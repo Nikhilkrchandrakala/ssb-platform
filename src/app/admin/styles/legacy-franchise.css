@@ -1,0 +1,48 @@
+/* Ported from inline <style> block in legacy Franchise.html */
+
+.clickable-row { cursor: pointer; transition: background 0.2s ease; }
+.clickable-row:hover { background: rgba(224, 194, 20, 0.05) !important; }
+
+.referral-link-box {
+    background: rgba(255,255,255,0.05);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.stat-card-mini {
+    background: var(--surface-dark);
+    border: var(--border-gold);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    text-align: center;
+}
+.stat-card-mini .val { font-size: 1.5rem; font-weight: 700; color: var(--primary-gold); }
+.stat-card-mini .lbl { font-size: 0.75rem; text-transform: uppercase; opacity: 0.6; margin-top: 5px; }
+
+.order-item-premium {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: var(--radius-md);
+    padding: 15px;
+    margin-bottom: 12px;
+    transition: var(--transition);
+}
+.order-item-premium:hover { border-color: var(--primary-gold); background: rgba(255,255,255,0.04); }
+
+.franchise-password-toggle {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.4);
+    cursor: pointer;
+    z-index: 10;
+    transition: color 0.2s;
+}

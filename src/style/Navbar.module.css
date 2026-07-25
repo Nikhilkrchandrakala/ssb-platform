@@ -1,0 +1,920 @@
+.pageWrapper {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.pageWrapper.sidebarOpen {
+    z-index: 9999999 !important;
+}
+
+.pageWrapper.sidebarOpen .pageWrapperMain {
+    z-index: 9999999 !important;
+}
+
+.bgVideo {
+    position: absolute;
+    inset: 0;
+    /* 🔥 replaces top/left/transform */
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* no extra zoom */
+    z-index: 0;
+}
+
+
+
+
+.pageWrapper::after {
+    z-index: 1;
+}
+
+.pageWrapperMain {
+    z-index: 2;
+}
+
+
+
+/* CONTENT ABOVE VIDEO */
+.pageWrapperMain {
+    position: relative;
+    z-index: 2;
+}
+
+.pageWrapper::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1;
+}
+
+
+
+
+/* =========================
+   HERO SECTION
+========================= */
+.heroSection {
+    position: relative;
+    height: 100vh;
+
+}
+
+.Divider {
+    position: absolute;
+    bottom: 10%;
+    border: 1px solid var(--gray);
+    height: 1px;
+    width: 100%;
+}
+
+/* Top Bar */
+.topBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 40px 60px;
+    z-index: 2;
+    position: relative;
+}
+
+.logo {
+    width: 100px;
+    /* height: 100px; */
+    cursor: pointer;
+}
+
+.menuIcon {
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    position: fixed;
+    top: 40px;
+    right: 60px;
+    z-index: 999999;
+    color: #fff;
+}
+
+/* Hero Content */
+.header {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.subtitle {
+    font-weight: 500;
+    font-size: 28px;
+    line-height: 38px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #ffffff;
+
+}
+
+/* .subtitle, */
+.subtitleTwo {
+    font-weight: 500;
+    font-size: 24px;
+    line-height: 38px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #ffffff;
+    margin-top: 40px;
+    font-family: var(--font-family);
+}
+
+.subtitle {
+    margin-bottom: 16px;
+}
+
+/* .subtitleTwo {
+    margin-top: 20px;
+} */
+
+.title {
+
+    font-weight: 400;
+    font-size: 100px;
+    line-height: 100px;
+    white-space: nowrap;
+}
+
+/* Text Animations */
+.military {
+    animation: militaryFlow 7s infinite ease-in-out;
+}
+
+.leadership {
+    animation: leadershipFlow 7s infinite ease-in-out;
+}
+
+@keyframes militaryFlow {
+    0% {
+        color: #fff37c;
+    }
+
+    15% {
+        color: #9b8600;
+    }
+
+    30% {
+        color: #3b3930;
+    }
+
+    45% {
+        color: #e3c607;
+    }
+
+    60% {
+        color: #837200;
+    }
+
+    75%,
+    100% {
+        color: #ffffff;
+    }
+}
+
+@keyframes leadershipFlow {
+
+    0%,
+    15% {
+        background: linear-gradient(90deg, #e0c214 0%, #d2a100 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    30% {
+        color: #fff37c;
+        -webkit-text-fill-color: initial;
+    }
+
+    45% {
+        color: #9b8600;
+    }
+
+    60% {
+        color: #e3c607;
+    }
+
+    75% {
+        color: #837200;
+    }
+
+    100% {
+        color: #ffffff;
+    }
+}
+
+/* =========================
+   CIRCLE SECTION
+========================= */
+.circleSection {
+    position: relative;
+
+    padding: 60px 80px;
+    /* background: rgba(0, 0, 0, 0.6); */
+}
+
+
+
+.sectionGlow {
+    position: absolute;
+    inset: -30%;
+    width: 800px;
+    height: 800px;
+    top: 50%;
+    left: 30%;
+    pointer-events: none;
+    filter: blur(100px);
+    background: radial-gradient(circle at 70% 40%,
+            rgba(244, 196, 48, 0.35),
+            transparent 65%);
+}
+
+/* .section-glow {
+   
+} */
+
+
+
+.circleSectionContainer {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.circleSectionCenterCon {
+    padding: 0px 40px 100px;
+}
+
+
+
+
+.circleSection::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    /* 👇 your section image */
+    background-image: url("../../public/assets/bg/bg2.webp");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+
+    /* 👇 transparency so GIF shows behind */
+    opacity: 0.20;
+
+    z-index: 1;
+    pointer-events: none;
+}
+
+
+/* Circle Wrapper */
+.circleWrapper {
+    position: relative;
+    width: 364px;
+    height: 373px;
+    margin-left: 100px;
+}
+
+/* Circle */
+/* .circle {
+    position: absolute;
+    top: 0;
+    left: 32px;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    border: 1.5px solid #d9d9d9;
+} */
+
+/* Orbit Dot */
+.orbitDot {
+    position: absolute;
+    top: -10px;
+    right: 40px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #715c20;
+    transform-origin: 110px 160px;
+}
+
+.circle:hover .orbitDot {
+    animation: orbitOnce 1.5s ease-in-out forwards;
+}
+
+@keyframes orbitOnce {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Center Text */
+.containerOfCircle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    /* padding: 10px 0; */
+}
+
+.circleOutSideContent {
+
+
+
+    /* font-family: 'Kelson'; */
+    /* font-family: "Kelson", sans-serif; */
+    /* font-style: normal; */
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 150%;
+    /* identical to box height, or 33px */
+    display: flex;
+    align-items: center;
+    text-align: center;
+
+    color: #C6C5AF;
+
+
+
+
+}
+
+/* Background wrapper */
+.wrapper {
+    width: 360px;
+    height: 360px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* dark textured feel */
+
+}
+
+/* Outer circle */
+.circle {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.8);
+}
+
+/* Orbit container */
+.orbit {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+}
+
+/* Gold dot (starts at right) */
+.dot {
+    position: absolute;
+    right: 23px;
+    top: 81%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #b89b3c;
+    box-shadow: 0 0 10px rgba(184, 155, 60, 0.8), 0 0 20px rgba(184, 155, 60, 0.5);
+}
+
+/* Center text */
+.center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+/* 180 */
+.number {
+
+    font-size: 96px;
+    font-weight: 400;
+    color: #d6d3c6;
+}
+
+/* + sign */
+.plus {
+
+    font-size: 36px;
+    color: #7a7a7a;
+    transform: translateY(-30px);
+}
+
+
+
+
+.titleOfSecondSection {
+
+
+    font-family: var(--font-heading);
+    font-style: normal;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 150%;
+    /* or 27px */
+
+    color: #C6C5AF;
+    width: 70%;
+
+
+}
+
+.titleOfThirdSection {
+    box-sizing: border-box;
+    padding: 8px 24px;
+
+    background: rgba(59, 57, 48, 0.5);
+    border: 1px solid rgba(198, 197, 175, 0.5);
+    backdrop-filter: blur(10px);
+
+    font-family: 'Kelson', sans-serif;
+    font-size: 13px;
+    line-height: 1.4;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+
+    margin-top: 20px;
+    margin-bottom: 20px;
+    width: fit-content;
+}
+
+/* Highlights list box text */
+.boxText {
+    color: #C6C5AF;
+    font-weight: 400;
+    display: inline-block;
+    white-space: nowrap;
+    line-height: 1.4;
+
+    /* Shimmer animation properties matching VTX text */
+    background: linear-gradient(to right,
+            #C6C5AF 20%,
+            #fff 40%,
+            #fff 60%,
+            #C6C5AF 80%);
+    background-size: 200% auto;
+    background-position: 200% center;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shineLeft 5s linear infinite;
+    padding: 0 4px;
+}
+
+/* Local keyframes for shimmer animation in CSS Modules */
+@keyframes shineLeft {
+    to {
+        background-position: 0% center;
+    }
+}
+
+/* Yellow slash */
+.divider {
+    font-weight: 500;
+    background: linear-gradient(262.12deg,
+            #D2A100 -2.23%,
+            #E0C214 48.89%,
+            #D2A100 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Normal text */
+.text {
+    color: #ffffff;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-top: 15px;
+    font-family: var(--pre);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    width: max-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+
+
+
+
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 768px) {
+    .title {
+        font-size: 36px;
+        line-height: 42px;
+    }
+
+    .subtitle,
+    .subtitleTwo {
+        font-size: 14px;
+        letter-spacing: 0.2em;
+    }
+
+    .topBar {
+        padding: 16px 20px;
+    }
+
+    .logo {
+        width: 36px;
+        /* height: 36px; */
+    }
+
+    .titleOfSecondSection {
+        width: 100%;
+    }
+
+    .pageWrapper {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+    }
+}
+
+
+/* =========================
+   RESPONSIVE FIXES
+========================= */
+
+/* Tablets */
+@media (max-width: 1400px) {
+    .text {
+        color: #ffffff;
+        font-weight: 400;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-top: 10px;
+        font-family: var(--pre);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        width: 90%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+@media (max-width: 1024px) {
+    .title {
+        font-size: 64px;
+        line-height: 72px;
+        white-space: normal;
+    }
+
+    .circleSectionContainer {
+        gap: 40px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .headingOfSSb {
+        font-size: 56px;
+        line-height: 64px;
+    }
+
+    .circleSectionCenterCon {
+        padding: 40px 20px 80px;
+    }
+
+    .text {
+        color: #ffffff;
+        font-weight: 400;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-top: 10px;
+        font-family: var(--pre);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        width: 90%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    /* .pageWrapper {
+        padding: 0 16px;
+    } */
+
+    .heroSection {
+        height: 100vh;
+    }
+
+    .topBar {
+        padding: 20px 10px;
+    }
+
+    .logo {
+        width: 80px;
+        /* height: 80px; */
+    }
+
+    .menuIcon {
+        width: 32px;
+        height: 32px;
+        top: 20px;
+        right: 20px;
+    }
+
+    .header {
+        position: static;
+        transform: none;
+        margin-top: 80px;
+    }
+
+    .title {
+        font-size: 36px;
+        line-height: 42px;
+        text-align: center;
+    }
+
+    .subtitle,
+    .subtitleTwo {
+        font-size: 18px;
+        letter-spacing: 0.15em;
+        text-align: center;
+    }
+
+    .text {
+        color: #ffffff;
+        font-size: 18px;
+        margin-top: 10px;
+        font-family: var(--pre);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        justify-content: center;
+        width: 95%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .circleSectionContainer {
+        flex-direction: column;
+        gap: 30px;
+        align-items: center;
+    }
+
+    .headingOfSSb {
+        font-size: 36px;
+        line-height: 42px;
+        /* flex-direction: column; */
+        align-items: flex-start;
+
+        margin-top: 30px;
+    }
+
+    .titleOfThirdSection {
+        padding: 8px 16px;
+        margin: 25px 0;
+    }
+
+    .shimmerWrapper {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .boxText {
+        white-space: normal;
+        font-size: 11px;
+        line-height: 1.4;
+    }
+
+    .circleSection {
+        padding: 20px;
+    }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+    .title {
+        font-size: 32px;
+        line-height: 34px;
+    }
+
+    .headingOfSSb {
+        font-size: 28px;
+        line-height: 34px;
+    }
+
+    .number {
+        font-size: 64px;
+    }
+
+
+    .header {
+        position: static;
+        transform: none;
+        margin-top: 30%;
+    }
+
+    .heroSection {
+        height: 100vh;
+    }
+
+    .pageWrapper {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .subtitleTwo {
+        margin-top: 20px;
+    }
+}
+
+
+/* =========================
+   CIRCLE RESPONSIVE ADD-ON
+   (DO NOT REMOVE ANYTHING ABOVE)
+========================= */
+
+/* Tablet */
+@media (max-width: 1024px) {
+    .circleWrapper {
+        width: 300px;
+        height: 310px;
+        margin-left: 0;
+    }
+
+    .wrapper {
+        width: 300px;
+        height: 300px;
+    }
+
+    .circle {
+        width: 260px;
+        height: 260px;
+    }
+
+    .dot {
+        width: 14px;
+        height: 14px;
+        right: 18px;
+    }
+
+    .number {
+        font-size: 72px;
+    }
+
+    .plus {
+        font-size: 28px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .circleWrapper {
+        width: 260px;
+        height: 270px;
+    }
+
+    .wrapper {
+        width: 260px;
+        height: 260px;
+    }
+
+    .circle {
+        width: 220px;
+        height: 220px;
+    }
+
+    .dot {
+        width: 12px;
+        height: 12px;
+        right: 15px;
+    }
+
+    .number {
+        font-size: 56px;
+    }
+
+    .plus {
+        font-size: 22px;
+        transform: translateY(-20px);
+    }
+
+    .circleOutSideContent {
+        font-size: 16px;
+        max-width: 220px;
+    }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+    .circleWrapper {
+        width: 220px;
+        height: 230px;
+    }
+
+    .wrapper {
+        width: 220px;
+        height: 220px;
+    }
+
+    .circle {
+        width: 180px;
+        height: 180px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        right: 12px;
+    }
+
+    .number {
+        font-size: 44px;
+    }
+
+    .plus {
+        font-size: 18px;
+    }
+
+    .circleOutSideContent {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 420px) {
+
+    .divider {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .pageWrapper {
+        /* background-image: url("/assets/bg/fallback.jpg"); */
+        background-size: cover;
+        background-position: center;
+    }
+}
+
+
+/* WHY SSB SECTION */
+.whyList {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    /* 2 items per row */
+    gap: 10px 20px;
+    padding: 0;
+    list-style: none;
+    margin-top: 10px;
+}
+
+.whyList li {
+    position: relative;
+    padding-left: 18px;
+
+}
+
+/* optional bullet styling */
+.whyList li::before {
+    /* content: "✔"; */
+    content: "•";
+    position: absolute;
+    left: 0;
+    /* : #e3c607; */
+    color: var(--secondary-color);
+}
+
+@media (max-width: 600px) {
+    .whyList {
+        grid-template-columns: 1fr;
+    }
+}

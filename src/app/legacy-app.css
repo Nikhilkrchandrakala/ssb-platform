@@ -1,0 +1,217 @@
+.ctaButton {
+  background: linear-gradient(135deg, rgba(227, 198, 7, 0.15) 0%, rgba(227, 198, 7, 0.05) 100%);
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+
+  cursor: pointer;
+  overflow: hidden;
+  padding: 12px 32px;
+  border: 1.5px solid var(--secondary-color);
+  border-radius: 50px;
+  font-family: var(--cta), 'Public Sans', sans-serif;
+  color: var(--secondary-color);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.headingOfMargin {
+  margin: 50px 0;
+}
+
+.ctaButton:hover {
+  background: var(--secondary-color);
+  color: #000000;
+  box-shadow: 0 0 20px rgba(227, 198, 7, 0.4);
+  transform: translateY(-2px);
+}
+
+
+
+
+.commonPadding {
+  padding: 20px 40px 100px;
+
+}
+
+.mb {
+  margin-bottom: 20px;
+}
+
+.pl {
+  padding-left: 40px;
+}
+
+.KnowMoreBtn {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 20px 0;
+}
+
+.downloadYour {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 10px 0;
+  margin: 0px;
+}
+
+.downloadYour span,
+.downloadYourRes span {
+  color: var(--secondary-color);
+  cursor: pointer;
+  padding-right: 4px;
+  text-decoration: underline;
+  /* margin: 0;
+  padding: 0; */
+
+  /* padding-left: 5px; */
+}
+
+.pl {
+  padding-left: 80px;
+}
+
+
+
+/* ================= RESPONSIVE HEADING & COMMON ================= */
+
+/* -------- Large laptops -------- */
+@media (max-width: 1200px) {
+
+
+  .pl {
+    padding-left: 60px;
+  }
+
+  .commonPadding {
+    padding: 20px 32px 80px;
+  }
+}
+
+/* -------- Tablets -------- */
+@media (max-width: 1024px) {
+  .pl {
+    padding-left: 45px;
+  }
+
+  .headingOfMargin {
+    margin: 30px 0;
+  }
+
+}
+
+@media (max-width: 992px) {
+
+
+  .commonPadding {
+    padding: 20px 24px 70px;
+  }
+
+  .pl {
+    padding-left: 24px;
+  }
+}
+
+/* -------- Mobile -------- */
+@media (max-width: 768px) {
+
+
+  .pl {
+    padding-left: 20px;
+  }
+
+  .commonPadding {
+    padding: 16px 16px 60px;
+  }
+
+  .pl {
+    padding-left: 16px;
+  }
+
+  .mb {
+    margin-bottom: 16px;
+  }
+
+  .KnowMoreBtn {
+    padding: 16px 0;
+  }
+}
+
+/* -------- Small mobile -------- */
+@media (max-width: 480px) {
+  .commonPadding {
+    padding: 12px 12px 50px;
+  }
+
+  .mb {
+    margin-bottom: 12px;
+  }
+
+  .ctaButton {
+    padding: 8px 18px;
+    font-size: 14px;
+    border: 1.5px solid var(--secondary-color);
+  }
+
+  .headingOfMargin {
+    margin: 20px 0;
+  }
+}
+
+@media (max-width: 360px) {
+
+
+
+
+
+  /* Text */
+  .ctaText {
+
+    font-size: 10px;
+    line-height: 15px;
+
+  }
+
+
+
+}
+
+
+.responsivePadding {
+  padding: 0 60px;
+  /* Desktop default */
+}
+
+/* ≤ 768px */
+@media (max-width: 768px) {
+  .responsivePadding {
+    padding: 0 16px;
+  }
+}
+
+/* ≤ 425px */
+@media (max-width: 425px) {
+  .responsivePadding {
+    padding: 0 16px;
+  }
+}
+
+/* Glow.module.css */
+.glow {
+  position: absolute;
+  background: rgba(158, 131, 52, 0.5);
+  filter: blur(150px);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+

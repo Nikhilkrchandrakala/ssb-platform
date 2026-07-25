@@ -1,0 +1,198 @@
+.section {
+    min-height: 100vh;
+    padding: 80px 100px;
+    background: radial-gradient(circle at top left, #3b2f12, #000);
+    color: #c6c5af;
+    font-family: var(--font1);
+}
+
+/* HEADER */
+.header h1 {
+    font-size: 64px;
+    font-weight: 400;
+    color: #f2f0e1;
+    margin-bottom: 20px;
+}
+
+.header h2 {
+    font-size: 36px;
+    font-weight: 400;
+    color: #f2f0e1;
+    margin-bottom: 20px;
+}
+
+.header p {
+    max-width: 720px;
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 60px;
+}
+
+/* CONTENT LAYOUT */
+.content {
+    display: grid;
+    grid-template-columns: 1.1fr 1.2fr;
+    gap: 60px;
+}
+
+/* FACTORS */
+.factors {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+}
+
+.factorCard {
+    border: 1px solid rgba(198, 197, 175, 0.35);
+    background: rgba(0, 0, 0, 0.55);
+    padding: 30px 0;
+    text-align: center;
+}
+
+/* .factorCard h3 {
+    font-size: 14px;
+    color: #c6c5af;
+    opacity: 0.7;
+} */
+
+.factorCard_heading_OfH4  {
+    font-size: 22px;
+    margin: 10px 0 20px;
+    color: #f2f0e1;
+    line-height: 20px;
+}
+
+.factorCard ul {
+    list-style: none;
+    padding: 0;
+}
+
+.factorCard li {
+    font-size: 14px;
+    margin-bottom: 8px;
+    opacity: 0.85;
+}
+
+/* TIPS */
+.tips {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.tip {
+    background: linear-gradient(180deg, #2a2a2a, #1f1f1f);
+    /* padding: 18px 20px; */
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tip p {
+    font-size: 14px;
+    margin-top: 10px;
+    opacity: 0.85;
+}
+
+.tip:hover {
+    /*  */
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 1024px) {
+    .section {
+        padding: 60px 40px;
+    }
+
+    .content {
+        grid-template-columns: 1fr;
+    }
+
+    .factors {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 36px;
+    }
+    .header h2 {
+        font-size: 26px;
+    }
+
+    .section {
+        padding: 40px 20px;
+    }
+}
+
+
+/* RIGHT SIDE TIPS */
+.tips {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* CLOSED STATE */
+.tip {
+    /* padding: 18px 22px; */
+    /* background: linear-gradient(180deg, #2a2a2a, #1f1f1f); */
+    cursor: pointer;
+    transition: all 0.35s ease;
+}
+
+/* TITLE */
+.tipTitle {
+    font-size: 15px;
+    font-weight: 500;
+    background: linear-gradient(180deg, #3a3a3a, #222);
+    padding: 18px;
+}
+
+/* HOVER */
+.tip:hover {
+    /* background: linear-gradient(180deg, #353535, #222); */
+}
+
+/* OPEN STATE */
+.open {
+    background: transparent;
+    /* 👈 bg gone */
+    /* border-left: 2px solid #d2a100; */
+    /* padding-left: 20px; */
+}
+
+/* CONTENT */
+.tipContent {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: all 0.4s ease;
+}
+
+.tipContent p {
+    font-size: 14px;
+    margin-top: 10px;
+    line-height: 1.6;
+    color: #c6c5af;
+    padding: 0 18px;
+}
+
+/* SHOW CONTENT */
+.show {
+    max-height: 200px;
+    opacity: 1;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .tipTitle {
+        font-size: 14px;
+    }
+
+    .tipContent p {
+        font-size: 13px;
+    }
+}

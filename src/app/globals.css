@@ -1,4 +1,13 @@
 @import "tailwindcss";
+/* Imported here (root, always-loaded stylesheet) rather than from the nested
+   psych-battery layout — a per-segment layout CSS import gets bundled as its
+   own chunk that Next's client-side router has to fetch/inject on first
+   visit to that route tree, which in dev mode shows up as a real "unstyled
+   flash" on the first click into /psych-battery/* (fixed instantly by a hard
+   refresh, since that always requests the full correct <head>). Making it
+   part of the root bundle means it's already loaded before any navigation
+   happens, regardless of route. */
+@import "./psych-battery/styles/theme.css";
 
 :root {
   --background: #ffffff;

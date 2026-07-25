@@ -1,0 +1,495 @@
+.section {
+    padding: 80px;
+    min-height: 100vh;
+    background: radial-gradient(circle at top left, #3b2f12, #000);
+    color: #c6c5af;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.title {
+    font-size: 48px;
+    margin-bottom: 40px;
+    font-weight: 00;
+
+    text-shadow: 0 2px 10px rgba(210, 161, 0, 0.2);
+    text-align: center;
+    color: var(--white);
+    font-family: var(--font1);
+}
+
+/* .svgWrapper {
+    position: relative;
+} */
+
+.tooltip {
+    position: fixed;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 100;
+}
+
+
+.tabs {
+    display: flex;
+    gap: 40px;
+    /* border-bottom: 1px solid rgba(255, 255, 255, 0.2); */
+    margin-bottom: 40px;
+    padding-bottom: 10px;
+    justify-content: center;
+}
+
+.tab {
+    background: none;
+    border: none;
+    color: #777;
+    font-size: 18px;
+    font-weight: 600;
+    padding: 12px 0;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+}
+
+.tab:hover {
+    color: #f0c75e;
+}
+
+.tab.active {
+    color: #d2a100;
+}
+
+.tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -11px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: currentColor;
+    border-radius: 2px;
+}
+
+.content {
+    display: flex;
+    justify-content: center;
+    /* 👈 ADD */
+    align-items: flex-end;
+    position: relative;
+
+    /* 👈 ADD */
+
+
+}
+
+
+
+
+.mapWrapper {
+    flex: none;
+    /* 👈 CHANGE */
+    width: 100%;
+    max-width: 900px;
+    /* 👈 MAP LIMIT */
+    display: flex;
+    justify-content: center;
+    /* position: absolute; */
+
+}
+
+.SelectionMapCon {
+    position: absolute;
+    right: 10%;
+    bottom: 15%;
+    /* top: 10p; */
+    /* top: 10%; */
+
+    /* margin-bottom: -50px; */
+}
+
+.SelectionMapCon p {
+    padding: 0;
+    margin: 5px;
+    /* font-family: var(--font1); */
+    /* font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; */
+
+}
+
+
+
+
+
+
+/* .svg {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 0 40px rgba(210, 161, 0, 0.15));
+} */
+
+.base {
+    fill: #5c5b52;
+    stroke: #777;
+    stroke-width: 1;
+}
+
+.region {
+    fill: #6a6650;
+    stroke: #888;
+    stroke-width: 1;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.region:hover {
+    fill: #b9961f;
+    stroke: #f0c75e;
+    filter: drop-shadow(0 0 15px rgba(210, 161, 0, 0.4));
+}
+
+.activeRegion {
+    fill: #d2a100 !important;
+    stroke: #f0c75e !important;
+    filter: drop-shadow(0 0 20px rgba(210, 161, 0, 0.6)) !important;
+}
+
+.navyRegion {
+    fill: #1e88e5;
+    stroke: #64b5f6;
+    stroke-width: 2;
+    opacity: 0.7;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.navyRegion:hover {
+    opacity: 1;
+    r: 45;
+    filter: drop-shadow(0 0 15px rgba(30, 136, 229, 0.6));
+}
+
+.airforceRegion {
+    fill: #43a047;
+    stroke: #66bb6a;
+    stroke-width: 2;
+    opacity: 0.7;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.airforceRegion:hover {
+    opacity: 1;
+    r: 35;
+    filter: drop-shadow(0 0 15px rgba(67, 160, 71, 0.6));
+}
+
+.regionText {
+    fill: white;
+    font-size: 12px;
+    font-weight: bold;
+    pointer-events: none;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.legend {
+    margin-top: 30px;
+    padding: 20px;
+    background: rgba(40, 40, 40, 0.6);
+    border-radius: 12px;
+    border-left: 4px solid #d2a100;
+}
+
+.legendTitle {
+    margin: 0 0 15px 0;
+    color: #f0c75e;
+    font-size: 18px;
+}
+
+.legendItem {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.legendItem:hover {
+    background-color: rgba(210, 161, 0, 0.1);
+}
+
+.legendCode {
+    background: #d2a100;
+    color: black;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-family: monospace;
+    margin-right: 15px;
+    min-width: 80px;
+    text-align: center;
+}
+
+.legendName {
+    font-size: 14px;
+}
+
+.index {
+    flex: 0 0 400px;
+    background: rgba(30, 30, 30, 0.5);
+    border-radius: 16px;
+    padding: 30px;
+    border: 1px solid rgba(210, 161, 0, 0.2);
+}
+
+.indexHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(210, 161, 0, 0.3);
+}
+
+.indexHeader h3 {
+    margin: 0;
+    color: #f0c75e;
+    font-size: 24px;
+}
+
+.activeBranch {
+    color: #aaa;
+    font-size: 14px;
+}
+
+.indexContent {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.branchInfo {
+    flex: 1;
+}
+
+.branchTitle {
+    color: #d2a100;
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.centerCard {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    margin-bottom: 12px;
+    background: rgba(60, 60, 60, 0.4);
+    border-radius: 10px;
+    border-left: 3px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.centerCard:hover {
+    background: rgba(210, 161, 0, 0.1);
+    border-left-color: #d2a100;
+    transform: translateX(5px);
+}
+
+.centerCard.highlighted {
+    background: rgba(210, 161, 0, 0.15);
+    border-left-color: #f0c75e;
+    box-shadow: 0 5px 15px rgba(210, 161, 0, 0.1);
+}
+
+.centerCode {
+    background: linear-gradient(135deg, #d2a100, #f0c75e);
+    color: black;
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-family: monospace;
+    margin-right: 15px;
+    min-width: 100px;
+    text-align: center;
+}
+
+.centerDetails {
+    flex: 1;
+}
+
+.centerName {
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #e6e6dc;
+}
+
+.centerLocation {
+    font-size: 13px;
+    color: #aaa;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.statCard {
+    background: linear-gradient(145deg, rgba(210, 161, 0, 0.1), rgba(30, 30, 30, 0.5));
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid rgba(210, 161, 0, 0.2);
+}
+
+.statNumber {
+    font-size: 28px;
+    font-weight: 700;
+    color: #f0c75e;
+    margin-bottom: 5px;
+}
+
+.statLabel {
+    font-size: 12px;
+    color: #aaa;
+    line-height: 1.4;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+
+
+
+    .index {
+        flex: none;
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .section {
+        padding: 40px 20px;
+    }
+
+    .title {
+        font-size: 32px;
+    }
+
+    .tabs {
+        gap: 20px;
+    }
+
+    .tab {
+        font-size: 16px;
+    }
+
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .title {
+        font-size: 24px;
+    }
+
+
+
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    .legendItem {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .legendCode {
+        margin-right: 0;
+    }
+
+
+    .SelectionMapCon {
+        position: absolute;
+        right: 1%;
+        bottom: 1%;
+        /* top: 10p; */
+        /* top: 10%; */
+
+        /* margin-bottom: -50px; */
+    }
+
+    .SelectionMapCon p {
+        padding: 0;
+        margin: 1px;
+        font-size: 8px;
+        padding: 1px;
+        line-height: 15px;
+    }
+
+    .SelectionMapCon h2 {
+        padding: 0;
+        /* margin: 5px; */
+        font-size: 14px;
+
+    }
+
+}
+
+.svg {
+    width: 100%;
+    height: auto;
+}
+
+
+
+
+.mapContainer {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    /* 👈 CENTER SVG */
+    align-items: center;
+}
+
+
+
+
+.state {
+    fill: #4a4a42;
+    stroke: #777;
+    stroke-width: 1;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    opacity: 0.25;
+    /* default dim */
+}
+
+/* Active but NOT hovered */
+.activeState {
+    fill: #c3a32e;
+    /* light yellow */
+    stroke: #c3a32e;
+    opacity: 1;
+    filter: none;
+    /* ❌ no glow by default */
+}
+
+/* Glow only on hover */
+.activeState:hover {
+    fill: #d2a100;
+    /* darker yellow on hover */
+    stroke: #f0c75e;
+    filter: drop-shadow(0 0 18px rgba(210, 161, 0, 0.6));
+}

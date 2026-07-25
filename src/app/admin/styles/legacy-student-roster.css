@@ -1,0 +1,133 @@
+/* Ported from admin-ssbwithisv/StudentRoster.html inline <style> block. */
+
+.stage-select-inline {
+  background: var(--surface-light);
+  border: 1px solid rgba(224, 194, 20, 0.2);
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  outline: none;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  transition: var(--transition);
+}
+
+/* Color classes matching dynamic course state */
+.stage-select-inline.stage-val-full_course { background: rgba(52, 152, 219, 0.15); color: #3498db; }
+.stage-select-inline.stage-val-ssb_ppdt { background: rgba(26, 188, 156, 0.15); color: #1abc9c; }
+.stage-select-inline.stage-val-psych { background: rgba(155, 89, 182, 0.15); color: #9b59b6; }
+.stage-select-inline.stage-val-interview { background: rgba(241, 196, 15, 0.15); color: #f1c40f; }
+.stage-select-inline.stage-val-group_testing { background: rgba(230, 126, 34, 0.15); color: #e67e22; }
+
+.assessor-badge-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 100%;
+}
+
+.mini-badge {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: inline-flex;
+  justify-content: space-between;
+  color: #fff;
+}
+
+.mini-badge span:first-child {
+  color: var(--primary-gold);
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.course-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.course-item-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.course-item-left h6 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.course-item-left p {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.course-item-right {
+  text-align: right;
+}
+
+.course-item-right .price {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #2ecc71;
+}
+
+.course-item-right .date {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface-light);
+  border: 2px solid var(--primary-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--primary-gold);
+  object-fit: cover;
+}
+
+/* Pagination Styles (Bootstrap .pagination overrides for dark theme) */
+.pagination .page-link {
+  background-color: var(--surface-light);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  box-shadow: none;
+}
+.pagination .page-item.active .page-link {
+  background-color: var(--primary-gold);
+  border-color: var(--primary-gold);
+  color: #000;
+  font-weight: bold;
+}
+.pagination .page-link:hover:not(.disabled):not(.active) {
+  background-color: rgba(224, 194, 20, 0.1);
+  color: var(--primary-gold);
+  border-color: rgba(224, 194, 20, 0.3);
+}
+.pagination .page-item.disabled .page-link {
+  background-color: var(--surface-dark);
+  color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* NOTE: legacy StudentRoster.html also defined a `.nav-tabs` override block
+   in its <style> tag, but no element in the page markup ever used a
+   `nav-tabs` class — genuinely dead CSS in the legacy source. Not ported. */

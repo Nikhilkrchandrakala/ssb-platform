@@ -1,0 +1,19 @@
+/*
+ * Bootstrap + Font Awesome, loaded via CDN exactly as the legacy site did.
+ *
+ * This MUST be the first CSS import in `(site)/layout.tsx` (before
+ * legacy-index/app/custom.css and custom-theme.css). Next/Turbopack bundles
+ * every CSS file a layout imports into one combined stylesheet chunk, in
+ * import order — an `@import` must be the first rule(s) in a stylesheet, so
+ * putting the CDN imports in their own file, imported first, guarantees
+ * Bootstrap's Reboot loads (and therefore cascades) before the app's own
+ * dark-theme overrides, matching the legacy `index.html` where these same
+ * CDN <link> tags were static and always preceded the webpack-injected app
+ * bundle. Using a plain <link> in JSX instead does NOT work here: a bare
+ * <link rel="stylesheet"> is hoisted to <head> only after every
+ * precedence-managed stylesheet (including this layout's own CSS-module
+ * imports), so Bootstrap would load last and its `body { background: #fff }`
+ * would silently win over the site's dark background.
+ */
+@import url("https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css");

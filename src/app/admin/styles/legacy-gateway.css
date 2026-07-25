@@ -1,0 +1,123 @@
+/* Ported from the inline <style> blocks in admin-ssbwithisv/index.html and
+   AccountRecovery.html — shared by the login and account-recovery pages. */
+
+.login-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.login-header .logo-icon {
+    margin-bottom: 20px;
+    display: inline-block;
+}
+
+.gateway-brand-logo {
+    height: 60px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 10px rgba(224, 194, 20, 0.25));
+    transition: all 0.3s ease;
+}
+
+.gateway-brand-logo:hover {
+    transform: scale(1.04);
+    filter: drop-shadow(0 0 15px rgba(224, 194, 20, 0.4));
+}
+
+.login-header h2 {
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #fff;
+    margin-bottom: 8px;
+}
+
+.login-header p {
+    color: var(--text-white);
+    opacity: 0.5;
+    font-size: 0.9rem;
+}
+
+.form-floating > .form-control {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-radius: var(--radius-sm);
+}
+
+.form-floating > .form-control:focus {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--primary-gold);
+    box-shadow: none;
+}
+
+.form-floating > label {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label {
+    color: var(--primary-gold);
+    opacity: 0.8;
+}
+
+.login-btn,
+.recovery-btn {
+    background: var(--gold-gradient);
+    color: #000;
+    border: none;
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    font-weight: 800;
+    width: 100%;
+    margin-top: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.recovery-btn {
+    padding: 13px;
+    font-size: 0.9rem;
+}
+
+.login-btn:hover,
+.recovery-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -5px rgba(224, 194, 20, 0.4);
+}
+
+.login-btn:active,
+.recovery-btn:active {
+    transform: translateY(0);
+}
+
+.login-btn:disabled,
+.recovery-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.gateway-seal-logo {
+    height: 70px;
+    width: 70px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 10px rgba(224, 194, 20, 0.25));
+    transition: all 0.3s ease;
+}
+
+.back-link {
+    color: var(--text-white);
+    opacity: 0.6;
+    text-decoration: none;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    margin-top: 20px;
+}
+
+.back-link:hover {
+    opacity: 1;
+    color: var(--primary-gold);
+}

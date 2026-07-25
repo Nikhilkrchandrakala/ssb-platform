@@ -1,0 +1,111 @@
+/* Ported from admin-ssbwithisv/all-users.html inline <style> block.
+   (DataTables CSS/JS and the .nav-tabs / .stage-select-inline rules from the
+   legacy file were dead code — no DataTables API calls and no matching
+   markup existed in the legacy all-users.js/html — so they were dropped.) */
+
+.course-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.course-item-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.course-item-left h6 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.course-item-left p {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.course-item-right {
+  text-align: right;
+}
+
+.course-item-right .price {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #2ecc71;
+}
+
+.course-item-right .date {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface-light);
+  border: 2px solid var(--primary-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--primary-gold);
+  object-fit: cover;
+}
+
+.mini-badge {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: inline-flex;
+  justify-content: space-between;
+  color: #fff;
+}
+
+.mini-badge span:first-child {
+  color: var(--primary-gold);
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.assessor-badge-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 100%;
+}
+
+/* Pagination Styles */
+.pagination .page-link {
+  background-color: var(--surface-light);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  box-shadow: none;
+}
+.pagination .page-item.active .page-link {
+  background-color: var(--primary-gold);
+  border-color: var(--primary-gold);
+  color: #000;
+  font-weight: bold;
+}
+.pagination .page-link:hover:not(.disabled):not(.active) {
+  background-color: rgba(224, 194, 20, 0.1);
+  color: var(--primary-gold);
+  border-color: rgba(224, 194, 20, 0.3);
+}
+.pagination .page-item.disabled .page-link {
+  background-color: var(--surface-dark);
+  color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.05);
+}

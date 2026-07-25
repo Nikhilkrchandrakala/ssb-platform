@@ -1,0 +1,361 @@
+.blogDetail {
+  background: radial-gradient(circle at top, #1c1c14, #0b0b0b);
+  color: #e6e6d8;
+  padding: 80px 0;
+  position: relative;
+}
+
+.blogDetailMain {
+  background: radial-gradient(circle at top, #1c1c14, #0b0b0b);
+  color: #e6e6d8;
+  padding: 80px 0;
+  position: relative;
+}
+
+/* Back Arrow Container - Fixed outside */
+.arrowBackContainer {
+  position: fixed;
+  top: 30px;
+  /* Header के बाद थोड़ा नीचे */
+  left: 8%;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+
+  /* Initial state - hidden */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-20px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Visible state - when scrolled */
+.arrowBackContainer.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+}
+
+/* Hidden state */
+.arrowBackContainer.hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-20px);
+}
+
+/* Arrow Button Styles */
+.arrowBackBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.arrowBackBtn:hover {
+  background: rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.arrowBackBtn:active {
+  transform: scale(0.95);
+}
+
+.arrowBackBtn svg {
+  font-size: 28px;
+  color: #e6e6d8;
+}
+
+.container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 0 20px;
+}
+
+/* META */
+.meta {
+  font-size: 13px;
+  color: #8c8c7a;
+  margin-bottom: 20px;
+}
+
+/* TITLE */
+.title {
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1.2;
+  margin-bottom: 20px;
+
+  position: sticky;
+  top: 0px;
+  z-index: 9999;
+
+  background: rgba(0, 0, 0, 0.2); /* transparent white */
+  backdrop-filter: blur(10px);
+  /* -webkit-backdrop-filter: blur(10px); Safari support */
+
+  padding: 10px 20px;
+  /* border-radius: 10px; */
+}
+
+/* TAG */
+.tag {
+  display: inline-block;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 6px 14px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  margin-bottom: 30px;
+  color: #d8d8c8;
+}
+
+/* INTRO */
+.intro {
+  font-size: 15px;
+  line-height: 1.8;
+  color: #cfcfc0;
+  margin-bottom: 40px;
+  margin-top: 20px;
+}
+
+/* SLIDER */
+.sliderWrapper {
+  margin: 40px 0;
+}
+
+/* IMAGE */
+.BlogImageWrapper {
+  position: relative;
+}
+
+.BlogImageWrapper img {
+  width: 100%;
+  display: block;
+  border-radius: 4px;
+}
+
+.imageOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+      rgba(0, 0, 0, 0.6) 0%,
+      rgba(0, 0, 0, 0) 40%,
+      rgba(0, 0, 0, 0.6) 100%);
+}
+
+.TextImage {
+  width: 100%;
+  text-align: center;
+  margin-top: 10px;
+  font-size: 14px;
+  color: #bfbfb0;
+}
+
+/* CONTENT (HTML) */
+.content {
+  font-size: 15px;
+  line-height: 1.9;
+  color: #bfbfb0;
+}
+
+.content p {
+  margin-bottom: 24px;
+}
+
+/* QUOTE */
+.quote {
+  display: flex;
+  gap: 14px;
+  margin: 50px 0;
+}
+
+.quoteDot {
+  width: 8px;
+  height: 8px;
+  background: #d6c97a;
+  border-radius: 50%;
+  margin-top: 8px;
+}
+
+.quote p {
+  font-size: 15px;
+  line-height: 1.8;
+  color: #e6e6d8;
+  margin-bottom: 8px;
+}
+
+.quoteAuthor {
+  font-size: 13px;
+  color: #9f9f8f;
+}
+
+/* ================= RESPONSIVE ================= */
+
+/* Tablets */
+@media (max-width: 992px) {
+  .container {
+    max-width: 90%;
+  }
+
+  .title {
+    font-size: 36px;
+  }
+
+  .intro {
+    font-size: 14px;
+  }
+
+  .content {
+    font-size: 14px;
+  }
+
+  .TextImage {
+    width: 90%;
+    font-size: 14px;
+  }
+
+  .arrowBackContainer {
+    top: 25px;
+    left: 15px;
+  }
+
+  .arrowBackBtn {
+    width: 45px;
+    height: 45px;
+  }
+
+  .arrowBackBtn svg {
+    font-size: 24px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .blogDetail {
+    padding: 50px 0;
+  }
+
+  .container {
+    padding: 0 26px;
+  }
+
+  .title {
+    font-size: 28px;
+    line-height: 1.3;
+  }
+
+  .meta {
+    font-size: 12px;
+  }
+
+  .tag {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+
+  .intro {
+    font-size: 13px;
+    margin-bottom: 25px;
+  }
+
+  .content {
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .sliderWrapper {
+    margin: 25px 0;
+  }
+
+  .TextImage {
+    width: 95%;
+    font-size: 13px;
+  }
+
+  .arrowBackContainer {
+    top: 20px;
+    left: 10px;
+  }
+
+  .arrowBackBtn {
+    width: 40px;
+    height: 40px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .arrowBackBtn svg {
+    font-size: 22px;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .title {
+    font-size: 16px;
+  }
+
+  .intro {
+    font-size: 12px;
+  }
+
+  .content {
+    font-size: 12px;
+  }
+
+  .TextImage {
+    font-size: 12px;
+    padding: 0 5px;
+  }
+
+  .arrowBackContainer {
+    top: 15px;
+    left: 8px;
+  }
+
+  .arrowBackBtn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .arrowBackBtn svg {
+    font-size: 20px;
+  }
+
+  .quote {
+    flex-direction: column;
+    gap: 6px;
+    margin: 30px 0;
+  }
+
+  .quote p {
+    font-size: 13px;
+  }
+}
+
+/* For very small screens */
+@media (max-width: 360px) {
+  .arrowBackContainer {
+    top: 12px;
+    left: 6px;
+  }
+
+  .arrowBackBtn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .arrowBackBtn svg {
+    font-size: 18px;
+  }
+}

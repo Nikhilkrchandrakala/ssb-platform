@@ -1,0 +1,257 @@
+.section {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  font-family: var(--font1);
+  color: #f2f0e1;
+}
+
+/* BACKGROUND IMAGE (FULL WIDTH) */
+.bgImage {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg,
+      rgba(0, 0, 0, 0.55),
+      rgba(0, 0, 0, 0.85)),
+    url("../../public/assets/website/allyou.webp") center / cover no-repeat;
+  z-index: 1;
+}
+
+/* LEFT IMAGE (FOREGROUND SOLDIERS) */
+.leftImage {
+  position: absolute;
+  top: 10%;
+  left: -4%;
+  width: 20%;
+  height: 15%;
+  background:
+
+    url("../../public/assets/Group161.png") center / cover no-repeat;
+  z-index: 2;
+}
+
+/* CONTENT WRAPPER */
+
+.contentMain {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+
+}
+
+
+
+.content {
+  position: relative;
+  z-index: 3;
+  height: 90vh;
+  padding: 80px;
+  display: flex;
+  flex-direction: column;
+  /* justify-content: ; */
+  align-items: flex-start;
+  width: fit-content;
+}
+
+/* HEADING */
+.heading {
+  /* font-size: 64px;
+    font-weight: 300;
+    text-align: start; */
+
+  margin-top: 40px;
+  margin-bottom: 40px;
+
+  /* font-family: Kelson; */
+  font-weight: 400;
+  font-style: Regular;
+  font-size: 80px;
+  /* leading-trim: NONE; */
+  line-height: 100px;
+  letter-spacing: 0%;
+  vertical-align: middle;
+  /* font-family: var(--); */
+  color: var(--white);
+  max-width: 600px;
+
+}
+
+.heading span {
+  color: var(--gray);
+}
+
+/* INFO BOX */
+.infoBox {
+  max-width: 640px;
+  padding: 36px 42px;
+  background: linear-gradient(180deg,
+      rgba(0, 0, 0, 0.65),
+      rgba(0, 0, 0, 0.35));
+  border: 1px solid rgba(198, 197, 175, 0.35);
+  backdrop-filter: blur(10px);
+  position: relative;
+}
+
+.sectionGlowTwo {
+  position: absolute;
+  inset: -30%;
+  pointer-events: none;
+  filter: blur(100px);
+  background: radial-gradient(circle at 20% 50%,
+      rgba(244, 196, 48, 0.25),
+      transparent 90%);
+  width: 250px;
+  height: 250px;
+  top: 20%;
+  left: 60%;
+}
+
+.infoBox p {
+
+  color: var(--white);
+  margin-bottom: 24px;
+
+  font-family: var(--font1);
+  font-weight: 400;
+  font-style: Regular;
+  font-size: 18px;
+  /* leading-trim: NONE; */
+  line-height: 150%;
+  letter-spacing: 0%;
+
+}
+
+/* BUTTON */
+.btn {
+  padding: 10px 26px;
+  border: 1px solid #d2a100;
+  background: transparent;
+  color: #d2a100;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  background: rgba(210, 161, 0, 0.15);
+}
+
+
+
+/* =========================
+   RESPONSIVE ADD-ONS
+   (DO NOT REMOVE ABOVE CODE)
+========================= */
+
+/* ---------- Large screens down ---------- */
+@media (max-width: 1200px) {
+  .heading {
+    font-size: 64px;
+    line-height: 80px;
+  }
+
+  .content {
+    padding: 60px;
+  }
+
+  .infoBox {
+    padding: 32px 36px;
+  }
+}
+
+/* ---------- Tablets ---------- */
+@media (max-width: 1024px) {
+  .contentMain {
+    justify-content: center;
+  }
+
+  .content {
+    width: 100%;
+    align-items: center;
+    padding: 50px 40px;
+    height: auto;
+  }
+
+  .heading {
+    font-size: 52px;
+    line-height: 64px;
+    text-align: center;
+  }
+
+  .infoBox {
+    max-width: 720px;
+  }
+
+  .leftImage {
+    width: 26%;
+    height: 22%;
+    top: 14%;
+    left: -6%;
+  }
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 768px) {
+  .section {
+    min-height: auto;
+  }
+
+  .content {
+    padding: 40px 20px;
+    align-items: center;
+  }
+
+  .heading {
+    font-size: 36px;
+    line-height: 46px;
+    margin-top: 20px;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  .infoBox {
+    padding: 24px 20px;
+  }
+
+  .infoBox p {
+    font-size: 15px;
+  }
+
+  .btn {
+    margin-top: 10px;
+  }
+
+  /* foreground image fade on mobile */
+  .leftImage {
+    width: 40%;
+    height: 30%;
+    top: 8%;
+    left: -10%;
+    opacity: 0.35;
+  }
+}
+
+/* ---------- Small phones ---------- */
+@media (max-width: 480px) {
+  .heading {
+    font-size: 28px;
+    line-height: 36px;
+  }
+
+  .infoBox p {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .btn {
+    font-size: 11px;
+    padding: 8px 20px;
+  }
+
+  .leftImage {
+    display: none;
+    /* 👈 clutter remove only on very small screens */
+  }
+}

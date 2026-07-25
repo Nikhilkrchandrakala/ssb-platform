@@ -1,0 +1,32 @@
+/*
+ * Legacy `leads.html` links only `admin-global.css`/`admin-header.css`, same
+ * as every other admin page (confirmed by grepping every legacy admin HTML
+ * file) — the old table-styled `.container`/`h1`/`table`/`th, td`/`tr:hover`/
+ * `.all-lead-container` rules this file used to carry were dead code from an
+ * earlier, never-linked prototype of this page, same as `legacy-magazine.css`
+ * had. `.container { background: #ffffff }` in particular was silently
+ * overriding the dark theme for this page's header/filter section (same
+ * class, same specificity as the real `.container` usage in LeadsView.tsx,
+ * later in cascade order since this file imports after the shared layout
+ * CSS). Removed the dead rules; kept `#excelDownloadBtn` below since it's the
+ * genuinely-used floating Excel-export button.
+ */
+  #excelDownloadBtn {
+    position: fixed;
+    bottom: 20px;
+    right: 6px;
+    width: 50px;
+    height: 50px;
+    background-color: unset;
+    border: none;
+    /* border-radius: 50%; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  #excelDownloadBtn img {
+    width: 58px;
+  }

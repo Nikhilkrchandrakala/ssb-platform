@@ -1,0 +1,769 @@
+/* ============ PaymentHistory.module.css ============ */
+
+/* ============ SUMMARY GRID ============ */
+.summaryGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 55556;
+}
+
+.summaryCard {
+    background: #10101660;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+
+.summaryCard:hover {
+    border-color: rgba(210, 161, 0, 0.45);
+    transform: translateY(-2px);
+}
+
+.summaryIcon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #d2a100;
+}
+
+.summaryContent {
+    display: flex;
+    flex-direction: column;
+}
+
+.summaryContent span {
+    color: #9a9a9a;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.summaryContent strong {
+    color: #c6c5af;
+    font-size: 1.5rem;
+    line-height: 1.2;
+}
+
+.summaryContent small {
+    color: #d2a100;
+    font-size: 0.75rem;
+}
+
+/* ============ FILTER BAR ============ */
+.filterBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+    position: relative;
+    z-index: 55556;
+}
+
+.filterTabs {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.filterTab {
+    padding: 0.5rem 1.25rem;
+    background: transparent;
+    border: 2px solid rgba(210, 161, 0, 0.25);
+    color: #c6c5af;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 30px;
+}
+
+.filterTab:hover {
+    background: rgba(210, 161, 0, 0.1);
+    border-color: #d2a100;
+}
+
+.filterTab.active {
+    background: linear-gradient(262.12deg, #d2a100 -2.23%, #e0c214 48.89%, #d2a100 100%);
+    color: #000;
+    border-color: transparent;
+}
+
+.filterToggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.5rem;
+    background: transparent;
+    border: 2px solid rgba(210, 161, 0, 0.45);
+    color: #c6c5af;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 30px;
+}
+
+.filterToggle:hover {
+    background: rgba(210, 161, 0, 0.1);
+    border-color: #d2a100;
+}
+
+/* ============ ADVANCED FILTERS ============ */
+.advancedFilters {
+    background: #10101660;
+    border: 2px solid rgba(210, 161, 0, 0.45);
+    backdrop-filter: blur(10px);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    align-items: flex-end;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.filterGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filterGroup label {
+    color: #d2a100;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filterSelect,
+.filterInput {
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(210, 161, 0, 0.25);
+    color: #c6c5af;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.filterSelect:focus,
+.filterInput:focus {
+    border-color: #d2a100;
+    outline: none;
+}
+
+.filterSelect option {
+    background: #101016;
+    color: #c6c5af;
+}
+
+.dateRangePicker {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    grid-column: span 2;
+}
+
+.dateRangePicker span {
+    color: #d2a100;
+    font-size: 0.9rem;
+}
+
+.dateInput {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(210, 161, 0, 0.25);
+    color: #c6c5af;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+}
+
+.dateInput:focus {
+    border-color: #d2a100;
+    outline: none;
+}
+
+.applyFiltersBtn {
+    padding: 0.6rem 1.5rem;
+    background: linear-gradient(262.12deg, #d2a100 -2.23%, #e0c214 48.89%, #d2a100 100%);
+    border: none;
+    color: #000;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: fit-content;
+    white-space: nowrap;
+}
+
+.applyFiltersBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(210, 161, 0, 0.3);
+}
+
+/* ============ PAYMENT CARD ============ */
+.paymentCard {
+    background: #10101660;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    width: 49%;
+    border-radius: 10px;
+
+}
+
+.paymentCard:hover {
+    border-color: rgba(210, 161, 0, 0.45);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* ============ PAYMENT HEADER ============ */
+.paymentHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid rgba(210, 161, 0, 0.25);
+    margin-bottom: 1rem;
+}
+
+.paymentId span {
+    color: #9a9a9a;
+    font-size: 0.9rem;
+    margin-right: 0.5rem;
+}
+
+.paymentId strong {
+    color: #d2a100;
+    font-size: 1rem;
+    letter-spacing: 1px;
+}
+
+.paymentDate {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #c6c5af;
+    font-size: 0.95rem;
+}
+
+.paymentDate svg {
+    color: #d2a100;
+}
+
+/* ============ PAYMENT BODY ============ */
+.paymentBody {
+    margin-bottom: 1.5rem;
+}
+
+.paymentInfo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.paymentMethod {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.methodIcon {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: rgba(210, 161, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #d2a100;
+}
+
+.methodDetails {
+    display: flex;
+    flex-direction: column;
+}
+
+.methodName {
+    color: #c6c5af;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.cardLast4,
+.paypalEmail {
+    color: #9a9a9a;
+    font-size: 0.85rem;
+}
+
+.paymentAmount {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.amountLabel {
+    color: #9a9a9a;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+.amountValue {
+    color: #d2a100;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.paymentStatus {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.statusBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 1.25rem;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.invoiceNumber {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: #9a9a9a;
+    font-size: 0.9rem;
+}
+
+.paymentDescription {
+    color: #c6c5af;
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+}
+
+.failureReason,
+.refundReason,
+.clearanceInfo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.failureReason {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.refundReason {
+    background: rgba(139, 92, 246, 0.1);
+    color: #8b5cf6;
+}
+
+.clearanceInfo {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+/* ============ PAYMENT FOOTER ============ */
+.paymentFooter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 2px solid rgba(210, 161, 0, 0.25);
+    flex-wrap: wrap;
+}
+
+.actionBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    background: transparent;
+    border: 2px solid rgba(210, 161, 0, 0.45);
+    color: #c6c5af;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 30px;
+}
+
+.actionBtn:hover {
+    background: rgba(210, 161, 0, 0.1);
+    border-color: #d2a100;
+    color: #d2a100;
+    transform: translateY(-2px);
+}
+
+/* ============ EMPTY STATE ============ */
+.emptyState {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: #10101660;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    width: 100%;
+}
+
+.emptyIcon {
+    font-size: 4rem;
+    color: #d2a100;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+}
+
+.emptyState h3 {
+    color: #c6c5af;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.emptyState p {
+    color: #9a9a9a;
+    margin-bottom: 2rem;
+}
+
+/* ============ MODAL ============ */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.modal {
+    background: #101016;
+    border: 2px solid #d2a100;
+    max-width: 600px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modalClose {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    color: #c6c5af;
+    font-size: 2rem;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    z-index: 1;
+}
+
+.modalClose:hover {
+    background: rgba(210, 161, 0, 0.1);
+    color: #d2a100;
+    transform: rotate(90deg);
+}
+
+.modalTitle {
+    padding: 1.5rem;
+    margin: 0;
+    border-bottom: 2px solid rgba(210, 161, 0, 0.45);
+    color: #d2a100;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.modalContent {
+    padding: 1.5rem;
+}
+
+.detailSection {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detailSection:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.detailSection h3 {
+    color: #d2a100;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.detailGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.detailRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #c6c5af;
+    padding: 0.5rem 0;
+}
+
+.detailRow span {
+    color: #9a9a9a;
+}
+
+.detailRow strong {
+    color: #d2a100;
+}
+
+.transactionId {
+    font-size: 0.85rem;
+    word-break: break-all;
+}
+
+.netAmount {
+    font-size: 1.1rem;
+}
+
+.paymentMethodDetail {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(210, 161, 0, 0.25);
+}
+
+.detailIcon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(210, 161, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: #d2a100;
+}
+
+.address,
+.description {
+    color: #c6c5af;
+    line-height: 1.6;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(210, 161, 0, 0.25);
+}
+
+.failureMessage,
+.clearanceMessage {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #ef4444;
+    padding: 0.5rem;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.clearanceMessage {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.25);
+}
+
+.modalFooter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-top: 2px solid rgba(210, 161, 0, 0.45);
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 1024px) {
+    .summaryGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .filterBar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .paymentCard {
+        width: 100%;
+
+    }
+
+    .filterTabs {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+
+    .filterToggle {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .advancedFilters {
+        grid-template-columns: 1fr;
+    }
+
+    .dateRangePicker {
+        grid-column: span 1;
+        flex-direction: column;
+    }
+
+    .paymentHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .paymentInfo {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .paymentAmount {
+        align-items: flex-start;
+    }
+
+    .paymentFooter {
+        flex-direction: column;
+    }
+
+    .actionBtn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .detailRow {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .modalFooter {
+        flex-direction: column;
+    }
+
+    .modalFooter button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .summaryGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .paymentId strong {
+        font-size: 0.9rem;
+    }
+
+    .methodIcon {
+        width: 35px;
+        height: 35px;
+        font-size: 1.2rem;
+    }
+
+    .amountValue {
+        font-size: 1.2rem;
+    }
+
+    .statusBadge {
+        padding: 0.3rem 1rem;
+        font-size: 0.8rem;
+    }
+}

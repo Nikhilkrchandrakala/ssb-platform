@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/test-results
+/playwright-report
 
 # next.js
 /.next/
@@ -19,6 +21,10 @@
 
 # production
 /build
+
+# user-uploaded files (local-disk storage — see src/server/storage/r2.ts).
+# Lives on the VPS's persistent disk; don't check runtime uploads into git.
+/public/uploads
 
 # misc
 .DS_Store
@@ -32,6 +38,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+/env
 
 # vercel
 .vercel

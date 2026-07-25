@@ -1,0 +1,142 @@
+/* ════════════════════════════════════════
+   Social Login Buttons — SSB with ISV
+   Matches the existing charcoal/gold design
+════════════════════════════════════════ */
+
+.social-login-wrapper {
+    width: 100%;
+    margin-top: 32px;
+}
+
+/* ─── Divider ─── */
+.social-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.social-divider-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(244, 196, 48, 0.3), transparent);
+}
+
+.social-divider-text {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: rgba(197, 183, 140, 0.6);
+    white-space: nowrap;
+    font-family: 'Outfit', 'Inter', sans-serif;
+}
+
+/* ─── Button Group — horizontal icon-only row ─── */
+.social-btn-group {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 16px;
+    width: 100%;
+}
+
+/* ─── Base Button — icon-only circle ─── */
+.social-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.social-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.06), transparent);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    border-radius: inherit;
+}
+
+.social-btn:hover::before {
+    opacity: 1;
+}
+
+.social-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.social-btn:active {
+    transform: translateY(0);
+    transition: transform 0.1s ease;
+}
+
+/* ─── Provider-specific hover accents ─── */
+.social-btn-google:hover {
+    border-color: rgba(66, 133, 244, 0.4);
+    box-shadow: 0 8px 24px rgba(66, 133, 244, 0.12);
+}
+
+.social-btn-facebook:hover {
+    border-color: rgba(24, 119, 242, 0.4);
+    box-shadow: 0 8px 24px rgba(24, 119, 242, 0.12);
+}
+
+.social-btn-linkedin:hover {
+    border-color: rgba(10, 102, 194, 0.4);
+    box-shadow: 0 8px 24px rgba(10, 102, 194, 0.12);
+}
+
+/* ─── Icon ─── */
+.social-btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    pointer-events: none;
+}
+
+/* ─── Text — hidden (icon-only mode) ─── */
+.social-btn-text {
+    display: none;
+}
+
+/* ─── OAuth Spinner (used on /auth/callback) ─── */
+.oauth-spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid rgba(244, 196, 48, 0.2);
+    border-top-color: #f4c430;
+    border-radius: 50%;
+    animation: oauth-spin 0.8s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes oauth-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 576px) {
+    .social-btn {
+        padding: 12px 16px;
+        font-size: 13px;
+    }
+
+    .social-divider-text {
+        font-size: 10px;
+    }
+}

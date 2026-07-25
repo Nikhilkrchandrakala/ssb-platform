@@ -1,0 +1,518 @@
+/* ============ OrderHistory.module.css ============ */
+
+/* ============ STATUS TABS ============ */
+.statusTabs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 55556;
+}
+
+.tabBtn {
+    padding: 0.6rem 1.5rem;
+    background: transparent;
+    border: 2px solid rgba(210, 161, 0, 0.25);
+    color: #c6c5af;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 30px;
+    min-width: 100px;
+}
+
+.tabBtn:hover {
+    background: rgba(210, 161, 0, 0.1);
+    border-color: #d2a100;
+}
+
+.tabBtn.active {
+    background: linear-gradient(262.12deg, #d2a100 -2.23%, #e0c214 48.89%, #d2a100 100%);
+    color: #000;
+    border-color: transparent;
+}
+
+/* ============ ORDER CARD ============ */
+.orderCard {
+    background: #10101660;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    width: 49%;
+    border-radius: 10px;
+}
+
+.orderCard:hover {
+    border-color: rgba(210, 161, 0, 0.45);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* ============ ORDER HEADER ============ */
+.orderHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid rgba(210, 161, 0, 0.25);
+    margin-bottom: 1rem;
+}
+
+.orderId span {
+    color: #9a9a9a;
+    font-size: 0.9rem;
+    margin-right: 0.5rem;
+}
+
+.orderId strong {
+    color: #d2a100;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+}
+
+.orderDate {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #c6c5af;
+    font-size: 0.95rem;
+}
+
+.orderDate svg {
+    color: #d2a100;
+}
+
+/* ============ ORDER BODY ============ */
+.orderBody {
+    margin-bottom: 1.5rem;
+}
+
+.orderInfo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.statusBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.orderStats {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #c6c5af;
+}
+
+.stat span {
+    color: #9a9a9a;
+    font-size: 0.9rem;
+}
+
+.stat strong {
+    color: #d2a100;
+    font-size: 1rem;
+}
+
+.trackingInfo,
+.estimatedDelivery {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #c6c5af;
+    font-size: 0.9rem;
+}
+
+.trackingInfo svg,
+.estimatedDelivery svg {
+    color: #d2a100;
+}
+
+/* ============ PRODUCTS PREVIEW ============ */
+.productsPreview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.productTag {
+    padding: 0.4rem 1rem;
+    background: rgba(210, 161, 0, 0.1);
+    border: 1px solid rgba(210, 161, 0, 0.25);
+    color: #c6c5af;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+/* ============ ORDER FOOTER ============ */
+.orderFooter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 2px solid rgba(210, 161, 0, 0.25);
+    flex-wrap: wrap;
+}
+
+.actionBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    background: transparent;
+    border: 2px solid rgba(210, 161, 0, 0.45);
+    color: #c6c5af;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 30px;
+}
+
+.actionBtn:hover {
+    background: rgba(210, 161, 0, 0.1);
+    border-color: #d2a100;
+    color: #d2a100;
+    transform: translateY(-2px);
+}
+
+/* ============ EMPTY STATE ============ */
+.emptyState {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: #10101660;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+}
+
+.emptyIcon {
+    font-size: 4rem;
+    color: #d2a100;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+}
+
+.emptyState h3 {
+    color: #c6c5af;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.emptyState p {
+    color: #9a9a9a;
+    margin-bottom: 2rem;
+}
+
+/* ============ MODAL ============ */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.modal {
+    background: #101016;
+    border: 2px solid #d2a100;
+    max-width: 600px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modalClose {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    color: #c6c5af;
+    font-size: 2rem;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    z-index: 1;
+}
+
+.modalClose:hover {
+    background: rgba(210, 161, 0, 0.1);
+    color: #d2a100;
+    transform: rotate(90deg);
+}
+
+.modalTitle {
+    padding: 1.5rem;
+    margin: 0;
+    border-bottom: 2px solid rgba(210, 161, 0, 0.45);
+    color: #d2a100;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.modalContent {
+    padding: 1.5rem;
+}
+
+.detailSection {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detailSection:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.detailSection h3 {
+    color: #d2a100;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.detailGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.detailRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #c6c5af;
+    padding: 0.5rem 0;
+}
+
+.detailRow span {
+    color: #9a9a9a;
+}
+
+.detailRow strong {
+    color: #d2a100;
+}
+
+.totalAmount {
+    font-size: 1.2rem;
+    color: #d2a100 !important;
+}
+
+.productsList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.productItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(210, 161, 0, 0.25);
+}
+
+.productName {
+    color: #c6c5af;
+    flex: 1;
+}
+
+.productQty {
+    color: #9a9a9a;
+    margin: 0 1rem;
+}
+
+.productPrice {
+    color: #d2a100;
+    font-weight: 600;
+}
+
+.address {
+    color: #c6c5af;
+    line-height: 1.6;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(210, 161, 0, 0.25);
+}
+
+.trackingNumber {
+    color: #c6c5af;
+    margin-bottom: 0.5rem;
+}
+
+.trackingNumber strong {
+    color: #d2a100;
+}
+
+.estimatedDate {
+    color: #9a9a9a;
+    font-size: 0.9rem;
+}
+
+.modalFooter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-top: 2px solid rgba(210, 161, 0, 0.45);
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 768px) {
+    .statusTabs {
+        gap: 0.5rem;
+    }
+
+    .orderCard {
+        width: 100%;
+    }
+
+    .tabBtn {
+        padding: 0.4rem 1rem;
+        font-size: 0.85rem;
+        min-width: auto;
+    }
+
+    .orderHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .orderInfo {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .orderStats {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .orderFooter {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .actionBtn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .modal {
+        width: 95%;
+    }
+
+    .detailRow {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .productItem {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+
+    .productQty {
+        margin: 0.25rem 0;
+    }
+
+    .modalFooter {
+        flex-direction: column;
+    }
+
+    .modalFooter button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .orderId strong {
+        font-size: 1rem;
+    }
+
+    .statusBadge {
+        padding: 0.4rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .productTag {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+    }
+}

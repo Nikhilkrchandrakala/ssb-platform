@@ -1,0 +1,183 @@
+/* ============ MODE TOGGLE ============ */
+.modeToggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 55556;
+}
+
+.toggleBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 2rem;
+    background: transparent;
+    border: 2px solid rgba(210, 161, 0, 0.45);
+    color: #c6c5af;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 30px;
+}
+
+.toggleBtn:hover {
+    background: rgba(210, 161, 0, 0.1);
+    border-color: #d2a100;
+}
+
+.toggleBtn.active {
+    background: linear-gradient(262.12deg, #d2a100 -2.23%, #e0c214 48.89%, #d2a100 100%);
+    color: #000;
+    border-color: transparent;
+}
+
+/* ============ PROFILE IMAGE WRAPPER ============ */
+.profileImageWrapper {
+    position: relative;
+    width: 150px;
+    margin: 0 auto 30px;
+}
+
+.profileImageWrapper .profile_image {
+    width: 150px;
+    margin-bottom: 0;
+}
+
+.changePhotoBtn {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(262.12deg, #d2a100 -2.23%, #e0c214 48.89%, #d2a100 100%);
+    border: 2px solid #c6c5af;
+    color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.2rem;
+}
+
+.CustomBtnOfHistory {
+
+    padding-top: 100px;
+    display: flex;
+
+    justify-content: space-between;
+}
+
+.changePhotoBtn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(210, 161, 0, 0.5);
+}
+
+/* ============ PREVIEW ITEMS ============ */
+.previewItem {
+    margin-bottom: 1.5rem;
+}
+
+.previewItem label {
+    display: block;
+    font-size: 0.85rem;
+    color: #d2a100;
+    margin-bottom: 0.25rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+.previewValue {
+    background: #10101660;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    color: #c6c5af;
+    padding: 12px 20px;
+    font-size: 18px;
+    border-radius: 0;
+    width: 100%;
+    word-break: break-word;
+}
+
+/* ============ TEXTAREA STYLES ============ */
+textarea.form-control.thm-input {
+    resize: vertical;
+    min-height: 80px;
+    background: #10101660 !important;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    color: #c6c5af !important;
+    padding: 8px 20px;
+    font-size: 19px;
+    border-radius: 0px;
+}
+
+textarea.form-control.thm-input:focus {
+    background: #101016 !important;
+    border-color: #f4c430;
+    box-shadow: none;
+    outline: none;
+}
+
+/* ============ ACTION BUTTONS ============ */
+.gap-3 {
+    gap: 1rem;
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 768px) {
+    .modeToggle {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .toggleBtn {
+        width: 200px;
+        justify-content: center;
+    }
+
+    .previewValue {
+        font-size: 16px;
+        padding: 10px 15px;
+    }
+
+    .profileImageWrapper {
+        width: 120px;
+    }
+
+    .profileImageWrapper .profile_image {
+        width: 120px;
+    }
+
+    .changePhotoBtn {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+        bottom: 5px;
+        right: 5px;
+    }
+
+    .gap-3 {
+        flex-direction: column;
+        gap: 0.75rem !important;
+    }
+
+    .gap-3 button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .previewValue {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+
+    .previewItem label {
+        font-size: 0.75rem;
+    }
+}

@@ -1,0 +1,433 @@
+.section {
+  /* width: 100%; */
+  min-height: 100vh;
+  padding: 60px 80px;
+  /* background: linear-gradient(270deg,
+            #111015 0%,
+            #111111 50%,
+            #111015 100%); */
+  color: #c6c5af;
+  font-family: var(--font1);
+}
+
+/* ================= HEADER ================= */
+
+.header {
+  /* max-width: 720px; */
+  width: 100%;
+  /* position: relative; */
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  /* flex: 1; */
+}
+
+
+
+.title {
+  font-size: 56px;
+  font-weight: 400;
+  margin-bottom: 16px;
+}
+
+.title span {
+  opacity: 0.4;
+}
+
+.subTitle {
+  font-size: 24px;
+  margin-bottom: 16px;
+  color: #c6c5af;
+  font-weight: 700;
+  line-height: 150%;
+  font-family: var(--font1);
+
+}
+
+.description {
+  font-size: 20px;
+  line-height: 1.8;
+  color: #c6c5af;
+  max-width: 640px;
+  font-weight: 200;
+  line-height: 150%;
+  font-family: var(--font1);
+
+}
+
+/* ================= ARROWS ================= */
+
+.arrows {
+  /* position: absolute;
+    right: -220px;
+    top: 50%;
+    transform: translateY(-50%); */
+  display: flex;
+  gap: 14px;
+}
+
+.arrow {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #d2a100;
+  background: transparent;
+  color: #d2a100;
+  font-size: 30px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+}
+
+.arrow:hover {
+  background: rgba(210, 161, 0, 0.1);
+}
+
+/* ================= CARDS ================= */
+
+.cards {
+  display: flex;
+  gap: 40px;
+  margin-top: 60px;
+}
+
+.card {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(198, 197, 175, 0.3);
+  backdrop-filter: blur(10px);
+  transition: transform 0.35s ease;
+}
+
+.card:hover {
+  transform: scale(1.03);
+}
+
+.card img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ================= CTA ================= */
+
+.cta {
+  margin-top: 50px;
+  text-align: center;
+}
+
+.ctaBtn {
+  padding: 10px 24px;
+  border: 1px solid #d2a100;
+  background: transparent;
+  color: #d2a100;
+  letter-spacing: 1px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.ctaBtn:hover {
+  background: rgba(210, 161, 0, 0.1);
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 1024px) {
+  .section {
+    padding: 60px 40px;
+  }
+
+  .cards {
+    flex-direction: column;
+  }
+
+  .arrows {
+    position: static;
+    transform: none;
+    margin-top: 20px;
+  }
+
+  .card {
+    width: 100%;
+  }
+}
+
+/* SWIPER */
+.mySwiper {
+  margin-top: 60px;
+}
+
+/* pagination container */
+.paginationWrapper {
+  display: flex;
+  justify-content: flex-end;
+  /* 👈 RIGHT SIDE */
+  margin-top: 20px;
+  width: 100%;
+}
+
+/* GLOBAL swiper pagination */
+:global(.roger-pagination) {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* pagination bullet → BOX */
+:global(.roger-pagination .swiper-pagination-bullet) {
+  width: 28px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 0;
+  /* ❌ no circle */
+  opacity: 1;
+  transition: all 0.3s ease;
+}
+
+/* ACTIVE BOX */
+:global(.roger-pagination .swiper-pagination-bullet-active) {
+  background: #ffffff;
+}
+
+
+/* =========================
+   EXTRA RESPONSIVE FIXES
+   (ADD ONLY – DO NOT REMOVE ABOVE)
+========================= */
+
+/* ---------- Large tablets ---------- */
+@media (max-width: 1200px) {
+  .title {
+    font-size: 48px;
+  }
+
+  .subTitle {
+    font-size: 20px;
+  }
+
+  .description {
+    font-size: 18px;
+  }
+
+  .cards {
+    gap: 30px;
+  }
+}
+
+/* ---------- Tablets ---------- */
+@media (max-width: 1024px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  .arrows {
+    align-self: flex-end;
+  }
+
+  .title {
+    font-size: 42px;
+  }
+
+  .subTitle {
+    font-size: 18px;
+  }
+
+  .description {
+    font-size: 16px;
+  }
+
+  .mySwiper {
+    margin-top: 40px;
+  }
+
+  .paginationWrapper {
+    justify-content: center;
+  }
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 768px) {
+  .section {
+    padding: 40px 20px;
+  }
+
+  .header {
+    align-items: flex-start;
+  }
+
+  .title {
+    font-size: 32px;
+    line-height: 1.3;
+  }
+
+  .subTitle {
+    font-size: 16px;
+  }
+
+  .description {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .arrows {
+    gap: 10px;
+  }
+
+  .arrow {
+    width: 34px;
+    height: 34px;
+    font-size: 22px;
+  }
+
+  .mySwiper {
+    margin-top: 30px;
+  }
+
+  .paginationWrapper {
+    justify-content: center;
+    margin-top: 16px;
+  }
+
+  :global(.roger-pagination .swiper-pagination-bullet) {
+    width: 22px;
+    height: 5px;
+  }
+}
+
+/* ---------- Small phones ---------- */
+@media (max-width: 480px) {
+  .title {
+    font-size: 26px;
+  }
+
+  .subTitle {
+    font-size: 14px;
+  }
+
+  .description {
+    font-size: 13px;
+  }
+
+  .arrow {
+    width: 30px;
+    height: 30px;
+    font-size: 20px;
+  }
+
+  :global(.roger-pagination .swiper-pagination-bullet) {
+    width: 18px;
+    height: 4px;
+  }
+}
+
+
+/* .videoCard {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+} */
+
+.videoCard {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  /* 🔥 MOST IMPORTANT */
+  /* border-radius: 16px; */
+  overflow: hidden;
+  background: #000;
+}
+
+
+.videoCard img,
+.videoCard iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: 0.3s ease;
+  cursor: pointer;
+}
+
+.videoCard:hover .overlay {
+  opacity: 1;
+}
+
+.playIcon {
+  font-size: 60px;
+  color: white;
+  /* background: rgba(0, 0, 0, 0.6);2 */
+  border-radius: 50%;
+  /* padding: 22px 30px; */
+}
+
+.aboutIntro {
+  color: #c6c5af;
+}
+
+.aboutIntroText {
+  font-size: 18px;
+  line-height: 1.7;
+  margin-bottom: 18px;
+  text-align: justify;
+}
+
+@media (max-width:768px) {
+
+  .aboutIntroText {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+}
+
+
+.about-text {
+  font-size: 18px;
+  line-height: 1.8;
+  color: #c6c5af;
+  margin-bottom: 18px;
+  text-align: justify;
+}
+
+.about-list {
+  margin: 20px 0;
+  padding-left: 22px;
+}
+
+.about-list li {
+  margin-bottom: 10px;
+  font-size: 17px;
+  color: #c6c5af;
+}
+
+@media(max-width:768px) {
+
+  .about-text {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .about-list li {
+    font-size: 14px;
+  }
+
+}

@@ -1,0 +1,350 @@
+:root {
+    --bg-dark: #0b0b0b;
+    --surface-dark: #1f1f1f;
+    --surface-light: #2c2c2c;
+    --primary-gold: #e0c214;
+    --secondary-gold: #d2a100;
+    --text-white: #ffffff;
+    --text-muted: rgba(255, 255, 255, 0.6);
+    --gold-gradient: linear-gradient(90deg, #e0c214 0%, #d2a100 100%);
+    --border-gold: 1px solid rgba(224, 194, 20, 0.3);
+    --radius-md: 12px;
+    --radius-sm: 6px;
+    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-white);
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+/* Global Button Styles */
+.thm-btn {
+    background: var(--gold-gradient);
+    color: #000;
+    border: none;
+    padding: 10px 24px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.thm-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(224, 194, 20, 0.3);
+    filter: brightness(1.1);
+}
+
+.thm-btn.secondary {
+    background: transparent;
+    border: 1px solid var(--primary-gold);
+    color: var(--primary-gold);
+}
+
+.thm-btn.secondary:hover {
+    background: var(--primary-gold);
+    color: #000;
+}
+
+/* Global Card Styles */
+.admin-card {
+    background: var(--surface-dark);
+    border: var(--border-gold);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    box-shadow: var(--shadow-lg);
+}
+
+/* Form Styles */
+.admin-input {
+    background: var(--surface-light);
+    border: 1px solid #444;
+    color: #fff;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.admin-input:focus {
+    outline: none;
+    border-color: var(--primary-gold);
+    background: #333;
+}
+
+/* Fix select dropdown option styling on dark theme */
+select.admin-input option,
+.admin-input option,
+.form-select option,
+select option {
+    background-color: var(--surface-dark) !important;
+    color: var(--text-white) !important;
+}
+
+/* Global Table Styles */
+.admin-table-container {
+    background: var(--surface-dark);
+    border: var(--border-gold);
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin-top: 20px;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--text-white);
+}
+
+.admin-table th {
+    background: rgba(224, 194, 20, 0.1);
+    color: var(--primary-gold);
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: var(--border-gold);
+}
+
+.admin-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.admin-table tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* SweetAlert2 (CDN default) defaults to z-index: 1060, which sits BEHIND
+   .admin-modal-overlay below (2000) — any Swal.fire() warning/confirm fired
+   while an admin modal is open rendered invisibly behind it. Push it above. */
+.swal2-container {
+    z-index: 2100 !important;
+}
+
+/* Global Modal Styles */
+.admin-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: flex-start; /* Aligns to top for vertical scroll when tall */
+    justify-content: center;
+    z-index: 2000;
+    overflow-y: auto; /* Enable overlay scroll for taller modals */
+    padding: 40px 15px; /* Spacing for the modal box */
+}
+
+.admin-modal {
+    background: var(--surface-dark);
+    border: var(--border-gold);
+    border-radius: var(--radius-md);
+    padding: 30px;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+}
+
+/* Custom Overlay-based Modals (Student Roster, Roles, Allotments) */
+.admin-modal-overlay .admin-modal {
+    width: 100%;
+    max-width: 600px;
+    margin: auto; /* Vertically and horizontally centers when content height allows */
+}
+
+.admin-modal-header {
+    border-bottom: 1px solid rgba(224, 194, 20, 0.2);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-modal-title {
+    color: var(--primary-gold);
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+/* Responsive Modal Adjustments */
+@media (max-width: 767.98px) {
+    .admin-modal-overlay {
+        padding: 15px 10px;
+    }
+
+    .admin-modal {
+        padding: 20px 15px;
+    }
+
+    /* Stack double-column custom modals vertically and add dividers */
+    .admin-modal [class*="col-"].border-end {
+        border-right: none !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        padding-right: 0 !important;
+        padding-bottom: 20px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .admin-modal [class*="col-"].ps-4 {
+        padding-left: 0 !important;
+    }
+
+    /* Scale down large modal typography on phone */
+    .admin-modal-title {
+        font-size: 1.25rem;
+    }
+
+    /* Refine assessor badges inside modal for small screens */
+    .assessor-badge-stack .mini-badge {
+        flex-direction: column;
+        align-items: flex-start !important;
+        padding: 8px 12px !important;
+    }
+    
+    .assessor-badge-stack .mini-badge strong {
+        margin-top: 4px;
+        padding-left: 18px;
+        color: var(--primary-gold) !important;
+    }
+}
+
+/* Form Helper Styles */
+.admin-form-group {
+    margin-bottom: 20px;
+}
+
+.admin-form-label {
+    display: block;
+    color: var(--primary-gold);
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+/* Page Header Styles */
+.admin-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.admin-page-title {
+    color: var(--primary-gold);
+    font-size: 2.2rem;
+    margin: 0;
+}
+
+/* Status Badge Styles */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.status-active {
+    background-color: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.status-badge.status-expired {
+    background-color: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.status-badge.status-inactive {
+    background-color: rgba(241, 196, 15, 0.15);
+    color: #f1c40f;
+    border: 1px solid rgba(241, 196, 15, 0.3);
+}
+
+/* Global Action Buttons (Edit, Delete, Copy etc.) */
+.action-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-white);
+    transition: var(--transition);
+    padding: 0;
+    font-size: 0.9rem;
+}
+
+/* Default / Edit button (Gold theme) */
+.action-btn:not(.delete-btn):not(.manual-btn):not(.secondary) {
+    color: var(--primary-gold);
+    background: rgba(224, 194, 20, 0.1);
+    border: 1px solid rgba(224, 194, 20, 0.2);
+}
+
+.action-btn:not(.delete-btn):not(.manual-btn):not(.secondary):hover {
+    background: var(--gold-gradient);
+    color: #0b0b0b;
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(224, 194, 20, 0.3);
+}
+
+/* Specific Edit Button class hook */
+.action-btn.edit-btn {
+    color: var(--primary-gold) !important;
+    background: rgba(224, 194, 20, 0.1) !important;
+    border: 1px solid rgba(224, 194, 20, 0.2) !important;
+}
+
+.action-btn.edit-btn:hover {
+    background: var(--gold-gradient) !important;
+    color: #0b0b0b !important;
+    border-color: transparent !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 10px rgba(224, 194, 20, 0.3) !important;
+}
+
+/* Delete / Discard button (Red theme) */
+.action-btn.delete-btn {
+    color: #ff6b6b !important;
+    background: rgba(255, 107, 107, 0.1) !important;
+    border: 1px solid rgba(255, 107, 107, 0.2) !important;
+}
+
+.action-btn.delete-btn:hover {
+    background: #ff6b6b !important;
+    color: #fff !important;
+    border-color: transparent !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3) !important;
+}
+
+/* Contrast fix for accessibility */
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+

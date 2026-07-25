@@ -1,0 +1,168 @@
+/* ================= BLOG SECTION ================= */
+
+.blogSection {
+    background: #0b0b0b;
+    padding: 60px 0;
+}
+
+/* ================= BLOG CARD ================= */
+
+.blogCard {
+    display: flex;
+    background: #111;
+    overflow: hidden;
+    margin-bottom: 60px;
+
+    /* 🔥 FIXED HEIGHT FOR ALL CARDS */
+    height: 420px;
+}
+
+/* ================= IMAGE ================= */
+
+.imageWrapper {
+    position: relative;
+    width: 50%;
+    height: 100%;
+}
+
+.imageWrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.imageOverlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+            rgba(0, 0, 0, 0.85) 0%,
+            rgba(0, 0, 0, 0.35) 45%,
+            rgba(0, 0, 0, 0) 100%);
+}
+
+/* ================= CONTENT ================= */
+
+.contentWrapper {
+    width: 50%;
+    height: 100%;
+    padding: 50px;
+
+    background: linear-gradient(180deg,
+            #1a1a1a 0%,
+            #0f0f0f 100%);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* ================= TAG ================= */
+
+.topicTag {
+    display: inline-block;
+    padding: 6px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ccc;
+    font-size: 12px;
+    letter-spacing: 1px;
+    width: fit-content;
+    margin-bottom: 20px;
+    font-family: var(--pre);
+}
+
+/* ================= TITLE ================= */
+
+.blogTitle {
+    font-size: 22px;
+    font-weight: 500;
+    color: #fff;
+    line-height: 1.3;
+    margin-bottom: 16px;
+}
+
+/* ================= DESCRIPTION ================= */
+
+.blogDescription {
+    font-size: 15px;
+    color: #b5b5b5;
+    line-height: 1.7;
+
+    max-width: 520px;
+    margin-bottom: 24px;
+
+    /* 🔥 SCROLL ONLY HERE */
+    max-height: 120px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+/* HIDE SCROLLBAR BUT KEEP FUNCTIONALITY */
+.blogDescription::-webkit-scrollbar {
+    width: 4px;
+}
+
+.blogDescription::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+/* ================= DATE ================= */
+
+.blogDate {
+    font-size: 13px;
+    color: #8c8c8c;
+    font-family: var(--pre);
+}
+
+/* ================= RESPONSIVE ================= */
+
+/* TABLET */
+@media (max-width: 991px) {
+    .blogCard {
+        flex-direction: column;
+        height: auto;
+        /* 🔥 auto for mobile */
+    }
+
+    .imageWrapper,
+    .contentWrapper {
+        width: 100%;
+        height: auto;
+    }
+
+    .imageWrapper {
+        height: 240px;
+    }
+
+    .imageOverlay {
+        background: linear-gradient(180deg,
+                rgba(0, 0, 0, 0.75) 0%,
+                rgba(0, 0, 0, 0.25) 60%,
+                rgba(0, 0, 0, 0) 100%);
+    }
+
+    .contentWrapper {
+        padding: 40px 30px;
+    }
+
+    .blogDescription {
+        max-height: none;
+        overflow: visible;
+    }
+}
+
+/* MOBILE */
+@media (max-width: 480px) {
+    .contentWrapper {
+        padding: 30px 20px;
+    }
+
+    .blogTitle {
+        font-size: 20px;
+    }
+
+    .blogDescription {
+        font-size: 14px;
+    }
+}

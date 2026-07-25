@@ -1,0 +1,109 @@
+/* Ported from admin-ssbwithisv/Courses.html inline <style> block. */
+
+.month-nav-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+.month-display-box {
+    text-align: center;
+    min-width: 250px;
+}
+.month-name {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--primary-gold);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+.month-stats {
+    font-size: 0.85rem;
+    opacity: 0.6;
+    letter-spacing: 1px;
+}
+.month-nav-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(224, 194, 20, 0.1);
+    border: 1px solid rgba(224, 194, 20, 0.3);
+    color: var(--primary-gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    cursor: pointer;
+}
+.month-nav-btn:hover {
+    background: var(--primary-gold);
+    color: #000;
+    transform: scale(1.1);
+}
+
+.batch-card {
+    background: var(--surface-dark);
+    border: var(--border-gold);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.batch-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+    border-color: var(--primary-gold);
+}
+.batch-header {
+    padding: 15px 20px;
+    background: rgba(0,0,0,0.3);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.batch-body { padding: 25px; flex-grow: 1; }
+.batch-footer {
+    padding: 20px;
+    background: rgba(0,0,0,0.2);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    gap: 10px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed rgba(255,255,255,0.1);
+}
+.stat-item:last-child { border-bottom: none; margin-bottom: 0; }
+.stat-label { opacity: 0.6; font-size: 0.85rem; }
+.stat-value { font-weight: 600; color: var(--primary-gold); }
+
+.price-badge {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--primary-gold);
+}
+
+.type-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.morning-type { background: rgba(0, 191, 255, 0.1); color: #00BFFF; border: 1px solid rgba(0, 191, 255, 0.3); }
+.evening-type { background: rgba(191, 64, 191, 0.1); color: #BF40BF; border: 1px solid rgba(191, 64, 191, 0.3); }
+.admin-input:disabled {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    color: rgba(255, 255, 255, 0.35) !important;
+    border-color: #333 !important;
+    cursor: not-allowed !important;
+}

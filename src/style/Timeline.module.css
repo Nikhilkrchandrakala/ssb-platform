@@ -1,0 +1,342 @@
+/* ================= CONTAINER ================= */
+.container {
+    background-color: #0d0d0b;
+    /* min-height: 100vh; */
+    padding: 80px;
+    color: #b9b9a6;
+    font-family: sans-serif;
+}
+
+.header {
+    font-size: 3.5rem;
+    margin-bottom: 80px;
+    font-weight: 300;
+    color: #d1d1c4;
+    text-align: center;
+}
+
+/* ================= TIMELINE ================= */
+.timelineWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 60px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* ================= ROW ================= */
+.row {
+    display: flex;
+    align-items: center;
+    position: relative;
+    flex-wrap: nowrap;
+}
+
+.rowReverse {
+    flex-direction: row-reverse;
+}
+
+.LastRow {
+    display: flex;
+    align-items: center;
+    position: relative;
+    flex-wrap: nowrap;
+    width: 60%;
+}
+
+/* ================= BOX ================= */
+.box {
+    border: 1px solid #3d3d37;
+    padding: 6px 18px;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    background: rgba(255, 255, 255, 0.02);
+    white-space: nowrap;
+
+    /* Animation base */
+    transition:
+        border-color 0.35s ease,
+        background 0.35s ease,
+        transform 0.35s ease,
+        box-shadow 0.35s ease;
+}
+
+/* 🔥 Premium Hover */
+.box:hover {
+    border-color: #8b7333;
+    background: rgba(139, 115, 51, 0.08);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow:
+        0 0 0 1px rgba(139, 115, 51, 0.3),
+        0 10px 25px rgba(139, 115, 51, 0.15);
+}
+
+.box {
+    position: relative;
+    overflow: hidden;
+}
+
+.box::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg,
+            transparent,
+            rgba(139, 115, 51, 0.25),
+            transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+}
+
+.box:hover::before {
+    transform: translateX(100%);
+}
+
+
+
+.textNode {
+    padding: 0 20px;
+    font-size: 1rem;
+    white-space: nowrap;
+    position: relative;
+
+    /* Smooth animation base */
+    transition:
+        color 0.35s ease,
+        transform 0.35s ease,
+        text-shadow 0.35s ease;
+}
+
+/* ✨ Subtle premium hover */
+.textNode:hover {
+    color: #d6bb6a;
+    transform: translateY(-2px);
+    text-shadow: 0 0 12px rgba(139, 115, 51, 0.45);
+}
+
+.textNode::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -6px;
+    width: 0;
+    height: 1px;
+    background: #8b7333;
+    transform: translateX(-50%);
+    transition: width 0.35s ease;
+}
+
+.textNode:hover::after {
+    width: 100%;
+}
+
+
+/* ================= CONNECTORS ================= */
+.connectorH {
+    flex-grow: 1;
+    height: 1px;
+    background: #3d3d37;
+    position: relative;
+    min-width: 50px;
+}
+
+/* ================= VERTICAL DROPS ================= */
+.verticalDropRight,
+.verticalDropLeft {
+    position: absolute;
+    width: 1px;
+    height: 60px;
+    background: #3d3d37;
+}
+
+.verticalDropRight {
+    right: 7%;
+    bottom: -52px;
+}
+
+.verticalDropLeft {
+    left: 9%;
+    bottom: -69px;
+}
+
+/* ================= DOTS ================= */
+.dot,
+.dotV {
+    width: 6px;
+    height: 6px;
+    background: #8b7333;
+    border-radius: 50%;
+    position: absolute;
+    box-shadow: 0 0 8px #8b7333;
+}
+
+.dot {
+    top: 50%;
+    transform: translateY(-50%);
+    animation: moveH 3s infinite linear;
+}
+
+.dotV {
+    left: 50%;
+    transform: translateX(-50%);
+    animation: moveV 2s infinite linear;
+}
+
+/* ================= ANIMATIONS ================= */
+@keyframes moveH {
+    0% {
+        left: 0;
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        left: 100%;
+        opacity: 0;
+    }
+}
+
+@keyframes moveHReverse {
+    0% {
+        right: 0;
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        right: 100%;
+        opacity: 0;
+    }
+}
+
+@keyframes moveV {
+    0% {
+        top: 0;
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        top: 100%;
+        opacity: 0;
+    }
+}
+
+.rowReverse .dot {
+    animation: moveHReverse 3s infinite linear;
+}
+
+/* ================================================= */
+/* ================= RESPONSIVE =================== */
+/* ================================================= */
+
+/* ---------- Tablets ---------- */
+@media (max-width: 1024px) {
+    .container {
+        padding: 50px 30px;
+    }
+
+    .header {
+        font-size: 2.5rem;
+        margin-bottom: 50px;
+    }
+
+    .box {
+        font-size: 0.75rem;
+        padding: 12px 18px;
+    }
+
+    .textNode {
+        font-size: 0.9rem;
+    }
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 768px) {
+
+    .timelineWrapper {
+        gap: 40px;
+    }
+
+    .row,
+    .rowReverse {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+        padding-left: 20px;
+    }
+
+    .LastRow {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+        padding-left: 20px;
+
+        width: 100%;
+    }
+
+    .box,
+    .textNode {
+        white-space: normal;
+        width: 100%;
+    }
+
+    .connectorH {
+        width: 1px;
+        height: 40px;
+        min-width: unset;
+        background: #3d3d37;
+    }
+
+    .dot {
+        left: 50%;
+        top: 0;
+        transform: translateX(-50%);
+        animation: moveV 2s infinite linear;
+    }
+
+    .rowReverse .dot {
+        animation: moveV 2s infinite linear;
+    }
+
+    .verticalDropLeft,
+    .verticalDropRight {
+        display: none;
+    }
+}
+
+/* ---------- Small Mobile ---------- */
+@media (max-width: 480px) {
+    .header {
+        font-size: 1.8rem;
+    }
+
+    .box {
+        font-size: 0.7rem;
+    }
+
+    .textNode {
+        font-size: 0.85rem;
+    }
+}
