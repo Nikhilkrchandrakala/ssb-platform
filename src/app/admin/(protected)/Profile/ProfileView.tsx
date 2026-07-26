@@ -4,16 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useAdminUser } from "@/components/admin/AdminUserProvider";
 import "@/app/admin/styles/legacy-profile.css";
 
-interface NotificationItem {
-  _id: string;
-  id?: string;
-  title: string;
-  message: string;
-  isRead: boolean;
-  type?: string;
-  createdAt: string;
-}
-
 const ASSESSOR_LABELS: Record<string, string> = {
   Psych: "Psychologist",
   GTO: "GTO",
@@ -41,16 +31,10 @@ export default function ProfileView() {
   const [phone, setPhone] = useState(user?.phone || "");
   const [saving, setSaving] = useState(false);
 
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [notificationsError, setNotificationsError] = useState<string | null>(null);
-
   const [avatarSrc, setAvatarSrc] = useState("/assets/admin/admin-img.jpg");
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load locally-persisted avatar preview once on mount (legacy is client-only,
-  // no backend endpoint exists for a profile picture — see report notes).
-  // Deferred through a microtask (matching the codebase's "no direct setState
-  // in an effect body" convention) rather than reading localStorage inline.
+  // Load locally-persisted avatar preview once on mount
   useEffect(() => {
     let cancelled = false;
     Promise.resolve().then(() => {
@@ -58,37 +42,6 @@ export default function ProfileView() {
       const saved = window.localStorage.getItem("profile_avatar");
       if (saved) setAvatarSrc(saved);
     });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // Reusable reload (called from the delete-notification handler — not an effect).
-  const reloadNotifications = () => {
-    fetch("/api/notifications")
-      .then((res) => (res.ok ? res.json() : Promise.reject(new Error("Failed to load notifications"))))
-      .then((data: NotificationItem[]) => {
-        setNotifications(Array.isArray(data) ? data : []);
-        setNotificationsError(null);
-      })
-      .catch((err) => {
-        setNotificationsError(err instanceof Error ? err.message : "Failed to load notifications");
-      });
-  };
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/notifications")
-      .then((res) => (res.ok ? res.json() : Promise.reject(new Error("Failed to load notifications"))))
-      .then((data: NotificationItem[]) => {
-        if (!cancelled) {
-          setNotifications(Array.isArray(data) ? data : []);
-          setNotificationsError(null);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) setNotificationsError(err instanceof Error ? err.message : "Failed to load notifications");
-      });
     return () => {
       cancelled = true;
     };
@@ -163,51 +116,12 @@ export default function ProfileView() {
     }
   };
 
-  const deleteNotification = async (id?: string) => {
-    if (!id) return;
-    const result = await window.Swal?.fire({
-      title: "Delete Notification?",
-      text: "Are you sure you want to dismiss this?",
-      icon: "warning",
-      showCancelButton: true,
-      background: "#1a1a1a",
-      color: "#fff",
-      confirmButtonColor: "#e0c214",
-      cancelButtonColor: "#ff6b6b",
-      confirmButtonText: "Yes, delete it!",
-    });
-    if (!result?.isConfirmed) return;
-
-    try {
-      const res = await fetch(`/api/notifications/${id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to delete notification.");
-      window.Swal?.fire({
-        icon: "success",
-        title: "Deleted!",
-        text: "Notification removed.",
-        background: "#1a1a1a",
-        color: "#fff",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-      reloadNotifications();
-    } catch (error) {
-      window.Swal?.fire({
-        icon: "error",
-        title: "Oops...",
-        text: error instanceof Error ? error.message : "Failed to delete notification.",
-        background: "#1a1a1a",
-        color: "#fff",
-      });
-    }
-  };
-
   const displayName = user?.name || "SSB Staff";
   const roleLabel = roleLabelFor(user);
 
   return (
     <div className="profile-container">
+      {/* Premium Hero Banner & Avatar */}
       <div className="profile-banner-card">
         <div className="profile-banner"></div>
         <div className="profile-header-content">
@@ -253,131 +167,85 @@ export default function ProfileView() {
         </div>
       </div>
 
+      {/* Essential Details & Security Grid */}
       <div className="profile-grid">
-        <div className="d-flex flex-column gap-4">
-          <div className="admin-card">
-            <div className="profile-card-header">
-              <i className="fas fa-id-card fa-lg"></i>
-              <h2>Personal Details</h2>
-            </div>
-            <form onSubmit={submitDetails}>
-              <div className="admin-form-group">
-                <label className="admin-form-label">Full Name</label>
-                <input
-                  type="text"
-                  className="admin-input"
-                  required
-                  placeholder="Enter full name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </div>
-
-              <div className="admin-form-group">
-                <label className="admin-form-label">Email Address</label>
-                <input
-                  type="email"
-                  className="admin-input"
-                  readOnly
-                  disabled
-                  value={user?.email || ""}
-                  style={{
-                    background: "#171717",
-                    borderColor: "#333",
-                    color: "#777",
-                    cursor: "not-allowed",
-                    opacity: 0.8,
-                  }}
-                />
-                <span className="small text-muted mt-1 d-block">
-                  <i className="fas fa-info-circle text-warning"></i> Primary email cannot be modified.
-                </span>
-              </div>
-
-              <div className="admin-form-group">
-                <label className="admin-form-label">Phone Number</label>
-                <input
-                  type="text"
-                  className="admin-input"
-                  required
-                  placeholder="e.g. +91 98765 43210"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-              </div>
-
-              <button type="submit" className="thm-btn w-100 mt-4 py-2 justify-content-center" disabled={saving}>
-                <i className="fas fa-save me-2"></i> {saving ? "Saving..." : "Save Profile Details"}
-              </button>
-            </form>
+        <div className="admin-card profile-details-card">
+          <div className="profile-card-header">
+            <i className="fas fa-user-edit fa-lg"></i>
+            <h2>Personal Details</h2>
           </div>
+          <form onSubmit={submitDetails} className="profile-form">
+            <div className="admin-form-group">
+              <label className="admin-form-label">Full Name</label>
+              <input
+                type="text"
+                className="admin-input"
+                required
+                placeholder="Enter full name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
 
-          <div className="admin-card notifications-feed-card">
-            <div className="profile-card-header">
-              <i className="fas fa-bell fa-lg"></i>
-              <h2>Recent Notifications</h2>
+            <div className="admin-form-group">
+              <label className="admin-form-label">Email Address</label>
+              <input
+                type="email"
+                className="admin-input"
+                readOnly
+                disabled
+                value={user?.email || ""}
+                style={{
+                  background: "#141414",
+                  borderColor: "#2a2a2a",
+                  color: "#888",
+                  cursor: "not-allowed",
+                  opacity: 0.9,
+                }}
+              />
+              <span className="small text-muted mt-2 d-block" style={{ fontSize: "0.8rem", color: "#aaa" }}>
+                <i className="fas fa-lock text-warning me-1" style={{ color: "var(--primary-gold)" }}></i> Primary account email is permanent and protected.
+              </span>
             </div>
-            <div className="notification-timeline">
-              {notificationsError ? (
-                <div style={{ color: "#ff6b6b", fontSize: 13, textAlign: "center", padding: 20 }}>
-                  {notificationsError}
-                </div>
-              ) : notifications.length === 0 ? (
-                <div style={{ color: "var(--text-muted)", fontSize: 13, textAlign: "center", padding: 20 }}>
-                  No recent notifications
-                </div>
-              ) : (
-                notifications.map((n) => (
-                  <div className={`notification-item${n.isRead ? "" : " unread"}`} key={n._id || n.id}>
-                    <div className="notification-marker">
-                      <i className={`fas ${n.type === "ALLOTMENT" ? "fa-user-plus" : "fa-info"}`}></i>
-                    </div>
-                    <div
-                      className="notification-content"
-                      style={
-                        !n.isRead
-                          ? { borderColor: "rgba(224, 194, 20, 0.4)", background: "rgba(224, 194, 20, 0.05)" }
-                          : undefined
-                      }
-                    >
-                      <div className="d-flex justify-content-between align-items-center mb-1">
-                        <div className="notification-icon-col" style={!n.isRead ? { color: "#fff" } : undefined}>
-                          {n.title}
-                        </div>
-                        <div className="d-flex align-items-center gap-2">
-                          <span className="notification-relative-time">
-                            {new Date(n.createdAt).toLocaleDateString()}
-                          </span>
-                          <button
-                            className="btn btn-sm text-danger p-0 m-0"
-                            onClick={() => deleteNotification(n._id || n.id)}
-                            title="Delete Notification"
-                            style={{ background: "none", border: "none", outline: "none", boxShadow: "none" }}
-                          >
-                            <i className="fas fa-trash-alt"></i>
-                          </button>
-                        </div>
-                      </div>
-                      <p className="notification-desc">{n.message}</p>
-                    </div>
-                  </div>
-                ))
-              )}
+
+            <div className="admin-form-group">
+              <label className="admin-form-label">Phone Number</label>
+              <input
+                type="text"
+                className="admin-input"
+                required
+                placeholder="e.g. +91 98765 43210"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
             </div>
+
+            <button type="submit" className="thm-btn w-100 mt-4 py-3 justify-content-center profile-save-btn" disabled={saving}>
+              <i className="fas fa-save me-2"></i> {saving ? "Saving Changes..." : "Save Profile Details"}
+            </button>
+          </form>
+        </div>
+
+        <div className="admin-card profile-security-card">
+          <div className="profile-card-header">
+            <i className="fas fa-shield-halved fa-lg"></i>
+            <h2>Security Settings</h2>
           </div>
-
-          <div className="admin-card">
-            <div className="profile-card-header">
-              <i className="fas fa-shield-halved fa-lg"></i>
-              <h2>Security Settings</h2>
+          <div className="security-card-body">
+            <div className="security-status-box mb-4">
+              <i className="fas fa-user-shield security-big-icon"></i>
+              <div>
+                <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#fff", margin: "0 0 4px 0" }}>Account Protection Active</h3>
+                <p style={{ fontSize: "0.82rem", color: "#aaa", margin: 0 }}>Your admin privileges are secured via encrypted authentication.</p>
+              </div>
             </div>
-            <p className="text-muted mb-4" style={{ fontSize: 13, lineHeight: 1.6 }}>
-              Initiate password modifications securely using our integrated account verification flow.
+            <p className="text-muted mb-4" style={{ fontSize: "0.88rem", lineHeight: 1.6, color: "#bbb" }}>
+              Need to change your credentials? Initiate password modifications securely using our integrated account verification flow.
             </p>
             <a
               href="/admin/AccountRecovery"
-              className="thm-btn secondary w-100 py-2 justify-content-center"
-              style={{ display: "flex", textDecoration: "none" }}
+              className="thm-btn secondary w-100 py-3 justify-content-center"
+              style={{ display: "flex", textDecoration: "none", alignItems: "center", borderRadius: "8px", fontWeight: 600 }}
             >
               <i className="fas fa-key me-2"></i> Reset Password
             </a>

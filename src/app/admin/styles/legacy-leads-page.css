@@ -1,81 +1,173 @@
-/*
- * Ported from the actual inline <style> block in legacy leads.html.
- *
- * Note: src/app/admin/styles/legacy-leads.css (imported alongside this file)
- * is a pre-existing, previously-uncommitted copy that turned out to be a
- * mismatched/stale stylesheet (light theme, generic <table>/<th> selectors —
- * doesn't match leads.html's actual charcoal/gold dark-theme markup at all).
- * It's still imported per the foundation instructions, but this file carries
- * the real rules leads.html depends on (filter panel, search bar, pagination,
- * lead badges, action buttons) and is imported after it so these win on any
- * overlapping selectors (e.g. #excelDownloadBtn).
- */
+/* ==========================================================================
+   MODERN LUXURY LEADS MANAGEMENT & EXECUTIVE CONTROLS
+   Enforcing single-line executive buttons & crisp sidebar-aligned typography
+   ========================================================================== */
+
+.filter-panel, .filter-panel *, .admin-table *, .search-bar * {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
 
 .filter-panel {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: var(--radius-md);
-    padding: 20px;
-    margin-bottom: 25px;
+    background: rgba(18, 18, 18, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 22px 26px;
+    margin-bottom: 28px;
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
-    gap: 15px;
+    gap: 18px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.45);
 }
-.filter-item { flex: 1; min-width: 200px; }
-.filter-actions { display: flex; gap: 10px; flex: 2; min-width: 300px; justify-content: flex-end; }
 
-#excelDownloadBtn {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 60px;
-    height: 60px;
-    background: var(--gold-gradient);
-    border: none;
-    border-radius: 50%;
-    display: flex;
+.filter-item { 
+    flex: 1; 
+    min-width: 220px; 
+}
+
+/* --------------------------------------------------------------------------
+   EXECUTIVE FILTER TOOLBAR (Single-line, balanced color palette)
+   -------------------------------------------------------------------------- */
+.filter-actions { 
+    display: flex; 
+    gap: 12px; 
+    flex-wrap: wrap;
     align-items: center;
-    justify-content: center;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-    cursor: pointer;
-    transition: var(--transition);
-    z-index: 1000;
+    justify-content: flex-end; 
+    margin-top: 4px;
 }
-#excelDownloadBtn:hover { transform: scale(1.1) rotate(5deg); }
-#excelDownloadBtn i { font-size: 1.5rem; color: #000; }
 
-.lead-name { font-weight: 600; color: var(--primary-gold); }
-.lead-contact { font-size: 0.85rem; opacity: 0.7; }
-.date-badge { font-family: monospace; font-size: 0.8rem; opacity: 0.6; }
+.filter-actions button {
+    white-space: nowrap !important;
+    padding: 0 20px !important;
+    height: 44px !important;
+    border-radius: 10px !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    transition: all 0.25s cubic-bezier(0.2, 0, 0, 1) !important;
+    min-width: auto !important;
+    box-sizing: border-box !important;
+}
+
+/* Apply Filter Button */
+.filter-actions button:nth-child(1) {
+    background: var(--primary-gold, #e0c214) !important;
+    border: 1px solid var(--primary-gold, #e0c214) !important;
+    color: #0b0b0b !important;
+    box-shadow: 0 4px 15px rgba(224, 194, 20, 0.25) !important;
+}
+.filter-actions button:nth-child(1):hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(224, 194, 20, 0.45) !important;
+}
+
+/* Clear Button */
+.filter-actions button:nth-child(2) {
+    background: rgba(255, 255, 255, 0.07) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+}
+.filter-actions button:nth-child(2):hover {
+    background: rgba(255, 255, 255, 0.14) !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+    color: #ffffff !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Export Excel Button */
+.filter-actions button:nth-child(3) {
+    background: rgba(46, 213, 115, 0.16) !important;
+    border: 1px solid #2ed573 !important;
+    color: #2ed573 !important;
+    box-shadow: 0 4px 15px rgba(46, 213, 115, 0.15) !important;
+}
+.filter-actions button:nth-child(3):hover {
+    background: #2ed573 !important;
+    color: #0b0b0b !important;
+    border-color: #2ed573 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 22px rgba(46, 213, 115, 0.4) !important;
+}
+
+/* --------------------------------------------------------------------------
+   LUXURY FLOATING EXCEL EXPORT BUTTON
+   -------------------------------------------------------------------------- */
+#excelDownloadBtn {
+    position: fixed !important;
+    bottom: 36px !important;
+    right: 36px !important;
+    width: 54px !important;
+    height: 54px !important;
+    background: rgba(18, 18, 18, 0.96) !important;
+    border: 2px solid var(--primary-gold, #e0c214) !important;
+    border-radius: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(224, 194, 20, 0.2) !important;
+    cursor: pointer !important;
+    transition: all 0.28s cubic-bezier(0.2, 0, 0, 1) !important;
+    z-index: 950 !important;
+}
+
+#excelDownloadBtn:hover {
+    background: var(--primary-gold, #e0c214) !important;
+    transform: translateY(-5px) scale(1.04) !important;
+    box-shadow: 0 14px 38px rgba(0, 0, 0, 0.9), 0 0 28px rgba(224, 194, 20, 0.5) !important;
+}
+
+#excelDownloadBtn i, #excelDownloadBtn img {
+    font-size: 1.4rem !important;
+    color: var(--primary-gold, #e0c214) !important;
+    transition: color 0.25s ease !important;
+    width: 26px !important;
+    height: 26px !important;
+    object-fit: contain !important;
+}
+
+#excelDownloadBtn:hover i {
+    color: #0b0b0b !important;
+}
+
+.lead-name { font-weight: 700; color: #ffffff; font-size: 0.95rem; }
+.lead-contact { font-size: 0.9rem; color: rgba(255, 255, 255, 0.8); }
+.date-badge { font-family: 'Inter', sans-serif !important; font-size: 0.85rem; color: var(--primary-gold, #e0c214); font-weight: 600; }
 
 /* Search Bar */
 .search-bar {
     position: relative;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 .search-bar input {
-    background: var(--surface-light);
-    border: 1px solid #444;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     color: #fff;
-    padding: 12px 16px 12px 44px;
-    border-radius: var(--radius-sm);
-    transition: var(--transition);
+    padding: 13px 18px 13px 48px;
+    border-radius: 12px;
+    transition: all 0.25s ease;
     width: 100%;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
 }
 .search-bar input:focus {
     outline: none;
-    border-color: var(--primary-gold);
-    background: #333;
+    border-color: var(--primary-gold, #e0c214);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 15px rgba(224, 194, 20, 0.2);
 }
 .search-bar .search-icon {
     position: absolute;
-    left: 14px;
+    left: 18px;
     top: 50%;
     transform: translateY(-50%);
-    color: var(--primary-gold);
-    opacity: 0.6;
+    color: var(--primary-gold, #e0c214);
+    font-size: 1rem;
 }
 
 /* Pagination */
@@ -83,75 +175,108 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 0 8px;
+    padding: 20px 0 8px;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 16px;
 }
 .pagination-info {
-    font-size: 0.85rem;
-    color: var(--text-muted);
+    font-size: 0.88rem;
+    color: var(--text-muted, rgba(255, 255, 255, 0.65));
 }
 .pagination-buttons {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
 }
 .pagination-buttons button {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--text-white);
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: var(--transition);
+    transition: all 0.22s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-size: 0.88rem;
+    font-weight: 600;
 }
 .pagination-buttons button:hover:not(:disabled) {
-    background: rgba(224, 194, 20, 0.15);
-    border-color: rgba(224, 194, 20, 0.3);
-    color: var(--primary-gold);
+    background: var(--primary-gold, #e0c214);
+    border-color: var(--primary-gold, #e0c214);
+    color: #0b0b0b;
 }
 .pagination-buttons button.active {
-    background: var(--primary-gold);
-    color: #000;
-    border-color: var(--primary-gold);
+    background: var(--primary-gold, #e0c214);
+    color: #0b0b0b;
+    border-color: var(--primary-gold, #e0c214);
     font-weight: 700;
 }
 .pagination-buttons button:disabled {
-    opacity: 0.3;
+    opacity: 0.25;
     cursor: not-allowed;
 }
 .per-page-select {
-    background: var(--surface-light);
-    border: 1px solid #444;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     color: #fff;
-    padding: 6px 10px;
-    border-radius: var(--radius-sm);
-    font-size: 0.85rem;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.88rem;
     cursor: pointer;
 }
-.per-page-select:focus { outline: none; border-color: var(--primary-gold); }
+.per-page-select:focus { outline: none; border-color: var(--primary-gold, #e0c214); }
 
-/* Action buttons in table */
+/* Table Action Buttons */
 .actions-cell {
     display: flex;
-    gap: 6px;
+    gap: 8px;
     align-items: center;
+    justify-content: flex-start;
+}
+.action-btn {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.22s ease !important;
+    cursor: pointer !important;
 }
 .action-btn.elevate-btn {
-    color: #2ecc71 !important;
-    background: rgba(46, 204, 113, 0.1) !important;
-    border: 1px solid rgba(46, 204, 113, 0.2) !important;
+    color: #2ed573 !important;
+    background: rgba(46, 213, 115, 0.12) !important;
+    border: 1px solid rgba(46, 213, 115, 0.3) !important;
 }
 .action-btn.elevate-btn:hover {
-    background: #2ecc71 !important;
-    color: #fff !important;
-    border-color: transparent !important;
+    background: #2ed573 !important;
+    color: #0b0b0b !important;
+    border-color: #2ed573 !important;
     transform: translateY(-2px) !important;
-    box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(46, 213, 115, 0.35) !important;
+}
+.action-btn.delete-btn {
+    color: #ff5252 !important;
+    background: rgba(255, 82, 82, 0.12) !important;
+    border: 1px solid rgba(255, 82, 82, 0.3) !important;
+}
+.action-btn.delete-btn:hover {
+    background: #ff5252 !important;
+    color: #ffffff !important;
+    border-color: #ff5252 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(255, 82, 82, 0.35) !important;
+}
+
+@media (max-width: 768px) {
+    .filter-actions {
+        justify-content: flex-start;
+        width: 100%;
+    }
+    .filter-actions button {
+        flex: 1;
+    }
 }

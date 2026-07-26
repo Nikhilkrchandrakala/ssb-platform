@@ -99,7 +99,7 @@ export default function DashboardView() {
       .catch((err) => console.error("Error fetching auth display settings:", err));
   };
 
-  // Initial load — mirrors legacy fetchEntries() + fetchContactSettings() + fetchAuthDisplaySettings()
+  // Initial load
   useEffect(() => {
     let cancelled = false;
 
@@ -144,7 +144,7 @@ export default function DashboardView() {
     };
   }, []);
 
-  // Smooth scroll to auth display card if hash matches (legacy checkHashAndScroll)
+  // Smooth scroll to auth display card if hash matches
   useEffect(() => {
     const checkHashAndScroll = () => {
       if (window.location.hash === "#authDisplaySettingsCard" && authCardRef.current) {
@@ -152,7 +152,7 @@ export default function DashboardView() {
         setTimeout(() => {
           card.scrollIntoView({ behavior: "smooth", block: "center" });
           card.style.transition = "box-shadow 0.5s ease-in-out, border-color 0.5s ease-in-out";
-          card.style.boxShadow = "0 0 20px rgba(224, 194, 20, 0.4)";
+          card.style.boxShadow = "0 0 25px rgba(224, 194, 20, 0.5)";
           card.style.borderColor = "var(--primary-gold)";
           setTimeout(() => {
             card.style.boxShadow = "";
@@ -247,7 +247,7 @@ export default function DashboardView() {
           toast: true,
           position: "top-end",
           icon: "success",
-          title: `Switched to ${mode} mode`,
+          title: `Switched to ${mode.toUpperCase()} display mode`,
           showConfirmButton: false,
           timer: 1500,
           background: "#1a1a1a",
@@ -277,7 +277,7 @@ export default function DashboardView() {
         toast: true,
         position: "top-end",
         icon: "success",
-        title: `Slideshow will now rotate every ${transitionValue} ${transitionUnit}`,
+        title: `Slideshow will rotate every ${transitionValue} ${transitionUnit}`,
         showConfirmButton: false,
         timer: 2000,
         background: "#1a1a1a",
@@ -361,6 +361,7 @@ export default function DashboardView() {
       cancelButtonText: "Cancel",
       background: "#1a1a1a",
       color: "#fff",
+      confirmButtonColor: "#dc3545",
     });
     if (!confirm?.isConfirmed) return;
 
@@ -448,245 +449,313 @@ export default function DashboardView() {
   };
 
   return (
-    <div className="container" style={{ maxWidth: 1200, margin: "40px auto", padding: "0 20px" }}>
-      <div className="admin-page-header">
-        <div className="header-left">
-          <h1 className="admin-page-title">
-            <i className="fas fa-tachometer-alt me-2"></i> Platform Statistics
+    <div className="dashboard-container">
+      {/* Main Page Title */}
+      <header className="dashboard-header">
+        <div className="dashboard-title-area">
+          <h1>
+            <i className="fas fa-gauge-high"></i> Executive Content Dashboard
           </h1>
-          <p className="text-muted mb-0">Control the counter numbers displayed on the frontend landing page</p>
-        </div>
-      </div>
-
-      <div className="admin-card">
-        <div className="card-header border-0 bg-transparent px-0 pb-3">
-          <h4 className="mb-0 text-white">
-            <i className="fas fa-edit me-2 text-warning"></i> Monitor Display Values
-          </h4>
-        </div>
-
-        <div className="admin-table-container">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Candidates Recommended</th>
-                <th>Track Record (Years)</th>
-                <th>Expertise (Years)</th>
-                <th>Total Faculty</th>
-                <th style={{ width: 150 }}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entriesLoading ? (
-                <tr>
-                  <td colSpan={5} className="text-center p-5 opacity-50">
-                    Syncing values from server...
-                  </td>
-                </tr>
-              ) : entriesError ? (
-                <tr>
-                  <td colSpan={5} className="text-center p-5 text-danger">
-                    {entriesError}
-                  </td>
-                </tr>
-              ) : entries.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="text-center p-5 opacity-50">
-                    No statistics entries found
-                  </td>
-                </tr>
-              ) : (
-                entries.map((entry) => (
-                  <tr key={entry._id}>
-                    <td>
-                      <input
-                        type="text"
-                        className="admin-input py-1"
-                        value={entry.officerSelection}
-                        onChange={(e) => updateEntryField(entry._id, "officerSelection", e.target.value)}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        className="admin-input py-1"
-                        value={entry.yearService}
-                        onChange={(e) => updateEntryField(entry._id, "yearService", e.target.value)}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        className="admin-input py-1"
-                        value={entry.facultyExperience}
-                        onChange={(e) => updateEntryField(entry._id, "facultyExperience", e.target.value)}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        className="admin-input py-1"
-                        value={entry.totalFaculty}
-                        onChange={(e) => updateEntryField(entry._id, "totalFaculty", e.target.value)}
-                      />
-                    </td>
-                    <td>
-                      <button className="thm-btn py-1 px-3" onClick={() => saveEntry(entry._id)}>
-                        <i className="fas fa-save me-1"></i> Save
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div
-          className="mt-4 p-3 rounded"
-          style={{ background: "rgba(224, 194, 20, 0.05)", border: "1px solid rgba(224, 194, 20, 0.1)" }}
-        >
-          <p className="mb-0 small text-muted">
-            <i className="fas fa-info-circle me-1"></i> Changes made here reflect immediately on the main website
-            counters. Please ensure values are accurate.
+          <p className="dashboard-subtitle">
+            Manage live public landing page metrics, support channels, and authentication screen visual branding.
           </p>
         </div>
-      </div>
+      </header>
 
-      <div className="admin-card mt-4">
-        <div className="card-header border-0 bg-transparent px-0 pb-3">
-          <h4 className="mb-0 text-white">
-            <i className="fas fa-phone-alt me-2 text-warning"></i> Support Contact Settings
-          </h4>
-        </div>
-        <div className="p-3" style={{ background: "#2a291f", borderRadius: 8, border: "1px solid #3b3930" }}>
+      {/* ── Section 1: Number Monitor (Platform Statistics Grid) ── */}
+      <section className="mb-5">
+        <h2 className="dashboard-section-title">
+          <i className="fas fa-chart-line"></i> Live Landing Page Stat Counters
+        </h2>
+
+        {entriesLoading ? (
+          <div className="dashboard-card text-center py-5">
+            <i className="fas fa-spinner fa-spin fa-2x text-warning mb-3"></i>
+            <p className="text-muted mb-0">Synchronizing live statistical metrics...</p>
+          </div>
+        ) : entriesError ? (
+          <div className="dashboard-card text-center py-5 border-danger">
+            <i className="fas fa-exclamation-triangle fa-2x text-danger mb-3"></i>
+            <p className="text-danger fw-bold mb-0">{entriesError}</p>
+          </div>
+        ) : entries.length === 0 ? (
+          <div className="dashboard-card text-center py-5">
+            <p className="text-muted mb-0">No statistical records initialized yet.</p>
+          </div>
+        ) : (
+          entries.map((entry) => (
+            <div key={entry._id}>
+              <div className="stat-cards-grid">
+                {/* Card 1: Candidates Recommended */}
+                <div className="stat-card-item">
+                  <div className="stat-card-header">
+                    <div className="stat-icon-box">
+                      <i className="fas fa-award"></i>
+                    </div>
+                    <h3 className="stat-card-label">Candidates Recommended</h3>
+                  </div>
+                  <div className="stat-card-body">
+                    <input
+                      type="text"
+                      className="stat-input-field"
+                      value={entry.officerSelection}
+                      onChange={(e) => updateEntryField(entry._id, "officerSelection", e.target.value)}
+                      title="Total Recommended Officers"
+                    />
+                  </div>
+                </div>
+
+                {/* Card 2: Track Record */}
+                <div className="stat-card-item">
+                  <div className="stat-card-header">
+                    <div className="stat-icon-box">
+                      <i className="fas fa-history"></i>
+                    </div>
+                    <h3 className="stat-card-label">Track Record (Years)</h3>
+                  </div>
+                  <div className="stat-card-body">
+                    <input
+                      type="number"
+                      className="stat-input-field"
+                      value={entry.yearService}
+                      onChange={(e) => updateEntryField(entry._id, "yearService", e.target.value)}
+                      title="Years of Proven Excellence"
+                    />
+                  </div>
+                </div>
+
+                {/* Card 3: Faculty Experience */}
+                <div className="stat-card-item">
+                  <div className="stat-card-header">
+                    <div className="stat-icon-box">
+                      <i className="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <h3 className="stat-card-label">Faculty Expertise (Years)</h3>
+                  </div>
+                  <div className="stat-card-body">
+                    <input
+                      type="number"
+                      className="stat-input-field"
+                      value={entry.facultyExperience}
+                      onChange={(e) => updateEntryField(entry._id, "facultyExperience", e.target.value)}
+                      title="Combined Faculty Wisdom"
+                    />
+                  </div>
+                </div>
+
+                {/* Card 4: Total Faculty */}
+                <div className="stat-card-item">
+                  <div className="stat-card-header">
+                    <div className="stat-icon-box">
+                      <i className="fas fa-users"></i>
+                    </div>
+                    <h3 className="stat-card-label">Total Faculty Strength</h3>
+                  </div>
+                  <div className="stat-card-body">
+                    <input
+                      type="number"
+                      className="stat-input-field"
+                      value={entry.totalFaculty}
+                      onChange={(e) => updateEntryField(entry._id, "totalFaculty", e.target.value)}
+                      title="Number of Specialist Assessors"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-end">
+                <button
+                  type="button"
+                  className="thm-btn py-3 px-5 fw-bold"
+                  style={{ borderRadius: "12px", fontSize: "1rem" }}
+                  onClick={() => saveEntry(entry._id)}
+                >
+                  <i className="fas fa-save me-2"></i> Save All Public Counters
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </section>
+
+      <hr style={{ borderColor: "rgba(224, 194, 20, 0.15)", margin: "45px 0" }} />
+
+      {/* ── Section 2: Support Contact Channels ── */}
+      <section className="mb-5">
+        <h2 className="dashboard-section-title">
+          <i className="fas fa-headset"></i> Support & Hotline Channels
+        </h2>
+        <div className="dashboard-card mb-0">
           <form onSubmit={submitContactSettings}>
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label className="form-label text-white">
-                  WhatsApp Support Number (10 digits, e.g. 8420422821)
+            <div className="support-channels-grid">
+              <div className="support-input-box">
+                <div className="support-channel-header whatsapp">
+                  <i className="fab fa-whatsapp"></i>
+                  <span>WhatsApp Support Hotline</span>
+                </div>
+                <label className="admin-form-label d-block text-muted mb-2" style={{ fontSize: "0.82rem" }}>
+                  10-Digit Mobile Number (e.g., 8420422821)
                 </label>
                 <input
                   type="text"
-                  className="admin-input form-control"
+                  className="admin-input"
+                  style={{
+                    width: "100%",
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    color: "#fff",
+                    padding: "12px 16px",
+                    borderRadius: "10px",
+                  }}
                   placeholder="Enter 10 digit WhatsApp number"
                   required
                   value={whatsappNumber}
                   onChange={(e) => setWhatsappNumber(e.target.value)}
                 />
               </div>
-              <div className="col-md-6 mb-3">
-                <label className="form-label text-white">
-                  Phone Call Support Number (10 digits, e.g. 7483617249)
+
+              <div className="support-input-box">
+                <div className="support-channel-header phone">
+                  <i className="fas fa-phone-alt"></i>
+                  <span>Voice Call Support Number</span>
+                </div>
+                <label className="admin-form-label d-block text-muted mb-2" style={{ fontSize: "0.82rem" }}>
+                  10-Digit Helpline Number (e.g., 7483617249)
                 </label>
                 <input
                   type="text"
-                  className="admin-input form-control"
-                  placeholder="Enter 10 digit phone call number"
+                  className="admin-input"
+                  style={{
+                    width: "100%",
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    color: "#fff",
+                    padding: "12px 16px",
+                    borderRadius: "10px",
+                  }}
+                  placeholder="Enter 10 digit phone number"
                   required
                   value={callNumber}
                   onChange={(e) => setCallNumber(e.target.value)}
                 />
               </div>
             </div>
-            <button type="submit" className="thm-btn py-2 px-4 mt-2">
-              <i className="fas fa-save me-1"></i> Save Support Info
-            </button>
+
+            <div className="text-end mt-3">
+              <button
+                type="submit"
+                className="thm-btn py-3 px-5 fw-bold"
+                style={{ borderRadius: "12px", fontSize: "0.95rem" }}
+              >
+                <i className="fas fa-check-circle me-2"></i> Update Support Contacts
+              </button>
+            </div>
           </form>
         </div>
-      </div>
+      </section>
 
-      <div className="admin-card mt-4" id="authDisplaySettingsCard" ref={authCardRef}>
-        <div className="card-header border-0 bg-transparent px-0 pb-3">
-          <h4 className="mb-0 text-white">
-            <i className="fas fa-images me-2 text-warning"></i> Auth Split-Screen Graphic Settings
-          </h4>
-        </div>
-        <div className="p-3" style={{ background: "#2a291f", borderRadius: 8, border: "1px solid #3b3930" }}>
-          <div className="mb-4">
-            <label className="form-label text-white d-block fw-bold">Select Active Graphic Mode</label>
-            <div className="form-check form-check-inline">
-              <input
-                className="form-check-input"
-                type="radio"
-                name="authDisplayMode"
-                id="modeSlideshow"
-                checked={authMode === "slideshow"}
-                onChange={() => toggleAuthMode("slideshow")}
-              />
-              <label className="form-check-label text-white" htmlFor="modeSlideshow">
-                <i className="fas fa-play-circle me-1 text-warning"></i> General Slideshow (up to 10 rotating images)
-              </label>
+      <hr style={{ borderColor: "rgba(224, 194, 20, 0.15)", margin: "45px 0" }} />
+
+      {/* ── Section 3: Auth Split-Screen Graphic Settings ── */}
+      <section id="authDisplaySettingsCard" ref={authCardRef}>
+        <h2 className="dashboard-section-title">
+          <i className="fas fa-object-group"></i> Auth Portal Graphic & Marketing Hub
+        </h2>
+        <div className="dashboard-card">
+          <p className="text-muted mb-4" style={{ fontSize: "0.9rem" }}>
+            Customize the live high-definition split-screen graphics seen by candidates and staff during Login and Registration.
+          </p>
+
+          {/* Interactive Mode Choice Cards Grid */}
+          <div className="mode-cards-grid">
+            <div
+              className={`mode-choice-card${authMode === "slideshow" ? " active" : ""}`}
+              onClick={() => toggleAuthMode("slideshow")}
+            >
+              <div className="mode-info">
+                <i className="fas fa-play-circle mode-icon"></i>
+                <div>
+                  <h3 className="mode-title">General Slideshow</h3>
+                  <p className="mode-desc">Rotate up to 10 visual highlights during login</p>
+                </div>
+              </div>
+              <div className="mode-active-badge" title={authMode === "slideshow" ? "Active Mode" : "Select Mode"}>
+                <i className="fas fa-check"></i>
+              </div>
             </div>
-            <div className="form-check form-check-inline ms-3">
-              <input
-                className="form-check-input"
-                type="radio"
-                name="authDisplayMode"
-                id="modeAd"
-                checked={authMode === "ad"}
-                onChange={() => toggleAuthMode("ad")}
-              />
-              <label className="form-check-label text-white" htmlFor="modeAd">
-                <i className="fas fa-ad me-1 text-warning"></i> Business Advertisement (Single ad image with custom
-                link)
-              </label>
+
+            <div
+              className={`mode-choice-card${authMode === "ad" ? " active" : ""}`}
+              onClick={() => toggleAuthMode("ad")}
+            >
+              <div className="mode-info">
+                <i className="fas fa-bullhorn mode-icon"></i>
+                <div>
+                  <h3 className="mode-title">Business Advertisement</h3>
+                  <p className="mode-desc">Showcase a single promo banner with clickable target URL</p>
+                </div>
+              </div>
+              <div className="mode-active-badge" title={authMode === "ad" ? "Active Mode" : "Select Mode"}>
+                <i className="fas fa-check"></i>
+              </div>
             </div>
           </div>
 
-          <hr style={{ borderColor: "rgba(255,255,255,0.1)" }} />
-
+          {/* ── Slideshow Configuration Panel ── */}
           {authMode === "slideshow" && (
-            <div id="slideshowSection" className="auth-config-section">
-              <h5 className="text-warning mb-3">
-                <i className="fas fa-photo-video me-1"></i> Slideshow Management
-              </h5>
-              <form className="mb-4" onSubmit={submitSlideshowUpload}>
-                <div className="row align-items-end">
-                  <div className="col-md-9 mb-3 mb-md-0">
-                    <label className="form-label text-white">
-                      Upload New Slideshow Images (Multiple allowed, maximum 10 images total)
-                    </label>
-                    <input
-                      type="file"
-                      className="form-control admin-input"
-                      accept="image/*"
-                      multiple
-                      required
-                      ref={slideshowFilesInputRef}
-                    />
+            <div>
+              <div className="config-toolbar mb-4">
+                <h4 style={{ fontSize: "1.02rem", fontWeight: 700, color: "#fff", marginBottom: "16px" }}>
+                  <i className="fas fa-plus-circle me-2 text-warning" style={{ color: "var(--primary-gold)" }}></i>
+                  Upload Additional Carousel Images
+                </h4>
+                <form onSubmit={submitSlideshowUpload}>
+                  <div className="row g-3 align-items-center">
+                    <div className="col-md-9">
+                      <input
+                        type="file"
+                        className="form-control admin-input"
+                        style={{ background: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.15)", color: "#fff" }}
+                        accept="image/*"
+                        multiple
+                        required
+                        ref={slideshowFilesInputRef}
+                      />
+                    </div>
+                    <div className="col-md-3">
+                      <button type="submit" className="thm-btn py-2 w-100 fw-bold" style={{ borderRadius: "8px" }}>
+                        <i className="fas fa-cloud-upload-alt me-2"></i> Add to Slideshow
+                      </button>
+                    </div>
                   </div>
-                  <div className="col-md-3">
-                    <button type="submit" className="thm-btn py-2 w-100">
-                      <i className="fas fa-upload me-1"></i> Upload Images
-                    </button>
-                  </div>
-                </div>
-              </form>
+                </form>
+              </div>
 
-              <div
-                className="p-3 mb-4 rounded"
-                style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}
-              >
+              <div className="config-toolbar mb-4">
+                <h4 style={{ fontSize: "1.02rem", fontWeight: 700, color: "#fff", marginBottom: "16px" }}>
+                  <i className="fas fa-clock me-2" style={{ color: "var(--primary-gold)" }}></i>
+                  Slideshow Rotation Speed
+                </h4>
                 <form onSubmit={submitTransition}>
-                  <div className="row align-items-end">
-                    <div className="col-md-5 mb-3 mb-md-0">
-                      <label className="form-label text-white">Slideshow Transition Duration Value</label>
+                  <div className="row g-3 align-items-end">
+                    <div className="col-md-5">
+                      <label className="text-muted small d-block mb-1">Duration Value</label>
                       <input
                         type="number"
                         min={1}
                         className="form-control admin-input"
+                        style={{ background: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.15)", color: "#fff" }}
                         placeholder="5"
                         required
                         value={transitionValue}
                         onChange={(e) => setTransitionValue(Number(e.target.value))}
                       />
                     </div>
-                    <div className="col-md-5 mb-3 mb-md-0">
-                      <label className="form-label text-white">Slideshow Transition Time Unit</label>
+                    <div className="col-md-4">
+                      <label className="text-muted small d-block mb-1">Time Unit</label>
                       <select
                         className="form-select admin-input"
-                        style={{ background: "#2a291f", borderColor: "#3b3930", color: "#fff" }}
+                        style={{ background: "#1a1a1a", borderColor: "rgba(255,255,255,0.15)", color: "#fff" }}
                         required
                         value={transitionUnit}
                         onChange={(e) => setTransitionUnit(e.target.value as typeof transitionUnit)}
@@ -697,98 +766,94 @@ export default function DashboardView() {
                         <option value="days">Days</option>
                       </select>
                     </div>
-                    <div className="col-md-2">
-                      <button type="submit" className="thm-btn py-2 w-100">
-                        <i className="fas fa-save me-1"></i> Save Time
+                    <div className="col-md-3">
+                      <button type="submit" className="thm-btn py-2 w-100 fw-bold" style={{ borderRadius: "8px" }}>
+                        <i className="fas fa-save me-2"></i> Save Rotation
                       </button>
                     </div>
                   </div>
                 </form>
               </div>
 
-              <label className="form-label text-white fw-bold mb-2">Current Slideshow Images</label>
-              <div className="row g-3">
-                {slideshowImages.length === 0 ? (
-                  <div className="col-12 text-muted small">No slideshow images uploaded yet.</div>
-                ) : (
-                  slideshowImages.map((imgUrl, index) => (
-                    <div className="col-md-3 col-sm-6 text-center position-relative mb-3" key={imgUrl + index}>
-                      <div
-                        style={{
-                          border: "1px solid #3b3930",
-                          borderRadius: 8,
-                          overflow: "hidden",
-                          background: "#1a1a1a",
-                          padding: 5,
-                        }}
-                      >
+              <h4 style={{ fontSize: "1rem", fontWeight: 700, color: "#ccc", margin: "24px 0 12px 0", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                Active Gallery Highlights ({slideshowImages.length} / 10)
+              </h4>
+
+              {slideshowImages.length === 0 ? (
+                <div className="text-center p-5 rounded" style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.15)" }}>
+                  <i className="fas fa-images fa-2x text-muted mb-2"></i>
+                  <p className="text-muted mb-0">No pictures currently loaded in the login slideshow.</p>
+                </div>
+              ) : (
+                <div className="gallery-grid">
+                  {slideshowImages.map((imgUrl, index) => (
+                    <div className="gallery-card" key={imgUrl + index}>
+                      <div className="gallery-img-wrapper">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={imgUrl}
-                          alt=""
-                          style={{ height: 100, maxWidth: "100%", objectFit: "cover", borderRadius: 4 }}
-                        />
-                        <button
-                          type="button"
-                          className="btn btn-danger btn-sm w-100 mt-2"
-                          onClick={() => deleteSlideshowImage(imgUrl)}
-                        >
-                          <i className="fas fa-trash-alt me-1"></i> Delete
+                        <img src={imgUrl} alt="Slideshow Item" className="gallery-img" />
+                      </div>
+                      <div className="gallery-actions">
+                        <button type="button" className="delete-img-btn" onClick={() => deleteSlideshowImage(imgUrl)}>
+                          <i className="fas fa-trash-alt me-1"></i> Remove Image
                         </button>
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
+          {/* ── Business Advertisement Configuration Panel ── */}
           {authMode === "ad" && (
-            <div id="adSection" className="auth-config-section">
-              <h5 className="text-warning mb-3">
-                <i className="fas fa-bullhorn me-1"></i> Business Advertisement
-              </h5>
+            <div className="config-toolbar mt-2">
               <form onSubmit={submitAdUpload}>
-                <div className="row">
-                  <div className="col-md-6 mb-3">
-                    <label className="form-label text-white">Upload Ad Banner Image</label>
+                <div className="row g-4 align-items-start">
+                  <div className="col-lg-6">
+                    <label className="text-white fw-bold d-block mb-2">Upload Ad Banner Graphic</label>
                     <input
                       type="file"
-                      className="form-control admin-input"
+                      className="form-control admin-input mb-3"
+                      style={{ background: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.15)", color: "#fff" }}
                       accept="image/*"
                       required={!adImage}
                       ref={adFileInputRef}
                     />
-                    {adImage && (
-                      <div className="mt-3 text-center">
+                    {adImage ? (
+                      <div className="text-center p-3 rounded" style={{ background: "#0a0a0a", border: "1px solid rgba(224,194,20,0.3)" }}>
+                        <p className="small text-muted mb-2 text-start">Current Active Ad Banner:</p>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={adImage}
                           alt="Ad Banner"
-                          style={{
-                            maxHeight: 150,
-                            borderRadius: 8,
-                            border: "1px solid #3b3930",
-                            maxWidth: "100%",
-                            objectFit: "contain",
-                          }}
+                          style={{ maxHeight: 180, maxWidth: "100%", objectFit: "contain", borderRadius: "8px" }}
                         />
+                      </div>
+                    ) : (
+                      <div className="text-center p-4 rounded text-muted small" style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.1)" }}>
+                        No advertisement graphic currently deployed.
                       </div>
                     )}
                   </div>
-                  <div className="col-md-6 mb-3">
-                    <label className="form-label text-white">Advertisement Click-through Link (Destination URL)</label>
+
+                  <div className="col-lg-6">
+                    <label className="text-white fw-bold d-block mb-2">Target Destination Click-through URL</label>
                     <input
                       type="url"
-                      className="form-control admin-input"
+                      className="form-control admin-input mb-3"
+                      style={{ background: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.15)", color: "#fff" }}
                       placeholder="https://ssbwithisv.in/special-course"
                       required
                       value={adLink}
                       onChange={(e) => setAdLink(e.target.value)}
                     />
-                    <div className="mt-4 text-end">
-                      <button type="submit" className="thm-btn py-2 px-4">
-                        <i className="fas fa-save me-1"></i> Save Advertisement Info
+                    <p className="text-muted small mb-4">
+                      When users click on the promotion graphic on the login screen, they will be seamlessly redirected to this landing URL.
+                    </p>
+
+                    <div className="text-end mt-4">
+                      <button type="submit" className="thm-btn py-3 px-5 fw-bold w-100" style={{ borderRadius: "12px", fontSize: "1rem" }}>
+                        <i className="fas fa-bullhorn me-2"></i> Deploy Advertisement Settings
                       </button>
                     </div>
                   </div>
@@ -797,7 +862,7 @@ export default function DashboardView() {
             </div>
           )}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

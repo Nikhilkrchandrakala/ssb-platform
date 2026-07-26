@@ -1,134 +1,188 @@
+/* ==========================================================================
+   EXECUTIVE ADMIN GLOBAL DESIGN SYSTEM & LUXURY TYPOGRAPHY
+   ========================================================================== */
 :root {
     --bg-dark: #0b0b0b;
-    --surface-dark: #1f1f1f;
-    --surface-light: #2c2c2c;
+    --surface-dark: rgba(18, 18, 18, 0.96);
+    --surface-light: rgba(255, 255, 255, 0.05);
     --primary-gold: #e0c214;
     --secondary-gold: #d2a100;
     --text-white: #ffffff;
-    --text-muted: rgba(255, 255, 255, 0.6);
+    --text-muted: rgba(255, 255, 255, 0.65);
     --gold-gradient: linear-gradient(90deg, #e0c214 0%, #d2a100 100%);
     --border-gold: 1px solid rgba(224, 194, 20, 0.3);
-    --radius-md: 12px;
-    --radius-sm: 6px;
+    --border-glass: 1px solid rgba(255, 255, 255, 0.08);
+    --radius-md: 16px;
+    --radius-sm: 10px;
     --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+    --font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-body {
-    background-color: var(--bg-dark);
-    color: var(--text-white);
-    font-family: 'Inter', sans-serif;
-    margin: 0;
-    padding: 0;
-    line-height: 1.6;
+/* Universal Typography Enforcement to Match Sidebar */
+body, button, input, select, textarea, table, th, td, h1, h2, h3, h4, h5, h6, p, span, label, a {
+    font-family: var(--font-family) !important;
 }
 
 /* Global Button Styles */
 .thm-btn {
     background: var(--gold-gradient);
-    color: #000;
+    color: #0b0b0b !important;
     border: none;
-    padding: 10px 24px;
+    padding: 10px 22px;
     border-radius: var(--radius-sm);
     font-weight: 600;
+    font-size: 0.88rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
     cursor: pointer;
     transition: var(--transition);
-    text-decoration: none;
+    text-decoration: none !important;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
+    box-shadow: 0 4px 15px rgba(224, 194, 20, 0.22);
+    white-space: nowrap !important;
 }
 
 .thm-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(224, 194, 20, 0.3);
-    filter: brightness(1.1);
+    box-shadow: 0 6px 20px rgba(224, 194, 20, 0.42);
+    filter: brightness(1.06);
+    color: #000 !important;
 }
 
 .thm-btn.secondary {
-    background: transparent;
+    background: rgba(224, 194, 20, 0.08);
     border: 1px solid var(--primary-gold);
-    color: var(--primary-gold);
+    color: var(--primary-gold) !important;
+    box-shadow: none;
 }
 
 .thm-btn.secondary:hover {
     background: var(--primary-gold);
-    color: #000;
+    color: #0b0b0b !important;
+    box-shadow: 0 4px 18px rgba(224, 194, 20, 0.35);
 }
 
-/* Global Card Styles */
+/* Global Luxury Card Styles */
 .admin-card {
     background: var(--surface-dark);
-    border: var(--border-gold);
+    border: var(--border-glass);
     border-radius: var(--radius-md);
     padding: 24px;
     box-shadow: var(--shadow-lg);
+    transition: all 0.28s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-card::top-accent {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary-gold, #e0c214), transparent);
+    opacity: 0.7;
+}
+
+.admin-card:hover {
+    border-color: rgba(224, 194, 20, 0.28);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65);
 }
 
 /* Form Styles */
 .admin-input {
-    background: var(--surface-light);
-    border: 1px solid #444;
-    color: #fff;
-    padding: 12px 16px;
-    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    padding: 11px 16px;
+    border-radius: 8px;
     transition: var(--transition);
     width: 100%;
     box-sizing: border-box;
+    font-size: 0.92rem;
+    font-weight: 400;
 }
 
 .admin-input:focus {
     outline: none;
     border-color: var(--primary-gold);
-    background: #333;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 12px rgba(224, 194, 20, 0.22);
 }
 
-/* Fix select dropdown option styling on dark theme */
 select.admin-input option,
 .admin-input option,
 .form-select option,
 select option {
-    background-color: var(--surface-dark) !important;
+    background-color: #1a1a1a !important;
     color: var(--text-white) !important;
 }
 
-/* Global Table Styles */
+/* Global Table & Roster Cards */
 .admin-table-container {
     background: var(--surface-dark);
-    border: var(--border-gold);
+    border: var(--border-glass);
     border-radius: var(--radius-md);
+    padding: 16px;
+    box-shadow: var(--shadow-lg);
     overflow-x: auto;
-    overflow-y: hidden;
-    margin-top: 20px;
+    margin-top: 24px;
 }
 
 .admin-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate !important;
+    border-spacing: 0 6px !important;
     color: var(--text-white);
 }
 
 .admin-table th {
-    background: rgba(224, 194, 20, 0.1);
-    color: var(--primary-gold);
-    padding: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--primary-gold, #e0c214);
+    padding: 14px 16px;
     text-align: left;
-    font-weight: 600;
-    border-bottom: var(--border-gold);
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 1px solid rgba(224, 194, 20, 0.28);
+}
+
+.admin-table tbody tr {
+    background: rgba(255, 255, 255, 0.02);
+    transition: all 0.2s ease;
 }
 
 .admin-table td {
     padding: 14px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: none !important;
+    vertical-align: middle;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #ffffff;
 }
 
-.admin-table tr:hover {
-    background: rgba(255, 255, 255, 0.02);
+.admin-table tbody tr td:first-child {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
 }
 
-/* SweetAlert2 (CDN default) defaults to z-index: 1060, which sits BEHIND
-   .admin-modal-overlay below (2000) — any Swal.fire() warning/confirm fired
-   while an admin modal is open rendered invisibly behind it. Push it above. */
+.admin-table tbody tr td:last-child {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.admin-table tbody tr:hover {
+    background: rgba(224, 194, 20, 0.06) !important;
+    transform: scale(1.002);
+}
+
+/* SweetAlert2 Modal Z-Index fix */
 .swal2-container {
     z-index: 2100 !important;
 }
@@ -140,36 +194,32 @@ select option {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.88);
+    backdrop-filter: blur(10px);
     display: none;
-    align-items: flex-start; /* Aligns to top for vertical scroll when tall */
+    align-items: flex-start;
     justify-content: center;
     z-index: 2000;
-    overflow-y: auto; /* Enable overlay scroll for taller modals */
-    padding: 40px 15px; /* Spacing for the modal box */
+    overflow-y: auto;
+    padding: 40px 15px;
 }
 
 .admin-modal {
-    background: var(--surface-dark);
-    border: var(--border-gold);
+    background: rgba(18, 18, 18, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: var(--radius-md);
-    padding: 30px;
-    box-shadow: var(--shadow-lg);
+    padding: 28px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
     position: relative;
-}
-
-/* Custom Overlay-based Modals (Student Roster, Roles, Allotments) */
-.admin-modal-overlay .admin-modal {
     width: 100%;
-    max-width: 600px;
-    margin: auto; /* Vertically and horizontally centers when content height allows */
+    max-width: 620px;
+    margin: auto;
 }
 
 .admin-modal-header {
-    border-bottom: 1px solid rgba(224, 194, 20, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     margin-bottom: 20px;
-    padding-bottom: 10px;
+    padding-bottom: 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -177,76 +227,51 @@ select option {
 
 .admin-modal-title {
     color: var(--primary-gold);
-    font-size: 1.5rem;
+    font-size: 1.18rem;
+    font-weight: 700;
     margin: 0;
-}
-
-/* Responsive Modal Adjustments */
-@media (max-width: 767.98px) {
-    .admin-modal-overlay {
-        padding: 15px 10px;
-    }
-
-    .admin-modal {
-        padding: 20px 15px;
-    }
-
-    /* Stack double-column custom modals vertically and add dividers */
-    .admin-modal [class*="col-"].border-end {
-        border-right: none !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-        padding-right: 0 !important;
-        padding-bottom: 20px !important;
-        margin-bottom: 20px !important;
-    }
-
-    .admin-modal [class*="col-"].ps-4 {
-        padding-left: 0 !important;
-    }
-
-    /* Scale down large modal typography on phone */
-    .admin-modal-title {
-        font-size: 1.25rem;
-    }
-
-    /* Refine assessor badges inside modal for small screens */
-    .assessor-badge-stack .mini-badge {
-        flex-direction: column;
-        align-items: flex-start !important;
-        padding: 8px 12px !important;
-    }
-    
-    .assessor-badge-stack .mini-badge strong {
-        margin-top: 4px;
-        padding-left: 18px;
-        color: var(--primary-gold) !important;
-    }
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: 0.2px;
 }
 
 /* Form Helper Styles */
 .admin-form-group {
-    margin-bottom: 20px;
+    margin-bottom: 18px;
 }
 
 .admin-form-label {
     display: block;
-    color: var(--primary-gold);
-    margin-bottom: 8px;
-    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 7px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* Page Header Styles */
+/* Page Header Styles - Crisp Sidebar Alignment */
 .admin-page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
+    margin-bottom: 28px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid rgba(224, 194, 20, 0.18);
+    flex-wrap: wrap;
+    gap: 16px;
 }
 
 .admin-page-title {
     color: var(--primary-gold);
-    font-size: 2.2rem;
-    margin: 0;
+    font-size: 1.45rem;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.2px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 /* Status Badge Styles */
@@ -254,54 +279,57 @@ select option {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 6px 14px;
+    padding: 5px 12px;
     border-radius: 50px;
-    font-size: 11px;
+    font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    gap: 6px;
 }
 
-.status-badge.status-active {
-    background-color: rgba(46, 204, 113, 0.15);
-    color: #2ecc71;
-    border: 1px solid rgba(46, 204, 113, 0.3);
+.status-badge.status-active,
+.status-active {
+    background-color: rgba(46, 213, 115, 0.15);
+    color: #2ed573;
+    border: 1px solid rgba(46, 213, 115, 0.35);
 }
 
-.status-badge.status-expired {
-    background-color: rgba(231, 76, 60, 0.15);
-    color: #e74c3c;
-    border: 1px solid rgba(231, 76, 60, 0.3);
+.status-badge.status-expired,
+.status-expired {
+    background-color: rgba(255, 82, 82, 0.15);
+    color: #ff5252;
+    border: 1px solid rgba(255, 82, 82, 0.35);
 }
 
-.status-badge.status-inactive {
-    background-color: rgba(241, 196, 15, 0.15);
-    color: #f1c40f;
-    border: 1px solid rgba(241, 196, 15, 0.3);
+.status-badge.status-inactive,
+.status-inactive {
+    background-color: rgba(255, 171, 0, 0.15);
+    color: #ffab00;
+    border: 1px solid rgba(255, 171, 0, 0.35);
 }
 
-/* Global Action Buttons (Edit, Delete, Copy etc.) */
+/* Global Action Buttons */
 .action-btn {
     width: 34px;
     height: 34px;
-    border-radius: 50%;
+    border-radius: 8px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     border: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.05);
-    color: var(--text-white);
+    color: #ffffff;
     transition: var(--transition);
     padding: 0;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
 }
 
-/* Default / Edit button (Gold theme) */
 .action-btn:not(.delete-btn):not(.manual-btn):not(.secondary) {
     color: var(--primary-gold);
-    background: rgba(224, 194, 20, 0.1);
-    border: 1px solid rgba(224, 194, 20, 0.2);
+    background: rgba(224, 194, 20, 0.12);
+    border: 1px solid rgba(224, 194, 20, 0.28);
 }
 
 .action-btn:not(.delete-btn):not(.manual-btn):not(.secondary):hover {
@@ -309,42 +337,44 @@ select option {
     color: #0b0b0b;
     border-color: transparent;
     transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(224, 194, 20, 0.3);
+    box-shadow: 0 4px 12px rgba(224, 194, 20, 0.35);
 }
 
-/* Specific Edit Button class hook */
 .action-btn.edit-btn {
-    color: var(--primary-gold) !important;
-    background: rgba(224, 194, 20, 0.1) !important;
-    border: 1px solid rgba(224, 194, 20, 0.2) !important;
+    color: #4da3ff !important;
+    background: rgba(77, 163, 255, 0.12) !important;
+    border: 1px solid rgba(77, 163, 255, 0.28) !important;
 }
 
 .action-btn.edit-btn:hover {
-    background: var(--gold-gradient) !important;
-    color: #0b0b0b !important;
-    border-color: transparent !important;
+    background: #4da3ff !important;
+    color: #ffffff !important;
+    border-color: #4da3ff !important;
     transform: translateY(-2px) !important;
-    box-shadow: 0 4px 10px rgba(224, 194, 20, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(77, 163, 255, 0.35) !important;
 }
 
-/* Delete / Discard button (Red theme) */
 .action-btn.delete-btn {
-    color: #ff6b6b !important;
-    background: rgba(255, 107, 107, 0.1) !important;
-    border: 1px solid rgba(255, 107, 107, 0.2) !important;
+    color: #ff5252 !important;
+    background: rgba(255, 82, 82, 0.12) !important;
+    border: 1px solid rgba(255, 82, 82, 0.28) !important;
 }
 
 .action-btn.delete-btn:hover {
-    background: #ff6b6b !important;
-    color: #fff !important;
-    border-color: transparent !important;
+    background: #ff5252 !important;
+    color: #ffffff !important;
+    border-color: #ff5252 !important;
     transform: translateY(-2px) !important;
-    box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(255, 82, 82, 0.35) !important;
 }
 
-/* Contrast fix for accessibility */
 .text-muted {
-    color: var(--text-muted) !important;
+    color: var(--text-muted, rgba(255, 255, 255, 0.65)) !important;
+    font-size: 0.88rem !important;
 }
 
-
+@media (max-width: 768px) {
+    .admin-modal {
+        padding: 20px;
+    }
+}

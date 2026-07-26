@@ -250,6 +250,7 @@ export default function SalesDashboardView() {
   const { user } = useAdminUser();
   const isOwner = user?.role === "owner";
   const isHead = user?.salesRole === "head";
+  const isExecutive = user?.salesRole === "executive";
   const canSeeTeam = isOwner || isHead;
 
   const [section, setSection] = useState<Section>("enroll");
@@ -1452,11 +1453,11 @@ export default function SalesDashboardView() {
 
               <div className="row g-2" style={{ marginBottom: 16 }}>
                 {[
-                  { label: "Total Amount", value: `₹${detailsSummary.total.toFixed(2)}`, color: "#fff" },
+                  ...(isExecutive ? [] : [{ label: "Total Amount", value: `₹${detailsSummary.total.toFixed(2)}`, color: "#fff" }]),
                   { label: "Paid So Far", value: `₹${detailsSummary.paid.toFixed(2)}`, color: "#2ecc71" },
                   { label: "Remaining", value: `₹${detailsSummary.remaining.toFixed(2)}`, color: detailsSummary.remaining > 0 ? "#f39c12" : "#2ecc71" },
                 ].map((card) => (
-                  <div className="col-4" key={card.label}>
+                  <div className={isExecutive ? "col-6" : "col-4"} key={card.label}>
                     <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #333", borderRadius: 6, padding: "10px 12px", textAlign: "center" }}>
                       <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>
                         {card.label}
@@ -1481,7 +1482,6 @@ export default function SalesDashboardView() {
                       <th>Due Date</th>
                       <th>Status</th>
                       <th>Paid On</th>
-                      <th>Link</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1492,19 +1492,6 @@ export default function SalesDashboardView() {
                         <td>{formatDate(inst.dueDate)}</td>
                         <td>{installmentStatusChip(inst.status)}</td>
                         <td>{inst.paidAt ? formatDate(inst.paidAt) : "—"}</td>
-                        <td>
-                          {inst.paymentLinkUrl ? (
-                            <button
-                              className="thm-btn secondary"
-                              style={{ padding: "2px 8px", fontSize: "0.7rem" }}
-                              onClick={() => copyLink(inst.paymentLinkUrl!)}
-                            >
-                              Copy
-                            </button>
-                          ) : (
-                            "—"
-                          )}
-                        </td>
                       </tr>
                     ))}
                   </tbody>

@@ -1,74 +1,153 @@
-/* Ported from admin-ssbwithisv/Gallery.html inline <style> block. */
+/* ==========================================================================
+   MODERN LUXURY MEDIA GALLERY & VISUAL ASSETS SYSTEM
+   Enforcing crisp sidebar-aligned typography & perfectly proportioned cards
+   ========================================================================== */
+
+@import "./legacy-admin-global.css";
+
+.gallery-grid, .gallery-card, .gallery-card *:not(i):not([class*="fa"]) {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
 
 .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 25px;
-    margin-top: 30px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 22px;
+    margin-top: 26px;
 }
+
 .gallery-card {
-    background: var(--surface-dark);
-    border: var(--border-gold);
-    border-radius: var(--radius-md);
+    background: rgba(18, 18, 18, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
     overflow: hidden;
-    transition: var(--transition);
+    transition: all 0.28s cubic-bezier(0.2, 0, 0, 1);
     display: flex;
     flex-direction: column;
+    position: relative;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
 }
-.gallery-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-lg); border-color: var(--primary-gold); }
+
+.gallery-card::top-glow {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary-gold, #e0c214), transparent);
+    opacity: 0.8;
+    z-index: 3;
+}
+
+.gallery-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.75), 0 0 20px rgba(224, 194, 20, 0.16);
+    border-color: rgba(224, 194, 20, 0.38);
+}
 
 .gallery-img-container {
     height: 220px;
     position: relative;
-    background: #111;
+    background: #0d0d0d;
     overflow: hidden;
 }
+
+.gallery-img-container::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: linear-gradient(to top, rgba(18, 18, 18, 0.95), transparent);
+    pointer-events: none;
+    z-index: 1;
+}
+
 .gallery-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease;
+    transition: transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-.gallery-card:hover .gallery-img { transform: scale(1.1); }
 
-.gallery-info { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
-.gallery-caption {
-    color: #fff;
-    font-size: 0.95rem;
-    font-weight: 500;
-    margin-bottom: 15px;
-    line-height: 1.5;
-    opacity: 0.9;
+.gallery-card:hover .gallery-img {
+    transform: scale(1.06);
 }
+
+.gallery-info {
+    padding: 18px 20px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+    background: rgba(18, 18, 18, 0.96);
+}
+
+.gallery-caption {
+    color: #ffffff;
+    font-size: 0.92rem;
+    font-weight: 600;
+    margin-bottom: 14px;
+    line-height: 1.45;
+    opacity: 0.95;
+    letter-spacing: 0.1px;
+}
+
 .gallery-meta {
     margin-top: auto;
-    padding-top: 15px;
-    border-top: 1px solid rgba(255,255,255,0.05);
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    font-size: 0.78rem;
+    color: var(--text-muted, #aaaaaa);
 }
 
 .gallery-action-icon {
-    width: 35px;
-    height: 35px;
+    width: 34px;
+    height: 34px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.05);
-    color: var(--text-white);
-    transition: var(--transition);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    transition: all 0.22s ease;
     cursor: pointer;
-    border: none;
+    font-size: 0.88rem;
 }
-.gallery-action-icon:hover { background: var(--primary-gold); color: #000; }
-.gallery-action-icon.delete:hover { background: #ff6b6b; color: #fff; }
+
+.gallery-action-icon:hover {
+    background: var(--primary-gold, #e0c214);
+    color: #0b0b0b !important;
+    border-color: var(--primary-gold, #e0c214);
+    transform: scale(1.06);
+    box-shadow: 0 4px 12px rgba(224, 194, 20, 0.35);
+}
+
+.gallery-action-icon.delete:hover {
+    background: #ff5252;
+    color: #ffffff !important;
+    border-color: #ff5252;
+    box-shadow: 0 4px 12px rgba(255, 82, 82, 0.35);
+}
 
 .preview-thumb {
-    width: 80px;
-    height: 80px;
+    width: 75px;
+    height: 75px;
     object-fit: cover;
-    border-radius: 6px;
-    border: 1px solid rgba(224, 194, 20, 0.3);
+    border-radius: 8px;
+    border: 1px solid rgba(224, 194, 20, 0.4);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 768px) {
+    .gallery-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
 }
