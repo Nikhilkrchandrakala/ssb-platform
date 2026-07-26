@@ -1,9 +1,23 @@
 import Razorpay from "razorpay";
 import crypto from "node:crypto";
 
-export const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || "",
-  key_secret: process.env.RAZORPAY_KEY_SECRET || "",
+let _razorpay: Razorpay | null = null;
+function getRazorpay(): Razorpay {
+  if (!_razorpay) {
+    _razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_placeholder_key_id",
+      key_secret: process.env.RAZORPAY_KEY_SECRET || "rzp_test_placeholder_secret",
+    });
+  }
+  return _razorpay;
+}
+
+export const razorpay = new Proxy({} as Razorpay, {
+  get(target, prop, receiver) {
+    const instance = getRazorpay();
+    const val = Reflect.get(instance, prop, receiver);
+    return typeof val === "function" ? val.bind(instance) : val;
+  },
 });
 
 /** Verifies the HMAC signature Razorpay returns after checkout, per their standard checkout flow. */

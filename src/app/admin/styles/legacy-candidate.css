@@ -50,7 +50,7 @@
     transition: border-color 0.25s ease;
 }
 
-.admin-candidate-card::top {
+.admin-candidate-card::before {
     content: "";
     position: absolute;
     top: 0;
