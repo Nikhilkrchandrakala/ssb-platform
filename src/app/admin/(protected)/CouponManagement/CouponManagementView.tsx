@@ -1,7 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import {
+  Ticket,
+  PlusCircle,
+  List,
+  Plus,
+  Store,
+  UserCheck,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import "@/app/admin/styles/legacy-coupon-management.css";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 /**
  * Ported from admin-ssbwithisv/CouponManagement.html + assets/js/coupons.js.
@@ -257,12 +269,12 @@ export default function CouponManagementView() {
       <div className="admin-page-header">
         <div className="header-left">
           <h1 className="admin-page-title">
-            <i className="fas fa-ticket-alt me-2"></i> Coupon Management
+            <Ticket size={20} className="me-2" style={ICON_STYLE} /> Coupon Management
           </h1>
           <p className="text-muted mb-0">Create and manage discount coupons for customers and franchises</p>
         </div>
         <button className="thm-btn" onClick={openAddModal}>
-          <i className="fas fa-plus-circle"></i> Create Coupon
+          <PlusCircle size={16} style={ICON_STYLE} /> Create Coupon
         </button>
       </div>
 
@@ -291,7 +303,7 @@ export default function CouponManagementView() {
       {/* Coupons Table Section */}
       <div className="admin-card">
         <h3 className="admin-form-label" style={{ fontSize: "1.3rem", marginBottom: 25 }}>
-          <i className="fas fa-list me-2"></i> Active &amp; Past Coupons
+          <List size={18} className="me-2" style={ICON_STYLE} /> Active &amp; Past Coupons
         </h3>
 
         {loading && (
@@ -315,13 +327,13 @@ export default function CouponManagementView() {
               </table>
             ) : coupons.length === 0 ? (
               <div className="empty-state text-center" style={{ padding: 60 }}>
-                <div className="empty-icon mb-3" style={{ fontSize: "3rem", color: "var(--primary-gold)", opacity: 0.5 }}>
-                  <i className="fas fa-ticket-alt"></i>
+                <div className="empty-icon mb-3" style={{ color: "var(--primary-gold)", opacity: 0.5 }}>
+                  <Ticket size={48} />
                 </div>
                 <h3>No Coupons Found</h3>
                 <p>Start by creating your first promotional discount coupon.</p>
                 <button className="thm-btn mt-3" onClick={openAddModal}>
-                  <i className="fas fa-plus"></i> Create Coupon
+                  <Plus size={14} style={ICON_STYLE} /> Create Coupon
                 </button>
               </div>
             ) : (
@@ -372,14 +384,14 @@ export default function CouponManagementView() {
                         <td>
                           {franchiseDisplay.isFranchise ? (
                             <span className="franchise-badge">
-                              <i className="fas fa-store me-1"></i> {escapeHtml(franchiseDisplay.label)}
+                              <Store size={12} className="me-1" style={ICON_STYLE} /> {escapeHtml(franchiseDisplay.label)}
                             </span>
                           ) : (
                             <span style={{ opacity: 0.5 }}>Admin</span>
                           )}
                         </td>
                         <td>
-                          <i className="fas fa-user-check me-1" style={{ opacity: 0.5 }}></i> {usedCount}
+                          <UserCheck size={12} className="me-1" style={{ ...ICON_STYLE, opacity: 0.5 }} /> {usedCount}
                         </td>
                         <td>
                           <span className={`status-badge ${statusClass}`}>{statusText}</span>
@@ -388,10 +400,10 @@ export default function CouponManagementView() {
                         <td>
                           <div className="d-flex gap-2">
                             <button className="action-btn edit-btn" title="Edit Coupon" onClick={() => openEditModal(coupon._id)}>
-                              <i className="fas fa-edit"></i>
+                              <Pencil size={14} />
                             </button>
                             <button className="action-btn delete-btn" title="Delete Coupon" onClick={() => deleteCoupon(coupon._id)}>
-                              <i className="fas fa-trash-alt"></i>
+                              <Trash2 size={14} />
                             </button>
                           </div>
                         </td>
@@ -411,7 +423,12 @@ export default function CouponManagementView() {
           <div className="admin-modal" style={{ maxWidth: 520 }} onClick={(e) => e.stopPropagation()}>
             <div className="admin-modal-header">
               <h5 className="admin-modal-title" style={{ fontSize: "1.2rem" }}>
-                <i className={`fas ${editId ? "fa-edit" : "fa-plus-circle"} me-2`}></i> {editId ? "Edit Coupon" : "Create New Coupon"}
+                {editId ? (
+                  <Pencil size={18} className="me-2" style={ICON_STYLE} />
+                ) : (
+                  <PlusCircle size={18} className="me-2" style={ICON_STYLE} />
+                )}{" "}
+                {editId ? "Edit Coupon" : "Create New Coupon"}
               </h5>
               <button type="button" className="btn-close" aria-label="Close" onClick={closeModal}></button>
             </div>
@@ -487,7 +504,7 @@ export default function CouponManagementView() {
                   <button type="submit" className="thm-btn" disabled={saving}>
                     {saving ? (
                       <>
-                        <i className="fas fa-spinner fa-spin me-2"></i> Saving...
+                        <span className="spinner-border spinner-border-sm me-2" role="status"></span> Saving...
                       </>
                     ) : (
                       "Save Coupon"

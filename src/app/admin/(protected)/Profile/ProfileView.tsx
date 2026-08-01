@@ -1,8 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  Camera,
+  CheckCircle2,
+  Activity,
+  UserPen,
+  Lock,
+  Save,
+  Shield,
+  ShieldCheck,
+  Key,
+} from "lucide-react";
 import { useAdminUser } from "@/components/admin/AdminUserProvider";
 import "@/app/admin/styles/legacy-profile.css";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 const ASSESSOR_LABELS: Record<string, string> = {
   Psych: "Psychologist",
@@ -137,7 +150,7 @@ export default function ProfileView() {
                 }}
               />
               <div className="profile-avatar-overlay" onClick={() => avatarFileInputRef.current?.click()}>
-                <i className="fas fa-camera fa-lg mb-1"></i>
+                <Camera size={18} className="mb-1" />
                 <span>Upload Image</span>
               </div>
             </div>
@@ -154,13 +167,15 @@ export default function ProfileView() {
           <div className="profile-title-area">
             <div className="profile-name-row">
               <h1 className="profile-display-name">{displayName}</h1>
-              <i className="fas fa-circle-check profile-verified-icon" title="Verified Professional Account"></i>
+              <span title="Verified Professional Account" style={{ display: "inline-flex" }}>
+                <CheckCircle2 size={18} className="profile-verified-icon" style={ICON_STYLE} />
+              </span>
             </div>
             <div className="profile-role-sub">
               <span>{roleLabel}</span>
               <div style={{ width: 4, height: 4, background: "rgba(255,255,255,0.3)", borderRadius: "50%" }}></div>
               <span className="profile-active-pulse">
-                <i className="fas fa-signal-perfect me-1"></i> Active Now
+                <Activity size={14} className="me-1" style={ICON_STYLE} /> Active Now
               </span>
             </div>
           </div>
@@ -171,7 +186,7 @@ export default function ProfileView() {
       <div className="profile-grid">
         <div className="admin-card profile-details-card">
           <div className="profile-card-header">
-            <i className="fas fa-user-edit fa-lg"></i>
+            <UserPen size={18} />
             <h2>Personal Details</h2>
           </div>
           <form onSubmit={submitDetails} className="profile-form">
@@ -204,7 +219,7 @@ export default function ProfileView() {
                 }}
               />
               <span className="small text-muted mt-2 d-block" style={{ fontSize: "0.8rem", color: "#aaa" }}>
-                <i className="fas fa-lock text-warning me-1" style={{ color: "var(--primary-gold)" }}></i> Primary account email is permanent and protected.
+                <Lock size={12} className="text-warning me-1" style={{ ...ICON_STYLE, color: "var(--primary-gold)" }} /> Primary account email is permanent and protected.
               </span>
             </div>
 
@@ -221,19 +236,19 @@ export default function ProfileView() {
             </div>
 
             <button type="submit" className="thm-btn w-100 mt-4 py-3 justify-content-center profile-save-btn" disabled={saving}>
-              <i className="fas fa-save me-2"></i> {saving ? "Saving Changes..." : "Save Profile Details"}
+              <Save size={16} className="me-2" style={ICON_STYLE} /> {saving ? "Saving Changes..." : "Save Profile Details"}
             </button>
           </form>
         </div>
 
         <div className="admin-card profile-security-card">
           <div className="profile-card-header">
-            <i className="fas fa-shield-halved fa-lg"></i>
+            <Shield size={18} />
             <h2>Security Settings</h2>
           </div>
           <div className="security-card-body">
             <div className="security-status-box mb-4">
-              <i className="fas fa-user-shield security-big-icon"></i>
+              <ShieldCheck size={48} className="security-big-icon" />
               <div>
                 <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#fff", margin: "0 0 4px 0" }}>Account Protection Active</h3>
                 <p style={{ fontSize: "0.82rem", color: "#aaa", margin: 0 }}>Your admin privileges are secured via encrypted authentication.</p>
@@ -247,7 +262,7 @@ export default function ProfileView() {
               className="thm-btn secondary w-100 py-3 justify-content-center"
               style={{ display: "flex", textDecoration: "none", alignItems: "center", borderRadius: "8px", fontWeight: 600 }}
             >
-              <i className="fas fa-key me-2"></i> Reset Password
+              <Key size={16} className="me-2" style={ICON_STYLE} /> Reset Password
             </a>
           </div>
         </div>

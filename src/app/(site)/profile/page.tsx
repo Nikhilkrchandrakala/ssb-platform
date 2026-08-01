@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/server/auth";
+import { requireSiteUser } from "@/server/auth";
 import ProfilePageClient, { type ProfilePageUser } from "./ProfilePageClient";
 
 export const metadata = {
@@ -7,10 +6,11 @@ export const metadata = {
 };
 
 // Server-side auth guard — replaces legacy AuthRoute's client-side localStorage
-// JWT check entirely. No session -> redirect before any HTML is sent.
+// JWT check entirely. No session -> redirect before any HTML is sent; a staff
+// session (owner/admin/assessor/franchise) is redirected to the admin panel
+// instead of rendering this candidate-only profile page for them.
 export default async function ProfilePage() {
-  const user = await getCurrentUser();
-  if (!user) redirect("/SignIn");
+  const user = await requireSiteUser();
 
   const profileUser: ProfilePageUser = {
     name: (user.name as string) || "",

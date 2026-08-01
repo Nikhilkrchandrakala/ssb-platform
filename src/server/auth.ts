@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import jwt from "jsonwebtoken";
 import { connectDB } from "./db";
 import { User } from "./models/User";
@@ -124,4 +125,21 @@ export async function getCurrentUser() {
 
 export function hasRole(user: { role?: string } | null, roles: string[]): boolean {
   return !!user?.role && roles.includes(user.role);
+}
+
+/**
+ * Server-side guard for candidate-only pages (ProfileDashboard, Order/Payment
+ * History, profile). getCurrentUser() resolves any valid session — including
+ * staff (owner/admin/assessor/franchise) browsing the public site with their
+ * admin-panel cookie still active — so a plain `if (!user)` check let staff
+ * accounts render as if they were a candidate (e.g. an owner seeing their own
+ * empty "My Profile"/orders dashboard). Redirects unauthenticated visitors to
+ * sign in, and redirects any non-student session to the admin panel instead
+ * of rendering candidate-only content for them.
+ */
+export async function requireSiteUser() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/SignIn");
+  if (user.role !== "student") redirect("/admin");
+  return user;
 }

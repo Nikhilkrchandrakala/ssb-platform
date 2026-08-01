@@ -120,13 +120,13 @@ export default function Footer({ contactSettings }: { contactSettings: ContactSe
             <div className={styles.contactRow}>
               <a href={`https://wa.me/91${whatsappNumRaw}`} target="_blank" rel="noopener noreferrer" className={styles.contactItem}>
                 <p>
-                  <i className="fa fa-whatsapp"></i> +91 {whatsappNumFormatted}
+                  <i className="fa fa-whatsapp"></i> Whatsapp only +91 {whatsappNumFormatted}
                 </p>
               </a>
 
               <a href={`tel:+91${callNumRaw}`} className={styles.contactItem}>
                 <p>
-                  <i className="fa fa-phone"></i> +91 {callNumFormatted}
+                  <i className="fa fa-phone"></i> Call only +91 {callNumFormatted}, +91 90246 67319
                 </p>
               </a>
 

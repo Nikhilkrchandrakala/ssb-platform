@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/server/auth";
+import { requireSiteUser } from "@/server/auth";
 import { connectDB } from "@/server/db";
 import { Order, MagazinePdf } from "@/server/models";
 import ProfileDashboardClient, { type DashboardOrder, type DashboardUser, type DashboardMagazine } from "./ProfileDashboardClient";
@@ -9,12 +8,12 @@ export const metadata = {
 };
 
 // Server-side auth guard: replaces legacy AuthRoute's client-side localStorage
-// JWT + expiry check entirely. getCurrentUser() resolves the httpOnly session
-// cookie; if there's no valid session, redirect() sends the response before
-// any HTML/JS reaches the client — no LoadingScreen/flash-of-content needed.
+// JWT + expiry check entirely. requireSiteUser() resolves the httpOnly session
+// cookie and redirects before any HTML/JS reaches the client — no
+// LoadingScreen/flash-of-content needed, and no staff session ever renders
+// this candidate-only dashboard.
 export default async function ProfileDashboardPage() {
-  const user = await getCurrentUser();
-  if (!user) redirect("/SignIn");
+  const user = await requireSiteUser();
 
   await connectDB();
 

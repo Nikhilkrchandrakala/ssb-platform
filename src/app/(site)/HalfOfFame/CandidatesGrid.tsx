@@ -9,6 +9,7 @@ interface Candidate {
   board: string;
   entry: string;
   img: string;
+  status?: string;
 }
 
 const ITEMS_PER_PAGE = 6;
@@ -22,7 +23,7 @@ export default function CandidatesGrid() {
     fetch("/api/allCandidates")
       .then((res) => res.json())
       .then((data: Candidate[]) => {
-        setCandidates(data);
+        setCandidates(data.filter((c) => c.status !== "inactive"));
         setLoading(false);
       })
       .catch((err) => {

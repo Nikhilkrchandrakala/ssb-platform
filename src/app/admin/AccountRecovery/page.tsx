@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Info, Send, MailOpen, Shield, Lock, ArrowLeft } from "lucide-react";
 import { postJSON, ApiError } from "@/lib/authApi";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 /**
  * Staff (admin/franchise/assessor) account recovery.
@@ -236,10 +239,10 @@ export default function AdminAccountRecoveryPage() {
               <label>Email Address</label>
             </div>
             <small className="text-muted d-block mb-3">
-              <i className="fas fa-info-circle"></i> Enter your registered email address.
+              <Info size={14} style={ICON_STYLE} /> Enter your registered email address.
             </small>
             <button type="submit" className="recovery-btn">
-              <i className="fas fa-paper-plane me-2"></i> Send Verification OTP
+              <Send size={16} className="me-2" style={ICON_STYLE} /> Send Verification OTP
             </button>
           </form>
         )}
@@ -247,7 +250,7 @@ export default function AdminAccountRecoveryPage() {
         {step === 2 && (
           <form onSubmit={verifyOtpCode}>
             <p className="small text-muted mb-4">
-              <i className="fas fa-envelope-open-text me-1 text-warning"></i> An OTP has been dispatched. Please check your inbox.
+              <MailOpen size={14} className="me-1 text-warning" style={ICON_STYLE} /> An OTP has been dispatched. Please check your inbox.
             </p>
             <div className="form-floating mb-2">
               <input
@@ -276,7 +279,7 @@ export default function AdminAccountRecoveryPage() {
               </div>
             </div>
             <button type="submit" className="recovery-btn mt-4">
-              <i className="fas fa-shield-alt me-2"></i> Verify Verification Code
+              <Shield size={16} className="me-2" style={ICON_STYLE} /> Verify Verification Code
             </button>
           </form>
         )}
@@ -308,14 +311,14 @@ export default function AdminAccountRecoveryPage() {
               <label>Confirm New Password</label>
             </div>
             <button type="submit" className="recovery-btn">
-              <i className="fas fa-lock me-2"></i> Reset Security Password
+              <Lock size={16} className="me-2" style={ICON_STYLE} /> Reset Security Password
             </button>
           </form>
         )}
 
         <div className="text-center">
           <a href="/admin" className="back-link">
-            <i className="fas fa-arrow-left"></i> Back to Gateway Authenticate
+            <ArrowLeft size={14} style={ICON_STYLE} /> Back to Gateway Authenticate
           </a>
         </div>
       </div>

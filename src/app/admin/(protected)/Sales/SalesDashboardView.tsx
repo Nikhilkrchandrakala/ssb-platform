@@ -2,8 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import {
+  Briefcase,
+  Search,
+  UserPlus,
+  ArrowLeft,
+  CheckCircle2,
+  Receipt,
+  Key,
+  BookOpen,
+  UserPen,
+} from "lucide-react";
 import { useAdminUser } from "@/components/admin/AdminUserProvider";
 import "@/app/admin/styles/legacy-sales-dashboard.css";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 interface SlotItem {
   _id: string;
@@ -768,7 +781,7 @@ export default function SalesDashboardView() {
       <div className="admin-page-header">
         <div className="header-left">
           <h1 className="admin-page-title">
-            <i className="fas fa-briefcase me-2"></i> Sales
+            <Briefcase size={20} className="me-2" style={ICON_STYLE} /> Sales
           </h1>
           <p className="text-muted mb-0">Enroll students on an installment plan and track collections.</p>
         </div>
@@ -800,7 +813,7 @@ export default function SalesDashboardView() {
         <div className="admin-card">
           <div className="sales-filter-bar">
             <div className="search-wrapper">
-              <i className="fas fa-search"></i>
+              <Search size={16} style={{ position: "absolute", left: 15, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
               <input
                 type="text"
                 className="admin-input"
@@ -848,7 +861,7 @@ export default function SalesDashboardView() {
                   </div>
                   <div style={{ fontWeight: 700, color: "var(--primary-gold)" }}>₹{Number(slot.price || 0).toFixed(2)}</div>
                   <button className="thm-btn" style={{ marginTop: 8 }} onClick={() => openEnrollModal(slot)}>
-                    <i className="fas fa-user-plus me-1"></i> Enroll Student
+                    <UserPlus size={14} className="me-1" style={ICON_STYLE} /> Enroll Student
                   </button>
                 </div>
               ))}
@@ -1027,7 +1040,7 @@ export default function SalesDashboardView() {
             <>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
                 <button className="thm-btn secondary" style={{ padding: "6px 14px", fontSize: "0.8rem" }} onClick={backToTeamRoster}>
-                  <i className="fas fa-arrow-left me-1"></i> Back to team
+                  <ArrowLeft size={14} className="me-1" style={ICON_STYLE} /> Back to team
                 </button>
                 <span style={{ fontWeight: 600 }}>
                   {selectedTeamMember?.name || selectedTeamMember?.email || "Sales person"}&apos;s students
@@ -1088,7 +1101,7 @@ export default function SalesDashboardView() {
               My Executives
             </h5>
             <button className="thm-btn" onClick={openAddExecutive}>
-              <i className="fas fa-user-plus me-1"></i> Add Executive
+              <UserPlus size={14} className="me-1" style={ICON_STYLE} /> Add Executive
             </button>
           </div>
           {teamLoading || !teamReports ? (
@@ -1175,7 +1188,7 @@ export default function SalesDashboardView() {
             >
               <div className="admin-modal-header">
                 <h3 className="admin-modal-title">
-                  <i className="fas fa-user-plus me-2"></i> Enroll Student — {selectedSlot.title}
+                  <UserPlus size={18} className="me-2" style={ICON_STYLE} /> Enroll Student — {selectedSlot.title}
                 </h3>
                 <button type="button" className="btn-close btn-close-white" onClick={closeEnrollModal}></button>
               </div>
@@ -1183,7 +1196,7 @@ export default function SalesDashboardView() {
               {enrollResult ? (
                 <div style={{ padding: "10px 0" }}>
                   <p style={{ color: "#2ecc71", fontWeight: 600 }}>
-                    <i className="fas fa-check-circle me-2"></i> Enrolled. Payment link generated:
+                    <CheckCircle2 size={16} className="me-2" style={ICON_STYLE} /> Enrolled. Payment link generated:
                   </p>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", background: "rgba(255,255,255,0.03)", padding: 10, borderRadius: 6 }}>
                     <code style={{ flex: 1, wordBreak: "break-all", color: "#fff" }}>{enrollResult.paymentLink}</code>
@@ -1258,7 +1271,7 @@ export default function SalesDashboardView() {
                   {selectedSlot.isFullCourse && (
                     <div style={{ borderLeft: "3px solid var(--primary-gold)", paddingLeft: 15, marginBottom: 16 }}>
                       <label className="admin-form-label mb-2">
-                        <i className="fas fa-book-open me-1" style={{ color: "var(--primary-gold)" }}></i> Choose Course / Modules
+                        <BookOpen size={14} className="me-1" style={{ ...ICON_STYLE, color: "var(--primary-gold)" }} /> Choose Course / Modules
                       </label>
                       {[FULL_COURSE_MODULE, ...MODULES].map((m) => (
                         <div className="form-check mb-2" style={{ paddingLeft: "1.5em" }} key={m.id}>
@@ -1371,7 +1384,7 @@ export default function SalesDashboardView() {
             >
               <div className="admin-modal-header">
                 <h3 className="admin-modal-title">
-                  <i className="fas fa-user-edit me-2"></i> {teamAccountEditing ? "Edit Executive" : "Add Executive"}
+                  <UserPen size={18} className="me-2" style={ICON_STYLE} /> {teamAccountEditing ? "Edit Executive" : "Add Executive"}
                 </h3>
                 <button type="button" className="btn-close btn-close-white" onClick={() => setTeamAccountModalOpen(false)}></button>
               </div>
@@ -1432,7 +1445,7 @@ export default function SalesDashboardView() {
             >
               <div className="admin-modal-header">
                 <h3 className="admin-modal-title">
-                  <i className="fas fa-receipt me-2"></i> Payment Details
+                  <Receipt size={18} className="me-2" style={ICON_STYLE} /> Payment Details
                 </h3>
                 <button type="button" className="btn-close btn-close-white" onClick={() => setDetailsOrder(null)}></button>
               </div>
@@ -1507,7 +1520,7 @@ export default function SalesDashboardView() {
                       disabled={busyOrderId === detailsOrder._id}
                       onClick={() => resetCredentials(detailsOrder)}
                     >
-                      <i className="fas fa-key me-1"></i> Reveal / Reset Login Credentials
+                      <Key size={14} className="me-1" style={ICON_STYLE} /> Reveal / Reset Login Credentials
                     </button>
                   )}
                 </div>

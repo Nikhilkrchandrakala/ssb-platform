@@ -1,7 +1,23 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import {
+  Users,
+  UserPlus,
+  Search,
+  AlertTriangle,
+  Database,
+  Eye,
+  IdCard,
+  ShieldUser,
+  XCircle,
+  Receipt,
+  Save,
+  Plus,
+} from "lucide-react";
 import "@/app/admin/styles/legacy-all-users.css";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 interface DirectoryUser {
   _id: string;
@@ -391,7 +407,7 @@ export default function AllUsersView() {
       return (
         <div className="mini-badge w-100 p-2 d-flex justify-content-between align-items-center mb-1" key={label}>
           <span>
-            <i className="fas fa-user-shield me-1"></i> {label} Assessor
+            <ShieldUser size={14} className="me-1" style={ICON_STYLE} /> {label} Assessor
           </span>
           <strong style={{ color: "#fff" }}>{assessor.name}</strong>
         </div>
@@ -404,7 +420,7 @@ export default function AllUsersView() {
         key={label}
       >
         <span style={{ color: "#ff6b6b" }}>
-          <i className="fas fa-times-circle me-1"></i> {label} Assessor
+          <XCircle size={14} className="me-1" style={ICON_STYLE} /> {label} Assessor
         </span>
         <strong style={{ color: "#ff6b6b", fontWeight: 500 }}>Unassigned</strong>
       </div>
@@ -416,13 +432,13 @@ export default function AllUsersView() {
       <div className="admin-page-header">
         <div className="header-left">
           <h1 className="admin-page-title">
-            <i className="fas fa-users me-2"></i> All Users Database
+            <Users size={20} className="me-2" style={ICON_STYLE} /> All Users Database
           </h1>
           <p className="text-muted mb-0">Unified directory of every account in the system (Admins, Assessors, Students, Leads)</p>
         </div>
         <div className="d-flex gap-2">
           <button className="thm-btn" onClick={openAddModal}>
-            <i className="fas fa-user-plus me-2"></i> Add Candidate
+            <UserPlus size={16} className="me-2" style={ICON_STYLE} /> Add Candidate
           </button>
         </div>
       </div>
@@ -430,7 +446,7 @@ export default function AllUsersView() {
       <div className="admin-card">
         <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
           <div style={{ position: "relative", maxWidth: 400, width: "100%" }}>
-            <i className="fas fa-search" style={{ position: "absolute", left: 15, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }}></i>
+            <Search size={16} style={{ position: "absolute", left: 15, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
             <input
               type="text"
               className="admin-input"
@@ -489,14 +505,14 @@ export default function AllUsersView() {
               ) : loadError ? (
                 <tr>
                   <td colSpan={6} className="text-center p-5 text-danger">
-                    <i className="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                    <AlertTriangle size={32} className="mb-3" />
                     <p className="mb-0">Error loading database: {loadError}</p>
                   </td>
                 </tr>
               ) : pageSlice.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center p-5 opacity-50">
-                    <i className="fas fa-database fa-2x mb-3"></i>
+                    <Database size={32} className="mb-3" />
                     <p className="mb-0">No candidate records found.</p>
                   </td>
                 </tr>
@@ -546,7 +562,7 @@ export default function AllUsersView() {
                       </td>
                       <td style={{ textAlign: "center" }}>
                         <button className="action-btn" title="View Profile" onClick={() => openStudentModal(s._id)}>
-                          <i className="fas fa-eye"></i>
+                          <Eye size={14} />
                         </button>
                       </td>
                     </tr>
@@ -600,7 +616,7 @@ export default function AllUsersView() {
           <div className="admin-modal" style={{ maxWidth: 1200, width: "95%", margin: "20px auto" }}>
             <div className="admin-modal-header">
               <h3 className="admin-modal-title">
-                <i className="fas fa-id-card me-2"></i> Complete Trainee Profile
+                <IdCard size={18} className="me-2" style={ICON_STYLE} /> Complete Trainee Profile
               </h3>
               <button type="button" className="btn-close btn-close-white" onClick={closeStudentModal}></button>
             </div>
@@ -720,7 +736,7 @@ export default function AllUsersView() {
                       <div className="course-card-list">
                         {studentOrders.length === 0 ? (
                           <div className="text-center p-5 opacity-40">
-                            <i className="fas fa-receipt fa-2x mb-2"></i>
+                            <Receipt size={32} className="mb-2" />
                             <p className="small mb-0">No paid courses or batch slots found for this candidate</p>
                           </div>
                         ) : (
@@ -767,7 +783,7 @@ export default function AllUsersView() {
                     </div>
                     <div>
                       <button type="submit" form="editProfileForm" className="thm-btn py-2 w-100" disabled={savingProfile}>
-                        <i className="fas fa-save me-2"></i> {savingProfile ? "Saving..." : "Save Profile"}
+                        <Save size={16} className="me-2" style={ICON_STYLE} /> {savingProfile ? "Saving..." : "Save Profile"}
                       </button>
                     </div>
                   </div>
@@ -786,7 +802,7 @@ export default function AllUsersView() {
           <div className="admin-modal" style={{ maxWidth: 500, width: "95%", background: "var(--surface-dark)", border: "var(--border-gold)", borderRadius: "var(--radius-md)", padding: 25, color: "var(--text-white)", margin: "auto" }}>
             <div className="admin-modal-header d-flex justify-content-between align-items-center mb-4" style={{ borderBottom: "1px solid rgba(224,194,20,0.1)", paddingBottom: 15 }}>
               <h3 className="admin-modal-title" style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--primary-gold)", margin: 0 }}>
-                <i className="fas fa-user-plus me-2"></i> Add New Candidate Trainee
+                <UserPlus size={18} className="me-2" style={ICON_STYLE} /> Add New Candidate Trainee
               </h3>
               <button type="button" className="btn-close btn-close-white" onClick={closeAddModal}></button>
             </div>
@@ -878,7 +894,7 @@ export default function AllUsersView() {
                   Cancel
                 </button>
                 <button type="submit" className="thm-btn py-2 px-4" disabled={addingStudent}>
-                  <i className="fas fa-plus me-1"></i> {addingStudent ? "Adding..." : "Add Candidate"}
+                  <Plus size={14} className="me-1" style={ICON_STYLE} /> {addingStudent ? "Adding..." : "Add Candidate"}
                 </button>
               </div>
             </form>

@@ -1,7 +1,32 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  LayoutDashboard,
+  LineChart,
+  AlertTriangle,
+  Award,
+  History,
+  Presentation,
+  Users,
+  Save,
+  Headset,
+  MessageCircle,
+  Phone,
+  CheckCircle2,
+  Boxes,
+  PlayCircle,
+  Check,
+  Megaphone,
+  PlusCircle,
+  UploadCloud,
+  Clock,
+  Images,
+  Trash2,
+} from "lucide-react";
 import "@/app/admin/styles/legacy-dashboard.css";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 interface NumberMonitorEntry {
   _id: string;
@@ -454,7 +479,7 @@ export default function DashboardView() {
       <header className="dashboard-header">
         <div className="dashboard-title-area">
           <h1>
-            <i className="fas fa-gauge-high"></i> Executive Content Dashboard
+            <LayoutDashboard size={20} style={{ ...ICON_STYLE, color: "var(--primary-gold)" }} /> Executive Content Dashboard
           </h1>
           <p className="dashboard-subtitle">
             Manage live public landing page metrics, support channels, and authentication screen visual branding.
@@ -465,17 +490,17 @@ export default function DashboardView() {
       {/* ── Section 1: Number Monitor (Platform Statistics Grid) ── */}
       <section className="mb-5">
         <h2 className="dashboard-section-title">
-          <i className="fas fa-chart-line"></i> Live Landing Page Stat Counters
+          <LineChart size={18} style={{ ...ICON_STYLE, color: "var(--primary-gold)" }} /> Live Landing Page Stat Counters
         </h2>
 
         {entriesLoading ? (
           <div className="dashboard-card text-center py-5">
-            <i className="fas fa-spinner fa-spin fa-2x text-warning mb-3"></i>
+            <div className="spinner-border text-warning mb-3" role="status"></div>
             <p className="text-muted mb-0">Synchronizing live statistical metrics...</p>
           </div>
         ) : entriesError ? (
           <div className="dashboard-card text-center py-5 border-danger">
-            <i className="fas fa-exclamation-triangle fa-2x text-danger mb-3"></i>
+            <AlertTriangle size={48} className="text-danger mb-3" />
             <p className="text-danger fw-bold mb-0">{entriesError}</p>
           </div>
         ) : entries.length === 0 ? (
@@ -490,7 +515,7 @@ export default function DashboardView() {
                 <div className="stat-card-item">
                   <div className="stat-card-header">
                     <div className="stat-icon-box">
-                      <i className="fas fa-award"></i>
+                      <Award size={20} />
                     </div>
                     <h3 className="stat-card-label">Candidates Recommended</h3>
                   </div>
@@ -509,7 +534,7 @@ export default function DashboardView() {
                 <div className="stat-card-item">
                   <div className="stat-card-header">
                     <div className="stat-icon-box">
-                      <i className="fas fa-history"></i>
+                      <History size={20} />
                     </div>
                     <h3 className="stat-card-label">Track Record (Years)</h3>
                   </div>
@@ -528,7 +553,7 @@ export default function DashboardView() {
                 <div className="stat-card-item">
                   <div className="stat-card-header">
                     <div className="stat-icon-box">
-                      <i className="fas fa-chalkboard-teacher"></i>
+                      <Presentation size={20} />
                     </div>
                     <h3 className="stat-card-label">Faculty Expertise (Years)</h3>
                   </div>
@@ -547,7 +572,7 @@ export default function DashboardView() {
                 <div className="stat-card-item">
                   <div className="stat-card-header">
                     <div className="stat-icon-box">
-                      <i className="fas fa-users"></i>
+                      <Users size={20} />
                     </div>
                     <h3 className="stat-card-label">Total Faculty Strength</h3>
                   </div>
@@ -570,7 +595,7 @@ export default function DashboardView() {
                   style={{ borderRadius: "12px", fontSize: "1rem" }}
                   onClick={() => saveEntry(entry._id)}
                 >
-                  <i className="fas fa-save me-2"></i> Save All Public Counters
+                  <Save size={16} className="me-2" style={ICON_STYLE} /> Save All Public Counters
                 </button>
               </div>
             </div>
@@ -583,14 +608,14 @@ export default function DashboardView() {
       {/* ── Section 2: Support Contact Channels ── */}
       <section className="mb-5">
         <h2 className="dashboard-section-title">
-          <i className="fas fa-headset"></i> Support & Hotline Channels
+          <Headset size={18} style={{ ...ICON_STYLE, color: "var(--primary-gold)" }} /> Support & Hotline Channels
         </h2>
         <div className="dashboard-card mb-0">
           <form onSubmit={submitContactSettings}>
             <div className="support-channels-grid">
               <div className="support-input-box">
                 <div className="support-channel-header whatsapp">
-                  <i className="fab fa-whatsapp"></i>
+                  <MessageCircle size={18} style={{ ...ICON_STYLE, color: "#2ed573" }} />
                   <span>WhatsApp Support Hotline</span>
                 </div>
                 <label className="admin-form-label d-block text-muted mb-2" style={{ fontSize: "0.82rem" }}>
@@ -616,7 +641,7 @@ export default function DashboardView() {
 
               <div className="support-input-box">
                 <div className="support-channel-header phone">
-                  <i className="fas fa-phone-alt"></i>
+                  <Phone size={18} style={{ ...ICON_STYLE, color: "var(--primary-gold)" }} />
                   <span>Voice Call Support Number</span>
                 </div>
                 <label className="admin-form-label d-block text-muted mb-2" style={{ fontSize: "0.82rem" }}>
@@ -647,7 +672,7 @@ export default function DashboardView() {
                 className="thm-btn py-3 px-5 fw-bold"
                 style={{ borderRadius: "12px", fontSize: "0.95rem" }}
               >
-                <i className="fas fa-check-circle me-2"></i> Update Support Contacts
+                <CheckCircle2 size={16} className="me-2" style={ICON_STYLE} /> Update Support Contacts
               </button>
             </div>
           </form>
@@ -659,7 +684,7 @@ export default function DashboardView() {
       {/* ── Section 3: Auth Split-Screen Graphic Settings ── */}
       <section id="authDisplaySettingsCard" ref={authCardRef}>
         <h2 className="dashboard-section-title">
-          <i className="fas fa-object-group"></i> Auth Portal Graphic & Marketing Hub
+          <Boxes size={18} style={{ ...ICON_STYLE, color: "var(--primary-gold)" }} /> Auth Portal Graphic & Marketing Hub
         </h2>
         <div className="dashboard-card">
           <p className="text-muted mb-4" style={{ fontSize: "0.9rem" }}>
@@ -673,14 +698,14 @@ export default function DashboardView() {
               onClick={() => toggleAuthMode("slideshow")}
             >
               <div className="mode-info">
-                <i className="fas fa-play-circle mode-icon"></i>
+                <PlayCircle size={24} className="mode-icon" />
                 <div>
                   <h3 className="mode-title">General Slideshow</h3>
                   <p className="mode-desc">Rotate up to 10 visual highlights during login</p>
                 </div>
               </div>
               <div className="mode-active-badge" title={authMode === "slideshow" ? "Active Mode" : "Select Mode"}>
-                <i className="fas fa-check"></i>
+                <Check size={12} />
               </div>
             </div>
 
@@ -689,14 +714,14 @@ export default function DashboardView() {
               onClick={() => toggleAuthMode("ad")}
             >
               <div className="mode-info">
-                <i className="fas fa-bullhorn mode-icon"></i>
+                <Megaphone size={24} className="mode-icon" />
                 <div>
                   <h3 className="mode-title">Business Advertisement</h3>
                   <p className="mode-desc">Showcase a single promo banner with clickable target URL</p>
                 </div>
               </div>
               <div className="mode-active-badge" title={authMode === "ad" ? "Active Mode" : "Select Mode"}>
-                <i className="fas fa-check"></i>
+                <Check size={12} />
               </div>
             </div>
           </div>
@@ -706,7 +731,7 @@ export default function DashboardView() {
             <div>
               <div className="config-toolbar mb-4">
                 <h4 style={{ fontSize: "1.02rem", fontWeight: 700, color: "#fff", marginBottom: "16px" }}>
-                  <i className="fas fa-plus-circle me-2 text-warning" style={{ color: "var(--primary-gold)" }}></i>
+                  <PlusCircle size={16} className="me-2 text-warning" style={{ ...ICON_STYLE, color: "var(--primary-gold)" }} />
                   Upload Additional Carousel Images
                 </h4>
                 <form onSubmit={submitSlideshowUpload}>
@@ -724,7 +749,7 @@ export default function DashboardView() {
                     </div>
                     <div className="col-md-3">
                       <button type="submit" className="thm-btn py-2 w-100 fw-bold" style={{ borderRadius: "8px" }}>
-                        <i className="fas fa-cloud-upload-alt me-2"></i> Add to Slideshow
+                        <UploadCloud size={16} className="me-2" style={ICON_STYLE} /> Add to Slideshow
                       </button>
                     </div>
                   </div>
@@ -733,7 +758,7 @@ export default function DashboardView() {
 
               <div className="config-toolbar mb-4">
                 <h4 style={{ fontSize: "1.02rem", fontWeight: 700, color: "#fff", marginBottom: "16px" }}>
-                  <i className="fas fa-clock me-2" style={{ color: "var(--primary-gold)" }}></i>
+                  <Clock size={16} className="me-2" style={{ ...ICON_STYLE, color: "var(--primary-gold)" }} />
                   Slideshow Rotation Speed
                 </h4>
                 <form onSubmit={submitTransition}>
@@ -768,7 +793,7 @@ export default function DashboardView() {
                     </div>
                     <div className="col-md-3">
                       <button type="submit" className="thm-btn py-2 w-100 fw-bold" style={{ borderRadius: "8px" }}>
-                        <i className="fas fa-save me-2"></i> Save Rotation
+                        <Save size={16} className="me-2" style={ICON_STYLE} /> Save Rotation
                       </button>
                     </div>
                   </div>
@@ -781,7 +806,7 @@ export default function DashboardView() {
 
               {slideshowImages.length === 0 ? (
                 <div className="text-center p-5 rounded" style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.15)" }}>
-                  <i className="fas fa-images fa-2x text-muted mb-2"></i>
+                  <Images size={32} className="text-muted mb-2" />
                   <p className="text-muted mb-0">No pictures currently loaded in the login slideshow.</p>
                 </div>
               ) : (
@@ -794,7 +819,7 @@ export default function DashboardView() {
                       </div>
                       <div className="gallery-actions">
                         <button type="button" className="delete-img-btn" onClick={() => deleteSlideshowImage(imgUrl)}>
-                          <i className="fas fa-trash-alt me-1"></i> Remove Image
+                          <Trash2 size={14} className="me-1" style={ICON_STYLE} /> Remove Image
                         </button>
                       </div>
                     </div>
@@ -853,7 +878,7 @@ export default function DashboardView() {
 
                     <div className="text-end mt-4">
                       <button type="submit" className="thm-btn py-3 px-5 fw-bold w-100" style={{ borderRadius: "12px", fontSize: "1rem" }}>
-                        <i className="fas fa-bullhorn me-2"></i> Deploy Advertisement Settings
+                        <Megaphone size={16} className="me-2" style={ICON_STYLE} /> Deploy Advertisement Settings
                       </button>
                     </div>
                   </div>

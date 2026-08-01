@@ -1,8 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  BookOpen,
+  PlusCircle,
+  Search,
+  Filter,
+  Eye,
+  Pencil,
+  Trash2,
+  Upload,
+  Plus,
+} from "lucide-react";
 import "@/app/admin/styles/legacy-magazine.css";
 import { resolveLegacyAssetUrl } from "@/lib/legacyAssets";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 interface MagazinePdf {
   _id: string;
@@ -28,6 +41,9 @@ export default function MagazineView() {
   const [magTitle, setMagTitle] = useState("");
   const [magCategory, setMagCategory] = useState("Magazine");
   const [saving, setSaving] = useState(false);
+
+  const [search, setSearch] = useState("");
+  const [filterCategory, setFilterCategory] = useState("All");
 
   const pdfInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
@@ -301,19 +317,61 @@ export default function MagazineView() {
     }
   };
 
+  const filteredMagazines = magazines.filter((mag) => {
+    const matchesCategory = filterCategory === "All" || (mag.tags || "Magazine") === filterCategory;
+    const q = search.trim().toLowerCase();
+    const matchesSearch = !q || mag.pdfTitle.toLowerCase().includes(q);
+    return matchesCategory && matchesSearch;
+  });
+
   return (
     <div className="container" style={{ maxWidth: 1400, margin: "40px auto", padding: "0 20px" }}>
       <div className="admin-page-header">
         <div className="header-left">
           <h1 className="admin-page-title">
-            <i className="fas fa-book-open me-2"></i> Digital Library
+            <BookOpen size={20} className="me-2" style={ICON_STYLE} /> Digital Library
           </h1>
           <p className="text-muted mb-0">Publish and organize magazines, books, and study materials</p>
         </div>
         <button className="thm-btn" onClick={openAddModal}>
-          <i className="fas fa-plus-circle me-2"></i> Publish New
+          <PlusCircle size={16} className="me-2" style={ICON_STYLE} /> Publish New
         </button>
       </div>
+
+      {!loading && magazines.length > 0 && (
+        <div className="d-flex flex-wrap gap-3 align-items-center mb-4">
+          <div style={{ position: "relative", maxWidth: 320, width: "100%" }}>
+            <Search
+              size={16}
+              style={{ position: "absolute", left: 15, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }}
+            />
+            <input
+              type="text"
+              className="admin-input"
+              placeholder="Search by title..."
+              style={{ paddingLeft: 45, borderRadius: 20 }}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <select
+            className="admin-input form-select"
+            style={{ maxWidth: 220 }}
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+          >
+            <option value="All">All Categories</option>
+            {categories.map((cat) => (
+              <option value={cat} key={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+          <span className="text-muted small">
+            Showing {filteredMagazines.length} of {magazines.length}
+          </span>
+        </div>
+      )}
 
       {loading && (
         <div className="text-center py-5">
@@ -324,7 +382,7 @@ export default function MagazineView() {
 
       {!loading && magazines.length === 0 && (
         <div className="text-center py-5">
-          <i className="fas fa-book mb-3" style={{ fontSize: "4rem", opacity: 0.2 }}></i>
+          <BookOpen size={64} className="mb-3" style={{ opacity: 0.2 }} />
           <h3>The library is empty</h3>
           <p className="text-muted">Start by publishing your first magazine or study guide.</p>
           <button className="thm-btn mt-3" onClick={openAddModal}>
@@ -333,9 +391,17 @@ export default function MagazineView() {
         </div>
       )}
 
-      {!loading && magazines.length > 0 && (
+      {!loading && magazines.length > 0 && filteredMagazines.length === 0 && (
+        <div className="text-center py-5">
+          <Filter size={64} className="mb-3" style={{ opacity: 0.2 }} />
+          <h3>No matches</h3>
+          <p className="text-muted">No items match your search/category filter.</p>
+        </div>
+      )}
+
+      {!loading && filteredMagazines.length > 0 && (
         <div className="magazine-grid">
-          {magazines.map((mag) => (
+          {filteredMagazines.map((mag) => (
             <div className="magazine-card" key={mag._id}>
               <div className="cover-wrapper">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -359,13 +425,13 @@ export default function MagazineView() {
                     className="mag-btn"
                     title="View PDF"
                   >
-                    <i className="fas fa-eye"></i> View
+                    <Eye size={14} style={ICON_STYLE} /> View
                   </a>
                   <button className="mag-btn" onClick={() => openEditModal(mag)} title="Edit Metadata">
-                    <i className="fas fa-edit"></i> Edit
+                    <Pencil size={14} style={ICON_STYLE} /> Edit
                   </button>
                   <button className="mag-btn del" onClick={() => confirmDelete(mag._id)} title="Remove Asset">
-                    <i className="fas fa-trash-alt"></i>
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>
@@ -379,7 +445,11 @@ export default function MagazineView() {
           <div className="admin-modal" style={{ maxWidth: 600, width: "100%" }} onClick={(e) => e.stopPropagation()}>
             <div className="admin-modal-header">
               <h5 className="admin-modal-title">
-                <i className={`fas ${editId ? "fa-edit" : "fa-upload"} me-2 text-warning`}></i>{" "}
+                {editId ? (
+                  <Pencil size={18} className="me-2 text-warning" style={ICON_STYLE} />
+                ) : (
+                  <Upload size={18} className="me-2 text-warning" style={ICON_STYLE} />
+                )}{" "}
                 {editId ? "Edit Metadata" : "Publish Asset"}
               </h5>
               <button type="button" className="btn-close" onClick={() => setModalOpen(false)} aria-label="Close"></button>
@@ -426,7 +496,7 @@ export default function MagazineView() {
                       style={{ borderRadius: 0 }}
                       onClick={addCategory}
                     >
-                      <i className="fas fa-plus"></i>
+                      <Plus size={14} />
                     </button>
                     <button
                       className="btn btn-outline-danger"
@@ -435,7 +505,7 @@ export default function MagazineView() {
                       style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
                       onClick={removeCategory}
                     >
-                      <i className="fas fa-trash"></i>
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
@@ -468,7 +538,7 @@ export default function MagazineView() {
               <button className="thm-btn" onClick={saveMag} disabled={saving}>
                 {saving ? (
                   <>
-                    <i className="fas fa-spinner fa-spin me-2"></i> Processing...
+                    <span className="spinner-border spinner-border-sm me-2" role="status"></span> Processing...
                   </>
                 ) : (
                   "Confirm Publication"

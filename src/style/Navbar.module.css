@@ -248,7 +248,9 @@
     display: flex;
     align-items: center;
     width: 100%;
-    justify-content: space-between;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 24px;
 }
 
 .circleSectionCenterCon {
@@ -355,8 +357,8 @@
 
 /* Background wrapper */
 .wrapper {
-    width: 360px;
-    height: 360px;
+    width: 260px;
+    height: 260px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -368,8 +370,8 @@
 /* Outer circle */
 .circle {
     position: relative;
-    width: 300px;
-    height: 300px;
+    width: 220px;
+    height: 220px;
     border-radius: 50%;
     border: 1.5px solid rgba(255, 255, 255, 0.8);
 }
@@ -384,11 +386,11 @@
 /* Gold dot (starts at right) */
 .dot {
     position: absolute;
-    right: 23px;
+    right: 15px;
     top: 81%;
     transform: translateY(-50%);
-    width: 16px;
-    height: 16px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     background: #b89b3c;
     box-shadow: 0 0 10px rgba(184, 155, 60, 0.8), 0 0 20px rgba(184, 155, 60, 0.5);
@@ -407,7 +409,7 @@
 /* 180 */
 .number {
 
-    font-size: 96px;
+    font-size: 58px;
     font-weight: 400;
     color: #d6d3c6;
 }
@@ -415,9 +417,9 @@
 /* + sign */
 .plus {
 
-    font-size: 36px;
+    font-size: 22px;
     color: #7a7a7a;
-    transform: translateY(-30px);
+    transform: translateY(-20px);
 }
 
 
@@ -765,41 +767,9 @@
 /* Tablet */
 @media (max-width: 1024px) {
     .circleWrapper {
-        width: 300px;
-        height: 310px;
-        margin-left: 0;
-    }
-
-    .wrapper {
-        width: 300px;
-        height: 300px;
-    }
-
-    .circle {
-        width: 260px;
-        height: 260px;
-    }
-
-    .dot {
-        width: 14px;
-        height: 14px;
-        right: 18px;
-    }
-
-    .number {
-        font-size: 72px;
-    }
-
-    .plus {
-        font-size: 28px;
-    }
-}
-
-/* Mobile */
-@media (max-width: 768px) {
-    .circleWrapper {
         width: 260px;
         height: 270px;
+        margin-left: 0;
     }
 
     .wrapper {
@@ -824,6 +794,38 @@
 
     .plus {
         font-size: 22px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .circleWrapper {
+        width: 220px;
+        height: 230px;
+    }
+
+    .wrapper {
+        width: 220px;
+        height: 220px;
+    }
+
+    .circle {
+        width: 180px;
+        height: 180px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        right: 12px;
+    }
+
+    .number {
+        font-size: 44px;
+    }
+
+    .plus {
+        font-size: 18px;
         transform: translateY(-20px);
     }
 

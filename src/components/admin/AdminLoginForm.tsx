@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { LogIn } from "lucide-react";
 import { postJSON, ApiError } from "@/lib/authApi";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 interface LoginResult {
   role: string;
@@ -122,7 +125,7 @@ export default function AdminLoginForm() {
       </div>
 
       <button type="submit" className="login-btn" id="loginBtn" disabled={loading}>
-        <i className="fas fa-sign-in-alt me-2"></i> {loading ? "Authenticating..." : "Authenticate"}
+        <LogIn size={16} className="me-2" style={ICON_STYLE} /> {loading ? "Authenticating..." : "Authenticate"}
       </button>
     </form>
   );

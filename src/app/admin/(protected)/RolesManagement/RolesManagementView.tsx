@@ -2,7 +2,25 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useAdminUser } from "@/components/admin/AdminUserProvider";
+import {
+  ShieldCheck,
+  UserPlus,
+  Search,
+  AlertTriangle,
+  UserX,
+  UserLock,
+  Pencil,
+  Lock,
+  Trash2,
+  UserPen,
+  Eye,
+  EyeOff,
+  Info,
+  Save,
+} from "lucide-react";
 import "@/app/admin/styles/legacy-roles.css";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 interface StaffUser {
   id: string;
@@ -373,19 +391,19 @@ export default function RolesManagementView() {
       <div className="admin-page-header">
         <div className="header-left">
           <h1 className="admin-page-title">
-            <i className="fas fa-user-shield me-2"></i> Roles &amp; Permissions
+            <ShieldCheck size={20} className="me-2" style={ICON_STYLE} /> Roles &amp; Permissions
           </h1>
           <p className="text-muted mb-0">Assign roles (Admin, Franchise, Assessor) and manage staff access permissions</p>
         </div>
         <button className="thm-btn" onClick={openPromoteModal}>
-          <i className="fas fa-user-plus me-1"></i> Promote / Add Staff
+          <UserPlus size={16} className="me-1" style={ICON_STYLE} /> Promote / Add Staff
         </button>
       </div>
 
       <div className="admin-card">
         <div className="roles-filter-bar">
           <div className="search-wrapper">
-            <i className="fas fa-search"></i>
+            <Search size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
             <input
               type="text"
               className="admin-input"
@@ -429,14 +447,14 @@ export default function RolesManagementView() {
               ) : usersError ? (
                 <tr>
                   <td colSpan={6} className="text-center p-5 text-danger">
-                    <i className="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                    <AlertTriangle size={32} className="mb-3" />
                     <p className="mb-0">Error loading staff users: {usersError}</p>
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center p-5 opacity-50">
-                    <i className="fas fa-users-slash fa-2x mb-3"></i>
+                    <UserX size={32} className="mb-3" />
                     <p className="mb-0">No matching staff accounts found.</p>
                   </td>
                 </tr>
@@ -503,7 +521,7 @@ export default function RolesManagementView() {
                             disabled
                             title="This is a protected user and cannot be edited."
                           >
-                            <i className="fas fa-user-shield me-1"></i> Locked
+                            <ShieldCheck size={14} className="me-1" style={ICON_STYLE} /> Locked
                           </button>
                         ) : isSelf ? (
                           <button
@@ -512,7 +530,7 @@ export default function RolesManagementView() {
                             disabled
                             title="You cannot edit your own account here."
                           >
-                            <i className="fas fa-user-lock me-1"></i> Self
+                            <UserLock size={14} className="me-1" style={ICON_STYLE} /> Self
                           </button>
                         ) : !canEdit ? (
                           <button
@@ -521,11 +539,11 @@ export default function RolesManagementView() {
                             disabled
                             title="You cannot edit other users on the same or higher level."
                           >
-                            <i className="fas fa-user-shield me-1"></i> Locked
+                            <ShieldCheck size={14} className="me-1" style={ICON_STYLE} /> Locked
                           </button>
                         ) : (
                           <button className="thm-btn" style={{ padding: "6px 12px", fontSize: "0.8rem" }} onClick={() => openRoleModal(u)}>
-                            <i className="fas fa-edit me-1"></i> Edit
+                            <Pencil size={14} className="me-1" style={ICON_STYLE} /> Edit
                           </button>
                         )}
 
@@ -536,7 +554,7 @@ export default function RolesManagementView() {
                             disabled
                             title="This is a protected user and cannot be deleted."
                           >
-                            <i className="fas fa-lock me-1"></i> Locked
+                            <Lock size={14} className="me-1" style={ICON_STYLE} /> Locked
                           </button>
                         ) : isSelf ? (
                           <button
@@ -545,7 +563,7 @@ export default function RolesManagementView() {
                             disabled
                             title="You cannot delete your own account."
                           >
-                            <i className="fas fa-user-lock me-1"></i> Self
+                            <UserLock size={14} className="me-1" style={ICON_STYLE} /> Self
                           </button>
                         ) : !canDelete ? (
                           <button
@@ -554,7 +572,7 @@ export default function RolesManagementView() {
                             disabled
                             title="You cannot delete other users on the same or higher level."
                           >
-                            <i className="fas fa-lock me-1"></i> Locked
+                            <Lock size={14} className="me-1" style={ICON_STYLE} /> Locked
                           </button>
                         ) : (
                           <button
@@ -562,7 +580,7 @@ export default function RolesManagementView() {
                             style={{ background: "#ff6b6b", borderColor: "#ff6b6b", padding: "6px 12px", fontSize: "0.8rem", marginLeft: 5 }}
                             onClick={() => confirmDeleteUser(u)}
                           >
-                            <i className="fas fa-trash-alt me-1"></i> Delete
+                            <Trash2 size={14} className="me-1" style={ICON_STYLE} /> Delete
                           </button>
                         )}
                       </td>
@@ -580,7 +598,7 @@ export default function RolesManagementView() {
           <div className="admin-modal" style={{ maxWidth: 950, width: "95%", margin: "20px auto" }}>
             <div className="admin-modal-header">
               <h3 className="admin-modal-title">
-                <i className="fas fa-user-edit me-2"></i> {modalTitle}
+                <UserPen size={18} className="me-2" style={ICON_STYLE} /> {modalTitle}
               </h3>
               <button type="button" className="btn-close btn-close-white" onClick={closeModal}></button>
             </div>
@@ -644,7 +662,7 @@ export default function RolesManagementView() {
                         onClick={() => setPasswordVisible((v) => !v)}
                         style={{ position: "absolute", right: 15, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", zIndex: 10 }}
                       >
-                        <i className={`fas ${passwordVisible ? "fa-eye" : "fa-eye-slash"}`}></i>
+                        {passwordVisible ? <Eye size={14} /> : <EyeOff size={14} />}
                       </button>
                     </div>
                   </div>
@@ -689,7 +707,7 @@ export default function RolesManagementView() {
                           onChange={(e) => setForm((prev) => ({ ...prev, commission: Number(e.target.value) }))}
                         />
                         <p className="small text-muted mt-2">
-                          <i className="fas fa-info-circle"></i> A unique referral code will be automatically generated upon submission for marketing attribution.
+                          <Info size={14} style={ICON_STYLE} /> A unique referral code will be automatically generated upon submission for marketing attribution.
                         </p>
                       </div>
                     )}
@@ -700,7 +718,7 @@ export default function RolesManagementView() {
                           Sales Hierarchy
                         </h5>
                         <p className="small text-muted mb-3">
-                          <i className="fas fa-info-circle"></i> A Sales Head manages a team of executives and reports directly to the Owner. A Sales
+                          <Info size={14} style={ICON_STYLE} /> A Sales Head manages a team of executives and reports directly to the Owner. A Sales
                           Executive must report to an existing Head.
                         </p>
                         <div className="d-flex flex-column gap-3 mb-3">
@@ -733,7 +751,7 @@ export default function RolesManagementView() {
                             <label className="admin-form-label">Reports To (Sales Head)</label>
                             {salesHeads.length === 0 ? (
                               <p className="small text-danger mb-0">
-                                <i className="fas fa-exclamation-triangle"></i> No Sales Head exists yet — create one first (select &ldquo;Sales
+                                <AlertTriangle size={14} style={ICON_STYLE} /> No Sales Head exists yet — create one first (select &ldquo;Sales
                                 Head&rdquo; above) before adding an executive.
                               </p>
                             ) : (
@@ -764,7 +782,7 @@ export default function RolesManagementView() {
                           Assessor Specialization
                         </h5>
                         <p className="small text-muted mb-3">
-                          <i className="fas fa-info-circle"></i> Specify the assessment officer subtype for Candidate Evaluation assignments:
+                          <Info size={14} style={ICON_STYLE} /> Specify the assessment officer subtype for Candidate Evaluation assignments:
                         </p>
                         <div className="d-flex flex-column gap-3">
                           {ASSESSOR_TYPES.map((at) => (
@@ -807,7 +825,7 @@ export default function RolesManagementView() {
                           </label>
                         </div>
                         <p className="small text-muted mb-3">
-                          <i className="fas fa-info-circle"></i> Enable specific page checkboxes to grant administrative clearance:
+                          <Info size={14} style={ICON_STYLE} /> Enable specific page checkboxes to grant administrative clearance:
                         </p>
 
                         <div className="row g-3">
@@ -864,7 +882,7 @@ export default function RolesManagementView() {
                       Cancel
                     </button>
                     <button type="submit" className="thm-btn" style={{ padding: "8px 25px" }} disabled={isSubmitting}>
-                      <i className="fas fa-save me-1"></i> Save Changes
+                      <Save size={14} className="me-1" style={ICON_STYLE} /> Save Changes
                     </button>
                   </div>
                 </div>

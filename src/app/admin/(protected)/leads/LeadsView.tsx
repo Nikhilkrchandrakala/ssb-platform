@@ -2,8 +2,29 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Script from "next/script";
+import {
+  Users,
+  CheckCircle2,
+  CalendarDays,
+  CalendarCheck,
+  Search,
+  RotateCcw,
+  FileSpreadsheet,
+  AlertTriangle,
+  Inbox,
+  Clock,
+  Mail,
+  Phone,
+  UserPlus,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+} from "lucide-react";
 import "@/app/admin/styles/legacy-leads.css";
 import "@/app/admin/styles/legacy-leads-page.css";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 /**
  * Ported from admin-ssbwithisv/leads.html + assets/js/leads.js.
@@ -322,7 +343,7 @@ export default function LeadsView() {
       <div className="admin-page-header">
         <div className="header-left">
           <h1 className="admin-page-title">
-            <i className="fas fa-address-book me-2"></i> Leads Management
+            <Users size={20} className="me-2" style={ICON_STYLE} /> Leads Management
           </h1>
           <p className="text-muted mb-0">Track, manage, and convert inquiry leads from the magazine and website</p>
         </div>
@@ -330,7 +351,7 @@ export default function LeadsView() {
           className="badge"
           style={{ background: "rgba(224, 194, 20, 0.1)", color: "var(--primary-gold)", border: "1px solid rgba(224, 194, 20, 0.2)", padding: "8px 15px" }}
         >
-          {loading ? "Loading leads..." : <><i className="fas fa-check-circle me-2"></i> {infoMsg}</>}
+          {loading ? "Loading leads..." : <><CheckCircle2 size={14} className="me-2" style={ICON_STYLE} /> {infoMsg}</>}
         </div>
       </div>
 
@@ -338,36 +359,36 @@ export default function LeadsView() {
       <div className="filter-panel">
         <div className="filter-item">
           <label className="admin-form-label">
-            <i className="far fa-calendar-alt me-1"></i> From Date
+            <CalendarDays size={14} className="me-1" style={ICON_STYLE} /> From Date
           </label>
           <input type="date" className="admin-input" value={fromDateInput} onChange={(e) => setFromDateInput(e.target.value)} />
         </div>
         <div className="filter-item">
           <label className="admin-form-label">
-            <i className="far fa-calendar-check me-1"></i> To Date
+            <CalendarCheck size={14} className="me-1" style={ICON_STYLE} /> To Date
           </label>
           <input type="date" className="admin-input" value={toDateInput} onChange={(e) => setToDateInput(e.target.value)} />
         </div>
         <div className="filter-actions">
           <button className="thm-btn" style={{ minWidth: 130 }} onClick={applyFilters}>
-            <i className="fas fa-search me-2"></i> Apply Filter
+            <Search size={14} className="me-2" style={ICON_STYLE} /> Apply Filter
           </button>
           <button
             className="thm-btn"
             style={{ background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)", minWidth: 100 }}
             onClick={clearFilters}
           >
-            <i className="fas fa-undo me-2"></i> Clear
+            <RotateCcw size={14} className="me-2" style={ICON_STYLE} /> Clear
           </button>
           <button className="thm-btn" style={{ background: "#27ae60", borderColor: "#2ecc71", minWidth: 160 }} onClick={exportFiltered}>
-            <i className="fas fa-file-excel me-2"></i> Export Excel
+            <FileSpreadsheet size={14} className="me-2" style={ICON_STYLE} /> Export Excel
           </button>
         </div>
       </div>
 
       {/* Search Bar */}
       <div className="search-bar">
-        <i className="fas fa-search search-icon"></i>
+        <Search size={16} className="search-icon" />
         <input
           type="text"
           placeholder="Search leads by name, email, or phone number..."
@@ -393,7 +414,7 @@ export default function LeadsView() {
               <tbody>
                 <tr>
                   <td colSpan={7} className="text-center text-danger p-4">
-                    <i className="fas fa-exclamation-triangle me-2"></i> Failed to load leads: {loadError}
+                    <AlertTriangle size={16} className="me-2" style={ICON_STYLE} /> Failed to load leads: {loadError}
                   </td>
                 </tr>
               </tbody>
@@ -402,7 +423,7 @@ export default function LeadsView() {
         ) : searchFiltered.length === 0 ? (
           <div className="empty-state text-center" style={{ padding: 80 }}>
             <div className="empty-icon mb-3" style={{ fontSize: "4rem", color: "var(--primary-gold)", opacity: 0.3 }}>
-              <i className="fas fa-inbox"></i>
+              <Inbox size={64} />
             </div>
             <h3>No Leads Found</h3>
             <p>There are no leads matching your current filter criteria.</p>
@@ -438,12 +459,12 @@ export default function LeadsView() {
                         <td>{globalIdx}</td>
                         <td>
                           <span className="date-badge">
-                            <i className="far fa-calendar-alt me-1"></i> {formattedDate}
+                            <CalendarDays size={12} className="me-1" style={ICON_STYLE} /> {formattedDate}
                           </span>
                         </td>
                         <td>
                           <span className="date-badge">
-                            <i className="far fa-clock me-1"></i> {formattedTime}
+                            <Clock size={12} className="me-1" style={ICON_STYLE} /> {formattedTime}
                           </span>
                         </td>
                         <td>
@@ -453,12 +474,12 @@ export default function LeadsView() {
                         </td>
                         <td>
                           <span className="lead-contact">
-                            <i className="far fa-envelope me-1"></i> {lead.email || "—"}
+                            <Mail size={12} className="me-1" style={ICON_STYLE} /> {lead.email || "—"}
                           </span>
                         </td>
                         <td>
                           <span className="lead-contact">
-                            <i className="fas fa-phone-alt me-1"></i> {lead.phoneNumber || "—"}
+                            <Phone size={12} className="me-1" style={ICON_STYLE} /> {lead.phoneNumber || "—"}
                           </span>
                         </td>
                         <td>
@@ -490,11 +511,11 @@ export default function LeadsView() {
                                 title="Elevate to Candidate"
                                 onClick={() => handleElevate(lead._id, lead.name, lead.email)}
                               >
-                                <i className="fas fa-user-plus"></i>
+                                <UserPlus size={14} />
                               </button>
                             )}
                             <button className="action-btn delete-btn" title="Delete Lead" onClick={() => handleDelete(lead._id, lead.name)}>
-                              <i className="fas fa-trash-alt"></i>
+                              <Trash2 size={14} />
                             </button>
                           </div>
                         </td>
@@ -530,7 +551,7 @@ export default function LeadsView() {
               </div>
               <div className="pagination-buttons">
                 <button disabled={safePage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
-                  <i className="fas fa-chevron-left"></i>
+                  <ChevronLeft size={14} />
                 </button>
                 {getPageRange(safePage, totalPages).map((p, i) =>
                   p === "..." ? (
@@ -544,7 +565,7 @@ export default function LeadsView() {
                   )
                 )}
                 <button disabled={safePage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>
-                  <i className="fas fa-chevron-right"></i>
+                  <ChevronRight size={14} />
                 </button>
               </div>
             </div>
@@ -554,7 +575,7 @@ export default function LeadsView() {
 
       {/* Floating Action Button for ALL Export */}
       <button id="excelDownloadBtn" title="Download all leads as Excel" onClick={() => exportToExcel(allLeads, "All_Leads_Complete.xlsx")}>
-        <i className="fas fa-download"></i>
+        <Download size={18} />
       </button>
     </div>
   );

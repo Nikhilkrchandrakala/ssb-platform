@@ -1,7 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  Store,
+  PlusCircle,
+  Users,
+  Plus,
+  Copy,
+  Trash2,
+  ArrowLeft,
+  LineChart,
+  UserCog,
+  Mail,
+  Phone,
+  ShoppingCart,
+  ShoppingBag,
+  Clock,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import "@/app/admin/styles/legacy-franchise.css";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 /**
  * Ported from admin-ssbwithisv/Franchise.html + assets/js/franchise.js.
@@ -265,7 +285,7 @@ export default function FranchiseView() {
           <div className="admin-page-header">
             <div className="header-left">
               <h1 className="admin-page-title">
-                <i className="fas fa-store me-2"></i> Franchise Management
+                <Store size={20} className="me-2" style={ICON_STYLE} /> Franchise Management
               </h1>
               <p className="text-muted mb-0">Manage all franchise partners and track their performance</p>
             </div>
@@ -276,13 +296,13 @@ export default function FranchiseView() {
                 setModalOpen(true);
               }}
             >
-              <i className="fas fa-plus-circle"></i> Add Franchise
+              <PlusCircle size={16} style={ICON_STYLE} /> Add Franchise
             </button>
           </div>
 
           <div className="admin-card">
             <h3 className="admin-form-label" style={{ fontSize: "1.3rem", marginBottom: 20 }}>
-              <i className="fas fa-users me-2"></i> All Franchise Partners
+              <Users size={18} className="me-2" style={ICON_STYLE} /> All Franchise Partners
             </h3>
 
             {loading ? (
@@ -304,8 +324,8 @@ export default function FranchiseView() {
               </div>
             ) : franchises.length === 0 ? (
               <div className="empty-state text-center" style={{ padding: 60 }}>
-                <div className="empty-icon mb-3" style={{ fontSize: "3rem", color: "var(--primary-gold)", opacity: 0.5 }}>
-                  <i className="fas fa-store-slash"></i>
+                <div className="empty-icon mb-3" style={{ color: "var(--primary-gold)", opacity: 0.5 }}>
+                  <Store size={48} />
                 </div>
                 <h3>No Franchises Found</h3>
                 <p>Create your first franchise partner to get started.</p>
@@ -316,7 +336,7 @@ export default function FranchiseView() {
                     setModalOpen(true);
                   }}
                 >
-                  <i className="fas fa-plus"></i> Add Franchise
+                  <Plus size={14} style={ICON_STYLE} /> Add Franchise
                 </button>
               </div>
             ) : (
@@ -376,7 +396,7 @@ export default function FranchiseView() {
                                   copyToClipboard(referralLink);
                                 }}
                               >
-                                <i className="fas fa-copy"></i>
+                                <Copy size={14} />
                               </button>
                             </div>
                           </td>
@@ -390,7 +410,7 @@ export default function FranchiseView() {
                                 deleteFranchise(franchise._id);
                               }}
                             >
-                              <i className="fas fa-trash-alt"></i>
+                              <Trash2 size={14} />
                             </button>
                           </td>
                         </tr>
@@ -413,10 +433,10 @@ export default function FranchiseView() {
                 style={{ background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" }}
                 onClick={backToList}
               >
-                <i className="fas fa-arrow-left"></i> Back to List
+                <ArrowLeft size={14} style={ICON_STYLE} /> Back to List
               </button>
               <h1 className="admin-page-title">
-                <i className="fas fa-chart-line me-2"></i> Franchise Details
+                <LineChart size={20} className="me-2" style={ICON_STYLE} /> Franchise Details
               </h1>
             </div>
           </div>
@@ -453,16 +473,16 @@ export default function FranchiseView() {
                         margin: "0 auto 15px",
                       }}
                     >
-                      <i className="fas fa-user-tie" style={{ fontSize: "2.5rem", color: "var(--primary-gold)" }}></i>
+                      <UserCog size={40} style={{ color: "var(--primary-gold)" }} />
                     </div>
                   </div>
                   <div className="col-md-5">
                     <h4 style={{ color: "var(--primary-gold)", marginBottom: 10 }}>{detailData.franchise.name}</h4>
                     <p className="mb-1 text-muted">
-                      <i className="fas fa-envelope me-2"></i> {detailData.franchise.email}
+                      <Mail size={14} className="me-2" style={ICON_STYLE} /> {detailData.franchise.email}
                     </p>
                     <p className="mb-0 text-muted">
-                      <i className="fas fa-phone me-2"></i> {detailData.franchise.phone || "—"}
+                      <Phone size={14} className="me-2" style={ICON_STYLE} /> {detailData.franchise.phone || "—"}
                     </p>
                   </div>
                   <div className="col-md-5">
@@ -506,11 +526,11 @@ export default function FranchiseView() {
 
               <div className="admin-card">
                 <h3 className="admin-form-label" style={{ fontSize: "1.3rem", marginBottom: 20 }}>
-                  <i className="fas fa-shopping-cart me-2"></i> Sales &amp; Orders
+                  <ShoppingCart size={18} className="me-2" style={ICON_STYLE} /> Sales &amp; Orders
                 </h3>
                 {detailData.orders.length === 0 ? (
                   <div className="empty-state text-center p-5">
-                    <i className="fas fa-shopping-bag fa-3x mb-3" style={{ opacity: 0.3 }}></i>
+                    <ShoppingBag size={48} className="mb-3" style={{ opacity: 0.3 }} />
                     <p>No orders found for this franchise partner yet.</p>
                   </div>
                 ) : (
@@ -529,7 +549,7 @@ export default function FranchiseView() {
                           <div className="col-md-4">
                             <div style={{ fontWeight: 600, color: "var(--primary-gold)" }}>{slotTitle}</div>
                             <div style={{ fontSize: "0.75rem", opacity: 0.6 }}>
-                              <i className="far fa-clock me-1"></i> {startTime}
+                              <Clock size={12} className="me-1" style={ICON_STYLE} /> {startTime}
                             </div>
                           </div>
                           <div className="col-md-3">
@@ -570,7 +590,7 @@ export default function FranchiseView() {
           <div className="admin-modal" style={{ maxWidth: 520 }} onClick={(e) => e.stopPropagation()}>
             <div className="admin-modal-header">
               <h5 className="admin-modal-title" style={{ fontSize: "1.2rem" }}>
-                <i className="fas fa-plus-circle me-2"></i> Add New Franchise
+                <PlusCircle size={18} className="me-2" style={ICON_STYLE} /> Add New Franchise
               </h5>
               <button
                 type="button"
@@ -644,7 +664,7 @@ export default function FranchiseView() {
                       className="franchise-password-toggle"
                       onClick={() => setShowPassword((v) => !v)}
                     >
-                      <i className={`fas ${showPassword ? "fa-eye" : "fa-eye-slash"}`}></i>
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                 </div>

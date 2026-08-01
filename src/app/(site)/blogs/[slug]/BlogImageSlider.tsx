@@ -5,6 +5,8 @@ import { Autoplay } from "swiper/modules";
 import "swiper/css";
 import styles from "@/style/BlogDetails.module.css";
 
+const FALLBACK = "/assets/logo/ISV.webp";
+
 interface BlogImage {
   imageUrl: string;
   imageText?: string;
@@ -26,7 +28,13 @@ export default function BlogImageSlider({ images, title }: { images: BlogImage[]
         {images.map((img, i) => (
           <SwiperSlide key={i}>
             <div className={styles.BlogImageWrapper}>
-              <img src={img.imageUrl} alt={title} />
+              <img
+                src={img.imageUrl}
+                alt={title}
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = FALLBACK;
+                }}
+              />
               <div className={styles.imageOverlay}></div>
             </div>
             <p className={styles.TextImage}>{img.imageText}</p>

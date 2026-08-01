@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/server/auth";
+import { requireSiteUser } from "@/server/auth";
 import { connectDB } from "@/server/db";
 import { Order } from "@/server/models";
 import PaymentHistoryClient, { type PaymentHistoryOrder } from "./PaymentHistoryClient";
@@ -9,10 +8,11 @@ export const metadata = {
 };
 
 // Server-side auth guard — replaces legacy AuthRoute's client-side localStorage
-// JWT check. No session -> redirect before any HTML is sent.
+// JWT check. No session -> redirect before any HTML is sent; a staff session
+// (owner/admin/assessor/franchise) is redirected to the admin panel instead
+// of rendering this candidate-only payment history for them.
 export default async function PaymentHistoryPage() {
-  const user = await getCurrentUser();
-  if (!user) redirect("/SignIn");
+  const user = await requireSiteUser();
 
   await connectDB();
 

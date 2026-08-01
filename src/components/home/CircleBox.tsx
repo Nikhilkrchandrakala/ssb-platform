@@ -12,6 +12,7 @@ interface NumberMonitorData {
   officerSelection?: number;
   facultyExperience?: number;
   yearService?: number;
+  totalFaculty?: number;
 }
 
 function CircleBox() {
@@ -44,6 +45,7 @@ function CircleBox() {
     { number: data?.officerSelection || 0, title: "Candidates Recommended", timeDel: "2" },
     { number: data?.facultyExperience || 0, title: "Years of Proven Track Record", timeDel: "4" },
     { number: data?.yearService || 0, title: "Years of Domain Expertise", timeDel: "6" },
+    { number: data?.totalFaculty || 0, title: "Specialist Faculty Members", timeDel: "8" },
   ];
 
   const router = useRouter();

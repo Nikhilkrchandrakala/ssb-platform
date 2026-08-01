@@ -5,6 +5,7 @@ import { Blog } from "@/server/models";
 import CustomHeader from "@/components/site/CustomHeader";
 import styles from "@/style/Blog.module.css";
 import { slugifyBlogTitle } from "./utils";
+import BlogThumb from "./BlogThumb";
 
 export const metadata: Metadata = {
   title: "SSB Preparation Blog | Expert SSB Interview Tips & Guides | SSB with ISV",
@@ -94,7 +95,7 @@ export default async function BlogsPage() {
             blogs.map((blog) => (
               <Link key={blog.id} href={`/blogs/${blog.slug}`} className={styles.blogCard}>
                 <div className={styles.imageWrapper}>
-                  <img src={blog.imageUrl} alt={blog.title} />
+                  <BlogThumb src={blog.imageUrl} alt={blog.title} />
                   <div className={styles.imageOverlay}></div>
                 </div>
 

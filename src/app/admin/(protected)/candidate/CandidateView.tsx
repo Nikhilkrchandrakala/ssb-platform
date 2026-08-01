@@ -1,7 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import {
+  GraduationCap,
+  PlusCircle,
+  Search,
+  Pencil,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  UploadCloud,
+  ImageIcon,
+} from "lucide-react";
 import "@/app/admin/styles/legacy-candidate.css";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 /**
  * REC Candidate Management.
@@ -53,6 +66,7 @@ export default function CandidateView() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [boardFilter, setBoardFilter] = useState("All");
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -106,17 +120,23 @@ export default function CandidateView() {
     };
   }, []);
 
+  const boardOptions = useMemo(() => {
+    const boards = new Set(candidates.map((c) => c.board).filter(Boolean));
+    return Array.from(boards).sort();
+  }, [candidates]);
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return candidates;
-    return candidates.filter(
-      (c) =>
+    return candidates.filter((c) => {
+      const matchesBoard = boardFilter === "All" || c.board === boardFilter;
+      const matchesSearch =
+        !q ||
         c.name?.toLowerCase().includes(q) ||
         c.entry?.toLowerCase().includes(q) ||
-        c.board?.toLowerCase().includes(q) ||
-        c.status?.toLowerCase().includes(q)
-    );
-  }, [candidates, search]);
+        c.board?.toLowerCase().includes(q);
+      return matchesBoard && matchesSearch;
+    });
+  }, [candidates, search, boardFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pageSafe = Math.min(currentPage, totalPages);
@@ -124,6 +144,11 @@ export default function CandidateView() {
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
+    setCurrentPage(1);
+  };
+
+  const handleBoardFilterChange = (value: string) => {
+    setBoardFilter(value);
     setCurrentPage(1);
   };
 
@@ -258,12 +283,12 @@ export default function CandidateView() {
       <div className="admin-page-header">
         <div className="header-left">
           <h1 className="admin-page-title">
-            <i className="fas fa-user-graduate me-2"></i> REC Candidate Management
+            <GraduationCap size={20} className="me-2" style={ICON_STYLE} /> REC Candidate Management
           </h1>
           <p className="text-muted mb-0">Manage successful candidates, their records, and display status</p>
         </div>
         <button className="thm-btn" onClick={openAdd}>
-          <i className="fas fa-plus-circle"></i> Add New Candidate
+          <PlusCircle size={16} style={ICON_STYLE} /> Add New Candidate
         </button>
       </div>
 
@@ -288,8 +313,21 @@ export default function CandidateView() {
             </select>
             <span className="text-muted small">per page</span>
           </div>
+          <select
+            className="admin-input form-select"
+            style={{ maxWidth: 220 }}
+            value={boardFilter}
+            onChange={(e) => handleBoardFilterChange(e.target.value)}
+          >
+            <option value="All">All Boards</option>
+            {boardOptions.map((board) => (
+              <option value={board} key={board}>
+                {board}
+              </option>
+            ))}
+          </select>
           <div style={{ position: "relative", maxWidth: 320, width: "100%" }}>
-            <i className="fas fa-search" style={{ position: "absolute", left: 15, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }}></i>
+            <Search size={16} style={{ position: "absolute", left: 15, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
             <input
               type="text"
               className="admin-input"
@@ -309,7 +347,6 @@ export default function CandidateView() {
                 <th>Name</th>
                 <th>Entry No</th>
                 <th>Board</th>
-                <th>Status</th>
                 <th>Created At</th>
                 <th>Actions</th>
               </tr>
@@ -317,19 +354,18 @@ export default function CandidateView() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="text-center p-5">
+                  <td colSpan={6} className="text-center p-5">
                     <div className="spinner-border text-warning" role="status"></div>
                   </td>
                 </tr>
               ) : pageSlice.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center p-5 opacity-50">
+                  <td colSpan={6} className="text-center p-5 opacity-50">
                     No candidates found
                   </td>
                 </tr>
               ) : (
                 pageSlice.map((candidate) => {
-                  const statusClass = candidate.status === "active" ? "status-active" : "status-inactive";
                   return (
                     <tr key={candidate._id}>
                       <td>
@@ -345,24 +381,26 @@ export default function CandidateView() {
                       </td>
                       <td>
                         <span style={{ fontWeight: 600, color: "var(--primary-gold)" }}>{candidate.name}</span>
+                        {candidate.status !== "active" && (
+                          <span className="status-badge status-inactive ms-2" title="Not shown on the public Hall of Fame page">
+                            Hidden
+                          </span>
+                        )}
                       </td>
                       <td>
                         <code style={{ color: "var(--text-white)", opacity: 0.8 }}>{candidate.entry}</code>
                       </td>
                       <td>{candidate.board}</td>
                       <td>
-                        <span className={`status-badge ${statusClass}`}>{candidate.status || "active"}</span>
-                      </td>
-                      <td>
                         <span style={{ fontSize: "0.8rem", opacity: 0.6 }}>{formatDate(candidate.createdAt)}</span>
                       </td>
                       <td>
                         <div className="d-flex gap-2">
                           <button className="action-btn edit-btn" onClick={() => openEdit(candidate)} title="Edit">
-                            <i className="fas fa-edit"></i>
+                            <Pencil size={14} />
                           </button>
                           <button className="action-btn delete-btn" onClick={() => handleDelete(candidate._id)} title="Delete">
-                            <i className="fas fa-trash-alt"></i>
+                            <Trash2 size={14} />
                           </button>
                         </div>
                       </td>
@@ -383,7 +421,7 @@ export default function CandidateView() {
               <ul className="pagination pagination-sm mb-0">
                 <li className={`page-item ${pageSafe === 1 ? "disabled" : ""}`}>
                   <button className="page-link" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}>
-                    <i className="fas fa-chevron-left"></i>
+                    <ChevronLeft size={14} />
                   </button>
                 </li>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
@@ -395,7 +433,7 @@ export default function CandidateView() {
                 ))}
                 <li className={`page-item ${pageSafe === totalPages ? "disabled" : ""}`}>
                   <button className="page-link" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}>
-                    <i className="fas fa-chevron-right"></i>
+                    <ChevronRight size={14} />
                   </button>
                 </li>
               </ul>
@@ -410,7 +448,7 @@ export default function CandidateView() {
           <div className="admin-modal" style={{ maxWidth: 700, width: "95%", margin: "20px auto" }}>
             <div className="admin-modal-header">
               <h3 className="admin-modal-title">
-                <i className="fas fa-plus-circle me-2"></i> Add New Candidate
+                <PlusCircle size={18} className="me-2" style={ICON_STYLE} /> Add New Candidate
               </h3>
               <button type="button" className="btn-close btn-close-white" onClick={closeAdd}></button>
             </div>
@@ -451,14 +489,14 @@ export default function CandidateView() {
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="admin-form-label">Status</label>
+                    <label className="admin-form-label">Show on Public Hall of Fame Page?</label>
                     <select
                       className="admin-input"
                       value={addForm.status}
                       onChange={(e) => setAddForm((f) => ({ ...f, status: e.target.value }))}
                     >
-                      <option value="active">Active (Visible)</option>
-                      <option value="inactive">Inactive (Hidden)</option>
+                      <option value="active">Yes, show it (Active)</option>
+                      <option value="inactive">No, keep it hidden (Inactive)</option>
                     </select>
                   </div>
                 </div>
@@ -466,7 +504,7 @@ export default function CandidateView() {
                   <label className="admin-form-label">Candidate Photo *</label>
                   <label className="upload-zone" style={{ display: "block" }}>
                     <div className="upload-icon">
-                      <i className="fas fa-cloud-upload-alt"></i>
+                      <UploadCloud size={28} />
                     </div>
                     <div className="upload-text">Click or Drag to Upload Photo</div>
                     <div className="text-muted small">JPG, PNG (Max 5MB)</div>
@@ -503,7 +541,7 @@ export default function CandidateView() {
                 <button type="submit" className="thm-btn" disabled={addSubmitting}>
                   {addSubmitting ? (
                     <>
-                      <i className="fas fa-spinner fa-spin me-2"></i> Creating...
+                      <span className="spinner-border spinner-border-sm me-2" role="status"></span> Creating...
                     </>
                   ) : (
                     "Create Candidate"
@@ -521,7 +559,7 @@ export default function CandidateView() {
           <div className="admin-modal" style={{ maxWidth: 700, width: "95%", margin: "20px auto" }}>
             <div className="admin-modal-header">
               <h3 className="admin-modal-title">
-                <i className="fas fa-edit me-2"></i> Edit Candidate
+                <Pencil size={18} className="me-2" style={ICON_STYLE} /> Edit Candidate
               </h3>
               <button type="button" className="btn-close btn-close-white" onClick={closeEdit}></button>
             </div>
@@ -559,14 +597,14 @@ export default function CandidateView() {
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="admin-form-label">Status</label>
+                    <label className="admin-form-label">Show on Public Hall of Fame Page?</label>
                     <select
                       className="admin-input"
                       value={editForm.status}
                       onChange={(e) => setEditForm((f) => ({ ...f, status: e.target.value }))}
                     >
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
+                      <option value="active">Yes, show it (Active)</option>
+                      <option value="inactive">No, keep it hidden (Inactive)</option>
                     </select>
                   </div>
                 </div>
@@ -574,7 +612,7 @@ export default function CandidateView() {
                   <label className="admin-form-label">Change Candidate Photo</label>
                   <label className="upload-zone" style={{ display: "block" }}>
                     <div className="upload-icon">
-                      <i className="fas fa-image"></i>
+                      <ImageIcon size={28} />
                     </div>
                     <div className="upload-text">Click to change photo</div>
                     <input
@@ -610,7 +648,7 @@ export default function CandidateView() {
                 <button type="submit" className="thm-btn" disabled={editSubmitting}>
                   {editSubmitting ? (
                     <>
-                      <i className="fas fa-spinner fa-spin me-2"></i> Updating...
+                      <span className="spinner-border spinner-border-sm me-2" role="status"></span> Updating...
                     </>
                   ) : (
                     "Update Candidate"

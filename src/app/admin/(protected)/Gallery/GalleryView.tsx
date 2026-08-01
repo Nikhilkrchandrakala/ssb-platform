@@ -1,7 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  Images,
+  UploadCloud,
+  Camera,
+  Pencil,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import "@/app/admin/styles/legacy-gallery.css";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 interface GalleryImage {
   imageUrl: string;
@@ -302,12 +312,12 @@ export default function GalleryView() {
       <div className="admin-page-header">
         <div className="header-left">
           <h1 className="admin-page-title">
-            <i className="fas fa-images me-2"></i> Gallery Assets
+            <Images size={20} className="me-2" style={ICON_STYLE} /> Gallery Assets
           </h1>
           <p className="text-muted mb-0">Visual storytelling for the SSB platform - Manage photos and captions</p>
         </div>
         <button className="thm-btn" onClick={openUploadModal}>
-          <i className="fas fa-cloud-upload-alt me-2"></i> Upload Images
+          <UploadCloud size={16} className="me-2" style={ICON_STYLE} /> Upload Images
         </button>
       </div>
 
@@ -320,7 +330,7 @@ export default function GalleryView() {
 
       {!loading && flatImages.length === 0 && (
         <div className="text-center py-5">
-          <i className="fas fa-camera-retro mb-3" style={{ fontSize: "4rem", opacity: 0.2 }}></i>
+          <Camera size={64} className="mb-3" style={{ opacity: 0.2 }} />
           <h3>No visual assets found</h3>
           <p className="text-muted">Upload your first set of images to showcase them in the frontend gallery.</p>
           <button className="thm-btn mt-3" onClick={openUploadModal}>
@@ -357,14 +367,14 @@ export default function GalleryView() {
                       onClick={() => openEdit(img.galleryId, img.imageUrl, img.imageText)}
                       title="Edit Caption"
                     >
-                      <i className="fas fa-edit"></i>
+                      <Pencil size={14} />
                     </button>
                     <button
                       className="gallery-action-icon delete"
                       onClick={() => confirmDelete(img.galleryId, img.imageUrl)}
                       title="Delete Asset"
                     >
-                      <i className="fas fa-trash-alt"></i>
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
@@ -383,7 +393,7 @@ export default function GalleryView() {
           <div className="admin-modal" style={{ maxWidth: 700, width: "100%" }} onClick={(e) => e.stopPropagation()}>
             <div className="admin-modal-header">
               <h5 className="admin-modal-title">
-                <i className="fas fa-file-upload me-2 text-warning"></i> Add Visual Assets
+                <Upload size={18} className="me-2 text-warning" style={ICON_STYLE} /> Add Visual Assets
               </h5>
               <button type="button" className="btn-close" onClick={() => setUploadModalOpen(false)} aria-label="Close"></button>
             </div>
@@ -445,7 +455,7 @@ export default function GalleryView() {
               <button className="thm-btn" onClick={startUpload} disabled={uploading}>
                 {uploading ? (
                   <>
-                    <i className="fas fa-spinner fa-spin me-2"></i> Uploading...
+                    <span className="spinner-border spinner-border-sm me-2" role="status"></span> Uploading...
                   </>
                 ) : (
                   "Start Upload Process"
@@ -461,7 +471,7 @@ export default function GalleryView() {
           <div className="admin-modal" style={{ maxWidth: 500, width: "100%" }} onClick={(e) => e.stopPropagation()}>
             <div className="admin-modal-header">
               <h5 className="admin-modal-title">
-                <i className="fas fa-edit me-2 text-warning"></i> Edit Asset Caption
+                <Pencil size={18} className="me-2 text-warning" style={ICON_STYLE} /> Edit Asset Caption
               </h5>
               <button type="button" className="btn-close" onClick={() => setEditModalOpen(false)} aria-label="Close"></button>
             </div>
@@ -476,7 +486,7 @@ export default function GalleryView() {
                 />
                 <div style={{ position: "relative" }}>
                   <label className="thm-btn py-1 px-3" style={{ fontSize: "0.75rem", cursor: "pointer", display: "inline-block" }}>
-                    <i className="fas fa-camera me-1"></i> Replace Image
+                    <Camera size={14} className="me-1" style={ICON_STYLE} /> Replace Image
                     <input
                       type="file"
                       accept="image/*"

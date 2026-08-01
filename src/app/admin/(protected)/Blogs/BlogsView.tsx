@@ -4,7 +4,21 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Script from "next/script";
+import {
+  Pencil,
+  PlusCircle,
+  ArrowLeft,
+  Info,
+  PenTool,
+  Images,
+  UploadCloud,
+  UserPen,
+  Save,
+  Send,
+} from "lucide-react";
 import "@/app/admin/styles/legacy-blog.css";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 // CKEditor 5 classic build (loaded via CDN <Script> below) attaches itself to
 // `window.ClassicEditor`. Declared locally only — this page is the sole
@@ -281,7 +295,11 @@ export default function BlogsView({ blogId }: BlogsViewProps) {
         <div className="admin-page-header">
           <div className="header-left">
             <h1 className="admin-page-title">
-              <i className={`fas ${isEditMode ? "fa-edit" : "fa-plus-circle"} me-2`}></i>{" "}
+              {isEditMode ? (
+                <Pencil size={20} className="me-2" style={ICON_STYLE} />
+              ) : (
+                <PlusCircle size={20} className="me-2" style={ICON_STYLE} />
+              )}{" "}
               {isEditMode ? "Edit Blog Post" : "Create Blog Post"}
             </h1>
             <p className="text-muted mb-0">Compose and publish insightful articles for your audience</p>
@@ -291,7 +309,7 @@ export default function BlogsView({ blogId }: BlogsViewProps) {
             className="thm-btn"
             style={{ background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" }}
           >
-            <i className="fas fa-arrow-left me-2"></i> Back to List
+            <ArrowLeft size={16} className="me-2" style={ICON_STYLE} /> Back to List
           </Link>
         </div>
 
@@ -303,7 +321,7 @@ export default function BlogsView({ blogId }: BlogsViewProps) {
           ) : (
             <form onSubmit={handleSubmit}>
               <div className="section-title">
-                <i className="fas fa-info-circle"></i> Basic Information
+                <Info size={16} style={ICON_STYLE} /> Basic Information
               </div>
               <div className="mb-4">
                 <label className="admin-form-label">Blog Title *</label>
@@ -331,7 +349,7 @@ export default function BlogsView({ blogId }: BlogsViewProps) {
               <div className="section-divider"></div>
 
               <div className="section-title">
-                <i className="fas fa-pen-nib"></i> Article Content
+                <PenTool size={16} style={ICON_STYLE} /> Article Content
               </div>
               <div className="mb-4">
                 <label className="admin-form-label">Full Content *</label>
@@ -345,12 +363,12 @@ export default function BlogsView({ blogId }: BlogsViewProps) {
               <div className="section-divider"></div>
 
               <div className="section-title">
-                <i className="fas fa-images"></i> Media & Visuals
+                <Images size={16} style={ICON_STYLE} /> Media & Visuals
               </div>
               <div className="mb-3">
                 <label className="admin-form-label">Upload Blog Images</label>
                 <label className="upload-area" style={{ display: "block" }}>
-                  <i className="fas fa-cloud-upload-alt"></i>
+                  <UploadCloud size={28} />
                   <h5>Click or Drag images to upload</h5>
                   <p className="text-muted small">PNG, JPG or GIF up to 5MB each (Multiple allowed)</p>
                   <input
@@ -446,7 +464,7 @@ export default function BlogsView({ blogId }: BlogsViewProps) {
               <div className="section-divider"></div>
 
               <div className="section-title">
-                <i className="fas fa-user-edit"></i> Publication Credits
+                <UserPen size={16} style={ICON_STYLE} /> Publication Credits
               </div>
               <div className="row">
                 <div className="col-md-6 mb-4">
@@ -487,11 +505,15 @@ export default function BlogsView({ blogId }: BlogsViewProps) {
                 <button type="submit" className="thm-btn" style={{ minWidth: 200 }} disabled={submitting}>
                   {submitting ? (
                     <>
-                      <i className="fas fa-spinner fa-spin me-2"></i> Processing...
+                      <span className="spinner-border spinner-border-sm me-2" role="status"></span> Processing...
                     </>
                   ) : (
                     <>
-                      <i className={`fas ${isEditMode ? "fa-save" : "fa-paper-plane"} me-2`}></i>{" "}
+                      {isEditMode ? (
+                        <Save size={16} className="me-2" style={ICON_STYLE} />
+                      ) : (
+                        <Send size={16} className="me-2" style={ICON_STYLE} />
+                      )}{" "}
                       {isEditMode ? "Update Article" : "Publish Article"}
                     </>
                   )}

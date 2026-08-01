@@ -2,7 +2,21 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import {
+  Newspaper,
+  PlusCircle,
+  Search,
+  FileText,
+  Plus,
+  Filter,
+  User,
+  CalendarDays,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import "@/app/admin/styles/legacy-blog.css";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 interface BlogImage {
   imageUrl: string;
@@ -34,6 +48,8 @@ export default function BlogListView() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
 
   useEffect(() => {
     let cancelled = false;
@@ -117,19 +133,62 @@ export default function BlogListView() {
     }
   };
 
+  const filteredBlogs = blogs
+    .filter((blog) => {
+      const q = search.trim().toLowerCase();
+      if (!q) return true;
+      return blog.title.toLowerCase().includes(q) || blog.authorName?.toLowerCase().includes(q);
+    })
+    .sort((a, b) => {
+      const aTime = new Date(a.createdAt || 0).getTime();
+      const bTime = new Date(b.createdAt || 0).getTime();
+      return sortOrder === "newest" ? bTime - aTime : aTime - bTime;
+    });
+
   return (
     <div className="container" style={{ maxWidth: 1200, margin: "40px auto", padding: "0 20px" }}>
       <div className="admin-page-header">
         <div className="header-left">
           <h1 className="admin-page-title">
-            <i className="fas fa-newspaper me-2"></i> Blog Management
+            <Newspaper size={20} className="me-2" style={ICON_STYLE} /> Blog Management
           </h1>
           <p className="text-muted mb-0">Create, edit and manage your platform articles</p>
         </div>
         <Link href="/admin/Blogs" className="thm-btn">
-          <i className="fas fa-plus-circle"></i> Add New Blog
+          <PlusCircle size={16} style={ICON_STYLE} /> Add New Blog
         </Link>
       </div>
+
+      {!loading && !error && blogs.length > 0 && (
+        <div className="d-flex flex-wrap gap-3 align-items-center mb-4">
+          <div style={{ position: "relative", maxWidth: 320, width: "100%" }}>
+            <Search
+              size={16}
+              style={{ position: "absolute", left: 15, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }}
+            />
+            <input
+              type="text"
+              className="admin-input"
+              placeholder="Search by title or author..."
+              style={{ paddingLeft: 45, borderRadius: 20 }}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <select
+            className="admin-input form-select"
+            style={{ maxWidth: 180 }}
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest")}
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+          </select>
+          <span className="text-muted small">
+            Showing {filteredBlogs.length} of {blogs.length}
+          </span>
+        </div>
+      )}
 
       {loading && (
         <div className="loading-spinner text-center" style={{ padding: 50 }}>
@@ -144,20 +203,30 @@ export default function BlogListView() {
 
       {!loading && !error && blogs.length === 0 && (
         <div className="empty-state text-center" style={{ padding: 60 }}>
-          <div className="empty-state-icon mb-3" style={{ fontSize: "4rem", color: "var(--primary-gold)", opacity: 0.5 }}>
-            <i className="fas fa-file-alt"></i>
+          <div className="empty-state-icon mb-3" style={{ color: "var(--primary-gold)", opacity: 0.5 }}>
+            <FileText size={64} />
           </div>
           <h3>No Blogs Found</h3>
           <p>You haven&apos;t created any blog posts yet.</p>
           <Link href="/admin/Blogs" className="thm-btn">
-            <i className="fas fa-plus"></i> Add Your First Blog
+            <Plus size={14} style={ICON_STYLE} /> Add Your First Blog
           </Link>
         </div>
       )}
 
-      {!loading && !error && blogs.length > 0 && (
+      {!loading && !error && blogs.length > 0 && filteredBlogs.length === 0 && (
+        <div className="empty-state text-center" style={{ padding: 60 }}>
+          <div className="empty-state-icon mb-3" style={{ color: "var(--primary-gold)", opacity: 0.5 }}>
+            <Filter size={64} />
+          </div>
+          <h3>No Matches</h3>
+          <p>No blogs match your search.</p>
+        </div>
+      )}
+
+      {!loading && !error && filteredBlogs.length > 0 && (
         <div className="row">
-          {blogs.map((blog) => {
+          {filteredBlogs.map((blog) => {
             const blogImage = blog.images && blog.images.length > 0 && blog.images[0].imageUrl
               ? blog.images[0].imageUrl
               : PLACEHOLDER;
@@ -187,18 +256,18 @@ export default function BlogListView() {
                   <p className="blog-excerpt">{excerpt}</p>
                   <div className="blog-meta">
                     <span>
-                      <i className="fas fa-user me-1"></i> {blog.authorName}
+                      <User size={12} className="me-1" style={ICON_STYLE} /> {blog.authorName}
                     </span>
                     <span>
-                      <i className="far fa-calendar me-1"></i> {formattedDate}
+                      <CalendarDays size={12} className="me-1" style={ICON_STYLE} /> {formattedDate}
                     </span>
                   </div>
                   <div className="blog-actions">
                     <Link href={`/admin/Blogs?id=${blog._id}`} className="action-icon-btn">
-                      <i className="fas fa-edit"></i> Edit
+                      <Pencil size={14} style={ICON_STYLE} /> Edit
                     </Link>
                     <button className="action-icon-btn delete" onClick={() => handleDelete(blog._id)}>
-                      <i className="fas fa-trash-alt"></i> Delete
+                      <Trash2 size={14} style={ICON_STYLE} /> Delete
                     </button>
                   </div>
                 </div>

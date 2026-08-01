@@ -1,7 +1,27 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import {
+  type LucideIcon,
+  PieChart,
+  RefreshCw,
+  Receipt,
+  Wallet,
+  Store,
+  UserCheck,
+  Search,
+  X,
+  SearchX,
+  Wrench,
+  CreditCard,
+  Headset,
+  CalendarDays,
+  Book,
+  Save,
+} from "lucide-react";
 import "@/app/admin/styles/legacy-total-sales.css";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 /**
  * Ported from admin-ssbwithisv/TotalSales.html + assets/js/total-sales.js.
@@ -76,18 +96,18 @@ function resolveBookingMethod(o: OrderItem): BookingMethod {
   return "standard";
 }
 
-const METHOD_BADGE: Record<BookingMethod, { icon: string; color: string; bg: string; border: string; label: (o: OrderItem) => string }> = {
-  manual: { icon: "fa-tools", color: "#e67e22", bg: "rgba(230,126,34,0.15)", border: "rgba(230,126,34,0.3)", label: () => "Manual" },
-  standard: { icon: "fa-credit-card", color: "#3498db", bg: "rgba(52,152,219,0.15)", border: "rgba(52,152,219,0.3)", label: () => "Standard" },
+const METHOD_BADGE: Record<BookingMethod, { icon: LucideIcon; color: string; bg: string; border: string; label: (o: OrderItem) => string }> = {
+  manual: { icon: Wrench, color: "#e67e22", bg: "rgba(230,126,34,0.15)", border: "rgba(230,126,34,0.3)", label: () => "Manual" },
+  standard: { icon: CreditCard, color: "#3498db", bg: "rgba(52,152,219,0.15)", border: "rgba(52,152,219,0.3)", label: () => "Standard" },
   franchise: {
-    icon: "fa-store",
+    icon: Store,
     color: "#e0c214",
     bg: "rgba(224,194,20,0.12)",
     border: "rgba(224,194,20,0.3)",
     label: (o) => (o.referralCode ? `Franchise · ${o.referralCode}` : "Franchise"),
   },
   sales: {
-    icon: "fa-headset",
+    icon: Headset,
     color: "#2ecc71",
     bg: "rgba(46,204,113,0.15)",
     border: "rgba(46,204,113,0.3)",
@@ -101,6 +121,7 @@ const METHOD_BADGE: Record<BookingMethod, { icon: string; color: string; bg: str
 function BookingMethodBadge({ order }: { order: OrderItem }) {
   const method = resolveBookingMethod(order);
   const b = METHOD_BADGE[method];
+  const Icon = b.icon;
   return (
     <div className="franchise-info">
       <span
@@ -118,7 +139,7 @@ function BookingMethodBadge({ order }: { order: OrderItem }) {
           border: `1px solid ${b.border}`,
         }}
       >
-        <i className={`fas ${b.icon}`} style={{ fontSize: "0.7rem" }}></i>
+        <Icon size={12} style={ICON_STYLE} />
         {b.label(order)}
       </span>
     </div>
@@ -347,13 +368,13 @@ export default function TotalSalesView() {
       <div className="admin-page-header">
         <div className="header-left">
           <h1 className="admin-page-title">
-            <i className="fas fa-chart-pie me-2"></i> Sales Analytics
+            <PieChart size={20} className="me-2" style={ICON_STYLE} /> Sales Analytics
           </h1>
           <p className="text-muted mb-0">Monitor global revenue streams and transaction details</p>
         </div>
         <div className="d-flex gap-2">
           <button className="thm-btn" onClick={handleRefresh}>
-            <i className="fas fa-sync-alt me-2"></i> Sync Data
+            <RefreshCw size={16} className="me-2" style={ICON_STYLE} /> Sync Data
           </button>
         </div>
       </div>
@@ -361,22 +382,22 @@ export default function TotalSalesView() {
       {/* KPI Cards */}
       <div className="stat-grid">
         <div className="stat-card">
-          <i className="fas fa-receipt"></i>
+          <Receipt size={28} style={{ color: "var(--primary-gold)", marginBottom: 12, opacity: 0.8 }} />
           <div className="val">{stats.total}</div>
           <div className="lab">Total Transactions</div>
         </div>
         <div className="stat-card">
-          <i className="fas fa-wallet"></i>
+          <Wallet size={28} style={{ color: "var(--primary-gold)", marginBottom: 12, opacity: 0.8 }} />
           <div className="val">₹{stats.revenue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
           <div className="lab">Total Gross Revenue</div>
         </div>
         <div className="stat-card">
-          <i className="fas fa-store"></i>
+          <Store size={28} style={{ color: "var(--primary-gold)", marginBottom: 12, opacity: 0.8 }} />
           <div className="val">{stats.franchiseCount}</div>
           <div className="lab">Partner Referrals</div>
         </div>
         <div className="stat-card">
-          <i className="fas fa-user-check"></i>
+          <UserCheck size={28} style={{ color: "var(--primary-gold)", marginBottom: 12, opacity: 0.8 }} />
           <div className="val">{stats.directCount}</div>
           <div className="lab">Direct Conversions</div>
         </div>
@@ -388,7 +409,7 @@ export default function TotalSalesView() {
           <div className="col-lg-3 col-md-6">
             <label className="admin-form-label">Search Transaction</label>
             <div className="position-relative">
-              <i className="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 opacity-50"></i>
+              <Search size={16} className="position-absolute top-50 start-0 translate-middle-y ms-3 opacity-50" />
               <input
                 type="text"
                 className="admin-input ps-5"
@@ -445,7 +466,7 @@ export default function TotalSalesView() {
               style={{ background: "rgba(255,107,107,0.1)", color: "#ff6b6b", borderColor: "rgba(255,107,107,0.2)", fontSize: "0.8rem" }}
               onClick={clearFilters}
             >
-              <i className="fas fa-times me-1"></i> Clear Filters
+              <X size={14} className="me-1" style={ICON_STYLE} /> Clear Filters
             </button>
           )}
         </div>
@@ -461,7 +482,7 @@ export default function TotalSalesView() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-5">
-              <i className="fas fa-search-minus mb-3" style={{ fontSize: "3rem", opacity: 0.2 }}></i>
+              <SearchX size={48} className="mb-3" style={{ opacity: 0.2 }} />
               <h4>No transactions found</h4>
               <p className="text-muted">Adjust your filters to see more results.</p>
             </div>
@@ -499,7 +520,7 @@ export default function TotalSalesView() {
                       </td>
                       <td>
                         <span className={`product-badge ${isBatch ? "badge-batch" : "badge-course"}`}>
-                          <i className={`fas ${isBatch ? "fa-calendar-alt" : "fa-book"}`}></i> {isBatch ? "BATCH" : "COURSE"}
+                          {isBatch ? <CalendarDays size={12} /> : <Book size={12} />} {isBatch ? "BATCH" : "COURSE"}
                         </span>
                         <div style={{ fontSize: "0.85rem", fontWeight: 500 }}>{prodTitle}</div>
                       </td>
@@ -534,7 +555,7 @@ export default function TotalSalesView() {
                       </td>
                       <td className="text-end">
                         <button className="action-btn" onClick={() => showOrderDetail(o)}>
-                          <i className="fas fa-receipt"></i>
+                          <Receipt size={14} />
                         </button>
                       </td>
                     </tr>
@@ -552,7 +573,7 @@ export default function TotalSalesView() {
           <div className="admin-modal sales-modal-content" style={{ maxWidth: 560 }} onClick={(e) => e.stopPropagation()}>
             <div className="admin-modal-header">
               <h5 className="admin-modal-title" style={{ fontSize: "1.2rem" }}>
-                <i className="fas fa-file-invoice me-2 text-warning"></i> Transaction Invoice
+                <Receipt size={18} className="me-2 text-warning" style={ICON_STYLE} /> Transaction Invoice
               </h5>
               <button type="button" className="btn-close btn-close-white" onClick={closeOrderDetail}></button>
             </div>
@@ -612,7 +633,7 @@ export default function TotalSalesView() {
                           disabled={savingBatch}
                           onClick={saveOrderBatch}
                         >
-                          <i className="fas fa-save"></i> Save
+                          <Save size={14} /> Save
                         </button>
                       </div>
                     </div>

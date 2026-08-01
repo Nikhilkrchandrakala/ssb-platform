@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Copy, TrendingUp, ShoppingCart, Wallet, History } from "lucide-react";
 import "@/app/admin/styles/legacy-franchise-dashboard.css";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 /**
  * Ported from admin-ssbwithisv/FranchiseDashboard.html + assets/js/franchise-dashboard.js.
@@ -123,7 +126,7 @@ export default function FranchiseDashboardView() {
                 </div>
               </div>
               <button className="thm-btn" style={{ background: "#000", color: "#fff", padding: "8px 20px" }} onClick={copyReferralCode}>
-                <i className="fas fa-copy me-2"></i> COPY
+                <Copy size={16} className="me-2" style={ICON_STYLE} /> COPY
               </button>
             </div>
           </div>
@@ -131,17 +134,17 @@ export default function FranchiseDashboardView() {
           {/* Stats Row */}
           <div className="stat-grid">
             <div className="stat-box">
-              <i className="fas fa-chart-line"></i>
+              <TrendingUp size={24} />
               <div className="val">₹{(data.totalSales || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
               <div className="lab">Total Sales Revenue</div>
             </div>
             <div className="stat-box">
-              <i className="fas fa-shopping-cart"></i>
+              <ShoppingCart size={24} />
               <div className="val">{data.totalOrders || 0}</div>
               <div className="lab">Total Orders</div>
             </div>
             <div className="stat-box">
-              <i className="fas fa-wallet"></i>
+              <Wallet size={24} />
               <div className="val">₹{(data.commission || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
               <div className="lab">My Commission ({data.franchise?.commissionPercent || 20}%)</div>
             </div>
@@ -151,7 +154,7 @@ export default function FranchiseDashboardView() {
           <div className="admin-card">
             <div className="card-header border-0 bg-transparent px-0 pb-3">
               <h4 className="mb-0 text-white">
-                <i className="fas fa-history me-2 text-warning"></i> Recent Referral Activity
+                <History size={18} className="me-2 text-warning" style={ICON_STYLE} /> Recent Referral Activity
               </h4>
             </div>
             <div className="admin-table-container">

@@ -129,3 +129,23 @@
         padding: 18px;
     }
 }
+
+/* Roster table thumbnail + modal photo preview — never had a style rule,
+   so both were rendering at the uploaded photo's native size. */
+.candidate-img-circle {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(224, 194, 20, 0.35);
+    display: block;
+}
+
+.preview-img {
+    max-width: 160px;
+    max-height: 160px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 10px;
+}

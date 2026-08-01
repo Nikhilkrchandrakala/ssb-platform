@@ -1,7 +1,27 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ListChecks,
+  GraduationCap,
+  ClipboardCheck,
+  Hourglass,
+  Search,
+  AlertTriangle,
+  ClipboardList,
+  ChevronLeft,
+  ChevronRight,
+  UserPen,
+  Info,
+  Brain,
+  UsersRound,
+  Settings2,
+  UserCog,
+  Save,
+} from "lucide-react";
 import "@/app/admin/styles/legacy-allotment.css";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 /**
  * Assessor Allotment & Management.
@@ -422,7 +442,7 @@ export default function AllotmentView() {
       <div className="admin-page-header">
         <div className="header-left">
           <h1 className="admin-page-title">
-            <i className="fas fa-tasks me-2"></i> Assessor Allotment & Management
+            <ListChecks size={20} className="me-2" style={ICON_STYLE} /> Assessor Allotment & Management
           </h1>
           <p className="text-muted mb-0">Allot specific GTO, TO, Psych, or IO assessors to active training candidates</p>
         </div>
@@ -431,7 +451,7 @@ export default function AllotmentView() {
       <div className="summary-card-grid">
         <div className="stat-card">
           <div className="stat-icon">
-            <i className="fas fa-user-graduate"></i>
+            <GraduationCap size={28} />
           </div>
           <div className="stat-info">
             <h3>{totalCount || "—"}</h3>
@@ -440,7 +460,7 @@ export default function AllotmentView() {
         </div>
         <div className="stat-card">
           <div className="stat-icon icon-allotted">
-            <i className="fas fa-clipboard-check"></i>
+            <ClipboardCheck size={28} />
           </div>
           <div className="stat-info">
             <h3>{pageAllottedCount}</h3>
@@ -449,7 +469,7 @@ export default function AllotmentView() {
         </div>
         <div className="stat-card">
           <div className="stat-icon icon-unallotted">
-            <i className="fas fa-user-clock"></i>
+            <Hourglass size={28} />
           </div>
           <div className="stat-info">
             <h3>{students.length - pageAllottedCount}</h3>
@@ -461,7 +481,7 @@ export default function AllotmentView() {
       <div className="admin-card">
         <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
           <div style={{ position: "relative", maxWidth: 400, width: "100%" }}>
-            <i className="fas fa-search" style={{ position: "absolute", left: 15, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }}></i>
+            <Search size={16} style={{ position: "absolute", left: 15, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
             <input
               type="text"
               className="admin-input"
@@ -523,14 +543,14 @@ export default function AllotmentView() {
               ) : loadError ? (
                 <tr>
                   <td colSpan={9} className="text-center p-5 text-danger">
-                    <i className="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                    <AlertTriangle size={32} className="mb-3" />
                     <p className="mb-0">Error loading data: {loadError}</p>
                   </td>
                 </tr>
               ) : students.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="text-center p-5 opacity-50">
-                    <i className="fas fa-user-clock fa-2x mb-3"></i>
+                    <Hourglass size={32} className="mb-3" />
                     <p className="mb-0">No enrolled candidates found matching your filters.</p>
                   </td>
                 </tr>
@@ -572,7 +592,7 @@ export default function AllotmentView() {
                       <td>{renderAssessorCell(s.assignedIO)}</td>
                       <td style={{ textAlign: "center", borderLeft: "1px solid var(--border-color)" }}>
                         <button className="action-btn" title="Allot Assessors" onClick={() => openAllotmentModal(s)}>
-                          <i className="fas fa-clipboard-list"></i>
+                          <ClipboardList size={14} />
                         </button>
                       </td>
                     </tr>
@@ -606,7 +626,7 @@ export default function AllotmentView() {
               <ul className="pagination pagination-sm mb-0">
                 <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
                   <button className="page-link" onClick={() => goToPage(currentPage - 1)}>
-                    <i className="fas fa-chevron-left"></i> Prev
+                    <ChevronLeft size={14} style={ICON_STYLE} /> Prev
                   </button>
                 </li>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
@@ -618,7 +638,7 @@ export default function AllotmentView() {
                 ))}
                 <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
                   <button className="page-link" onClick={() => goToPage(currentPage + 1)}>
-                    Next <i className="fas fa-chevron-right"></i>
+                    Next <ChevronRight size={14} style={ICON_STYLE} />
                   </button>
                 </li>
               </ul>
@@ -633,7 +653,7 @@ export default function AllotmentView() {
           <div className="admin-modal" style={{ maxWidth: 900, width: "95%", margin: "20px auto" }}>
             <div className="admin-modal-header">
               <h3 className="admin-modal-title">
-                <i className="fas fa-user-edit me-2"></i> Configure Assessor Allotment
+                <UserPen size={18} className="me-2" style={ICON_STYLE} /> Configure Assessor Allotment
               </h3>
               <button type="button" className="btn-close btn-close-white" onClick={closeAllotmentModal}></button>
             </div>
@@ -693,7 +713,7 @@ export default function AllotmentView() {
 
                   <div style={{ background: "rgba(224, 194, 20, 0.04)", border: "var(--border-gold)", padding: 15, borderRadius: 8 }} className="mt-4">
                     <p className="small text-warning mb-0">
-                      <i className="fas fa-info-circle"></i> Assessor slots will dynamically filter candidates to the corresponding officer subclass.
+                      <Info size={14} style={ICON_STYLE} /> Assessor slots will dynamically filter candidates to the corresponding officer subclass.
                       Workloads are recalculated live in real-time to avoid schedule clashes.
                     </p>
                   </div>
@@ -708,7 +728,7 @@ export default function AllotmentView() {
 
                     <div className="admin-form-group">
                       <label className="admin-form-label">
-                        <i className="fas fa-brain me-1"></i> Psychology Assessor (Psych)
+                        <Brain size={14} className="me-1" style={ICON_STYLE} /> Psychology Assessor (Psych)
                       </label>
                       <select className="admin-input" disabled={!psychOrToAllowed} value={selectPsych} onChange={(e) => handlePsychChange(e.target.value)}>
                         <option value="">{psychOrToAllowed ? "-- Select Psych Assessor --" : "-- Not Allowed by Course --"}</option>
@@ -722,7 +742,7 @@ export default function AllotmentView() {
 
                     <div className="admin-form-group">
                       <label className="admin-form-label">
-                        <i className="fas fa-users-cog me-1"></i> Group Testing Assessor (GTO)
+                        <UsersRound size={14} className="me-1" style={ICON_STYLE} /> Group Testing Assessor (GTO)
                       </label>
                       <select className="admin-input" disabled={!gtoAllowed} value={selectGTO} onChange={(e) => setSelectGTO(e.target.value)}>
                         <option value="">{gtoAllowed ? "-- Select GTO Assessor --" : "-- Not Allowed by Course --"}</option>
@@ -736,7 +756,7 @@ export default function AllotmentView() {
 
                     <div className="admin-form-group">
                       <label className="admin-form-label">
-                        <i className="fas fa-cogs me-1"></i> Technical Assessor (TO)
+                        <Settings2 size={14} className="me-1" style={ICON_STYLE} /> Technical Assessor (TO)
                       </label>
                       <select className="admin-input" disabled={!psychOrToAllowed} value={selectTO} onChange={(e) => handleToChange(e.target.value)}>
                         <option value="">{psychOrToAllowed ? "-- Select TO Assessor --" : "-- Not Allowed by Course --"}</option>
@@ -750,7 +770,7 @@ export default function AllotmentView() {
 
                     <div className="admin-form-group">
                       <label className="admin-form-label">
-                        <i className="fas fa-user-tie me-1"></i> Interviewing Officer (IO)
+                        <UserCog size={14} className="me-1" style={ICON_STYLE} /> Interviewing Officer (IO)
                       </label>
                       <select className="admin-input" disabled={!ioAllowed} value={selectIO} onChange={(e) => setSelectIO(e.target.value)}>
                         <option value="">{ioAllowed ? "-- Select IO Assessor --" : "-- Not Allowed by Course --"}</option>
@@ -803,7 +823,7 @@ export default function AllotmentView() {
                       Cancel
                     </button>
                     <button type="submit" className="thm-btn" style={{ padding: "8px 25px" }} disabled={submitting}>
-                      <i className="fas fa-save me-1"></i> {submitting ? "Saving..." : "Save Allotments"}
+                      <Save size={14} className="me-1" style={ICON_STYLE} /> {submitting ? "Saving..." : "Save Allotments"}
                     </button>
                   </div>
                 </div>

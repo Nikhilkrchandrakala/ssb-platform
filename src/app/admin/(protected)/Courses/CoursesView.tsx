@@ -1,7 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  CalendarDays,
+  PlusCircle,
+  Globe,
+  Pencil,
+  Unlock,
+  Save,
+  ChevronLeft,
+  ChevronRight,
+  CalendarX2,
+  Plus,
+  Sun,
+  Moon,
+  Users,
+  UserCheck,
+  Tag,
+  Ban,
+  Check,
+  UserPlus,
+  Trash2,
+  BookOpen,
+  CheckCircle2,
+} from "lucide-react";
 import "@/app/admin/styles/legacy-courses.css";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 interface Slot {
   _id: string;
@@ -547,12 +572,12 @@ export default function CoursesView() {
       <div className="admin-page-header">
         <div className="header-left">
           <h1 className="admin-page-title">
-            <i className="fas fa-calendar-alt me-2"></i> Batch Management
+            <CalendarDays size={20} className="me-2" style={ICON_STYLE} /> Batch Management
           </h1>
           <p className="text-muted mb-0">Schedule courses, manage batches, and handle manual seat bookings</p>
         </div>
         <button className="thm-btn" onClick={openAddModal}>
-          <i className="fas fa-plus-circle"></i> Create New Batch
+          <PlusCircle size={16} style={ICON_STYLE} /> Create New Batch
         </button>
       </div>
 
@@ -563,7 +588,7 @@ export default function CoursesView() {
           style={{ borderBottom: "1px solid rgba(224, 194, 20, 0.2)" }}
         >
           <h4 style={{ color: "var(--primary-gold)", margin: 0, fontWeight: 700, letterSpacing: "0.5px", fontSize: "1.25rem" }}>
-            <i className="fas fa-globe me-2"></i> Global Course Module Pricing
+            <Globe size={18} className="me-2" style={ICON_STYLE} /> Global Course Module Pricing
           </h4>
           <span
             className="badge"
@@ -576,7 +601,7 @@ export default function CoursesView() {
               borderRadius: 20,
             }}
           >
-            {pricingSyncing && <i className="fas fa-sync fa-spin me-1"></i>} Live Prices
+            {pricingSyncing && <span className="spinner-border spinner-border-sm me-1" role="status"></span>} Live Prices
           </span>
         </div>
 
@@ -622,7 +647,11 @@ export default function CoursesView() {
                   }}
                   onClick={() => togglePriceLock(key)}
                 >
-                  <i className={`fas ${priceLocked[key] ? "fa-edit" : "fa-unlock-alt"} me-1`}></i>{" "}
+                  {priceLocked[key] ? (
+                    <Pencil size={14} className="me-1" style={ICON_STYLE} />
+                  ) : (
+                    <Unlock size={14} className="me-1" style={ICON_STYLE} />
+                  )}{" "}
                   {priceLocked[key] ? "Edit" : "Unlock"}
                 </button>
               </div>
@@ -630,7 +659,7 @@ export default function CoursesView() {
           ))}
           <div className="col-xl-auto col-md-12 text-end">
             <button type="submit" className="thm-btn w-100" disabled={savingPricing}>
-              <i className="fas fa-save"></i> {savingPricing ? "Saving..." : "Save Global Prices"}
+              <Save size={16} style={ICON_STYLE} /> {savingPricing ? "Saving..." : "Save Global Prices"}
             </button>
           </div>
         </form>
@@ -639,7 +668,7 @@ export default function CoursesView() {
       {/* Month Navigation */}
       <div className="month-nav-container">
         <button className="month-nav-btn" onClick={() => setCurrentDate((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1))}>
-          <i className="fas fa-chevron-left"></i>
+          <ChevronLeft size={14} />
         </button>
         <div className="month-display-box">
           <div className="month-name">{`${MONTH_NAMES[month]} ${year}`}</div>
@@ -655,7 +684,7 @@ export default function CoursesView() {
           </div>
         </div>
         <button className="month-nav-btn" onClick={() => setCurrentDate((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1))}>
-          <i className="fas fa-chevron-right"></i>
+          <ChevronRight size={14} />
         </button>
       </div>
 
@@ -668,13 +697,13 @@ export default function CoursesView() {
 
       {!loading && monthBatches.length === 0 && (
         <div className="empty-state text-center" style={{ padding: "100px 20px" }}>
-          <div className="empty-icon mb-4" style={{ fontSize: "4rem", color: "var(--primary-gold)", opacity: 0.3 }}>
-            <i className="far fa-calendar-times"></i>
+          <div className="empty-icon mb-4" style={{ color: "var(--primary-gold)", opacity: 0.3 }}>
+            <CalendarX2 size={64} />
           </div>
           <h3>No batches scheduled for {`${MONTH_NAMES[month]} ${year}`}</h3>
           <p className="text-muted">You haven&apos;t created any course batches for this period yet.</p>
           <button className="thm-btn mt-3" onClick={openAddModal}>
-            <i className="fas fa-plus"></i> Schedule First Batch
+            <Plus size={16} style={ICON_STYLE} /> Schedule First Batch
           </button>
         </div>
       )}
@@ -694,14 +723,17 @@ export default function CoursesView() {
             const isFull = max > 0 && booked >= max;
             const isMorning = slot.batchType === "morning" || (slot.title || "").toLowerCase().includes("morning");
             const typeClass = isMorning ? "morning-type" : "evening-type";
-            const typeIcon = isMorning ? "fa-sun" : "fa-moon";
 
             return (
               <div className="col-lg-4 col-md-6" key={slot._id}>
                 <div className="batch-card">
                   <div className="batch-header">
                     <span className={`type-badge ${typeClass}`}>
-                      <i className={`fas ${typeIcon} me-2`}></i>
+                      {isMorning ? (
+                        <Sun size={14} className="me-2" style={ICON_STYLE} />
+                      ) : (
+                        <Moon size={14} className="me-2" style={ICON_STYLE} />
+                      )}
                       {slot.title || (isMorning ? "Morning" : "Evening")}
                     </span>
                     <span style={{ fontSize: "0.75rem", opacity: 0.5 }}>ID: {slot.batchNo || "—"}</span>
@@ -709,32 +741,32 @@ export default function CoursesView() {
                   <div className="batch-body">
                     <div className="stat-item">
                       <span className="stat-label">
-                        <i className="far fa-calendar-alt me-2"></i>Start Date
+                        <CalendarDays size={14} className="me-2" style={ICON_STYLE} />Start Date
                       </span>
                       <span className="stat-value">{startDateStr}</span>
                     </div>
                     <div className="stat-item">
                       <span className="stat-label">
-                        <i className="fas fa-users me-2"></i>Capacity
+                        <Users size={14} className="me-2" style={ICON_STYLE} />Capacity
                       </span>
                       <span className="stat-value">{max} Seats</span>
                     </div>
                     <div className="stat-item">
                       <span className="stat-label">
-                        <i className="fas fa-user-check me-2"></i>Booked
+                        <UserCheck size={14} className="me-2" style={ICON_STYLE} />Booked
                       </span>
                       <span className="stat-value">{booked} Students</span>
                     </div>
                     <div className="stat-item">
                       <span className="stat-label">
-                        <i className="fas fa-tag me-2"></i>Price
+                        <Tag size={14} className="me-2" style={ICON_STYLE} />Price
                       </span>
                       <span className="price-badge">{priceStr}</span>
                     </div>
                     <div className="mt-3 text-center">
                       {isFull ? (
                         <span className="badge bg-danger w-100 p-2" style={{ borderRadius: 8 }}>
-                          <i className="fas fa-ban me-2"></i>BATCH FULL
+                          <Ban size={14} className="me-2" style={ICON_STYLE} />BATCH FULL
                         </span>
                       ) : (
                         <span
@@ -746,14 +778,14 @@ export default function CoursesView() {
                             borderRadius: 8,
                           }}
                         >
-                          <i className="fas fa-check me-2"></i>{available} SPOTS AVAILABLE
+                          <Check size={14} className="me-2" style={ICON_STYLE} />{available} SPOTS AVAILABLE
                         </span>
                       )}
                     </div>
                   </div>
                   <div className="batch-footer">
                     <button className="action-btn edit-btn" style={{ flex: 1 }} title="Edit" onClick={() => openEditModal(slot._id)}>
-                      <i className="fas fa-edit"></i>
+                      <Pencil size={14} />
                     </button>
                     <button
                       className="action-btn manual-btn"
@@ -761,14 +793,14 @@ export default function CoursesView() {
                       disabled={isFull}
                       onClick={() => openManualBookingModal(slot._id)}
                     >
-                      <i className="fas fa-user-plus me-1"></i> Book
+                      <UserPlus size={14} className="me-1" style={ICON_STYLE} /> Book
                     </button>
                     <button
                       className="action-btn delete-btn"
                       style={{ flex: 1, color: "#ff6b6b" }}
                       onClick={() => showDeleteConfirm(slot._id)}
                     >
-                      <i className="fas fa-trash-alt"></i>
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
@@ -784,7 +816,11 @@ export default function CoursesView() {
           <div className="admin-modal" style={{ maxWidth: 550, width: "100%" }} onClick={(e) => e.stopPropagation()}>
             <div className="admin-modal-header">
               <h5 className="admin-modal-title">
-                <i className={`fas ${editSlotId ? "fa-edit" : "fa-plus-circle"} me-2`}></i>{" "}
+                {editSlotId ? (
+                  <Pencil size={18} className="me-2" style={ICON_STYLE} />
+                ) : (
+                  <PlusCircle size={18} className="me-2" style={ICON_STYLE} />
+                )}{" "}
                 {editSlotId ? "Edit Batch Details" : "Create New Batch"}
               </h5>
               <button type="button" className="btn-close" onClick={() => setSlotModalOpen(false)} aria-label="Close"></button>
@@ -859,7 +895,7 @@ export default function CoursesView() {
                   style={{ paddingLeft: "2em", borderLeft: "3px solid var(--primary-gold)", marginTop: 15 }}
                 >
                   <label className="admin-form-label mb-2">
-                    <i className="fas fa-book-open me-1" style={{ color: "var(--primary-gold)" }}></i> Select Included
+                    <BookOpen size={14} className="me-1" style={{ ...ICON_STYLE, color: "var(--primary-gold)" }} /> Select Included
                     Modules
                   </label>
                   {MODULES.map((m) => (
@@ -906,7 +942,7 @@ export default function CoursesView() {
           <div className="admin-modal" style={{ maxWidth: 550, width: "100%" }} onClick={(e) => e.stopPropagation()}>
             <div className="admin-modal-header">
               <h5 className="admin-modal-title">
-                <i className="fas fa-user-plus me-2"></i> Manual Seat Booking
+                <UserPlus size={18} className="me-2" style={ICON_STYLE} /> Manual Seat Booking
               </h5>
               <button type="button" className="btn-close" onClick={() => setBookModalOpen(false)} aria-label="Close"></button>
             </div>
@@ -932,7 +968,7 @@ export default function CoursesView() {
                   style={{ borderLeft: "3px solid var(--primary-gold)", paddingLeft: 15, marginTop: 15 }}
                 >
                   <label className="admin-form-label mb-2">
-                    <i className="fas fa-book-open me-1" style={{ color: "var(--primary-gold)" }}></i> Choose Course /
+                    <BookOpen size={14} className="me-1" style={{ ...ICON_STYLE, color: "var(--primary-gold)" }} /> Choose Course /
                     Modules
                   </label>
                   {MANUAL_MODULES.map((m) => (
@@ -994,7 +1030,7 @@ export default function CoursesView() {
                   onClick={confirmManualBook}
                   disabled={confirmingBooking}
                 >
-                  <i className="fas fa-check-circle me-1"></i> {confirmingBooking ? "Processing..." : "Confirm Booking"}
+                  <CheckCircle2 size={14} className="me-1" style={ICON_STYLE} /> {confirmingBooking ? "Processing..." : "Confirm Booking"}
                 </button>
               </div>
             </div>

@@ -3,6 +3,35 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  Bell,
+  Check,
+  PieChart,
+  User,
+  Layers,
+  ChevronDown,
+  Gauge,
+  BookOpen,
+  Newspaper,
+  Images,
+  IdCard,
+  Briefcase,
+  GraduationCap,
+  Store,
+  Coins,
+  Receipt,
+  Ticket,
+  UserSearch,
+  ShieldUser,
+  ClipboardCheck,
+  UserRoundCog,
+  Brain,
+  LogOut,
+  X,
+  Indent,
+  Outdent,
+  type LucideIcon,
+} from "lucide-react";
 import { useAdminUser } from "./AdminUserProvider";
 import { hasAdminPermission } from "@/server/adminAccess";
 
@@ -30,14 +59,14 @@ const ASSESSOR_LABELS: Record<string, string> = {
 function NavLink({
   href,
   active,
-  icon,
+  icon: Icon,
   children,
   onClick,
   title,
 }: {
   href: string;
   active: boolean;
-  icon?: string;
+  icon?: LucideIcon;
   children: React.ReactNode;
   onClick?: () => void;
   title?: string;
@@ -49,7 +78,7 @@ function NavLink({
       onClick={onClick}
       title={title || (typeof children === "string" ? children : "")}
     >
-      {icon && <i className={icon}></i>}
+      {Icon && <Icon size={16} />}
       <span className="admin-nav-label">{children}</span>
     </Link>
   );
@@ -103,7 +132,7 @@ function NotificationBell({ open, onToggle }: { open: boolean; onToggle: () => v
         onClick={toggle}
         title="Notifications"
       >
-        <i className="fas fa-bell"></i>
+        <Bell size={18} />
         {unreadCount > 0 && <span className="notification-badge-count">{unreadCount}</span>}
       </div>
       <div
@@ -132,7 +161,7 @@ function NotificationBell({ open, onToggle }: { open: boolean; onToggle: () => v
                     title="Mark as read"
                     style={{ background: "none", border: "none", color: "var(--primary-gold)", cursor: "pointer", padding: "0 0 0 10px" }}
                   >
-                    <i className="fas fa-check"></i>
+                    <Check size={14} />
                   </button>
                 )}
               </div>
@@ -265,10 +294,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
           {role === "franchise" ? (
             <>
-              <NavLink href="/admin/FranchiseDashboard" active={isActive("/admin/FranchiseDashboard")} icon="fas fa-chart-pie" onClick={closeMobile}>
+              <NavLink href="/admin/FranchiseDashboard" active={isActive("/admin/FranchiseDashboard")} icon={PieChart} onClick={closeMobile}>
                 Franchise Dashboard
               </NavLink>
-              <NavLink href="/admin/Profile" active={isActive("/admin/Profile")} icon="fas fa-user-circle" onClick={closeMobile}>
+              <NavLink href="/admin/Profile" active={isActive("/admin/Profile")} icon={User} onClick={closeMobile}>
                 Profile
               </NavLink>
             </>
@@ -278,34 +307,34 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 <div className={`admin-nav-dropdown${openDropdown === "content" ? " open" : ""}`}>
                   <div className="admin-nav-dropdown-toggle" onClick={() => toggleDropdown("content")} title="Content Management">
                     <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0, overflow: "hidden" }}>
-                      <i className="fas fa-layer-group"></i>
+                      <Layers size={16} />
                       <span className="admin-nav-label">Content</span>
                     </div>
-                    <i className="fas fa-chevron-down dropdown-chevron"></i>
+                    <ChevronDown size={12} className="dropdown-chevron" />
                   </div>
                   <div className="admin-nav-submenu">
                     {hasAdminPermission(user ?? null, "dashboard") && (
-                      <NavLink href="/admin/dashboard" active={isActive("/admin/dashboard")} icon="fas fa-gauge-high" onClick={closeMobile}>
+                      <NavLink href="/admin/dashboard" active={isActive("/admin/dashboard")} icon={Gauge} onClick={closeMobile}>
                         Dashboard
                       </NavLink>
                     )}
                     {hasAdminPermission(user ?? null, "magazine") && (
-                      <NavLink href="/admin/magazine" active={isActive("/admin/magazine")} icon="fas fa-book-open" onClick={closeMobile}>
+                      <NavLink href="/admin/magazine" active={isActive("/admin/magazine")} icon={BookOpen} onClick={closeMobile}>
                         Magazine
                       </NavLink>
                     )}
                     {hasAdminPermission(user ?? null, "blogs") && (
-                      <NavLink href="/admin/BlogList" active={pathname?.includes("Blog") ?? false} icon="fas fa-newspaper" onClick={closeMobile}>
+                      <NavLink href="/admin/BlogList" active={pathname?.includes("Blog") ?? false} icon={Newspaper} onClick={closeMobile}>
                         Blogs
                       </NavLink>
                     )}
                     {hasAdminPermission(user ?? null, "gallery") && (
-                      <NavLink href="/admin/Gallery" active={isActive("/admin/Gallery")} icon="fas fa-images" onClick={closeMobile}>
+                      <NavLink href="/admin/Gallery" active={isActive("/admin/Gallery")} icon={Images} onClick={closeMobile}>
                         Gallery
                       </NavLink>
                     )}
                     {hasAdminPermission(user ?? null, "candidates") && (
-                      <NavLink href="/admin/candidate" active={isActive("/admin/candidate")} icon="fas fa-id-card" onClick={closeMobile}>
+                      <NavLink href="/admin/candidate" active={isActive("/admin/candidate")} icon={IdCard} onClick={closeMobile}>
                         REC Candidates
                       </NavLink>
                     )}
@@ -317,59 +346,59 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 <div className={`admin-nav-dropdown${openDropdown === "management" ? " open" : ""}`}>
                   <div className="admin-nav-dropdown-toggle" onClick={() => toggleDropdown("management")} title="Administration & Sales">
                     <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0, overflow: "hidden" }}>
-                      <i className="fas fa-briefcase"></i>
+                      <Briefcase size={16} />
                       <span className="admin-nav-label">Management</span>
                     </div>
-                    <i className="fas fa-chevron-down dropdown-chevron"></i>
+                    <ChevronDown size={12} className="dropdown-chevron" />
                   </div>
                   <div className="admin-nav-submenu">
                     {hasAdminPermission(user ?? null, "courses") && (
-                      <NavLink href="/admin/Courses" active={isActive("/admin/Courses")} icon="fas fa-graduation-cap" onClick={closeMobile}>
+                      <NavLink href="/admin/Courses" active={isActive("/admin/Courses")} icon={GraduationCap} onClick={closeMobile}>
                         Courses
                       </NavLink>
                     )}
                     {hasAdminPermission(user ?? null, "franchise") && (
-                      <NavLink href="/admin/Franchise" active={isActive("/admin/Franchise")} icon="fas fa-store" onClick={closeMobile}>
+                      <NavLink href="/admin/Franchise" active={isActive("/admin/Franchise")} icon={Store} onClick={closeMobile}>
                         Franchise
                       </NavLink>
                     )}
                     {hasAdminPermission(user ?? null, "sales") && user?.salesRole !== "executive" && (
-                      <NavLink href="/admin/TotalSales" active={isActive("/admin/TotalSales")} icon="fas fa-coins" onClick={closeMobile}>
+                      <NavLink href="/admin/TotalSales" active={isActive("/admin/TotalSales")} icon={Coins} onClick={closeMobile}>
                         Total Sales
                       </NavLink>
                     )}
                     {hasAdminPermission(user ?? null, "sales") && (
-                      <NavLink href="/admin/Sales" active={isActive("/admin/Sales")} icon="fas fa-receipt" onClick={closeMobile}>
+                      <NavLink href="/admin/Sales" active={isActive("/admin/Sales")} icon={Receipt} onClick={closeMobile}>
                         Sales
                       </NavLink>
                     )}
                     {hasAdminPermission(user ?? null, "coupons") && (
-                      <NavLink href="/admin/CouponManagement" active={isActive("/admin/CouponManagement")} icon="fas fa-ticket" onClick={closeMobile}>
+                      <NavLink href="/admin/CouponManagement" active={isActive("/admin/CouponManagement")} icon={Ticket} onClick={closeMobile}>
                         Coupons
                       </NavLink>
                     )}
                     {hasAdminPermission(user ?? null, "leads") && (
-                      <NavLink href="/admin/leads" active={isActive("/admin/leads")} icon="fas fa-users-viewfinder" onClick={closeMobile}>
+                      <NavLink href="/admin/leads" active={isActive("/admin/leads")} icon={UserSearch} onClick={closeMobile}>
                         Leads
                       </NavLink>
                     )}
                     {hasAdminPermission(user ?? null, "roles") && (
-                      <NavLink href="/admin/RolesManagement" active={isActive("/admin/RolesManagement")} icon="fas fa-user-shield" onClick={closeMobile}>
+                      <NavLink href="/admin/RolesManagement" active={isActive("/admin/RolesManagement")} icon={ShieldUser} onClick={closeMobile}>
                         Roles & Permissions
                       </NavLink>
                     )}
                     {hasAdminPermission(user ?? null, "students") && (
-                      <NavLink href="/admin/StudentRoster" active={isActive("/admin/StudentRoster")} icon="fas fa-user-graduate" onClick={closeMobile}>
+                      <NavLink href="/admin/StudentRoster" active={isActive("/admin/StudentRoster")} icon={GraduationCap} onClick={closeMobile}>
                         Candidates
                       </NavLink>
                     )}
                     {hasAdminPermission(user ?? null, "allotment") && (
-                      <NavLink href="/admin/Allotment" active={isActive("/admin/Allotment")} icon="fas fa-clipboard-check" onClick={closeMobile}>
+                      <NavLink href="/admin/Allotment" active={isActive("/admin/Allotment")} icon={ClipboardCheck} onClick={closeMobile}>
                         Assessor Allotment
                       </NavLink>
                     )}
                     {hasAdminPermission(user ?? null, "admin") && (
-                      <NavLink href="/admin/all-users" active={isActive("/admin/all-users")} icon="fas fa-users-gear" onClick={closeMobile}>
+                      <NavLink href="/admin/all-users" active={isActive("/admin/all-users")} icon={UserRoundCog} onClick={closeMobile}>
                         Users
                       </NavLink>
                     )}
@@ -386,12 +415,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                   onClick={closeMobile}
                   title="Candidate Evaluation"
                 >
-                  <i className="fas fa-brain"></i>
+                  <Brain size={16} />
                   <span className="admin-nav-label">Candidate Evaluation</span>
                 </a>
               )}
 
-              <NavLink href="/admin/Profile" active={isActive("/admin/Profile")} icon="fas fa-user" onClick={closeMobile}>
+              <NavLink href="/admin/Profile" active={isActive("/admin/Profile")} icon={User} onClick={closeMobile}>
                 Profile
               </NavLink>
             </>
@@ -420,7 +449,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           </Link>
 
           <button id="logoutBtn" className="admin-sidebar-logout-btn" onClick={() => logout()} title="Logout">
-            <i className="fas fa-power-off"></i>
+            <LogOut size={16} />
             <span>Logout</span>
           </button>
         </div>
@@ -442,7 +471,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               title={isCollapsed ? "Expand Navigation Sidebar" : "Collapse Navigation Sidebar"}
               aria-label="Toggle Navigation Sidebar"
             >
-              <i className={mobileOpen ? "fas fa-times" : isCollapsed ? "fas fa-indent" : "fas fa-outdent"}></i>
+              {mobileOpen ? <X size={18} /> : isCollapsed ? <Indent size={18} /> : <Outdent size={18} />}
             </button>
             <div className="admin-header-title">
               <span>Welcome, {displayName}</span>

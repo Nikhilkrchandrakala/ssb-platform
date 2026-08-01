@@ -98,7 +98,7 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
           </div>
 
           <nav className={styles.menu}>
-            {user?.name && (
+            {user?.role === "student" && (
               <Link href="/ProfileDashboard" onClick={onClose} className={pathname === "/ProfileDashboard" ? styles.active : ""}>
                 My Profile
               </Link>

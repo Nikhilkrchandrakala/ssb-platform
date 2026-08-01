@@ -1,7 +1,28 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import {
+  ShieldCheck,
+  XCircle,
+  GraduationCap,
+  UserPlus,
+  Search,
+  AlertTriangle,
+  Database,
+  FileText,
+  Eye,
+  IdCard,
+  Receipt,
+  Info,
+  ExternalLink,
+  Save,
+  Plus,
+  User,
+  type LucideIcon,
+} from "lucide-react";
 import "@/app/admin/styles/legacy-student-roster.css";
+
+const ICON_STYLE = { verticalAlign: -2 };
 
 /**
  * Candidate / Student Roster.
@@ -450,7 +471,7 @@ export default function StudentRosterView() {
       return (
         <div className="mini-badge w-100 p-2 d-flex justify-content-between align-items-center mb-1" key={label}>
           <span>
-            <i className="fas fa-user-shield me-1"></i> {label} Assessor
+            <ShieldCheck size={14} className="me-1" style={ICON_STYLE} /> {label} Assessor
           </span>
           <strong style={{ color: "#fff" }}>{assessor.name}</strong>
         </div>
@@ -463,7 +484,7 @@ export default function StudentRosterView() {
         key={label}
       >
         <span style={{ color: "#ff6b6b" }}>
-          <i className="fas fa-times-circle me-1"></i> {label} Assessor
+          <XCircle size={14} className="me-1" style={ICON_STYLE} /> {label} Assessor
         </span>
         <strong style={{ color: "#ff6b6b", fontWeight: 500 }}>Unassigned</strong>
       </div>
@@ -497,16 +518,16 @@ export default function StudentRosterView() {
   }, [detailOrders, detailStudent]);
 
   const documentLinks = useMemo(() => {
-    const links: { icon: string; iconColor: string; label: string; url: string }[] = [];
+    const links: { icon: LucideIcon; iconColor: string; label: string; url: string }[] = [];
     if (detailStudent?.profileImage) {
-      links.push({ icon: "fa-user-circle", iconColor: "text-warning", label: "Profile Picture", url: detailStudent.profileImage });
+      links.push({ icon: User, iconColor: "text-warning", label: "Profile Picture", url: detailStudent.profileImage });
     }
     (detailSubmissions || []).forEach((sub, subIdx) => {
       (sub.piqFiles || []).forEach((file, idx) => {
-        links.push({ icon: "fa-file-pdf", iconColor: "text-danger", label: `PIQ Document #${idx + 1} (Sub #${subIdx + 1})`, url: file });
+        links.push({ icon: FileText, iconColor: "text-danger", label: `PIQ Document #${idx + 1} (Sub #${subIdx + 1})`, url: file });
       });
       (sub.uploadedFiles || []).forEach((file, idx) => {
-        links.push({ icon: "fa-file-alt", iconColor: "text-info", label: `Answer Sheet #${idx + 1} (Sub #${subIdx + 1})`, url: file });
+        links.push({ icon: FileText, iconColor: "text-info", label: `Answer Sheet #${idx + 1} (Sub #${subIdx + 1})`, url: file });
       });
     });
     return links;
@@ -517,19 +538,19 @@ export default function StudentRosterView() {
       <div className="admin-page-header">
         <div className="header-left">
           <h1 className="admin-page-title">
-            <i className="fas fa-user-graduate me-2"></i> Candidates Management
+            <GraduationCap size={20} className="me-2" style={ICON_STYLE} /> Candidates Management
           </h1>
           <p className="text-muted mb-0">View and manage trainees assigned to batches, their transactions, and documents</p>
         </div>
         <button className="thm-btn" onClick={openAddModal}>
-          <i className="fas fa-user-plus"></i> Add Candidate
+          <UserPlus size={16} style={ICON_STYLE} /> Add Candidate
         </button>
       </div>
 
       <div className="admin-card">
         <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
           <div style={{ position: "relative", maxWidth: 400, width: "100%" }}>
-            <i className="fas fa-search" style={{ position: "absolute", left: 15, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }}></i>
+            <Search size={16} style={{ position: "absolute", left: 15, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
             <input
               type="text"
               className="admin-input"
@@ -610,14 +631,14 @@ export default function StudentRosterView() {
               ) : loadError ? (
                 <tr>
                   <td colSpan={9} className="text-center p-5 text-danger">
-                    <i className="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                    <AlertTriangle size={32} className="mb-3" />
                     <p className="mb-0">Error loading database: {loadError}</p>
                   </td>
                 </tr>
               ) : pageSlice.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="text-center p-5 opacity-50">
-                    <i className="fas fa-database fa-2x mb-3"></i>
+                    <Database size={32} className="mb-3" />
                     <p className="mb-0">No candidate records found.</p>
                   </td>
                 </tr>
@@ -698,7 +719,7 @@ export default function StudentRosterView() {
                                 fontWeight: 500,
                               }}
                             >
-                              <i className="fas fa-file-alt me-1"></i> {assignedAssessmentsCount} Assigned
+                              <FileText size={12} className="me-1" style={ICON_STYLE} /> {assignedAssessmentsCount} Assigned
                             </span>
                           </div>
                         )}
@@ -712,7 +733,7 @@ export default function StudentRosterView() {
                       </td>
                       <td style={{ textAlign: "center" }}>
                         <button className="action-btn" title="View Full Profile" onClick={() => openDetailModal(s._id)} disabled={detailLoading}>
-                          <i className="fas fa-eye"></i>
+                          <Eye size={14} />
                         </button>
                       </td>
                     </tr>
@@ -759,7 +780,7 @@ export default function StudentRosterView() {
           <div className="admin-modal" style={{ maxWidth: 1200, width: "95%", margin: "20px auto" }}>
             <div className="admin-modal-header">
               <h3 className="admin-modal-title">
-                <i className="fas fa-id-card me-2"></i> Complete Candidate Details
+                <IdCard size={18} className="me-2" style={ICON_STYLE} /> Complete Candidate Details
               </h3>
               <button type="button" className="btn-close btn-close-white" onClick={closeDetailModal}></button>
             </div>
@@ -853,7 +874,7 @@ export default function StudentRosterView() {
                     <div style={{ maxHeight: 180, overflowY: "auto", paddingRight: 5, marginBottom: 20 }}>
                       {detailOrders.length === 0 ? (
                         <div className="text-center p-5 opacity-40">
-                          <i className="fas fa-receipt fa-2x mb-2"></i>
+                          <Receipt size={32} className="mb-2" />
                           <p className="small mb-0">No paid courses or batch slots found for this candidate</p>
                         </div>
                       ) : (
@@ -947,7 +968,7 @@ export default function StudentRosterView() {
                       >
                         {documentLinks.length === 0 ? (
                           <div className="text-muted text-center py-2">
-                            <i className="fas fa-info-circle me-1"></i> No documents uploaded yet.
+                            <Info size={14} className="me-1" style={ICON_STYLE} /> No documents uploaded yet.
                           </div>
                         ) : (
                           documentLinks.map((doc, idx) => (
@@ -957,10 +978,10 @@ export default function StudentRosterView() {
                               key={idx}
                             >
                               <span>
-                                <i className={`fas ${doc.icon} me-2 ${doc.iconColor}`}></i> {doc.label}
+                                <doc.icon size={14} className={`me-2 ${doc.iconColor}`} style={ICON_STYLE} /> {doc.label}
                               </span>
                               <a href={doc.url} target="_blank" rel="noreferrer" className="badge bg-dark border border-secondary text-light text-decoration-none">
-                                <i className="fas fa-external-link-alt"></i> View
+                                <ExternalLink size={12} style={ICON_STYLE} /> View
                               </a>
                             </div>
                           ))
@@ -984,7 +1005,7 @@ export default function StudentRosterView() {
                     </div>
                     <div>
                       <button type="submit" form="editProfileForm" className="thm-btn py-2 w-100" disabled={savingProfile}>
-                        <i className="fas fa-save me-2"></i> {savingProfile ? "Saving..." : "Save Profile"}
+                        <Save size={14} className="me-2" style={ICON_STYLE} /> {savingProfile ? "Saving..." : "Save Profile"}
                       </button>
                     </div>
                   </div>
@@ -1001,7 +1022,7 @@ export default function StudentRosterView() {
           <div className="admin-modal" style={{ maxWidth: 500, width: "95%", margin: "20px auto" }}>
             <div className="admin-modal-header">
               <h3 className="admin-modal-title">
-                <i className="fas fa-user-plus me-2"></i> Add New Candidate Trainee
+                <UserPlus size={18} className="me-2" style={ICON_STYLE} /> Add New Candidate Trainee
               </h3>
               <button type="button" className="btn-close btn-close-white" onClick={closeAddModal}></button>
             </div>
@@ -1093,7 +1114,7 @@ export default function StudentRosterView() {
                   Cancel
                 </button>
                 <button type="submit" className="thm-btn py-2 px-4" disabled={addSubmitting}>
-                  <i className="fas fa-plus me-1"></i> {addSubmitting ? "Adding..." : "Add Candidate"}
+                  <Plus size={14} className="me-1" style={ICON_STYLE} /> {addSubmitting ? "Adding..." : "Add Candidate"}
                 </button>
               </div>
             </form>
