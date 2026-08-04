@@ -594,7 +594,7 @@ export default function FranchiseView() {
               </h5>
               <button
                 type="button"
-                className="btn-close"
+                className="btn-close btn-close-white"
                 aria-label="Close"
                 onClick={() => {
                   setModalOpen(false);

@@ -15,6 +15,7 @@ import {
 import { cn } from "@/app/psych-battery/lib/utils";
 import { AssessmentMiniViewer } from "./AssessmentMiniViewer";
 import { Reveal, Skeleton, Button } from "@/app/psych-battery/components/ui/Primitives";
+import { assessorLabel } from "@/lib/assessorLabels";
 
 // Ported from psych_battery/src/pages/SubmissionReview.tsx.
 //
@@ -1168,10 +1169,10 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
                     <div className="flex items-center gap-3 text-app-accent">
                       <Sparkles size={24} className="fill-current" />
                       <h3 className="text-2xl font-black text-app-text-bright tracking-tight">
-                        {activeAssessorType === "Psych" ? "Psychologist Evaluation Suite" :
-                         activeAssessorType === "GTO" ? "GTO Case Scorecard" :
-                         activeAssessorType === "IO" ? "Interview Assessment Dossier" :
-                         "Technical Aptitude Evaluation"}
+                        {activeAssessorType === "Psych" ? `${assessorLabel("Psych")} Evaluation Suite` :
+                         activeAssessorType === "GTO" ? `${assessorLabel("GTO")} Case Scorecard` :
+                         activeAssessorType === "IO" ? `${assessorLabel("IO")} Assessment Dossier` :
+                         `${assessorLabel("TO")} Aptitude Evaluation`}
                       </h3>
                     </div>
                     <p className="text-app-text-muted text-sm font-serif italic leading-relaxed">
@@ -1195,7 +1196,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
                                 : "text-app-text-muted hover:text-app-text-bright"
                             )}
                           >
-                            {t === "Psych" ? "Psychologist" : t === "GTO" ? "GTO Assessor" : t === "IO" ? "Interviewing Officer" : "Technical Officer"}
+                            {t}
                           </button>
                         ))}
                       </div>
@@ -1381,20 +1382,20 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
                   <div className="flex items-center gap-3 text-app-accent">
                     <Calendar size={24} />
                     <h3 className="text-2xl font-black text-app-text-bright tracking-tight">
-                      {activeAssessorType === "IO" ? "Mock Interview" : `${activeAssessorType} Feedback Scheduler`}
+                      {activeAssessorType === "IO" ? "Mock Interview" : `${assessorLabel(activeAssessorType)} Feedback Scheduler`}
                     </h3>
                   </div>
                   <p className="text-app-text-muted text-sm font-serif italic leading-relaxed">
                     {activeAssessorType === "IO"
                       ? "Schedule a mock interview with the candidate to evaluate their performance."
-                      : `Schedule a follow-up feedback session or review with the candidate to discuss their performance from the ${activeAssessorType} perspective.`}
+                      : `Schedule a follow-up feedback session or review with the candidate to discuss their performance from the ${assessorLabel(activeAssessorType)} perspective.`}
                   </p>
                 </div>
 
                 <div className="space-y-8">
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-app-text-muted uppercase tracking-[0.2em] px-2 block">
-                      {activeAssessorType === "IO" ? "Mock Interview Date & Hour" : `${activeAssessorType} Feedback Meeting Date & Hour`}
+                      {activeAssessorType === "IO" ? "Mock Interview Date & Hour" : `${assessorLabel(activeAssessorType)} Feedback Meeting Date & Hour`}
                     </label>
                     <ModernDateTimePicker
                       value={meetingDate}
@@ -1445,10 +1446,10 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {[
-                      { title: "Psychology Evaluation", remarks: submission.psychRemarks },
-                      { title: "GTO Outdoor Case", remarks: subWithRemarks.gtoRemarks },
-                      { title: "IO Personal Interview", remarks: subWithRemarks.ioRemarks },
-                      { title: "Technical Officer Aptitude", remarks: subWithRemarks.toRemarks },
+                      { title: assessorLabel("Psych"), remarks: submission.psychRemarks },
+                      { title: assessorLabel("GTO"), remarks: subWithRemarks.gtoRemarks },
+                      { title: assessorLabel("IO"), remarks: subWithRemarks.ioRemarks },
+                      { title: assessorLabel("TO"), remarks: subWithRemarks.toRemarks },
                     ].map((feedback, idx) => (
                       <div key={idx} className="bg-app-card border border-app-border rounded-3xl p-6 space-y-4 shadow-xl">
                         <div className="border-b border-app-border pb-3">

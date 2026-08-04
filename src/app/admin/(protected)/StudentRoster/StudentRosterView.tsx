@@ -20,6 +20,7 @@ import {
   User,
   type LucideIcon,
 } from "lucide-react";
+import { assessorLabel } from "@/lib/assessorLabels";
 import "@/app/admin/styles/legacy-student-roster.css";
 
 const ICON_STYLE = { verticalAlign: -2 };
@@ -471,7 +472,7 @@ export default function StudentRosterView() {
       return (
         <div className="mini-badge w-100 p-2 d-flex justify-content-between align-items-center mb-1" key={label}>
           <span>
-            <ShieldCheck size={14} className="me-1" style={ICON_STYLE} /> {label} Assessor
+            <ShieldCheck size={14} className="me-1" style={ICON_STYLE} /> {label}
           </span>
           <strong style={{ color: "#fff" }}>{assessor.name}</strong>
         </div>
@@ -484,7 +485,7 @@ export default function StudentRosterView() {
         key={label}
       >
         <span style={{ color: "#ff6b6b" }}>
-          <XCircle size={14} className="me-1" style={ICON_STYLE} /> {label} Assessor
+          <XCircle size={14} className="me-1" style={ICON_STYLE} /> {label}
         </span>
         <strong style={{ color: "#ff6b6b", fontWeight: 500 }}>Unassigned</strong>
       </div>
@@ -997,10 +998,10 @@ export default function StudentRosterView() {
                         Allotted Evaluators
                       </h5>
                       <div className="assessor-badge-stack w-100 mb-4">
-                        {renderDetailAssessor(detailStudent.assignedPsych, "Psychology")}
-                        {renderDetailAssessor(detailStudent.assignedGTO, "Group Testing (GTO)")}
-                        {renderDetailAssessor(detailStudent.assignedTO, "Technical (TO)")}
-                        {renderDetailAssessor(detailStudent.assignedIO, "Interviewing (IO)")}
+                        {renderDetailAssessor(detailStudent.assignedPsych, assessorLabel("Psych"))}
+                        {renderDetailAssessor(detailStudent.assignedGTO, assessorLabel("GTO"))}
+                        {renderDetailAssessor(detailStudent.assignedTO, assessorLabel("TO"))}
+                        {renderDetailAssessor(detailStudent.assignedIO, assessorLabel("IO"))}
                       </div>
                     </div>
                     <div>
@@ -1110,7 +1111,7 @@ export default function StudentRosterView() {
               </div>
 
               <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top border-secondary">
-                <button type="button" className="thm-btn secondary py-2 px-4" onClick={closeAddModal}>
+                <button type="button" className="thm-btn cancel-btn py-2 px-4" onClick={closeAddModal}>
                   Cancel
                 </button>
                 <button type="submit" className="thm-btn py-2 px-4" disabled={addSubmitting}>

@@ -13,16 +13,10 @@ import {
   Key,
 } from "lucide-react";
 import { useAdminUser } from "@/components/admin/AdminUserProvider";
+import { assessorLabel } from "@/lib/assessorLabels";
 import "@/app/admin/styles/legacy-profile.css";
 
 const ICON_STYLE = { verticalAlign: -2 };
-
-const ASSESSOR_LABELS: Record<string, string> = {
-  Psych: "Psychologist",
-  GTO: "GTO",
-  IO: "Interviewing Officer",
-  TO: "Technical Officer",
-};
 
 function roleLabelFor(user: { role?: string; permissions?: string[]; assessorType?: string | null } | null) {
   if (!user) return "Staff User";
@@ -32,7 +26,7 @@ function roleLabelFor(user: { role?: string; permissions?: string[]; assessorTyp
   }
   if (user.role === "franchise") return "Franchise Partner";
   if (user.role === "assessor") {
-    return ASSESSOR_LABELS[user.assessorType || ""] || "Assessor";
+    return assessorLabel(user.assessorType) || "Assessor";
   }
   return "Staff User";
 }

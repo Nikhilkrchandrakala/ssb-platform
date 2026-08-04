@@ -3,8 +3,9 @@ import { connectDB } from "@/server/db";
 import { getCurrentUser } from "@/server/auth";
 import { hasAdminPermission } from "@/server/adminAccess";
 import { Slot, Order, InstallmentPlan, SalesAuditLog, User, Lead } from "@/server/models";
-import { getSlotBasePrice, applySalesCoupon, resolveOrderSelectedModules, MIN_INITIAL_AMOUNT } from "@/server/sales/pricing";
+import { getSlotBasePrice, applySalesCoupon, resolveOrderSelectedModules, describeSelectedModules, MIN_INITIAL_AMOUNT } from "@/server/sales/pricing";
 import { createPaymentLink } from "@/server/integrations/razorpay";
+import { formatRealStartTime } from "@/lib/batchTiming";
 
 interface SubmittedInstallment {
   amount: number;
@@ -133,11 +134,18 @@ export async function POST(req: NextRequest) {
       { convertedAt: now, convertedOrderId: order._id }
     );
 
+    // Batch number + real start date/time + course/module, so the payment
+    // page ("Payment for: ...") tells the student which specific batch and
+    // session this is for, not just a bare batch-type name.
+    const batchLabel = `${slot.title}${slot.batchNo ? ` (#${slot.batchNo})` : ""}`;
+    const moduleLabel = describeSelectedModules(order.selectedModules || []);
+    const description = `Initial payment — ${batchLabel} — ${formatRealStartTime(slot)} — ${moduleLabel}`;
+
     const paymentLink = await createPaymentLink({
       amountRupees: initialAmount,
       customerName: studentName,
       customerEmail: studentEmail,
-      description: `Initial payment — ${slot.title}`,
+      description,
       notes: { orderId: String(order._id), installmentPlanId: String(plan._id), seq: "1" },
     });
 

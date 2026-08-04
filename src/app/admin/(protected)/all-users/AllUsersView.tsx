@@ -890,7 +890,7 @@ export default function AllUsersView() {
               </div>
 
               <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top border-secondary">
-                <button type="button" className="thm-btn secondary py-2 px-4" onClick={closeAddModal}>
+                <button type="button" className="thm-btn cancel-btn py-2 px-4" onClick={closeAddModal}>
                   Cancel
                 </button>
                 <button type="submit" className="thm-btn py-2 px-4" disabled={addingStudent}>

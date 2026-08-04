@@ -66,6 +66,20 @@ export function resolveOrderSelectedModules(slot: SlotLike, selectedModules: str
 // Was 3000 — dropped to 1 while the sales flow is still in testing (user request, 2026-07-25).
 export const MIN_INITIAL_AMOUNT = 1;
 
+const MODULE_SHORT_LABELS: Record<string, string> = {
+  ssb_ppdt: "Intro to SSB & PPDT",
+  psych: "Psychology Prep",
+  interview: "Interview & Mock",
+  group_testing: "GTO Course",
+  full_course: "Full Course",
+};
+
+/** Short human label for a module batch's own module, or a full-course order's selected modules — used in payment-link descriptions. */
+export function describeSelectedModules(selectedModules: string[]): string {
+  if (selectedModules.length === 0 || selectedModules.includes("full_course")) return MODULE_SHORT_LABELS.full_course;
+  return selectedModules.map((m) => MODULE_SHORT_LABELS[m] || m).join(" + ");
+}
+
 export type SalesCouponResult =
   | { ok: true; finalPriceInclGST: number; discount: number; couponCode: string | null }
   | { ok: false; error: string };

@@ -5,12 +5,18 @@ import { test, expect } from "@playwright/test";
 // redirects an unauthenticated visitor to /admin instead of serving content.
 
 test.describe("admin public pages render", () => {
-  for (const path of ["/admin", "/admin/AccountRecovery"]) {
-    test(`GET ${path} returns 200`, async ({ request }) => {
-      const response = await request.get(path);
-      expect(response.status()).toBe(200);
-    });
-  }
+  test("GET /admin/AccountRecovery returns 200", async ({ request }) => {
+    const response = await request.get("/admin/AccountRecovery");
+    expect(response.status()).toBe(200);
+  });
+});
+
+// /admin no longer has its own login form — it forwards unauthenticated
+// visitors to the one shared /SignIn page (see src/app/admin/page.tsx).
+test("GET /admin without a session redirects to /SignIn", async ({ request }) => {
+  const response = await request.get("/admin", { maxRedirects: 0 });
+  expect(response.status()).toBe(307);
+  expect(response.headers()["location"]).toBe("/SignIn");
 });
 
 test.describe("protected admin pages redirect unauthenticated visitors to /admin", () => {

@@ -5,10 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "../../lib/api";
 import { UserProfile, Assessment, AssessmentSubmission } from "../../types";
+import { assessorLabel } from "@/lib/assessorLabels";
 import { Plus, Trash2, Edit2, Database, Play, Eye, X, CheckCircle, Send, Copy } from "lucide-react";
 import {
   PageHeader, Badge, Card, GlassCard, Button, IconButton, TableShell, Th, Td, Tr, EmptyState,
-  Reveal, Skeleton, staggerDelay, Dialog, DialogContent, DialogTitle,
+  Reveal, Skeleton, staggerDelay, Dialog, DialogContent, DialogTitle, SearchInput,
 } from "../../components/ui/Primitives";
 
 // Ported from psych_battery/src/pages/AdminDashboard.tsx.
@@ -77,6 +78,11 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [submissions, setSubmissions] = useState<SubmissionWithAssessorFields[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Candidate Evaluation table filters (name / batch no / chest no).
+  const [nameFilter, setNameFilter] = useState("");
+  const [batchFilter, setBatchFilter] = useState("");
+  const [chestNoFilter, setChestNoFilter] = useState("");
 
   // Super Admin Auditing State
   const [selectedSubmission, setSelectedSubmission] = useState<SubmissionWithAssessorFields | null>(null);
@@ -166,6 +172,17 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
     }
   };
 
+  const resolveStudent = (s: SubmissionWithAssessorFields) =>
+    (s.student as UserProfile | undefined) || users.find((u) => u.uid === s.userId) || users.find((u) => u.id === s.userId);
+
+  const filteredSubmissions = submissions.filter((s) => {
+    const student = resolveStudent(s);
+    if (nameFilter.trim() && !(student?.name || "").toLowerCase().includes(nameFilter.trim().toLowerCase())) return false;
+    if (batchFilter.trim() && !(student?.batch || "").toLowerCase().includes(batchFilter.trim().toLowerCase())) return false;
+    if (chestNoFilter.trim() && !(student?.chestNo || "").toLowerCase().includes(chestNoFilter.trim().toLowerCase())) return false;
+    return true;
+  });
+
   if (loading)
     return (
       <div className="space-y-8 pb-20">
@@ -241,25 +258,37 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
       )}
 
       {activeTab === "assignments" && (
-        <div className="animate-in fade-in duration-500">
+        <div className="space-y-5 animate-in fade-in duration-500">
           {submissions.length === 0 ? (
             <Card><EmptyState icon={Database} title="No candidate assignments yet" /></Card>
           ) : (
-            <TableShell minWidth={1000}>
+            <>
+              <Reveal delay={0.1} className="flex flex-col sm:flex-row gap-3">
+                <SearchInput placeholder="Filter by name" value={nameFilter} onChange={(e) => setNameFilter(e.target.value)} />
+                <SearchInput placeholder="Filter by batch no" value={batchFilter} onChange={(e) => setBatchFilter(e.target.value)} containerClassName="sm:max-w-[220px]" />
+                <SearchInput placeholder="Filter by chest no" value={chestNoFilter} onChange={(e) => setChestNoFilter(e.target.value)} containerClassName="sm:max-w-[220px]" />
+              </Reveal>
+
+              {filteredSubmissions.length === 0 ? (
+                <Card><EmptyState icon={Database} title="No candidates match your filters" /></Card>
+              ) : (
+            <TableShell minWidth={1100}>
               <thead>
                 <tr>
                   <Th>Candidate</Th>
+                  <Th>Batch No</Th>
+                  <Th>Chest No</Th>
                   <Th align="center">Candidate Step</Th>
-                  <Th align="center">Psychologist</Th>
+                  <Th align="center">Psych</Th>
                   <Th align="center">GTO</Th>
-                  <Th align="center">Interview (IO)</Th>
-                  <Th align="center">Technical (TO)</Th>
+                  <Th align="center">IO</Th>
+                  <Th align="center">TO</Th>
                   <Th align="right">Actions</Th>
                 </tr>
               </thead>
               <tbody>
-                {submissions.map((s) => {
-                  const student = (s.student as UserProfile | undefined) || users.find((u) => u.uid === s.userId) || users.find((u) => u.id === s.userId);
+                {filteredSubmissions.map((s) => {
+                  const student = resolveStudent(s);
                   const studentName = student?.name || "Unknown Candidate";
                   const studentEmail = student?.email || "N/A";
 
@@ -310,19 +339,24 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
                   return (
                     <Tr key={s.id}>
                       <Td>
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <div className="text-sm font-bold text-app-text-bright">{studentName}</div>
-                          <span className="px-1.5 py-0.5 rounded bg-app-card border border-app-border text-[9px] font-bold text-app-text-muted whitespace-nowrap">
-                            B{student?.batch || "--"} · C{student?.chestNo || "--"}
-                          </span>
-                        </div>
+                        <div className="text-sm font-bold text-app-text-bright">{studentName}</div>
                         <div className="text-[11px] text-app-text-muted">{studentEmail}</div>
                       </Td>
+                      <Td>
+                        <span className="px-1.5 py-0.5 rounded bg-app-card border border-app-border text-[10px] font-bold text-app-text-muted whitespace-nowrap">
+                          {student?.batch || "--"}
+                        </span>
+                      </Td>
+                      <Td>
+                        <span className="px-1.5 py-0.5 rounded bg-app-card border border-app-border text-[10px] font-bold text-app-text-muted whitespace-nowrap">
+                          {student?.chestNo || "--"}
+                        </span>
+                      </Td>
                       <Td align="center">{candidateStepContent}</Td>
-                      <Td align="center">{renderAssessorDot(student?.assignedPsych, s.psychStatus || "PENDING", "Psychologist")}</Td>
-                      <Td align="center">{renderAssessorDot(student?.assignedGTO, s.gtoStatus || "PENDING", "GTO Assessor")}</Td>
-                      <Td align="center">{renderAssessorDot(student?.assignedIO, s.ioStatus || "PENDING", "Interviewing Officer")}</Td>
-                      <Td align="center">{renderAssessorDot(student?.assignedTO, s.toStatus || "PENDING", "Technical Officer")}</Td>
+                      <Td align="center">{renderAssessorDot(student?.assignedPsych, s.psychStatus || "PENDING", assessorLabel("Psych"))}</Td>
+                      <Td align="center">{renderAssessorDot(student?.assignedGTO, s.gtoStatus || "PENDING", assessorLabel("GTO"))}</Td>
+                      <Td align="center">{renderAssessorDot(student?.assignedIO, s.ioStatus || "PENDING", assessorLabel("IO"))}</Td>
+                      <Td align="center">{renderAssessorDot(student?.assignedTO, s.toStatus || "PENDING", assessorLabel("TO"))}</Td>
                       <Td align="right">
                         <IconButton icon={Eye} size={16} onClick={() => setSelectedSubmission(s)} title="Audit Scorecard Details" />
                       </Td>
@@ -331,6 +365,8 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
                 })}
               </tbody>
             </TableShell>
+              )}
+            </>
           )}
         </div>
       )}
@@ -475,10 +511,10 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
                 <div className="p-6 space-y-6 overflow-y-auto flex-grow">
                   {/* Scorecards Grid */}
                   <div className="flex flex-col gap-5">
-                    {renderAuditAssessorCard("Psych", "Psychology Evaluation Report", student?.assignedPsych, s.psychStatus || "PENDING", s.psychRemarks || "")}
-                    {renderAuditAssessorCard("GTO", "GTO Outdoor Case Report", student?.assignedGTO, s.gtoStatus || "PENDING", s.gtoRemarks || "")}
-                    {renderAuditAssessorCard("IO", "IO Personal Interview Report", student?.assignedIO, s.ioStatus || "PENDING", s.ioRemarks || "")}
-                    {renderAuditAssessorCard("TO", "Technical Officer Aptitude Report", student?.assignedTO, s.toStatus || "PENDING", s.toRemarks || "")}
+                    {renderAuditAssessorCard("Psych", `${assessorLabel("Psych")} Report`, student?.assignedPsych, s.psychStatus || "PENDING", s.psychRemarks || "")}
+                    {renderAuditAssessorCard("GTO", `${assessorLabel("GTO")} Report`, student?.assignedGTO, s.gtoStatus || "PENDING", s.gtoRemarks || "")}
+                    {renderAuditAssessorCard("IO", `${assessorLabel("IO")} Report`, student?.assignedIO, s.ioStatus || "PENDING", s.ioRemarks || "")}
+                    {renderAuditAssessorCard("TO", `${assessorLabel("TO")} Report`, student?.assignedTO, s.toStatus || "PENDING", s.toRemarks || "")}
                   </div>
                 </div>
 

@@ -520,8 +520,7 @@ export default function BlogsView({ blogId }: BlogsViewProps) {
                 </button>
                 <button
                   type="button"
-                  className="thm-btn"
-                  style={{ background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" }}
+                  className="thm-btn cancel-btn"
                   onClick={handleCancel}
                 >
                   Discard Changes

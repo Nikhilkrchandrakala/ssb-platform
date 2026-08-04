@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { useAdminUser } from "./AdminUserProvider";
 import { hasAdminPermission } from "@/server/adminAccess";
+import { assessorLabel } from "@/lib/assessorLabels";
 
 interface NotificationItem {
   id?: string;
@@ -47,13 +48,6 @@ interface NotificationItem {
 const ROLE_LABELS: Record<string, { text: string; color: string }> = {
   owner: { text: "OWNER", color: "#ff4757" },
   franchise: { text: "FRANCHISE PARTNER", color: "var(--primary-gold)" },
-};
-
-const ASSESSOR_LABELS: Record<string, string> = {
-  Psych: "PSYCHOLOGIST",
-  GTO: "GTO",
-  IO: "INTERVIEWING OFFICER",
-  TO: "TECHNICAL OFFICER",
 };
 
 function NavLink({
@@ -249,7 +243,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         : role === "admin" && (user?.permissions || []).includes("super_admin")
           ? { text: "SUPER ADMIN", color: "var(--primary-gold, #e0c214)" }
           : role === "assessor"
-            ? { text: ASSESSOR_LABELS[user?.assessorType || ""] || "ASSESSOR", color: "#9b59b6" }
+            ? { text: assessorLabel(user?.assessorType).toUpperCase() || "ASSESSOR", color: "#9b59b6" }
             : ROLE_LABELS[role] || { text: role.toUpperCase() || "ADMIN", color: "var(--primary-gold, #e0c214)" };
 
   const isActive = (path: string) => pathname === path;

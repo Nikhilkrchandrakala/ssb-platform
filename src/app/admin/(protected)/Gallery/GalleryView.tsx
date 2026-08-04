@@ -395,7 +395,7 @@ export default function GalleryView() {
               <h5 className="admin-modal-title">
                 <Upload size={18} className="me-2 text-warning" style={ICON_STYLE} /> Add Visual Assets
               </h5>
-              <button type="button" className="btn-close" onClick={() => setUploadModalOpen(false)} aria-label="Close"></button>
+              <button type="button" className="btn-close btn-close-white" onClick={() => setUploadModalOpen(false)} aria-label="Close"></button>
             </div>
             <div>
               <div className="mb-4">
@@ -446,8 +446,7 @@ export default function GalleryView() {
             </div>
             <div className="modal-footer px-0 pb-0 pt-3">
               <button
-                className="thm-btn"
-                style={{ background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" }}
+                className="thm-btn cancel-btn"
                 onClick={() => setUploadModalOpen(false)}
               >
                 Cancel
@@ -473,7 +472,7 @@ export default function GalleryView() {
               <h5 className="admin-modal-title">
                 <Pencil size={18} className="me-2 text-warning" style={ICON_STYLE} /> Edit Asset Caption
               </h5>
-              <button type="button" className="btn-close" onClick={() => setEditModalOpen(false)} aria-label="Close"></button>
+              <button type="button" className="btn-close btn-close-white" onClick={() => setEditModalOpen(false)} aria-label="Close"></button>
             </div>
             <div>
               <div className="text-center mb-3">
@@ -513,8 +512,7 @@ export default function GalleryView() {
             </div>
             <div className="modal-footer px-0 pb-0 pt-3">
               <button
-                className="thm-btn"
-                style={{ background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" }}
+                className="thm-btn cancel-btn"
                 onClick={() => setEditModalOpen(false)}
               >
                 Cancel

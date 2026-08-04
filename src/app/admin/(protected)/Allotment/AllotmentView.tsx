@@ -19,6 +19,7 @@ import {
   UserCog,
   Save,
 } from "lucide-react";
+import { assessorLabel } from "@/lib/assessorLabels";
 import "@/app/admin/styles/legacy-allotment.css";
 
 const ICON_STYLE = { verticalAlign: -2 };
@@ -728,7 +729,7 @@ export default function AllotmentView() {
 
                     <div className="admin-form-group">
                       <label className="admin-form-label">
-                        <Brain size={14} className="me-1" style={ICON_STYLE} /> Psychology Assessor (Psych)
+                        <Brain size={14} className="me-1" style={ICON_STYLE} /> {assessorLabel("Psych")}
                       </label>
                       <select className="admin-input" disabled={!psychOrToAllowed} value={selectPsych} onChange={(e) => handlePsychChange(e.target.value)}>
                         <option value="">{psychOrToAllowed ? "-- Select Psych Assessor --" : "-- Not Allowed by Course --"}</option>
@@ -742,7 +743,7 @@ export default function AllotmentView() {
 
                     <div className="admin-form-group">
                       <label className="admin-form-label">
-                        <UsersRound size={14} className="me-1" style={ICON_STYLE} /> Group Testing Assessor (GTO)
+                        <UsersRound size={14} className="me-1" style={ICON_STYLE} /> {assessorLabel("GTO")}
                       </label>
                       <select className="admin-input" disabled={!gtoAllowed} value={selectGTO} onChange={(e) => setSelectGTO(e.target.value)}>
                         <option value="">{gtoAllowed ? "-- Select GTO Assessor --" : "-- Not Allowed by Course --"}</option>
@@ -756,7 +757,7 @@ export default function AllotmentView() {
 
                     <div className="admin-form-group">
                       <label className="admin-form-label">
-                        <Settings2 size={14} className="me-1" style={ICON_STYLE} /> Technical Assessor (TO)
+                        <Settings2 size={14} className="me-1" style={ICON_STYLE} /> {assessorLabel("TO")}
                       </label>
                       <select className="admin-input" disabled={!psychOrToAllowed} value={selectTO} onChange={(e) => handleToChange(e.target.value)}>
                         <option value="">{psychOrToAllowed ? "-- Select TO Assessor --" : "-- Not Allowed by Course --"}</option>
@@ -770,7 +771,7 @@ export default function AllotmentView() {
 
                     <div className="admin-form-group">
                       <label className="admin-form-label">
-                        <UserCog size={14} className="me-1" style={ICON_STYLE} /> Interviewing Officer (IO)
+                        <UserCog size={14} className="me-1" style={ICON_STYLE} /> {assessorLabel("IO")}
                       </label>
                       <select className="admin-input" disabled={!ioAllowed} value={selectIO} onChange={(e) => setSelectIO(e.target.value)}>
                         <option value="">{ioAllowed ? "-- Select IO Assessor --" : "-- Not Allowed by Course --"}</option>
@@ -819,7 +820,7 @@ export default function AllotmentView() {
                   )}
 
                   <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top border-secondary">
-                    <button type="button" className="thm-btn secondary" style={{ padding: "8px 25px" }} onClick={closeAllotmentModal}>
+                    <button type="button" className="thm-btn cancel-btn" style={{ padding: "8px 25px" }} onClick={closeAllotmentModal}>
                       Cancel
                     </button>
                     <button type="submit" className="thm-btn" style={{ padding: "8px 25px" }} disabled={submitting}>

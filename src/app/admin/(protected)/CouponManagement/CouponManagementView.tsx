@@ -430,7 +430,7 @@ export default function CouponManagementView() {
                 )}{" "}
                 {editId ? "Edit Coupon" : "Create New Coupon"}
               </h5>
-              <button type="button" className="btn-close" aria-label="Close" onClick={closeModal}></button>
+              <button type="button" className="btn-close btn-close-white" aria-label="Close" onClick={closeModal}></button>
             </div>
             <div className="modal-body">
               <form
@@ -495,8 +495,7 @@ export default function CouponManagementView() {
                 <div className="modal-footer px-0 pb-0 pt-3">
                   <button
                     type="button"
-                    className="thm-btn"
-                    style={{ background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" }}
+                    className="thm-btn cancel-btn"
                     onClick={closeModal}
                   >
                     Cancel

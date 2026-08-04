@@ -14,6 +14,8 @@ import {
   UserPen,
 } from "lucide-react";
 import { useAdminUser } from "@/components/admin/AdminUserProvider";
+import { isBookingClosed, formatTimeRemaining } from "@/lib/batchTiming";
+import { redistributeRemaining } from "@/lib/redistributeInstallments";
 import "@/app/admin/styles/legacy-sales-dashboard.css";
 
 const ICON_STYLE = { verticalAlign: -2 };
@@ -38,6 +40,8 @@ interface Installment {
   paymentLinkUrl?: string | null;
   paymentId?: string | null;
   paidAt?: string | null;
+  paymentMethod?: "razorpay" | "manual" | null;
+  paymentReference?: string | null;
 }
 
 interface InstallmentPlanPopulated {
@@ -274,16 +278,21 @@ export default function SalesDashboardView() {
   const [slotsLoading, setSlotsLoading] = useState(true);
   const [courses, setCourses] = useState<CourseItem[]>([]);
 
+  // Ticks once a minute so every "time left to book" card label on this
+  // page stays live without needing a full data refetch.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     fetch("/api/allSlots")
       .then((res) => (res.ok ? res.json() : []))
       .then((data: SlotItem[]) => {
-        const now = Date.now();
         const live = (Array.isArray(data) ? data : []).filter((slot) => {
-          const starts = slot.startTime ? new Date(slot.startTime).getTime() : NaN;
-          const isUpcoming = !Number.isNaN(starts) && starts > now;
           const isOpen = (slot.bookedStudents?.length || 0) < (slot.maxStudents || 50);
-          return isUpcoming && isOpen;
+          return !isBookingClosed(slot) && isOpen;
         });
         setSlots(live);
       })
@@ -520,13 +529,28 @@ export default function SalesDashboardView() {
   };
 
   const updateRow = (seq: number, field: "amount" | "dueDate", value: string) => {
-    setInstallmentRows((rows) =>
-      rows.map((r) =>
-        r.seq === seq
-          ? { ...r, [field]: field === "amount" ? Number(value) : new Date(value).toISOString() }
-          : r
-      )
-    );
+    if (field === "dueDate") {
+      setInstallmentRows((rows) => rows.map((r) => (r.seq === seq ? { ...r, dueDate: new Date(value).toISOString() } : r)));
+      return;
+    }
+
+    // Editing one row's amount automatically re-splits the rest so they still
+    // sum to the balance due after the initial payment — no hand-editing
+    // every other row to compensate.
+    setInstallmentRows((rows) => {
+      const edited = rows.map((r) => (r.seq === seq ? { ...r, amount: Number(value) || 0 } : r));
+      const remainingDue = finalPriceInclGST !== null ? Math.round((finalPriceInclGST - initialAmount) * 100) / 100 : 0;
+      const redistributable = edited.map((r) => ({ seq: r.seq, amount: r.amount, status: "pending" }));
+      const result = redistributeRemaining(redistributable, remainingDue, new Set([seq]));
+      if (!result.ok) {
+        swalToast("error", result.message);
+        return edited;
+      }
+      return edited.map((r) => {
+        const updated = redistributable.find((x) => x.seq === r.seq);
+        return updated ? { ...r, amount: updated.amount } : r;
+      });
+    });
   };
 
   const submitEnroll = async () => {
@@ -642,6 +666,105 @@ export default function SalesDashboardView() {
       showCredentialsSwal(data);
     } catch (err) {
       swalToast("error", err instanceof Error ? err.message : "Could not reset credentials");
+    } finally {
+      setBusyOrderId(null);
+    }
+  };
+
+  // Keeps the open Payment Details modal in sync immediately (rather than
+  // requiring a close/reopen), and refreshes whichever list(s) this modal
+  // could have been opened from — My Students always, Team only if it's
+  // actually been loaded at least once.
+  const refreshAfterInstallmentChange = (updatedInstallments?: Installment[] | null) => {
+    if (updatedInstallments) {
+      setDetailsOrder((prev) =>
+        prev && prev.installmentPlanId ? { ...prev, installmentPlanId: { ...prev.installmentPlanId, installments: updatedInstallments } } : prev
+      );
+    }
+    loadMyOrders();
+    if (teamOrders !== null) loadTeam(teamExecutiveFilter || undefined);
+  };
+
+  // A student paid this installment offline (cash, UPI, bank transfer,
+  // cheque...) — the sales person records it here with a reference so it's
+  // always distinguishable from a real Razorpay payment, both to the sales
+  // team and to the student's own dashboard.
+  const markPaidOffline = async (order: SalesOrderItem, seq: number) => {
+    if (!order.installmentPlanId) return;
+    const { value: reference } =
+      (await window.Swal?.fire({
+        title: `Mark Installment #${seq} as Paid`,
+        text: "Record how the student actually paid this installment offline.",
+        input: "text",
+        inputLabel: "Payment Reference (transaction ID, UTR, cheque no., UPI ref, etc.)",
+        inputPlaceholder: "e.g. UPI/2026080312345",
+        showCancelButton: true,
+        confirmButtonColor: "#e0c214",
+        cancelButtonColor: "#555",
+        confirmButtonText: "Mark Paid",
+        background: "#1a1a1a",
+        color: "#fff",
+        inputValidator: (value: string) => (!value?.trim() ? "A payment reference is required" : undefined),
+      })) || {};
+    if (!reference) return;
+
+    setBusyOrderId(order._id);
+    try {
+      const res = await fetch("/api/sales/markInstallmentPaidManual", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ installmentPlanId: order.installmentPlanId._id, seq, reference }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Could not mark installment paid");
+      if (data.studentCredentials) {
+        showCredentialsSwal(data.studentCredentials);
+      } else {
+        swalToast("success", `Installment #${seq} marked as paid`);
+      }
+      refreshAfterInstallmentChange(data.installments);
+    } catch (err) {
+      swalToast("error", err instanceof Error ? err.message : "Could not mark installment paid");
+    } finally {
+      setBusyOrderId(null);
+    }
+  };
+
+  // Changing one installment's amount automatically re-splits the rest of
+  // the not-yet-paid installments so the plan's total still adds up — the
+  // sales person never has to hand-edit every other installment to compensate.
+  const editInstallmentAmount = async (order: SalesOrderItem, inst: Installment) => {
+    if (!order.installmentPlanId) return;
+    const { value: amountStr } =
+      (await window.Swal?.fire({
+        title: `Edit Installment #${inst.seq} Amount`,
+        text: "The remaining not-yet-paid installments will be re-split automatically so the total still adds up.",
+        input: "number",
+        inputLabel: "New Amount (₹)",
+        inputValue: inst.amount,
+        showCancelButton: true,
+        confirmButtonColor: "#e0c214",
+        cancelButtonColor: "#555",
+        confirmButtonText: "Update Amount",
+        background: "#1a1a1a",
+        color: "#fff",
+        inputValidator: (value: string) => (!value || Number(value) <= 0 ? "Enter a positive amount" : undefined),
+      })) || {};
+    if (amountStr === undefined || amountStr === "") return;
+
+    setBusyOrderId(order._id);
+    try {
+      const res = await fetch("/api/sales/adjustInstallmentAmount", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ installmentPlanId: order.installmentPlanId._id, seq: inst.seq, amount: Number(amountStr) }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Could not update amount");
+      swalToast("success", "Amount updated — remaining installments re-split automatically");
+      refreshAfterInstallmentChange(data.installments);
+    } catch (err) {
+      swalToast("error", err instanceof Error ? err.message : "Could not update amount");
     } finally {
       setBusyOrderId(null);
     }
@@ -859,6 +982,7 @@ export default function SalesDashboardView() {
                     {(slot.bookedStudents || []).length}/{slot.maxStudents || 50} booked ·{" "}
                     {slot.isFullCourse ? "Full course" : "Module batch"}
                   </div>
+                  <div style={{ fontSize: "0.8rem", color: "var(--primary-gold)" }}>⏰ {formatTimeRemaining(slot, now)}</div>
                   <div style={{ fontWeight: 700, color: "var(--primary-gold)" }}>₹{Number(slot.price || 0).toFixed(2)}</div>
                   <button className="thm-btn" style={{ marginTop: 8 }} onClick={() => openEnrollModal(slot)}>
                     <UserPlus size={14} className="me-1" style={ICON_STYLE} /> Enroll Student
@@ -1335,7 +1459,13 @@ export default function SalesDashboardView() {
                           </div>
                           {installmentRows.map((row) => (
                             <div className="sales-installment-row" key={row.seq}>
-                              <span style={{ color: "var(--text-muted)" }}>{row.seq}</span>
+                              {/* row.seq is 2-based internally (seq 1 is the
+                                  initial/registration payment, set on submit —
+                                  see enrollStudent) — displayed as 1-based
+                                  here since the registration amount isn't
+                                  counted as "an installment" to the sales
+                                  person filling this in. */}
+                              <span style={{ color: "var(--text-muted)" }}>{row.seq - 1}</span>
                               <input
                                 type="number"
                                 className="admin-input"
@@ -1356,7 +1486,7 @@ export default function SalesDashboardView() {
                   )}
 
                   <div className="d-flex justify-content-end gap-2 pt-3 border-top border-secondary">
-                    <button type="button" className="thm-btn secondary" onClick={closeEnrollModal}>
+                    <button type="button" className="thm-btn cancel-btn" onClick={closeEnrollModal}>
                       Cancel
                     </button>
                     <button type="button" className="thm-btn" onClick={submitEnroll} disabled={isEnrolling || finalPriceInclGST === null}>
@@ -1419,7 +1549,7 @@ export default function SalesDashboardView() {
                 />
               </div>
               <div className="d-flex justify-content-end gap-2 pt-3 border-top border-secondary mt-2">
-                <button type="button" className="thm-btn secondary" onClick={() => setTeamAccountModalOpen(false)}>
+                <button type="button" className="thm-btn cancel-btn" onClick={() => setTeamAccountModalOpen(false)}>
                   Cancel
                 </button>
                 <button type="button" className="thm-btn" onClick={submitTeamAccount} disabled={isSavingAccount}>
@@ -1495,6 +1625,8 @@ export default function SalesDashboardView() {
                       <th>Due Date</th>
                       <th>Status</th>
                       <th>Paid On</th>
+                      <th>Method</th>
+                      <th style={{ textAlign: "center" }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1505,6 +1637,55 @@ export default function SalesDashboardView() {
                         <td>{formatDate(inst.dueDate)}</td>
                         <td>{installmentStatusChip(inst.status)}</td>
                         <td>{inst.paidAt ? formatDate(inst.paidAt) : "—"}</td>
+                        <td>
+                          {inst.status === "paid" ? (
+                            <div>
+                              <span
+                                style={{
+                                  padding: "2px 8px",
+                                  borderRadius: 4,
+                                  fontSize: "0.7rem",
+                                  fontWeight: 700,
+                                  color: inst.paymentMethod === "manual" ? "#9b59b6" : "#3498db",
+                                  background: inst.paymentMethod === "manual" ? "rgba(155,89,182,0.15)" : "rgba(52,152,219,0.15)",
+                                }}
+                              >
+                                {inst.paymentMethod === "manual" ? "MANUAL" : "RAZORPAY"}
+                              </span>
+                              {inst.paymentReference && (
+                                <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: 2 }} title={inst.paymentReference}>
+                                  {inst.paymentReference}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          {inst.status !== "paid" && (
+                            <div style={{ display: "flex", gap: 4, justifyContent: "center", flexWrap: "wrap" }}>
+                              <button
+                                type="button"
+                                className="thm-btn secondary"
+                                style={{ padding: "3px 8px", fontSize: "0.7rem" }}
+                                disabled={busyOrderId === detailsOrder._id}
+                                onClick={() => markPaidOffline(detailsOrder, inst.seq)}
+                              >
+                                Mark Paid
+                              </button>
+                              <button
+                                type="button"
+                                className="thm-btn secondary"
+                                style={{ padding: "3px 8px", fontSize: "0.7rem" }}
+                                disabled={busyOrderId === detailsOrder._id}
+                                onClick={() => editInstallmentAmount(detailsOrder, inst)}
+                              >
+                                Edit Amount
+                              </button>
+                            </div>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

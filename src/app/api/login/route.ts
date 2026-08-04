@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import { connectDB } from "@/server/db";
-import { User } from "@/server/models/User";
 import { signSessionToken, setSessionCookie } from "@/server/auth";
-import { last10 } from "@/server/integrations/msg91";
+import { resolveLoginCredentials } from "@/server/resolveLogin";
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,34 +10,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email or Phone and password required" }, { status: 400 });
     }
 
-    await connectDB();
-
-    let user;
-    if (phone) {
-      user = await User.findOne({ phone: { $regex: new RegExp(`${last10(phone)}$`) } });
-    } else {
-      const emailClean = email.trim();
-      user = await User.findOne({ email: { $regex: new RegExp(`^${emailClean}$`, "i") } });
-    }
-
-    if (!user) {
+    const result = await resolveLoginCredentials({ email, phone, password });
+    if (result.status === "not_found") {
       return NextResponse.json({ error: "User not found" }, { status: 400 });
     }
-
-    if (user.role === "assessor" || user.role === "admin" || user.role === "owner") {
-      return NextResponse.json({ error: "Access denied. Please use the admin login portal." }, { status: 403 });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
+    if (result.status === "invalid_password") {
       return NextResponse.json({ error: "Invalid password" }, { status: 400 });
     }
 
-    const token = signSessionToken({ id: user._id.toString(), role: user.role || "student" });
+    const { user, role } = result;
+    const token = signSessionToken({ id: String(user._id), role });
     await setSessionCookie(token);
 
     return NextResponse.json({
       status: "ok",
+      role,
       user: { name: user.name, email: user.email, phone: user.phone },
     });
   } catch (error) {

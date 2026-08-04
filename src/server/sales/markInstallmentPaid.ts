@@ -8,6 +8,9 @@ interface InstallmentSubdoc {
   status: string;
   paymentId: string | null;
   paidAt: Date | null;
+  paymentMethod: string | null;
+  paymentReference: string | null;
+  markedPaidBy: unknown;
 }
 
 /**
@@ -25,6 +28,12 @@ export async function markInstallmentPaid(opts: {
   installmentPlanId: string;
   seq: number;
   paymentId: string;
+  /** Defaults to "razorpay" — every pre-existing caller is a real gateway confirmation. */
+  method?: "razorpay" | "manual";
+  /** Defaults to paymentId when omitted (razorpay's own id doubles as its reference). */
+  reference?: string;
+  /** AdminUser id — only meaningful for method: "manual". */
+  markedPaidBy?: string;
 }): Promise<{ alreadyProcessed: boolean; studentCredentials?: { email: string; password: string } }> {
   await connectDB();
 
@@ -41,6 +50,9 @@ export async function markInstallmentPaid(opts: {
   installment.status = "paid";
   installment.paymentId = opts.paymentId;
   installment.paidAt = new Date();
+  installment.paymentMethod = opts.method || "razorpay";
+  installment.paymentReference = opts.reference || opts.paymentId;
+  if (opts.markedPaidBy) installment.markedPaidBy = opts.markedPaidBy;
 
   const allPaid = (plan.installments as unknown as InstallmentSubdoc[]).every((i) => i.status === "paid");
   if (allPaid) plan.status = "completed";

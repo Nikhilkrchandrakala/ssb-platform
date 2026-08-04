@@ -23,6 +23,7 @@ import {
   PageHeader, StatTile, SegmentedControl, EmptyState, Button, SearchInput,
   GlassCard, Reveal, Skeleton, staggerDelay,
 } from "@/app/psych-battery/components/ui/Primitives";
+import { assessorLabel } from "@/lib/assessorLabels";
 
 // Ported from psych_battery/src/pages/Meetings.tsx (assessor meeting
 // scheduling/calendar view). Shape below matches the FlatMeeting the
@@ -68,10 +69,10 @@ type ViewMode = "table" | "card" | "calendar";
 type CalendarViewMode = "month" | "week" | "day";
 
 const MEETING_TYPE_OPTIONS: { value: Meeting["meetingType"]; label: string }[] = [
-  { value: "psych", label: "Psychologist" },
-  { value: "to", label: "TO" },
-  { value: "gto", label: "GTO" },
-  { value: "io", label: "IO" },
+  { value: "psych", label: assessorLabel("Psych") },
+  { value: "to", label: assessorLabel("TO") },
+  { value: "gto", label: assessorLabel("GTO") },
+  { value: "io", label: assessorLabel("IO") },
 ];
 
 type MeetingsQuery = {

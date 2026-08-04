@@ -202,7 +202,18 @@ function SignInForm() {
       setFailedAttempts(0);
 
       toast.success("Logged in successfully!");
-      router.push("/ProfileDashboard");
+
+      // An admin/assessor/franchise account may land on this page (e.g. a
+      // session-expired redirect from Candidate Evaluation) — route them to
+      // the right portal instead of the student dashboard.
+      const role = data?.role;
+      if (role === "franchise") {
+        router.push("/admin/FranchiseDashboard");
+      } else if (role === "owner" || role === "admin" || role === "assessor") {
+        router.push("/admin/Profile");
+      } else {
+        router.push("/ProfileDashboard");
+      }
       router.refresh();
     } catch (err) {
       const apiErr = err instanceof ApiError ? err : null;
@@ -274,7 +285,6 @@ function SignInForm() {
                 onBlur={() => validateField("loginId", formData.loginId)}
                 disabled={isDisabled}
                 autoComplete="username"
-                maxLength={30}
               />
               {fieldErrors.loginId && <div className="field-error">{fieldErrors.loginId}</div>}
             </div>

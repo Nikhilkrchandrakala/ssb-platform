@@ -25,6 +25,7 @@ import {
 import { useSiteUser } from "@/components/site/SiteUserProvider";
 import { postJSON, ApiError } from "@/lib/authApi";
 import type { RazorpayOptions } from "@/global";
+import { isBookingClosed, formatTimeRemaining, formatRealStartTime } from "@/lib/batchTiming";
 import styles from "@/style/BatchPage.module.css";
 
 interface Slot {
@@ -82,6 +83,14 @@ export default function BatchesView() {
   const [selectedBatchType, setSelectedBatchType] = useState("all");
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  // Ticks once a minute so every "time left to book" label on this page
+  // stays live without needing a full data refetch.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Coupon states (declared here, ahead of the pending-batch-restore effect below, since
   // that effect needs to call setCouponCode).
@@ -319,54 +328,12 @@ export default function BatchesView() {
     }
   };
 
-  const formatDateTime = (isoString: string) => {
-    if (!isoString) return "N/A";
-    const date = new Date(isoString);
-    return date.toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-  };
+  const formatDateTime = (slot: Slot) => formatRealStartTime(slot);
 
   const isSlotFull = (slot: Slot) => {
     if (!slot.maxStudents) return false;
     const bookedCount = slot.bookedStudents?.length || 0;
     return bookedCount >= slot.maxStudents;
-  };
-
-  const isBookingClosed = (startTime: string) => {
-    if (!startTime) return true;
-
-    const startDate = new Date(startTime);
-    const cutoffDate = new Date(startDate);
-    cutoffDate.setDate(cutoffDate.getDate() - 1);
-    cutoffDate.setHours(23, 59, 59, 999);
-
-    return new Date() > cutoffDate;
-  };
-
-  const getBookingMessage = (startTime: string) => {
-    if (!startTime) return null;
-
-    const startDate = new Date(startTime);
-    const cutoffDate = new Date(startDate);
-    cutoffDate.setDate(cutoffDate.getDate() - 1);
-    cutoffDate.setHours(23, 59, 59, 999);
-
-    const now = new Date();
-
-    if (now > cutoffDate) return null;
-
-    const cutoffMidnight = new Date(cutoffDate);
-    cutoffMidnight.setHours(0, 0, 0, 0);
-
-    const todayMidnight = new Date(now);
-    todayMidnight.setHours(0, 0, 0, 0);
-
-    const diffDays = Math.ceil((cutoffMidnight.getTime() - todayMidnight.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) {
-      return "⏰ Booking closes tonight at 11:59 PM";
-    }
-
-    return null;
   };
 
   const handlePayment = async () => {
@@ -393,7 +360,7 @@ export default function BatchesView() {
         return;
       }
 
-      if (isBookingClosed(selectedBatch.startTime)) {
+      if (isBookingClosed(selectedBatch)) {
         toast.error("Booking closed");
         return;
       }
@@ -463,7 +430,7 @@ export default function BatchesView() {
   };
 
   const openModal = (slot: Slot) => {
-    if (isBookingClosed(slot.startTime)) {
+    if (isBookingClosed(slot)) {
       toast.error("Booking is no longer available for this batch.");
       return;
     }
@@ -678,10 +645,11 @@ export default function BatchesView() {
             const batchIcon = isMorning ? <FaSun /> : <FaMoon />;
             const batchClass = isMorning ? styles.morningBatch : styles.eveningBatch;
 
-            const isClosed = isBookingClosed(batch.startTime);
+            const isClosed = isBookingClosed(batch, now);
             const disableBooking = isFull || isClosed;
 
-            const bookingMessage = getBookingMessage(batch.startTime);
+            const timeRemaining = !isClosed ? formatTimeRemaining(batch, now) : null;
+            const seatsLeft = (batch.maxStudents || 0) - (batch.bookedStudents?.length || 0);
 
             return (
               <div
@@ -692,7 +660,7 @@ export default function BatchesView() {
                 <div className={styles.batchHeader}>
                   <div className={styles.batchTime}>
                     <FaClock />
-                    <span>{formatDateTime(batch.startTime)}</span>
+                    <span>{formatDateTime(batch)}</span>
                   </div>
 
                   <p className={`${styles.batchTitle} ${batchClass}`}>
@@ -700,16 +668,18 @@ export default function BatchesView() {
                   </p>
                 </div>
 
-                {!isClosed && bookingMessage && <div className={styles.cutoffMessageUrgent}>{bookingMessage}</div>}
+                {!isClosed && !isFull && timeRemaining && <div className={styles.cutoffMessageUrgent}>⏰ {timeRemaining}</div>}
 
                 {isClosed && <div className={styles.cutoffMessageClosed}>❌ Booking Closed</div>}
 
-                <div className={styles.batchStats}>
-                  <div className={styles.stat}>
-                    <FaUsers />
-                    <span>Limited Seats Available</span>
+                {!isClosed && !isFull && (
+                  <div className={styles.batchStats}>
+                    <div className={styles.stat}>
+                      <FaUsers />
+                      <span>{seatsLeft > 0 ? `${seatsLeft} Seats Left` : "Limited Seats Available"}</span>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <button
                   className={`${styles.bookBtn} ${disableBooking ? styles.disabled : ""}`}
@@ -748,7 +718,13 @@ export default function BatchesView() {
                 <div className={styles.modalMeta}>
                   <div className={styles.metaItem}>
                     <FaCalendarAlt />
-                    <span>Start: {formatDateTime(selectedBatch.startTime)}</span>
+                    <span>Start: {formatDateTime(selectedBatch)}</span>
+                  </div>
+                  <div className={styles.metaItem}>
+                    <FaClock />
+                    <span>
+                      {isBookingClosed(selectedBatch, now) ? "❌ Booking Closed" : `⏰ ${formatTimeRemaining(selectedBatch, now)}`}
+                    </span>
                   </div>
                   {selectedBatch.batchNo && (
                     <div className={styles.metaItem}>
@@ -941,11 +917,11 @@ export default function BatchesView() {
                 <button
                   onClick={handlePayment}
                   className={styles.confirmBookBtn}
-                  disabled={isPaying || isSlotFull(selectedBatch) || isBookingClosed(selectedBatch.startTime)}
+                  disabled={isPaying || isSlotFull(selectedBatch) || isBookingClosed(selectedBatch, now)}
                 >
                   {isSlotFull(selectedBatch)
                     ? "Batch Full"
-                    : isBookingClosed(selectedBatch.startTime)
+                    : isBookingClosed(selectedBatch, now)
                       ? "Booking Closed"
                       : "Proceed to Checkout"}{" "}
                   <FaArrowRight />

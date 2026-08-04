@@ -7,6 +7,7 @@ import { AssessmentSubmission, UserProfile } from "@/app/psych-battery/types";
 import { usePsychUser } from "@/components/psych/PsychUserProvider";
 import { Users, Filter, User as UserIcon, Bell, Check, Eye, FileCheck, GraduationCap, Clock3, CheckCircle2, ClipboardList } from "lucide-react";
 import { cn } from "@/app/psych-battery/lib/utils";
+import { assessorLabel } from "@/lib/assessorLabels";
 import {
   PageHeader, StatTile, Badge, Avatar, SearchInput, IconButton, SegmentedControl,
   EmptyState, Card, GlassCard, Reveal, Skeleton, staggerDelay,
@@ -74,10 +75,10 @@ export default function AssessorDashboardView() {
   const showRoleToggle = !user?.assessorType;
 
   const headerTitle =
-    activeAssessorType === "Psych" ? "Psychologist Terminal" :
-    activeAssessorType === "GTO" ? "GTO Assessment Desk" :
-    activeAssessorType === "IO" ? "Interviewing Officer Terminal" :
-    activeAssessorType === "TO" ? "Technical Officer Terminal" :
+    activeAssessorType === "Psych" ? `${assessorLabel("Psych")} Terminal` :
+    activeAssessorType === "GTO" ? `${assessorLabel("GTO")} Assessment Desk` :
+    activeAssessorType === "IO" ? `${assessorLabel("IO")} Terminal` :
+    activeAssessorType === "TO" ? `${assessorLabel("TO")} Terminal` :
     "Assessor Terminal";
 
   const headerDesc =
@@ -169,10 +170,10 @@ export default function AssessorDashboardView() {
                 value={activeAssessorType}
                 onChange={setActiveAssessorType}
                 options={[
-                  { value: "Psych", label: "Psychologist" },
+                  { value: "Psych", label: "Psych" },
                   { value: "GTO", label: "GTO" },
-                  { value: "IO", label: "Interview" },
-                  { value: "TO", label: "Technical" },
+                  { value: "IO", label: "IO" },
+                  { value: "TO", label: "TO" },
                 ]}
               />
             )}

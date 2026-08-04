@@ -532,8 +532,7 @@ export default function CandidateView() {
               <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top border-secondary">
                 <button
                   type="button"
-                  className="thm-btn"
-                  style={{ background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" }}
+                  className="thm-btn cancel-btn"
                   onClick={closeAdd}
                 >
                   Cancel
@@ -639,8 +638,7 @@ export default function CandidateView() {
               <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top border-secondary">
                 <button
                   type="button"
-                  className="thm-btn"
-                  style={{ background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" }}
+                  className="thm-btn cancel-btn"
                   onClick={closeEdit}
                 >
                   Cancel

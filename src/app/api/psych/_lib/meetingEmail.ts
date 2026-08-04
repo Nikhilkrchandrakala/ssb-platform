@@ -1,19 +1,23 @@
 import { sendMsg91Email } from "./email";
+import { assessorLabel } from "@/lib/assessorLabels";
 
 export type MeetingRole = "psych" | "gto" | "io" | "to";
 
+// Was 2 separately-drifted copies of this map ("gto" left abbreviated while
+// its siblings were spelled out in one; all inconsistently worded in the
+// other) — both now derive from the single canonical assessorLabel() source.
 const ROLE_LABELS: Record<MeetingRole, string> = {
-  psych: "Psychologist Feedback",
-  gto: "GTO Outdoor Case",
-  io: "Interviewing Officer Interview",
-  to: "Technical Officer Aptitude",
+  psych: `${assessorLabel("Psych")} Feedback`,
+  gto: `${assessorLabel("GTO")} Outdoor Case`,
+  io: `${assessorLabel("IO")} Interview`,
+  to: `${assessorLabel("TO")} Aptitude`,
 };
 
 const ASSESSOR_ROLE_NAMES: Record<MeetingRole, string> = {
-  psych: "Psychologist",
-  to: "Technical Officer",
-  gto: "GTO Assessor",
-  io: "Interviewing Officer",
+  psych: assessorLabel("Psych"),
+  to: assessorLabel("TO"),
+  gto: assessorLabel("GTO"),
+  io: assessorLabel("IO"),
 };
 
 /**

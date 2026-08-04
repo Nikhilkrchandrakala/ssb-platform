@@ -452,7 +452,7 @@ export default function MagazineView() {
                 )}{" "}
                 {editId ? "Edit Metadata" : "Publish Asset"}
               </h5>
-              <button type="button" className="btn-close" onClick={() => setModalOpen(false)} aria-label="Close"></button>
+              <button type="button" className="btn-close btn-close-white" onClick={() => setModalOpen(false)} aria-label="Close"></button>
             </div>
             <div>
               <div className="row">
@@ -529,8 +529,7 @@ export default function MagazineView() {
             </div>
             <div className="modal-footer px-0 pb-0 pt-3">
               <button
-                className="thm-btn"
-                style={{ background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" }}
+                className="thm-btn cancel-btn"
                 onClick={() => setModalOpen(false)}
               >
                 Cancel

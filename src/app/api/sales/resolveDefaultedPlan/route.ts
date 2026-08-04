@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/server/auth";
 import { hasAdminPermission } from "@/server/adminAccess";
 import { InstallmentPlan, Order, SalesAuditLog } from "@/server/models";
 import { markInstallmentPaid } from "@/server/sales/markInstallmentPaid";
+import { redistributeRemaining } from "@/lib/redistributeInstallments";
 
 interface InstallmentSubdoc {
   seq: number;
@@ -63,6 +64,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: "installments must be a non-empty array" }, { status: 400 });
       }
       const installments = plan.installments as unknown as InstallmentSubdoc[];
+      const editedSeqs = new Set<number>();
+      let anyAmountEdited = false;
       for (const edit of edits) {
         const inst = installments.find((i) => i.seq === edit.seq);
         if (!inst) return NextResponse.json({ message: `Installment seq ${edit.seq} not found` }, { status: 404 });
@@ -74,6 +77,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ message: `Installment seq ${edit.seq}: amount must be a positive number` }, { status: 400 });
           }
           inst.amount = edit.amount;
+          editedSeqs.add(edit.seq);
+          anyAmountEdited = true;
         }
         if (edit.dueDate !== undefined) {
           const d = new Date(edit.dueDate);
@@ -83,6 +88,18 @@ export async function POST(req: NextRequest) {
           inst.dueDate = d;
         }
       }
+
+      // Per owner request: editing any installment's amount here re-splits
+      // the rest of the not-yet-paid installments automatically, same as the
+      // dedicated /api/sales/adjustInstallmentAmount route — this bulk editor
+      // shouldn't behave differently just because it can touch several at once.
+      if (anyAmountEdited) {
+        const result = redistributeRemaining(installments as unknown as { seq: number; amount: number; status: string }[], plan.totalAmount, editedSeqs);
+        if (!result.ok) {
+          return NextResponse.json({ message: result.message }, { status: 400 });
+        }
+      }
+
       await plan.save();
 
       await SalesAuditLog.create({
@@ -90,7 +107,7 @@ export async function POST(req: NextRequest) {
         action: "PLAN_EDITED",
         orderId: plan.orderId,
         installmentPlanId: plan._id,
-        meta: { reason: reason || null, edits },
+        meta: { reason: reason || null, edits, autoRedistributed: anyAmountEdited },
       });
 
       return NextResponse.json({ success: true });
@@ -100,15 +117,23 @@ export async function POST(req: NextRequest) {
       const seq = body.seq;
       if (typeof seq !== "number") return NextResponse.json({ message: "seq is required" }, { status: 400 });
 
+      const reference = typeof body.reference === "string" && body.reference.trim() ? body.reference.trim() : "Resolved via defaulted-plan recovery";
       const paymentId = `manual:${user!._id}:${Date.now()}`;
-      await markInstallmentPaid({ installmentPlanId, seq, paymentId });
+      await markInstallmentPaid({
+        installmentPlanId,
+        seq,
+        paymentId,
+        method: "manual",
+        reference,
+        markedPaidBy: String(user!._id),
+      });
 
       await SalesAuditLog.create({
         actorId: user!._id,
         action: "INSTALLMENT_MARKED_PAID_MANUAL",
         orderId: plan.orderId,
         installmentPlanId: plan._id,
-        meta: { seq, reason: reason || null, paymentId },
+        meta: { seq, reason: reason || null, reference, paymentId },
       });
 
       return NextResponse.json({ success: true });

@@ -3,6 +3,7 @@ import { connectDB } from "@/server/db";
 import { getCurrentUser } from "@/server/auth";
 import { Order, Coupon, Slot, Course } from "@/server/models";
 import { razorpay } from "@/server/integrations/razorpay";
+import { isBookingClosed } from "@/lib/batchTiming";
 
 // Offline-safe baseline defaults, mirrors legacy orderRoutes.js
 const DEFAULT_PRICES: Record<string, number> = {
@@ -29,16 +30,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Slot not found" }, { status: 404 });
     }
 
-    // check if booking is closed (cutoff is 11:59:59 PM the day before)
-    if (slot.startTime) {
-      const startDate = new Date(slot.startTime);
-      const cutoffDate = new Date(startDate);
-      cutoffDate.setDate(cutoffDate.getDate() - 1);
-      cutoffDate.setHours(23, 59, 59, 999);
-
-      if (new Date() > cutoffDate) {
-        return NextResponse.json({ message: "Booking for this batch is closed." }, { status: 400 });
-      }
+    // Booking closes 1 hour before the batch's real start time (see
+    // src/lib/batchTiming.ts — Morning/Evening batches have a fixed IST
+    // clock time, so this needs no extra data beyond what's already stored).
+    if (isBookingClosed(slot)) {
+      return NextResponse.json({ message: "Booking for this batch is closed." }, { status: 400 });
     }
 
     // Dynamic Global Pricing Verification

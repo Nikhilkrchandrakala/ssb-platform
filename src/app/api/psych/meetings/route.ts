@@ -6,8 +6,13 @@ import { requireUser, userId } from "../_lib/auth";
 
 type MeetingRole = "psych" | "to" | "gto" | "io";
 
+// Kept short (abbreviation + qualifier) since this label feeds compact UI
+// (calendar day pills, table cells) — see src/lib/assessorLabels.ts for the
+// canonical full-name form used in more spacious contexts. All four now
+// follow the same "<ABBR> <qualifier>" shape; previously "psych" alone spelled
+// out "Psychologist" while its siblings stayed abbreviated.
 const ROLE_LABELS: Record<MeetingRole, string> = {
-  psych: "Psychologist Feedback",
+  psych: "Psych Feedback",
   to: "TO Aptitude",
   gto: "GTO Outdoor Case",
   io: "IO Interview",

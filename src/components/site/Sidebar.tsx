@@ -19,7 +19,7 @@ const getInitials = (name?: string) => {
 const NAV_LINKS = [
   { href: "/Courses", label: "Courses" },
   { href: "/ssbVirtualTrainingXperience", label: "VTX™" },
-  { href: "/magazine", label: "Roger That - Our monthly magazine" },
+  { href: "/Magazine", label: "Roger That - Our monthly magazine" },
   { href: "/HalfOfFame", label: "Hall of fame" },
   { href: "/aboutSSB", label: "About SSB" },
   { href: "/aboutssbwithisv", label: "About us" },

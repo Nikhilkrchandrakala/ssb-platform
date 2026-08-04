@@ -66,6 +66,22 @@ body, button, input, select, textarea, table, th, td, h1, h2, h3, h4, h5, h6, p,
     box-shadow: 0 4px 18px rgba(224, 194, 20, 0.35);
 }
 
+/* Every "Cancel"/"Discard" button across the admin panel — single shared
+   class so the glow stays consistent everywhere instead of each page
+   re-styling its own Cancel button inline. */
+.thm-btn.cancel-btn {
+    background: rgba(255, 107, 107, 0.08);
+    border: 1px solid #ff6b6b;
+    color: #ff6b6b !important;
+    box-shadow: 0 0 12px rgba(255, 107, 107, 0.35);
+}
+
+.thm-btn.cancel-btn:hover {
+    background: #ff6b6b;
+    color: #0b0b0b !important;
+    box-shadow: 0 0 22px rgba(255, 107, 107, 0.65);
+}
+
 /* Global Luxury Card Styles */
 .admin-card {
     background: var(--surface-dark);

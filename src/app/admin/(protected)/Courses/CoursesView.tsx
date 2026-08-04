@@ -24,6 +24,7 @@ import {
   BookOpen,
   CheckCircle2,
 } from "lucide-react";
+import { isBookingClosed, formatTimeRemaining } from "@/lib/batchTiming";
 import "@/app/admin/styles/legacy-courses.css";
 
 const ICON_STYLE = { verticalAlign: -2 };
@@ -89,6 +90,14 @@ export default function CoursesView() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [allBatches, setAllBatches] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Ticks once a minute so every "time left to book" badge on this page
+  // stays live without needing a full data refetch.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const [dbCourses, setDbCourses] = useState<Course[]>([]);
   const [pricingSyncing, setPricingSyncing] = useState(true);
@@ -723,6 +732,7 @@ export default function CoursesView() {
             const isFull = max > 0 && booked >= max;
             const isMorning = slot.batchType === "morning" || (slot.title || "").toLowerCase().includes("morning");
             const typeClass = isMorning ? "morning-type" : "evening-type";
+            const bookingClosed = isBookingClosed(slot, now);
 
             return (
               <div className="col-lg-4 col-md-6" key={slot._id}>
@@ -762,6 +772,14 @@ export default function CoursesView() {
                         <Tag size={14} className="me-2" style={ICON_STYLE} />Price
                       </span>
                       <span className="price-badge">{priceStr}</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">
+                        <CalendarDays size={14} className="me-2" style={ICON_STYLE} />Public Booking
+                      </span>
+                      <span className="stat-value" style={{ color: bookingClosed ? "#ff6b6b" : undefined }}>
+                        {bookingClosed ? "Closed" : formatTimeRemaining(slot, now)}
+                      </span>
                     </div>
                     <div className="mt-3 text-center">
                       {isFull ? (
@@ -823,7 +841,7 @@ export default function CoursesView() {
                 )}{" "}
                 {editSlotId ? "Edit Batch Details" : "Create New Batch"}
               </h5>
-              <button type="button" className="btn-close" onClick={() => setSlotModalOpen(false)} aria-label="Close"></button>
+              <button type="button" className="btn-close btn-close-white" onClick={() => setSlotModalOpen(false)} aria-label="Close"></button>
             </div>
             <div>
               <div className="mb-3">
@@ -921,8 +939,7 @@ export default function CoursesView() {
               <div className="modal-footer px-0 pb-0 pt-3">
                 <button
                   type="button"
-                  className="thm-btn"
-                  style={{ background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" }}
+                  className="thm-btn cancel-btn"
                   onClick={() => setSlotModalOpen(false)}
                 >
                   Cancel
@@ -944,7 +961,7 @@ export default function CoursesView() {
               <h5 className="admin-modal-title">
                 <UserPlus size={18} className="me-2" style={ICON_STYLE} /> Manual Seat Booking
               </h5>
-              <button type="button" className="btn-close" onClick={() => setBookModalOpen(false)} aria-label="Close"></button>
+              <button type="button" className="btn-close btn-close-white" onClick={() => setBookModalOpen(false)} aria-label="Close"></button>
             </div>
             <div>
               <div className="mb-3">
@@ -1017,8 +1034,7 @@ export default function CoursesView() {
               <div className="modal-footer px-0 pb-0 pt-3">
                 <button
                   type="button"
-                  className="thm-btn"
-                  style={{ background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" }}
+                  className="thm-btn cancel-btn"
                   onClick={() => setBookModalOpen(false)}
                 >
                   Cancel

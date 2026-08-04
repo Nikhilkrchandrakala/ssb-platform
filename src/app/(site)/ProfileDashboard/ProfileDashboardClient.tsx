@@ -29,6 +29,7 @@ import PdfViewer from "@/components/site/PdfViewer";
 import { useSiteUser } from "@/components/site/SiteUserProvider";
 import { resolveLegacyAssetUrl } from "@/lib/legacyAssets";
 import { postJSON, ApiError } from "@/lib/authApi";
+import { assessorLabel } from "@/lib/assessorLabels";
 import type { RazorpayOptions } from "@/global";
 
 // Razorpay's public key_id is not a secret (mirrors BatchesView.tsx's own
@@ -65,6 +66,8 @@ interface DashboardInstallment {
   amount: number;
   dueDate?: string;
   status: "pending" | "paid" | "overdue" | "failed";
+  paymentMethod?: "razorpay" | "manual" | null;
+  paymentReference?: string | null;
 }
 
 interface DashboardInstallmentPlan {
@@ -322,10 +325,10 @@ export default function ProfileDashboardClient({
   const activeSubMeetings: { role: string; date?: string; link: string }[] = activeSub
     ? (
         [
-          activeSub.psychMeetingLink && { role: "Psychologist", date: activeSub.psychMeetingDate, link: activeSub.psychMeetingLink },
-          activeSub.ioMeetingLink && { role: "Interviewing Officer", date: activeSub.ioMeetingDate, link: activeSub.ioMeetingLink },
-          activeSub.gtoMeetingLink && { role: "GTO", date: activeSub.gtoMeetingDate, link: activeSub.gtoMeetingLink },
-          activeSub.toMeetingLink && { role: "Technical Officer", date: activeSub.toMeetingDate, link: activeSub.toMeetingLink },
+          activeSub.psychMeetingLink && { role: assessorLabel("Psych"), date: activeSub.psychMeetingDate, link: activeSub.psychMeetingLink },
+          activeSub.ioMeetingLink && { role: assessorLabel("IO"), date: activeSub.ioMeetingDate, link: activeSub.ioMeetingLink },
+          activeSub.gtoMeetingLink && { role: assessorLabel("GTO"), date: activeSub.gtoMeetingDate, link: activeSub.gtoMeetingLink },
+          activeSub.toMeetingLink && { role: assessorLabel("TO"), date: activeSub.toMeetingDate, link: activeSub.toMeetingLink },
         ].filter(Boolean) as { role: string; date?: string; link: string }[]
       )
     : [];
@@ -997,6 +1000,12 @@ export default function ProfileDashboardClient({
                                                 {isPaid ? "Paid" : `Due ${formatDate(inst.dueDate)}`}
                                                 {inst.status === "overdue" && " — Overdue"}
                                               </div>
+                                              {isPaid && inst.paymentMethod && (
+                                                <div style={{ fontSize: "0.7rem", opacity: 0.6, marginTop: 2 }}>
+                                                  Paid via {inst.paymentMethod === "manual" ? "Manual (offline)" : "Razorpay"}
+                                                  {inst.paymentReference ? ` — Ref: ${inst.paymentReference}` : ""}
+                                                </div>
+                                              )}
                                             </div>
                                             {isPaid ? (
                                               <FaCheckCircle style={{ color: "#2ecc71" }} title="Paid" />
@@ -1569,7 +1578,7 @@ export default function ProfileDashboardClient({
                                         </div>
                                         <div>
                                           <h6>
-                                            {m.role === "Interviewing Officer" ? "Interviewing Officer Mock Interview" : `${m.role} Feedback Session`}
+                                            {m.role === assessorLabel("IO") ? `${m.role} Mock Interview` : `${m.role} Feedback Session`}
                                           </h6>
                                           {m.date ? (
                                             <p>
@@ -1708,25 +1717,25 @@ export default function ProfileDashboardClient({
                 <div className={styles.feedbackModalBody}>
                   {hasPsych && (
                     <div className={styles.feedbackSection}>
-                      <h4 className={styles.feedbackSectionTitle}>Psychologist Remarks</h4>
+                      <h4 className={styles.feedbackSectionTitle}>{assessorLabel("Psych")} Remarks</h4>
                       <p className={styles.feedbackSectionBody}>{psychRemarks}</p>
                     </div>
                   )}
                   {hasGto && (
                     <div className={styles.feedbackSection}>
-                      <h4 className={styles.feedbackSectionTitle}>GTO Remarks</h4>
+                      <h4 className={styles.feedbackSectionTitle}>{assessorLabel("GTO")} Remarks</h4>
                       <p className={styles.feedbackSectionBody}>{gtoRemarks}</p>
                     </div>
                   )}
                   {hasIo && (
                     <div className={styles.feedbackSection}>
-                      <h4 className={styles.feedbackSectionTitle}>Interviewing Officer Remarks</h4>
+                      <h4 className={styles.feedbackSectionTitle}>{assessorLabel("IO")} Remarks</h4>
                       <p className={styles.feedbackSectionBody}>{ioRemarks}</p>
                     </div>
                   )}
                   {hasTo && (
                     <div className={styles.feedbackSection}>
-                      <h4 className={styles.feedbackSectionTitle}>Technical Officer Remarks</h4>
+                      <h4 className={styles.feedbackSectionTitle}>{assessorLabel("TO")} Remarks</h4>
                       <p className={styles.feedbackSectionBody}>{toRemarks}</p>
                     </div>
                   )}

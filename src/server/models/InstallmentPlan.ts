@@ -21,6 +21,16 @@ const installmentPlanSchema = new Schema(
         paymentLinkExpiresAt: { type: Date, default: null },
         paymentId: { type: String, default: null },
         paidAt: { type: Date, default: null },
+        // Set whenever an installment is marked paid — "razorpay" for a real
+        // gateway confirmation (webhook/checkInstallmentStatus/verifyPayment),
+        // "manual" when a sales person marks an offline payment (cash, UPI,
+        // bank transfer, etc.) themselves. paymentReference is always shown to
+        // the student alongside the method, so both sides can later relate an
+        // installment back to the actual transaction — for "razorpay" it
+        // mirrors paymentId; for "manual" it's whatever the sales person typed.
+        paymentMethod: { type: String, enum: ["razorpay", "manual", null], default: null },
+        paymentReference: { type: String, default: null },
+        markedPaidBy: { type: Schema.Types.ObjectId, ref: "AdminUser", default: null },
         reminderSentAt: { type: Date, default: null },
       },
     ],

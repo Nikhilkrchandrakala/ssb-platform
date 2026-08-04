@@ -18,6 +18,7 @@ import {
   Info,
   Save,
 } from "lucide-react";
+import { ASSESSOR_TYPE_VALUES, assessorLabel } from "@/lib/assessorLabels";
 import "@/app/admin/styles/legacy-roles.css";
 
 const ICON_STYLE = { verticalAlign: -2 };
@@ -67,12 +68,7 @@ const MANAGEMENT_PERMISSIONS: { value: string; label: string }[] = [
   { value: "psych_battery", label: "Candidate Evaluation" },
 ];
 
-const ASSESSOR_TYPES = [
-  { value: "GTO", label: "GTO Assessor", desc: "(Group Testing Officer)" },
-  { value: "TO", label: "TO Assessor", desc: "(Technical Officer)" },
-  { value: "Psych", label: "Psych Assessor", desc: "(Psychologist)" },
-  { value: "IO", label: "IO Assessor", desc: "(Interviewing Officer)" },
-];
+const ASSESSOR_TYPES = ASSESSOR_TYPE_VALUES;
 
 const PROTECTED_EMAIL = "nkc@ssbwithisv.in";
 const SUPER_ADMIN_EMAIL = "info@ssbwithisv.in";
@@ -507,7 +503,7 @@ export default function RolesManagementView() {
                         ) : u.role === "assessor" ? (
                           <div style={{ fontSize: "0.85rem" }}>
                             <span className="text-warning">Specialization:</span>{" "}
-                            <strong style={{ color: "#9b59b6" }}>{u.assessorType || "General Assessor"}</strong>
+                            <strong style={{ color: "#9b59b6" }}>{assessorLabel(u.assessorType) || "General Assessor"}</strong>
                           </div>
                         ) : (
                           <span className="opacity-50">—</span>
@@ -786,17 +782,17 @@ export default function RolesManagementView() {
                         </p>
                         <div className="d-flex flex-column gap-3">
                           {ASSESSOR_TYPES.map((at) => (
-                            <label key={at.value} className="d-flex align-items-center gap-2" style={{ color: "#fff", cursor: "pointer", fontSize: 13 }}>
+                            <label key={at} className="d-flex align-items-center gap-2" style={{ color: "#fff", cursor: "pointer", fontSize: 13 }}>
                               <input
                                 type="radio"
                                 name="assessorType"
-                                value={at.value}
-                                checked={form.assessorType === at.value}
-                                onChange={() => setForm((prev) => ({ ...prev, assessorType: at.value }))}
+                                value={at}
+                                checked={form.assessorType === at}
+                                onChange={() => setForm((prev) => ({ ...prev, assessorType: at }))}
                                 className="form-check-input mt-0"
                                 style={{ backgroundColor: "#2b2b2b", borderColor: "#555", width: 18, height: 18 }}
                               />{" "}
-                              <strong>{at.label}</strong> {at.desc}
+                              <strong>{assessorLabel(at)}</strong>
                             </label>
                           ))}
                         </div>
@@ -878,7 +874,7 @@ export default function RolesManagementView() {
                   </div>
 
                   <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top border-secondary">
-                    <button type="button" className="thm-btn secondary" style={{ padding: "8px 25px" }} onClick={closeModal}>
+                    <button type="button" className="thm-btn cancel-btn" style={{ padding: "8px 25px" }} onClick={closeModal}>
                       Cancel
                     </button>
                     <button type="submit" className="thm-btn" style={{ padding: "8px 25px" }} disabled={isSubmitting}>
