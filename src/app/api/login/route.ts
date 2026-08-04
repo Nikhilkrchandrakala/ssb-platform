@@ -4,13 +4,18 @@ import { resolveLoginCredentials } from "@/server/resolveLogin";
 
 export async function POST(req: NextRequest) {
   try {
-    const { phone, email, password } = await req.json();
+    const { phone, email, password, portal } = await req.json();
 
     if ((!phone && !email) || !password) {
       return NextResponse.json({ error: "Email or Phone and password required" }, { status: 400 });
     }
 
-    const result = await resolveLoginCredentials({ email, phone, password });
+    const result = await resolveLoginCredentials({
+      email,
+      phone,
+      password,
+      portal: portal === "admin" || portal === "student" ? portal : undefined,
+    });
     if (result.status === "not_found") {
       return NextResponse.json({ error: "User not found" }, { status: 400 });
     }

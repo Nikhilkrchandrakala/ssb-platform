@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/server/db";
 import { User } from "@/server/models/User";
+import { AdminUser, Franchise } from "@/server/models";
 import { verificationTokens } from "@/server/otpStore";
 import { submitSignupLead } from "@/server/integrations/zoho";
 import { cleanPhone, last10 } from "@/server/integrations/msg91";
@@ -50,14 +51,33 @@ export async function POST(req: NextRequest) {
     await connectDB();
 
     const escapedEmail = emailLower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const existingUser = await User.findOne({
+    const emailOrPhoneMatch = {
       $or: [
         { email: { $regex: new RegExp(`^${escapedEmail}$`, "i") } },
         { phone: { $regex: new RegExp(`${phoneLast10}$`) } },
       ],
-    });
+    };
+
+    const existingUser = await User.findOne(emailOrPhoneMatch);
     if (existingUser) {
       return NextResponse.json({ error: "User already exists" }, { status: 400 });
+    }
+
+    // AdminUser/Franchise enforce email uniqueness only within their own
+    // collection, so without this check a candidate could self-register with
+    // an email/phone already tied to a staff account. Login then resolves
+    // AdminUser/Franchise first (see resolveLogin.ts) and never falls
+    // through to the new User document, leaving it permanently unable to log
+    // in with its own password — so this must be rejected at signup time.
+    const [existingAdmin, existingFranchise] = await Promise.all([
+      AdminUser.findOne(emailOrPhoneMatch),
+      Franchise.findOne(emailOrPhoneMatch),
+    ]);
+    if (existingAdmin || existingFranchise) {
+      return NextResponse.json(
+        { error: "This email or phone is already associated with a staff account. Please contact support." },
+        { status: 400 }
+      );
     }
 
     const newUser = new User({

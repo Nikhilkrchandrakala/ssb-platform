@@ -1334,6 +1334,40 @@ input::-ms-clear {
     text-transform: uppercase;
 }
 
+.portal-toggle {
+    display: flex;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    padding: 4px;
+    margin: 0 auto 20px;
+    max-width: 320px;
+}
+
+.portal-toggle-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: #c6c5af;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.portal-toggle-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.portal-toggle-btn.active {
+    background: #f4c430;
+    color: #1a1a1a;
+}
+
 .auth-logo-wrapper {
     display: flex;
     justify-content: center;

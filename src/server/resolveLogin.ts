@@ -21,6 +21,8 @@ export type LoginLookupResult =
   | { status: "invalid_password" }
   | { status: "ok"; user: Candidate; role: string };
 
+const STAFF_ROLES = ["admin", "owner", "assessor", "franchise"];
+
 // Ported from the pre-migration lookups verbatim, which built `new RegExp()`
 // straight from the request body — unescaped, that lets `.`/`*`/etc. in an
 // "email" match unintended strings, and a pathological pattern (e.g. nested
@@ -34,68 +36,74 @@ function escapeRegExp(value: string): string {
 /**
  * Single shared credential lookup used by every login entry point (admin
  * portal, public site, candidate evaluation's session-expired redirect).
- * Tries AdminUser -> Franchise -> assessor User -> any other User, so the
- * same email/password works no matter which login page someone lands on —
- * previously /api/login flatly rejected admin/assessor/owner accounts,
- * which is what sent staff bouncing between the two login pages.
+ *
+ * `portal` scopes which collections are searched:
+ * - "admin": AdminUser -> Franchise -> staff-flagged User docs (assessor/
+ *   admin/owner/franchise stored in the shared User collection). Never
+ *   touches plain student/lead User docs.
+ * - "student": only User docs that are NOT staff-flagged.
+ * - omitted: legacy behavior — cascades through all of the above in order,
+ *   stopping at the first email/phone match. Kept only for callers that
+ *   predate the portal split; new callers should always pass `portal`,
+ *   since without it a candidate who signed up with the same email as a
+ *   staff account can never reach their own User doc (the staff lookup
+ *   matches first and any password check against it fails).
  */
 export async function resolveLoginCredentials({
   email,
   phone,
   password,
+  portal,
 }: {
   email?: string;
   phone?: string;
   password: string;
+  portal?: "admin" | "student";
 }): Promise<LoginLookupResult> {
   await connectDB();
 
   const phoneLast10 = phone ? last10(phone) : null;
   const emailClean = email ? escapeRegExp(email.trim()) : null;
+  const emailOrPhoneQuery = (extra?: Record<string, unknown>) => {
+    const base = phone
+      ? { phone: { $regex: new RegExp(`${phoneLast10}$`) } }
+      : { email: { $regex: new RegExp(`^${emailClean}$`, "i") } };
+    return extra ? { ...base, ...extra } : base;
+  };
 
   let user: Candidate | null = null;
   let role = "";
 
-  // 1. Admin/owner check
-  if (phone) {
-    user = await AdminUser.findOne({ phone: { $regex: new RegExp(`${phoneLast10}$`) } });
-  } else if (email) {
-    user = await AdminUser.findOne({ email: { $regex: new RegExp(`^${emailClean}$`, "i") } });
-  }
-  if (user) {
-    role = user.role === "owner" ? "owner" : "admin";
-  } else {
-    // 2. Franchise check
-    if (phone) {
-      user = await Franchise.findOne({ phone: { $regex: new RegExp(`${phoneLast10}$`) } });
-    } else if (email) {
-      user = await Franchise.findOne({ email: { $regex: new RegExp(`^${emailClean}$`, "i") } });
+  if (portal !== "student") {
+    // 1. Admin/owner check
+    user = await AdminUser.findOne(emailOrPhoneQuery());
+    if (user) {
+      role = user.role === "owner" ? "owner" : "admin";
+    } else {
+      // 2. Franchise check
+      user = await Franchise.findOne(emailOrPhoneQuery());
+      if (user) role = "franchise";
     }
-    if (user) role = "franchise";
-  }
 
-  // 3. Assessor check (in main User collection)
-  if (!user) {
-    let assessorUser: Candidate | null = null;
-    if (phone) {
-      assessorUser = await User.findOne({ phone: { $regex: new RegExp(`${phoneLast10}$`) }, role: "assessor" });
-    } else if (email) {
-      assessorUser = await User.findOne({ email: { $regex: new RegExp(`^${emailClean}$`, "i") }, role: "assessor" });
-    }
-    if (assessorUser) {
-      user = assessorUser;
-      role = "assessor";
+    // 3. Staff accounts stored in the shared User collection (assessor, or
+    // legacy admin/owner/franchise rows that never got migrated out)
+    if (!user) {
+      const staffUser = await User.findOne(emailOrPhoneQuery({ role: { $in: STAFF_ROLES } }));
+      if (staffUser) {
+        user = staffUser;
+        role = staffUser.role || "assessor";
+      }
     }
   }
 
-  // 4. Everyone else (student/lead) in the User collection
-  if (!user) {
-    if (phone) {
-      user = await User.findOne({ phone: { $regex: new RegExp(`${phoneLast10}$`) } });
-    } else if (email) {
-      user = await User.findOne({ email: { $regex: new RegExp(`^${emailClean}$`, "i") } });
+  // 4. Student/lead accounts — only reached on the student portal, or on
+  // the legacy no-portal path when no staff account matched
+  if (!user && portal !== "admin") {
+    const studentUser = await User.findOne(emailOrPhoneQuery({ role: { $nin: STAFF_ROLES } }));
+    if (studentUser) {
+      user = studentUser;
+      role = studentUser.role || "student";
     }
-    if (user) role = user.role || "student";
   }
 
   if (!user) return { status: "not_found" };

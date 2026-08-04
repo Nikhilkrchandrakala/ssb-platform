@@ -38,6 +38,12 @@ function SignInForm() {
     }
   }, [searchParams]);
 
+  // Which portal the credentials are being checked against — lets a person
+  // whose email is shared between a staff account and a student account log
+  // into either one explicitly, instead of the backend silently picking
+  // whichever collection it checks first.
+  const [portal, setPortal] = useState<"student" | "admin">("student");
+
   // Form state
   const [formData, setFormData] = useState<FormData>({
     loginId: "",
@@ -187,7 +193,7 @@ function SignInForm() {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestData),
+        body: JSON.stringify({ ...requestData, portal }),
       });
       const data = await res.json().catch(() => ({}));
 
@@ -217,7 +223,14 @@ function SignInForm() {
       router.refresh();
     } catch (err) {
       const apiErr = err instanceof ApiError ? err : null;
-      console.error("Login error:", apiErr?.data?.error);
+      // Wrong password / wrong portal / lockout are expected outcomes
+      // already surfaced to the user below via setError() — logging them as
+      // console.error trips Next's dev-mode error overlay on every failed
+      // login attempt. Only unexpected failures (network error, 5xx) get
+      // logged here.
+      if (!apiErr || apiErr.status >= 500) {
+        console.error("Login error:", apiErr?.data?.error || err);
+      }
 
       // Track failed attempts
       const newAttempts = failedAttempts + 1;
@@ -230,8 +243,18 @@ function SignInForm() {
         return;
       }
 
-      if (apiErr?.data?.error) {
-        setError(apiErr.data.error as string);
+      const backendError = apiErr?.data?.error as string | undefined;
+      if (backendError === "User not found") {
+        // Doesn't confirm whether this email/phone actually belongs to the
+        // other portal — just a generic nudge, so this can't be used to
+        // enumerate which accounts exist as staff vs. student.
+        setError(
+          portal === "student"
+            ? "No student account found with those details. Staff members should use the Admin Portal tab above."
+            : "No staff account found with those details. Students should use the Student tab above."
+        );
+      } else if (backendError) {
+        setError(backendError);
       } else {
         setError("An error occurred. Please try again");
       }
@@ -271,6 +294,29 @@ function SignInForm() {
             <img src="/assets/logo/ISV.webp" alt="SSB with ISV Logo" className="auth-logo" />
           </div>
           <h1 className="auth-card-title">Sign In</h1>
+
+          <div className="portal-toggle" role="tablist" aria-label="Login as">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={portal === "student"}
+              className={`portal-toggle-btn ${portal === "student" ? "active" : ""}`}
+              onClick={() => setPortal("student")}
+              disabled={isDisabled}
+            >
+              Student
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={portal === "admin"}
+              className={`portal-toggle-btn ${portal === "admin" ? "active" : ""}`}
+              onClick={() => setPortal("admin")}
+              disabled={isDisabled}
+            >
+              Admin Portal
+            </button>
+          </div>
 
           <div className="row g-3 justify-content-center" onKeyDown={handleKeyDown}>
             {/* Login ID */}
@@ -319,7 +365,10 @@ function SignInForm() {
               </label>
             </div>
 
-            <div onClick={() => !isDisabled && router.push("/AccountRecovery")} className="col-6 mt-4 text-end">
+            <div
+              onClick={() => !isDisabled && router.push(portal === "admin" ? "/admin/AccountRecovery" : "/AccountRecovery")}
+              className="col-6 mt-4 text-end"
+            >
               <div className="thm-account-link" style={{ cursor: isDisabled ? "not-allowed" : "pointer", opacity: isDisabled ? 0.6 : 1 }}>
                 Forgot Password?
               </div>
@@ -343,18 +392,22 @@ function SignInForm() {
               />
             </div>
 
-            <SocialLoginButtons />
+            {portal === "student" && (
+              <>
+                <SocialLoginButtons />
 
-            {/* Signup link */}
-            <div className="col-12 text-center mt-5">
-              <div
-                onClick={() => !isDisabled && router.push("/SignUp")}
-                className="thm-account-link"
-                style={{ cursor: isDisabled ? "not-allowed" : "pointer", opacity: isDisabled ? 0.6 : 1 }}
-              >
-                Create a new account.
-              </div>
-            </div>
+                {/* Signup link */}
+                <div className="col-12 text-center mt-5">
+                  <div
+                    onClick={() => !isDisabled && router.push("/SignUp")}
+                    className="thm-account-link"
+                    style={{ cursor: isDisabled ? "not-allowed" : "pointer", opacity: isDisabled ? 0.6 : 1 }}
+                  >
+                    Create a new account.
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
