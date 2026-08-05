@@ -5,6 +5,7 @@ import { User } from "@/server/models/User";
 import { requireUser, userId } from "../../../_lib/auth";
 import { getEvaluationRecipientIds, notifyRecipients } from "../../../_lib/notify";
 import { uploadToR2 } from "@/server/storage/r2";
+import { sendDossierUploadedEmail, sendDossierUploadedSms } from "@/server/integrations/msg91";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -69,6 +70,46 @@ export async function POST(req: NextRequest, { params }: Params) {
         title: "Dossier Uploaded",
         message: `Candidate ${candidateName} has uploaded their Dossier.`,
       });
+
+      // Email + SMS only the assigned TO/Psych for this candidate —
+      // deliberately narrower than the in-app notification above (which also
+      // reaches admins/owner). Skips silently if neither is assigned yet; no
+      // fallback recipient, per explicit product decision (2026-08-05).
+      if (student) {
+        const assessorIds = [student.assignedTO, student.assignedPsych].filter(Boolean).map((id) => String(id));
+        const uniqueAssessorIds = Array.from(new Set(assessorIds));
+        if (uniqueAssessorIds.length > 0) {
+          const assessors = await User.find({ _id: { $in: uniqueAssessorIds } }).select("name email phone");
+          await Promise.all(
+            assessors.flatMap((a) => {
+              const sends = [];
+              if (a.email) {
+                sends.push(
+                  sendDossierUploadedEmail({
+                    to: a.email,
+                    assessorName: a.name || "Assessor",
+                    candidateName,
+                    batchNumber: student.batch || "—",
+                    chestNo: student.chestNo || "—",
+                  })
+                );
+              }
+              if (a.phone) {
+                sends.push(
+                  sendDossierUploadedSms({
+                    toPhone: a.phone,
+                    assessorName: a.name || "Assessor",
+                    candidateName,
+                    batchNumber: student.batch || "—",
+                    chestNo: student.chestNo || "—",
+                  })
+                );
+              }
+              return sends;
+            })
+          );
+        }
+      }
     } catch (notifErr) {
       console.error("Failed to create Dossier notification:", notifErr);
     }

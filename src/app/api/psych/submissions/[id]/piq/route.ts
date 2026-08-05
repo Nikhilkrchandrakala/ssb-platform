@@ -5,6 +5,7 @@ import { User } from "@/server/models/User";
 import { requireUser, userId } from "../../../_lib/auth";
 import { getEvaluationRecipientIds, notifyRecipients } from "../../../_lib/notify";
 import { uploadToR2 } from "@/server/storage/r2";
+import { sendPiqUploadedEmail, sendPiqUploadedSms } from "@/server/integrations/msg91";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -90,6 +91,49 @@ export async function POST(req: NextRequest, { params }: Params) {
         title: "PIQ Uploaded",
         message: `Candidate ${candidateName} has uploaded their PIQ files.`,
       });
+
+      // Targeted email + SMS, deliberately narrower than the in-app
+      // notification above: PIQ1 -> assigned TO/Psych only, PIQ2 -> assigned
+      // IO only (2026-08-05 product decision). Skips silently if the
+      // relevant assessor(s) aren't assigned yet; no fallback recipient.
+      if (candidateUser) {
+        const assessorIds =
+          piqType === "piq2"
+            ? [candidateUser.assignedIO].filter(Boolean)
+            : [candidateUser.assignedTO, candidateUser.assignedPsych].filter(Boolean);
+        const uniqueAssessorIds = Array.from(new Set(assessorIds.map((id) => String(id))));
+        if (uniqueAssessorIds.length > 0) {
+          const assessors = await User.find({ _id: { $in: uniqueAssessorIds } }).select("name email phone");
+          await Promise.all(
+            assessors.flatMap((a) => {
+              const sends = [];
+              if (a.email) {
+                sends.push(
+                  sendPiqUploadedEmail({
+                    to: a.email,
+                    assessorName: a.name || "Assessor",
+                    candidateName,
+                    batchNumber: candidateUser.batch || "—",
+                    chestNo: candidateUser.chestNo || "—",
+                  })
+                );
+              }
+              if (a.phone) {
+                sends.push(
+                  sendPiqUploadedSms({
+                    toPhone: a.phone,
+                    assessorName: a.name || "Assessor",
+                    candidateName,
+                    batchNumber: candidateUser.batch || "—",
+                    chestNo: candidateUser.chestNo || "—",
+                  })
+                );
+              }
+              return sends;
+            })
+          );
+        }
+      }
     } catch (notifErr) {
       console.error("Failed to create PIQ notification:", notifErr);
     }

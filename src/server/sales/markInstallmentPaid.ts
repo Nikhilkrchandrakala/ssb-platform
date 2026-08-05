@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { connectDB } from "@/server/db";
 import { InstallmentPlan, Order, Slot, User, Coupon } from "@/server/models";
-import { sendMail } from "@/server/integrations/email";
+import { sendCredentialsEmail } from "@/server/integrations/msg91";
 
 interface InstallmentSubdoc {
   seq: number;
@@ -34,7 +34,7 @@ export async function markInstallmentPaid(opts: {
   reference?: string;
   /** AdminUser id — only meaningful for method: "manual". */
   markedPaidBy?: string;
-}): Promise<{ alreadyProcessed: boolean; studentCredentials?: { email: string; password: string } }> {
+}): Promise<{ alreadyProcessed: boolean; studentCredentials?: { email: string; password: string; emailDelivered: boolean } }> {
   await connectDB();
 
   const plan = await InstallmentPlan.findById(opts.installmentPlanId);
@@ -108,15 +108,19 @@ export async function markInstallmentPaid(opts: {
   student.password = plainPassword;
   await student.save();
 
-  await sendMail({
+  const mail = await sendCredentialsEmail({
     to: student.email,
-    subject: "Your SSB with ISV login details",
-    html: `<p>Hi ${student.name},</p><p>Your payment has been received and your account is ready.</p><p>Login email: ${student.email}<br/>Password: ${plainPassword}</p><p>Please sign in and change your password.</p>`,
+    name: student.name,
+    username: student.email,
+    password: plainPassword,
   });
 
   // Surfaced to the caller (checkInstallmentStatus/webhook) so the Sales
   // dashboard can show credentials on screen as a fallback when the email
-  // above silently fails to deliver (e.g. bad SMTP creds) — see resetStudentCredentials
-  // for the on-demand equivalent once this one-time reveal has been missed.
-  return { alreadyProcessed: false, studentCredentials: { email: student.email, password: plainPassword } };
+  // above fails to deliver — see resetStudentCredentials for the on-demand
+  // equivalent once this one-time reveal has been missed.
+  return {
+    alreadyProcessed: false,
+    studentCredentials: { email: student.email, password: plainPassword, emailDelivered: mail.delivered },
+  };
 }

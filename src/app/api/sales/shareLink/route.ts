@@ -3,18 +3,22 @@ import { connectDB } from "@/server/db";
 import { getCurrentUser } from "@/server/auth";
 import { hasAdminPermission } from "@/server/adminAccess";
 import { InstallmentPlan, SalesAuditLog } from "@/server/models";
-import { sendMail } from "@/server/integrations/email";
+import { sendRegistrationPaymentEmail, sendInstallmentPaymentEmail } from "@/server/integrations/msg91";
 import { assertCanAccessPlan, toSalesActor } from "@/server/sales/scope";
 
 interface InstallmentSubdoc {
   seq: number;
+  amount: number;
+  dueDate: string | Date;
   paymentLinkUrl: string | null;
 }
 
 // Sends a given installment's Razorpay Payment Link via email and/or SMS
 // (salesimplementation.md Phase 2). SMS is stubbed/no-op — MSG91's
 // transactional API + a DLT-approved template aren't provisioned yet
-// (Open Decision #5); email works today via the existing email.ts wrapper.
+// (Open Decision #5). Email uses one of two MSG91 templates depending on
+// whether this is the first payment (registration) or a later installment —
+// different enough in tone/content that one shared template read as generic.
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -27,7 +31,8 @@ export async function POST(req: NextRequest) {
 
     const plan = await InstallmentPlan.findById(installmentPlanId)
       .populate("studentId", "name email")
-      .populate("salesPersonId", "reportsTo");
+      .populate("salesPersonId", "reportsTo")
+      .populate({ path: "orderId", populate: { path: "slotId", select: "title batchNo startTime" } });
     if (!plan) return NextResponse.json({ message: "Installment plan not found" }, { status: 404 });
 
     if (!assertCanAccessPlan(toSalesActor(user!), plan.salesPersonId as { _id: unknown; reportsTo?: unknown })) {
@@ -41,14 +46,36 @@ export async function POST(req: NextRequest) {
     }
 
     const student = plan.studentId as unknown as { name: string; email: string };
+    const order = plan.orderId as unknown as { slotId?: { title?: string; batchNo?: string; startTime?: string } } | null;
+    const slot = order?.slotId;
     const results: Record<string, boolean> = {};
 
     if (requestedChannels.includes("email")) {
-      const mail = await sendMail({
-        to: student.email,
-        subject: "Your SSB with ISV payment link",
-        html: `<p>Hi ${student.name},</p><p>Please complete your payment here: <a href="${installment.paymentLinkUrl}">${installment.paymentLinkUrl}</a></p>`,
-      });
+      const formatDate = (d: string | Date) =>
+        new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+
+      const mail =
+        seq === 1
+          ? await sendRegistrationPaymentEmail({
+              to: student.email,
+              name: student.name,
+              courseName: slot?.title || "—",
+              batchNo: slot?.batchNo || "—",
+              startDate: slot?.startTime ? formatDate(slot.startTime) : "—",
+              amount: installment.amount,
+              link: installment.paymentLinkUrl,
+            })
+          : await sendInstallmentPaymentEmail({
+              to: student.email,
+              name: student.name,
+              courseName: slot?.title || "—",
+              batchNo: slot?.batchNo || "—",
+              installmentNumber: seq,
+              totalInstallments: (plan.installments as unknown as InstallmentSubdoc[]).length,
+              dueDate: formatDate(installment.dueDate),
+              amount: installment.amount,
+              link: installment.paymentLinkUrl,
+            });
       results.email = mail.delivered;
     }
 

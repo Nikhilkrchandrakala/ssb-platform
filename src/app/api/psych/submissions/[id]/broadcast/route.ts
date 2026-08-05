@@ -5,7 +5,7 @@ import { User } from "@/server/models/User";
 import { requireUser } from "../../../_lib/auth";
 import { resolvePendingSubmissionId } from "../../../_lib/pendingSubmission";
 import { notifyRecipients } from "../../../_lib/notify";
-import { sendMsg91Email } from "../../../_lib/email";
+import { sendResultsBroadcastEmail } from "@/server/integrations/msg91";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -86,26 +86,26 @@ export async function POST(req: NextRequest, { params }: Params) {
       });
 
       // Email via MSG91 ONLY for the final combined broadcast.
+      let emailDelivered: boolean | null = null;
       if (!isIndividual) {
         if (!student.email) {
           console.warn("[EMAIL WARNING] Student email is missing. Cannot send results broadcast email.");
         } else {
-          await sendMsg91Email(
-            {
-              to: [{ name: candidateName, email: student.email }],
-              templateId: "results_broadcast_template_1",
-              variables: {
-                candidate_name: candidateName,
-                evaluation_details: `Your psychological evaluation results are published. Overall Score: ${
-                  (submissionRecord.score as number | undefined) ?? "--"
-                }.`,
-                report_link: "https://ssbwithisv.in/ProfileDashboard?tab=psycheTest",
-              },
-            },
-            "Results-Broadcast"
-          );
+          const result = await sendResultsBroadcastEmail({
+            to: student.email,
+            candidateName,
+            evaluationDetails: `Your psychological evaluation results are published. Overall Score: ${
+              (submissionRecord.score as number | undefined) ?? "--"
+            }.`,
+          });
+          emailDelivered = result.delivered;
+          if (!result.delivered) {
+            console.warn(`[EMAIL WARNING] Results broadcast email failed to deliver to ${student.email}`);
+          }
         }
       }
+
+      return NextResponse.json({ message: "Results successfully broadcasted", submission, emailDelivered });
     }
 
     return NextResponse.json({ message: "Results successfully broadcasted", submission });

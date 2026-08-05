@@ -135,7 +135,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
         formattedTime = d.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: true });
       }
 
-      await sendMeetingEmails({
+      const emailResults = await sendMeetingEmails({
         role,
         studentEmail,
         studentName,
@@ -145,6 +145,9 @@ export async function PUT(req: NextRequest, { params }: Params) {
         formattedDate,
         formattedTime,
       });
+      if (emailResults.candidateDelivered === false || emailResults.assessorDelivered === false) {
+        console.warn(`[EMAIL WARNING] Meeting email delivery failed for ${role.toUpperCase()}:`, emailResults);
+      }
     }
 
     return NextResponse.json(submission);

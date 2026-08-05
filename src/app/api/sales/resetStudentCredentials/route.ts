@@ -4,7 +4,7 @@ import { connectDB } from "@/server/db";
 import { getCurrentUser } from "@/server/auth";
 import { hasAdminPermission } from "@/server/adminAccess";
 import { Order, User, SalesAuditLog } from "@/server/models";
-import { sendMail } from "@/server/integrations/email";
+import { sendCredentialsEmail } from "@/server/integrations/msg91";
 import { assertCanAccessPlan, toSalesActor } from "@/server/sales/scope";
 
 /**
@@ -50,10 +50,11 @@ export async function POST(req: NextRequest) {
     student.password = plainPassword;
     await student.save();
 
-    const mail = await sendMail({
+    const mail = await sendCredentialsEmail({
       to: student.email,
-      subject: "Your SSB with ISV login details (reset)",
-      html: `<p>Hi ${student.name},</p><p>Your login password has been reset by your enrollment contact.</p><p>Login email: ${student.email}<br/>Password: ${plainPassword}</p><p>Please sign in and change your password.</p>`,
+      name: student.name,
+      username: student.email,
+      password: plainPassword,
     });
 
     await SalesAuditLog.create({

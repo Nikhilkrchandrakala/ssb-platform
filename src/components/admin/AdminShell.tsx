@@ -26,6 +26,7 @@ import {
   ClipboardCheck,
   UserRoundCog,
   Brain,
+  Send,
   LogOut,
   X,
   Indent,
@@ -389,6 +390,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                     {hasAdminPermission(user ?? null, "allotment") && (
                       <NavLink href="/admin/Allotment" active={isActive("/admin/Allotment")} icon={ClipboardCheck} onClick={closeMobile}>
                         Assessor Allotment
+                      </NavLink>
+                    )}
+                    {hasAdminPermission(user ?? null, "allotment") && (
+                      <NavLink href="/admin/AllotmentSummary" active={isActive("/admin/AllotmentSummary")} icon={Send} onClick={closeMobile}>
+                        Notify Assessors
                       </NavLink>
                     )}
                     {hasAdminPermission(user ?? null, "admin") && (
