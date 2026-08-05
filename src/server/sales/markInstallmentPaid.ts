@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { connectDB } from "@/server/db";
 import { InstallmentPlan, Order, Slot, User, Coupon } from "@/server/models";
-import { sendCredentialsEmail } from "@/server/integrations/msg91";
+import { sendCredentialsEmail, sendSalesNotificationEmail } from "@/server/integrations/msg91";
 
 interface InstallmentSubdoc {
   seq: number;
@@ -114,6 +114,16 @@ export async function markInstallmentPaid(opts: {
     username: student.email,
     password: plainPassword,
   });
+
+  // Notify sales team
+  await sendSalesNotificationEmail({
+    studentName: student.name,
+    studentEmail: student.email,
+    courseName: slot?.title || "Custom Batch",
+    amountPaid: installment.amount,
+    bookingMethod: order.bookingMethod || "sales",
+    orderId: order._id.toString(),
+  }).catch((err) => console.error("[msg91] sendSalesNotificationEmail failed", err));
 
   // Surfaced to the caller (checkInstallmentStatus/webhook) so the Sales
   // dashboard can show credentials on screen as a fallback when the email

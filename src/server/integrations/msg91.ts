@@ -94,6 +94,7 @@ const PSYCH_INTERVIEW_CANDIDATE_TEMPLATE_ID = process.env.MSG91_PSYCH_INTERVIEW_
 const PSYCH_INTERVIEW_ASSESSOR_TEMPLATE_ID = process.env.MSG91_PSYCH_INTERVIEW_ASSESSOR_TEMPLATE_ID || "psych_interview_assessor";
 const IO_INTERVIEW_TEMPLATE_ID = process.env.MSG91_IO_INTERVIEW_TEMPLATE_ID || "io_interview_template";
 const INTERVIEW_TEMPLATE_6_ID = process.env.MSG91_INTERVIEW_TEMPLATE_6_ID || "interview_template_6";
+const NEW_ENROLLMENT_ALERT_TEMPLATE_ID = process.env.MSG91_NEW_ENROLLMENT_ALERT_TEMPLATE_ID || "new_enrollment_alert";
 
 async function sendTemplateEmail(params: {
   to: string;
@@ -337,6 +338,30 @@ export function sendInterviewCandidateEmail(params: {
       date: params.date,
       time: params.time,
       meeting_link: params.meetingLink,
+    },
+  });
+}
+
+export async function sendSalesNotificationEmail(params: {
+  studentName: string;
+  studentEmail: string;
+  courseName: string;
+  amountPaid: number;
+  bookingMethod: string;
+  orderId: string;
+}): Promise<{ delivered: boolean }> {
+  const salesEmail = process.env.SALES_TEAM_EMAIL || "sales@quantumclimb.com";
+  return sendTemplateEmail({
+    to: salesEmail,
+    name: "Sales Team",
+    templateId: NEW_ENROLLMENT_ALERT_TEMPLATE_ID,
+    variables: {
+      student_name: params.studentName,
+      student_email: params.studentEmail,
+      course_name: params.courseName,
+      amount_paid: String(params.amountPaid),
+      booking_method: params.bookingMethod,
+      order_id: params.orderId,
     },
   });
 }

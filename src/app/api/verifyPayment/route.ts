@@ -3,6 +3,7 @@ import { connectDB } from "@/server/db";
 import { getCurrentUser } from "@/server/auth";
 import { Order, Slot, Coupon, User } from "@/server/models";
 import { verifyRazorpaySignature } from "@/server/integrations/razorpay";
+import { sendSalesNotificationEmail } from "@/server/integrations/msg91";
 
 export async function POST(req: NextRequest) {
   try {
@@ -70,6 +71,19 @@ export async function POST(req: NextRequest) {
           },
         }
       );
+    }
+
+    // Notify sales team
+    const student = await User.findById(order.userId);
+    if (student) {
+      await sendSalesNotificationEmail({
+        studentName: student.name,
+        studentEmail: student.email,
+        courseName: slot?.title || "Unknown Batch",
+        amountPaid: order.price,
+        bookingMethod: order.bookingMethod || "standard",
+        orderId: order._id.toString(),
+      }).catch((err) => console.error("[msg91] sendSalesNotificationEmail failed", err));
     }
 
     return NextResponse.json({ success: true });
