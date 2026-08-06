@@ -5,6 +5,7 @@ import { sendCredentialsEmail, sendSalesNotificationEmail } from "@/server/integ
 
 interface InstallmentSubdoc {
   seq: number;
+  amount: number;
   status: string;
   paymentId: string | null;
   paidAt: Date | null;
