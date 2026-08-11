@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
     const { success, reqId } = await sendEmailOtp(emailLower);
     if (success && reqId) {
-      recoveryEmailReqIds.set(emailLower, reqId);
+      await recoveryEmailReqIds.set(emailLower, reqId);
       return NextResponse.json({ success: true, message: "OTP sent" });
     }
     return NextResponse.json({ success: false, message: "Failed to send OTP via MSG91" }, { status: 400 });

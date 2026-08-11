@@ -17,12 +17,12 @@ export async function POST(req: NextRequest) {
       if (isDevOtpBypass(otp)) {
         verified = true;
       } else {
-        const storedReqId = studentRecoveryEmailReqIds.get(emailLower);
+        const storedReqId = await studentRecoveryEmailReqIds.get(emailLower);
         if (!storedReqId) {
           return NextResponse.json({ success: false, message: "OTP session not found. Please request a new one." }, { status: 400 });
         }
         verified = await verifyOtp({ otp, reqId: storedReqId, widget: "email" });
-        if (verified) studentRecoveryEmailReqIds.delete(emailLower);
+        if (verified) await studentRecoveryEmailReqIds.delete(emailLower);
       }
 
       if (!verified) {
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       }
 
       const token = crypto.randomBytes(32).toString("hex");
-      verificationTokens.set(`student-reset:email:${emailLower}`, { token, expiresAt: Date.now() + 15 * 60 * 1000 });
+      await verificationTokens.set(`student-reset:email:${emailLower}`, { token, expiresAt: Date.now() + 15 * 60 * 1000 });
       return NextResponse.json({ success: true, message: "OTP verified", resetToken: token });
     }
 
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     }
 
     const token = crypto.randomBytes(32).toString("hex");
-    verificationTokens.set(`student-reset:phone:${phoneLast10}`, { token, expiresAt: Date.now() + 15 * 60 * 1000 });
+    await verificationTokens.set(`student-reset:phone:${phoneLast10}`, { token, expiresAt: Date.now() + 15 * 60 * 1000 });
     return NextResponse.json({ success: true, message: "OTP verified", resetToken: token });
   } catch {
     return NextResponse.json({ success: false, message: "OTP verification failed" }, { status: 500 });

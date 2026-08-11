@@ -15,10 +15,10 @@ export async function POST(req: NextRequest) {
     if (isDevOtpBypass(otp)) {
       verified = true;
     } else {
-      const reqId = recoveryEmailReqIds.get(emailLower);
+      const reqId = await recoveryEmailReqIds.get(emailLower);
       if (!reqId) return NextResponse.json({ message: "OTP session not found" }, { status: 400 });
       verified = await verifyOtp({ otp, reqId, widget: "email" });
-      if (verified) recoveryEmailReqIds.delete(emailLower);
+      if (verified) await recoveryEmailReqIds.delete(emailLower);
     }
 
     if (!verified) {

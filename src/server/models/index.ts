@@ -21,3 +21,4 @@ export { SalesAuditLog } from "./SalesAuditLog";
 export { Slot } from "./Slot";
 export { Visitor } from "./Visitor";
 export { AuthDisplaySettings } from "./AuthDisplaySettings";
+export { VerificationSession } from "./VerificationSession";

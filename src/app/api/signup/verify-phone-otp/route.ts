@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     }
 
     const token = crypto.randomBytes(32).toString("hex");
-    verificationTokens.set(`phone:${phoneLast10}`, { token, expiresAt: Date.now() + 15 * 60 * 1000 });
+    await verificationTokens.set(`phone:${phoneLast10}`, { token, expiresAt: Date.now() + 15 * 60 * 1000 });
 
     return NextResponse.json({ success: true, message: "Phone verified successfully", phoneVerifyToken: token });
   } catch {

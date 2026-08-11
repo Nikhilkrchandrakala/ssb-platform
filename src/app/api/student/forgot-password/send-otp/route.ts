@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
 
       const { success, reqId } = await sendEmailOtp(emailLower);
       if (success && reqId) {
-        studentRecoveryEmailReqIds.set(emailLower, reqId);
+        await studentRecoveryEmailReqIds.set(emailLower, reqId);
         return NextResponse.json({ success: true, message: "OTP sent to your email" });
       }
       return NextResponse.json({ success: false, message: "Failed to send OTP via MSG91" }, { status: 400 });

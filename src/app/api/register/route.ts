@@ -37,16 +37,16 @@ export async function POST(req: NextRequest) {
     const cleaned = cleanPhone(phone);
     const phoneLast10 = last10(phone);
 
-    const emailEntry = verificationTokens.get(`email:${emailLower}`);
+    const emailEntry = await verificationTokens.get(`email:${emailLower}`);
     if (!emailEntry || emailEntry.token !== emailVerifyToken || emailEntry.expiresAt < Date.now()) {
       return NextResponse.json({ error: "Email not verified. Please complete email verification first." }, { status: 400 });
     }
-    const phoneEntry = verificationTokens.get(`phone:${phoneLast10}`);
+    const phoneEntry = await verificationTokens.get(`phone:${phoneLast10}`);
     if (!phoneEntry || phoneEntry.token !== phoneVerifyToken || phoneEntry.expiresAt < Date.now()) {
       return NextResponse.json({ error: "Phone number not verified. Please complete phone verification first." }, { status: 400 });
     }
-    verificationTokens.delete(`email:${emailLower}`);
-    verificationTokens.delete(`phone:${phoneLast10}`);
+    await verificationTokens.delete(`email:${emailLower}`);
+    await verificationTokens.delete(`phone:${phoneLast10}`);
 
     await connectDB();
 

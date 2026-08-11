@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     }
 
     const key = email ? `student-reset:email:${email.toLowerCase().trim()}` : `student-reset:phone:${last10(phone)}`;
-    const entry = verificationTokens.get(key);
+    const entry = await verificationTokens.get(key);
     if (!entry || entry.token !== resetToken || entry.expiresAt < Date.now()) {
       return NextResponse.json({ success: false, message: "Reset session expired or invalid. Please verify OTP again." }, { status: 400 });
     }
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     user.password = newPassword;
     await user.save();
-    verificationTokens.delete(key);
+    await verificationTokens.delete(key);
 
     return NextResponse.json({ success: true, message: "Password reset successfully" });
   } catch {

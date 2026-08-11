@@ -16,12 +16,12 @@ export async function POST(req: NextRequest) {
     if (isDevOtpBypass(otp)) {
       verified = true;
     } else {
-      const reqId = signupEmailReqIds.get(emailLower);
+      const reqId = await signupEmailReqIds.get(emailLower);
       if (!reqId) {
         return NextResponse.json({ success: false, message: "OTP session not found. Please request a new one." }, { status: 400 });
       }
       verified = await verifyOtp({ otp, reqId, widget: "email" });
-      if (verified) signupEmailReqIds.delete(emailLower);
+      if (verified) await signupEmailReqIds.delete(emailLower);
     }
 
     if (!verified) {
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     }
 
     const token = crypto.randomBytes(32).toString("hex");
-    verificationTokens.set(`email:${emailLower}`, { token, expiresAt: Date.now() + 15 * 60 * 1000 });
+    await verificationTokens.set(`email:${emailLower}`, { token, expiresAt: Date.now() + 15 * 60 * 1000 });
 
     return NextResponse.json({ success: true, message: "Email verified successfully", emailVerifyToken: token });
   } catch {
