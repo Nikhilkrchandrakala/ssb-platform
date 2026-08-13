@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import CustomButton from "@/components/site/CustomButton";
 import { postJSON, ApiError } from "@/lib/authApi";
-import "@/style/Login.css"; // for .otp-btn
 import "@/style/custom-theme.css";
 import "@/style/MagazineGateForm.css"; // for the .mgf-* SSB Profile step
 
@@ -361,7 +360,7 @@ function OAuthPhoneVerifyInner() {
             </div>
           )}
 
-          {/* STEP 2: PHONE + OTP (unchanged) */}
+          {/* STEP 2: PHONE + OTP */}
           {step === 2 && (
             <div className="row col-xl-7 g-4 g-md-2 col-lg-9 mx-auto justify-content-center">
               {/* Greeting */}
@@ -376,52 +375,64 @@ function OAuthPhoneVerifyInner() {
                 </p>
               </div>
 
-              {/* Phone + OTP button */}
+              {/* Phone number */}
               <div className="col-lg-12">
-                <div className="input-group" style={{ gap: "10px", display: "flex" }}>
-                  <input
-                    type="text"
-                    className="form-control thm-input"
-                    placeholder="Your 10-digit Phone Number"
-                    value={phone}
-                    maxLength={10}
-                    inputMode="numeric"
-                    onChange={(e) => {
-                      const v = e.target.value.replace(/\D/g, "");
-                      if (v.length <= 10) setPhone(v);
-                    }}
-                    disabled={otpSent && phoneTimer > 0}
-                    style={{ flex: 1 }}
-                  />
-                  <button
-                    className="otp-btn"
-                    onClick={handleSendOtp}
-                    disabled={loading || (otpSent && phoneTimer > 0)}
-                    style={{ whiteSpace: "nowrap", minWidth: "110px" }}
-                    type="button"
-                  >
-                    {loading && !otp ? "Sending..." : otpSent && phoneTimer > 0 ? formatTime(phoneTimer) : otpSent ? "Resend OTP" : "SEND OTP"}
-                  </button>
-                </div>
+                <input
+                  type="text"
+                  className="form-control thm-input"
+                  placeholder="Your 10-digit Phone Number"
+                  value={phone}
+                  maxLength={10}
+                  inputMode="numeric"
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "");
+                    if (v.length <= 10) setPhone(v);
+                  }}
+                  disabled={otpSent && phoneTimer > 0}
+                />
               </div>
+
+              {!otpSent && (
+                <div className="col-12 d-flex justify-content-center mt-2">
+                  <CustomButton
+                    text={loading ? "Sending..." : "SEND OTP"}
+                    onClick={handleSendOtp}
+                    disabled={loading || phone.length !== 10}
+                  />
+                </div>
+              )}
 
               {/* OTP input */}
               {otpSent && (
-                <div className="col-lg-12">
-                  <input
-                    ref={otpRef}
-                    type="text"
-                    className="form-control thm-input"
-                    placeholder="Enter OTP"
-                    value={otp}
-                    maxLength={6}
-                    inputMode="numeric"
-                    onChange={(e) => {
-                      const v = e.target.value.replace(/\D/g, "");
-                      if (v.length <= 6) setOtp(v);
-                    }}
-                  />
-                </div>
+                <>
+                  <div className="col-lg-12">
+                    <input
+                      ref={otpRef}
+                      type="text"
+                      className="form-control thm-input"
+                      placeholder="Enter OTP"
+                      value={otp}
+                      maxLength={6}
+                      inputMode="numeric"
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/\D/g, "");
+                        if (v.length <= 6) setOtp(v);
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-lg-12 text-end">
+                    {phoneTimer > 0 ? (
+                      <span className="thm-account-link" style={{ cursor: "default" }}>
+                        Resend in {formatTime(phoneTimer)}
+                      </span>
+                    ) : (
+                      <span className="thm-account-link" onClick={handleSendOtp} style={{ cursor: "pointer", color: "#f4c430" }}>
+                        Resend OTP
+                      </span>
+                    )}
+                  </div>
+                </>
               )}
 
               {/* Messages */}
