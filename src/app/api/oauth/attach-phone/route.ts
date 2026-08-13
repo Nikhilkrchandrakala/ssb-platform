@@ -9,7 +9,32 @@ import { submitSignupLead } from "@/server/integrations/zoho";
 const JWT_SECRET = (process.env.JWT_SECRET || "").trim();
 
 export async function POST(req: NextRequest) {
-  const { tempToken, phone, otp, reqId } = await req.json();
+  const {
+    tempToken,
+    phone,
+    otp,
+    reqId,
+    // SSB Profile fields — normal (non-OAuth) signup collects these in its
+    // own "Step 4" and they get submitted to Zoho's Magazine Download
+    // webform via submitSignupLead() below. OAuth signup has no equivalent
+    // step of its own, so without capturing them here every Google/
+    // Facebook/LinkedIn signup reached Zoho as a lead with every profiling
+    // field blank — useless for the client's CRM tracking/investigation
+    // workflow. The phone-verify page now collects these in a "Step 1"
+    // before the phone/OTP step and sends them along with this same request.
+    dob,
+    ssbAspirant,
+    servingCandidate,
+    vtxHeard,
+    youtubeSubscribed,
+    podcastSubscribed,
+    ssbExperience,
+    nextSsbDate,
+    ssbBoards,
+    ssbEntries,
+    city,
+    state,
+  } = await req.json();
 
   if (!tempToken || !phone || !otp || !reqId) {
     return NextResponse.json({ success: false, message: "tempToken, phone, otp and reqId are required" }, { status: 400 });
@@ -55,7 +80,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, message: "This phone number is already linked to another account." }, { status: 400 });
   }
 
-  const user = await User.findByIdAndUpdate(userId, { phone: phoneLast10, phoneVerified: true }, { new: true });
+  const user = await User.findByIdAndUpdate(
+    userId,
+    {
+      phone: phoneLast10,
+      phoneVerified: true,
+      zohoFormFilled: true,
+      dob: dob || "",
+      ssbAspirant: ssbAspirant || "",
+      servingCandidate: servingCandidate || "",
+      vtxHeard: vtxHeard || "",
+      youtubeSubscribed: youtubeSubscribed || "",
+      podcastSubscribed: podcastSubscribed || "",
+      ssbExperience: ssbExperience || "",
+      nextSsbDate: nextSsbDate || "",
+      ssbBoards: Array.isArray(ssbBoards) ? ssbBoards : [],
+      ssbEntries: Array.isArray(ssbEntries) ? ssbEntries : [],
+      city: city || "",
+      state: state || "",
+    },
+    { new: true }
+  );
   if (!user) {
     return NextResponse.json({ success: false, message: "User not found." }, { status: 404 });
   }
