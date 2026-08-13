@@ -55,6 +55,8 @@ export async function POST(req: NextRequest, { params }: Params) {
       piq2Status?: string;
       piqStatus?: string;
       piqFiles?: string[];
+      piq1UploadedAt?: Date;
+      piq2UploadedAt?: Date;
     };
     const currentPiq1Status = submissionRecord.piq1Status || "PENDING";
     if (piqType === "piq2" && !isIOOnly && currentPiq1Status !== "VERIFIED") {
@@ -73,9 +75,11 @@ export async function POST(req: NextRequest, { params }: Params) {
     submissionRecord.piqFiles = [...(submissionRecord.piqFiles || []), ...filePaths];
     if (piqType === "piq2") {
       submissionRecord.piq2Status = "VERIFIED";
+      submissionRecord.piq2UploadedAt = new Date();
     } else {
       submissionRecord.piq1Status = "VERIFIED";
       submissionRecord.piqStatus = "PARSED";
+      submissionRecord.piq1UploadedAt = new Date();
     }
     await submission.save();
 

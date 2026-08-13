@@ -89,6 +89,11 @@ export interface AssessmentSubmission {
   completedAt?: unknown;
   uploadedFiles?: string[];
   piqFiles?: string[];
+  piq1Status?: string;
+  piq2Status?: string;
+  piq1UploadedAt?: unknown;
+  piq2UploadedAt?: unknown;
+  dossierUploadedAt?: unknown;
   assessorId?: string;
   assessorRemarks?: string;
   psychStatus?: string;

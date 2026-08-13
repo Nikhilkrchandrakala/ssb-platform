@@ -22,6 +22,14 @@ const submissionSchema = new Schema(
     piqStatus: { type: String, enum: ["PENDING", "PROCESSING", "PARSED", "FAILED"], default: "PENDING" },
     piq1Status: { type: String, enum: ["PENDING", "PROCESSING", "VERIFIED", "FAILED"], default: "PENDING" },
     piq2Status: { type: String, enum: ["PENDING", "PROCESSING", "VERIFIED", "FAILED"], default: "PENDING" },
+    // When each artifact was actually uploaded — surfaced to admins/owner on
+    // the Candidate Step tracker so they can see not just *what* a candidate
+    // uploaded but *when*. Only set going forward; submissions uploaded
+    // before this field existed stay null (tracker falls back to "time
+    // unknown" for those).
+    piq1UploadedAt: { type: Date, default: null },
+    piq2UploadedAt: { type: Date, default: null },
+    dossierUploadedAt: { type: Date, default: null },
 
     assessorId: { type: Schema.Types.ObjectId, ref: "User" },
     assessorRemarks: String,

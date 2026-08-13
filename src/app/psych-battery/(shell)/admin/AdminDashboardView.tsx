@@ -11,6 +11,8 @@ import {
   PageHeader, Badge, Card, GlassCard, Button, IconButton, TableShell, Th, Td, Tr, EmptyState,
   Reveal, Skeleton, staggerDelay, Dialog, DialogContent, DialogTitle, SearchInput,
 } from "../../components/ui/Primitives";
+import { useDocumentPip, PipContent, FileGallery, resolveFileUrl, isPdfPath } from "../../components/ui/DocumentPipViewer";
+import { cn } from "../../lib/utils";
 
 // Ported from psych_battery/src/pages/AdminDashboard.tsx.
 //
@@ -70,6 +72,49 @@ const gridConfig = {
   traits: psychTraits,
 };
 
+function formatUploadedAt(value: unknown): string {
+  if (!value) return "time not recorded";
+  const d = new Date(value as string);
+  if (Number.isNaN(d.getTime())) return "time not recorded";
+  return `uploaded ${d.toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}`;
+}
+
+// One tracked step (PIQ 1 / PIQ 2 / Dossier) in the Candidate Step column.
+// Clicking an uploaded step fires a brief ping-ring animation, then opens
+// its file(s) via the caller's onOpen (picture-in-picture viewer).
+function StepDot({ label, uploaded, uploadedAt, onOpen }: { label: string; uploaded: boolean; uploadedAt?: unknown; onOpen: () => void }) {
+  const [pulsing, setPulsing] = useState(false);
+
+  return (
+    <button
+      type="button"
+      disabled={!uploaded}
+      onClick={() => {
+        if (!uploaded) return;
+        setPulsing(true);
+        window.setTimeout(() => setPulsing(false), 700);
+        onOpen();
+      }}
+      title={uploaded ? `${label}: ${formatUploadedAt(uploadedAt)} — click to view` : `${label}: not uploaded yet`}
+      className={cn(
+        "flex flex-col items-center gap-1 group bg-transparent border-0 p-0",
+        uploaded ? "cursor-pointer" : "cursor-default"
+      )}
+    >
+      <span className="relative flex items-center justify-center w-3 h-3">
+        {pulsing && <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />}
+        <span
+          className={cn(
+            "relative inline-flex w-2.5 h-2.5 rounded-full transition-transform",
+            uploaded ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)] group-hover:scale-125" : "bg-app-border"
+          )}
+        />
+      </span>
+      <span className={cn("text-[9px] font-bold uppercase tracking-widest", uploaded ? "text-emerald-400" : "text-app-text-muted")}>{label}</span>
+    </button>
+  );
+}
+
 export default function AdminDashboardView({ tab }: { tab?: string }) {
   const router = useRouter();
   const activeTab = tab === "catalogue" ? "assessments" : "assignments";
@@ -87,6 +132,13 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
   // Super Admin Auditing State
   const [selectedSubmission, setSelectedSubmission] = useState<SubmissionWithAssessorFields | null>(null);
   const [broadcasting, setBroadcasting] = useState(false);
+
+  // Candidate Step tracker (PIQ 1 / PIQ 2 / Dossier) — which step's uploaded
+  // file(s) are currently open in the picture-in-picture viewer, plus the
+  // imperative PiP controller (its `request()` must be called synchronously
+  // from the dot's onClick — see useDocumentPip's doc comment).
+  const [pipTarget, setPipTarget] = useState<{ submission: SubmissionWithAssessorFields; step: "piq1" | "piq2" | "dossier" } | null>(null);
+  const pip = useDocumentPip();
 
   // Legacy gated this fetch behind `if (!isAdminUser) return;` inside the
   // effect — but that early return sat *before* the `finally` that clears
@@ -292,26 +344,19 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
                   const studentName = student?.name || "Unknown Candidate";
                   const studentEmail = student?.email || "N/A";
 
-                  // Candidate Step calculation
-                  const hasPiq = s.piqFiles && s.piqFiles.length > 0;
-                  const isTestCompleted = s.status === "COMPLETED" || s.status === "REVIEW_PENDING" || s.status === "TEST_COMPLETED" || s.status === "REPORT_RELEASED";
-                  const hasDossier = s.uploadedFiles && s.uploadedFiles.length > 0;
+                  // Candidate Step: PIQ 1 / PIQ 2 / Dossier tracked separately so
+                  // admins/owner can see exactly which artifact a candidate
+                  // uploaded and when, instead of one collapsed status badge.
+                  // piqFiles mixes piq1/piq2 pages in one array — split by the
+                  // filename prefix the upload route stamps them with.
+                  const allPiqFiles = s.piqFiles || [];
+                  const piq1Files = allPiqFiles.filter((f) => f.includes("/piq1_") || !f.includes("/piq2_"));
+                  const piq2Files = allPiqFiles.filter((f) => f.includes("/piq2_"));
+                  const dossierFiles = s.uploadedFiles || [];
 
-                  let candidateStepContent;
-                  if (hasDossier) {
-                    candidateStepContent = (
-                      <div className="flex items-center justify-center gap-1.5" title="All Documents Uploaded / Timed Test Complete">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]" />
-                        <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Sealed</span>
-                      </div>
-                    );
-                  } else if (isTestCompleted) {
-                    candidateStepContent = <Badge tone="warning">Candidate Evaluation</Badge>;
-                  } else if (hasPiq) {
-                    candidateStepContent = <Badge tone="info">PIQ Uploaded</Badge>;
-                  } else {
-                    candidateStepContent = <Badge tone="neutral">PIQ Pending</Badge>;
-                  }
+                  const hasPiq1 = piq1Files.length > 0;
+                  const hasPiq2 = piq2Files.length > 0;
+                  const hasDossier = dossierFiles.length > 0;
 
                   // Dots rendering helper
                   const renderAssessorDot = (assigned: unknown, statusVal: string, name: string) => {
@@ -352,7 +397,39 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
                           {student?.chestNo || "--"}
                         </span>
                       </Td>
-                      <Td align="center">{candidateStepContent}</Td>
+                      <Td align="center">
+                        <div className="flex items-center justify-center gap-4">
+                          <StepDot
+                            label="PIQ 1"
+                            uploaded={hasPiq1}
+                            uploadedAt={s.piq1UploadedAt}
+                            onOpen={() => {
+                              // pip.request() must fire synchronously inside this
+                              // click handler — see useDocumentPip's doc comment.
+                              pip.request(`${studentName} — PIQ 1`);
+                              setPipTarget({ submission: s, step: "piq1" });
+                            }}
+                          />
+                          <StepDot
+                            label="PIQ 2"
+                            uploaded={hasPiq2}
+                            uploadedAt={s.piq2UploadedAt}
+                            onOpen={() => {
+                              pip.request(`${studentName} — PIQ 2`);
+                              setPipTarget({ submission: s, step: "piq2" });
+                            }}
+                          />
+                          <StepDot
+                            label="Dossier"
+                            uploaded={hasDossier}
+                            uploadedAt={s.dossierUploadedAt}
+                            onOpen={() => {
+                              pip.request(`${studentName} — Dossier`);
+                              setPipTarget({ submission: s, step: "dossier" });
+                            }}
+                          />
+                        </div>
+                      </Td>
                       <Td align="center">{renderAssessorDot(student?.assignedPsych, s.psychStatus || "PENDING", assessorLabel("Psych"))}</Td>
                       <Td align="center">{renderAssessorDot(student?.assignedGTO, s.gtoStatus || "PENDING", assessorLabel("GTO"))}</Td>
                       <Td align="center">{renderAssessorDot(student?.assignedIO, s.ioStatus || "PENDING", assessorLabel("IO"))}</Td>
@@ -550,6 +627,38 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
                 </div>
               </DialogContent>
             </Dialog>
+          );
+        })()}
+
+      {/* ── CANDIDATE STEP FILE VIEWER (PIQ 1 / PIQ 2 / Dossier) ──────────────── */}
+      {pipTarget &&
+        (() => {
+          const { submission: s, step } = pipTarget;
+          const student = resolveStudent(s);
+          const studentName = student?.name || "Candidate";
+          const label = step === "piq1" ? "PIQ 1" : step === "piq2" ? "PIQ 2" : "Dossier";
+
+          const allPiqFiles = s.piqFiles || [];
+          const piq1Files = allPiqFiles.filter((f) => f.includes("/piq1_") || !f.includes("/piq2_"));
+          const piq2Files = allPiqFiles.filter((f) => f.includes("/piq2_"));
+          const rawFiles = step === "piq1" ? piq1Files : step === "piq2" ? piq2Files : s.uploadedFiles || [];
+          const submissionId = String(s.id || s._id || "");
+          // isPdf must be checked against the raw filename, not the resolved
+          // URL — the db:// proxy URL has no file extension to check.
+          const items = rawFiles.map((f) => ({ url: resolveFileUrl(submissionId, allPiqFiles, f), isPdf: isPdfPath(f) }));
+
+          return (
+            <PipContent
+              pipWindow={pip.pipWindow}
+              dialogOpen={pip.dialogOpen}
+              onClose={() => {
+                pip.close();
+                setPipTarget(null);
+              }}
+              title={`${studentName} — ${label}`}
+            >
+              <FileGallery label={label} items={items} />
+            </PipContent>
           );
         })()}
     </div>

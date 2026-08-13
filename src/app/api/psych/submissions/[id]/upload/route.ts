@@ -55,9 +55,10 @@ export async function POST(req: NextRequest, { params }: Params) {
       return NextResponse.json({ message: "No files uploaded" }, { status: 400 });
     }
 
-    const submissionRecord = submission as unknown as { uploadedFiles?: string[]; status?: string };
+    const submissionRecord = submission as unknown as { uploadedFiles?: string[]; status?: string; dossierUploadedAt?: Date };
     submissionRecord.uploadedFiles = [...(submissionRecord.uploadedFiles || []), ...filePaths];
     submissionRecord.status = "REVIEW_PENDING";
+    submissionRecord.dossierUploadedAt = new Date();
     await submission.save();
 
     try {
