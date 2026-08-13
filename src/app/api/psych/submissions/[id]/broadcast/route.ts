@@ -25,7 +25,13 @@ export async function POST(req: NextRequest, { params }: Params) {
   }
 
   const { id: rawId } = await params;
-  const body = await req.json();
+  // The full-broadcast call (api.submissions.broadcast(id) with no second
+  // argument) sends no request body at all — req.json() throws
+  // "Unexpected end of JSON input" on an empty body, which used to be an
+  // unhandled exception here (this line ran before the try/catch below),
+  // producing a bare 500 with no JSON the client could parse. Empty/absent
+  // body just means "no assessorType" (full broadcast), same as intended.
+  const body = await req.json().catch(() => ({}));
   const { assessorType } = body as { assessorType?: string };
 
   const resolved = await resolvePendingSubmissionId(rawId);
