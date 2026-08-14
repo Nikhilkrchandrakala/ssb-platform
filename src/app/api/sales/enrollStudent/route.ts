@@ -90,6 +90,23 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Hard stop — a student who already has a paid order for this exact
+    // batch must never get a second one. The "supersede" cleanup below only
+    // catches a still-*pending* prior order; once one is paid its status is
+    // no longer "pending" so that cleanup silently skips it, leaving nothing
+    // to stop a duplicate enrollment (and a duplicate charge) for the same
+    // batch. Different batch/module for the same student is unaffected —
+    // this only blocks re-booking the identical slot.
+    const existingPaidForSlot = await Order.findOne({ userId: student._id, slotId: slot._id, status: "paid" });
+    if (existingPaidForSlot) {
+      return NextResponse.json(
+        {
+          message: `This student already has a paid order for this batch (Order ${existingPaidForSlot._id}). Enroll them in a different batch or module instead of creating a duplicate.`,
+        },
+        { status: 400 }
+      );
+    }
+
     // Supersede any other still-open sales enrollment this student already
     // has (an earlier abandoned/duplicate Enroll & Generate Link attempt) —
     // cancel its Razorpay Payment Link and close out its plan, so that old
