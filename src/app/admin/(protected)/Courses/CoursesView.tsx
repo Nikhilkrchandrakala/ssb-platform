@@ -129,6 +129,8 @@ export default function CoursesView() {
     full_course: false, ssb_ppdt: false, psych: false, interview: false, group_testing: false,
   });
   const [confirmingBooking, setConfirmingBooking] = useState(false);
+  const [manualDiscountType, setManualDiscountType] = useState<"flat" | "percent">("flat");
+  const [manualDiscountValue, setManualDiscountValue] = useState<number>(0);
 
   const getCoursePrice = (courseId: string, defaultPrice: number) => {
     const course = dbCourses.find((c) => c.courseId === courseId);
@@ -399,6 +401,8 @@ export default function CoursesView() {
     setBookingSlotId(id);
     setManualUserId("");
     setManualChecks({ full_course: false, ssb_ppdt: false, psych: false, interview: false, group_testing: false });
+    setManualDiscountType("flat");
+    setManualDiscountValue(0);
     setBookModalOpen(true);
   };
 
@@ -422,7 +426,7 @@ export default function CoursesView() {
   const manualAnyOtherChecked = MODULES.some((m) => manualChecks[m.id]);
 
   const calcManualPrice = () => {
-    if (!bookingSlot) return { base: 0, gst: 0, total: 0 };
+    if (!bookingSlot) return { base: 0, discount: 0, netBase: 0, gst: 0, total: 0 };
     let basePrice = 0;
     if (bookingSlot.isFullCourse) {
       const checkedOthers = MODULES.filter((m) => manualChecks[m.id]);
@@ -438,8 +442,11 @@ export default function CoursesView() {
     } else {
       basePrice = bookingSlot.price || 0;
     }
-    const gst = basePrice * 0.18;
-    return { base: basePrice, gst, total: basePrice + gst };
+    const rawDiscount = manualDiscountType === "percent" ? (basePrice * manualDiscountValue) / 100 : manualDiscountValue;
+    const discount = Math.min(Math.max(rawDiscount, 0), basePrice);
+    const netBase = basePrice - discount;
+    const gst = netBase * 0.18;
+    return { base: basePrice, discount, netBase, gst, total: netBase + gst };
   };
 
   const manualPricing = calcManualPrice();
@@ -474,7 +481,12 @@ export default function CoursesView() {
       const response = await fetch(`/api/manualBookSlot/${bookingSlotId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: identifier, selectedModules }),
+        body: JSON.stringify({
+          email: identifier,
+          selectedModules,
+          discountType: manualDiscountValue > 0 ? manualDiscountType : undefined,
+          discountValue: manualDiscountValue > 0 ? manualDiscountValue : undefined,
+        }),
       });
 
       if (!response.ok) {
@@ -1007,29 +1019,59 @@ export default function CoursesView() {
                       </label>
                     </div>
                   ))}
-
-                  <div
-                    className="price-summary-box mt-3 p-3"
-                    style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.05)", borderRadius: 8 }}
-                  >
-                    <div className="d-flex justify-content-between mb-1" style={{ fontSize: "0.8rem", opacity: 0.8, color: "#fff" }}>
-                      <span>Base Price:</span>
-                      <span>{fmtInr(manualPricing.base)}</span>
-                    </div>
-                    <div className="d-flex justify-content-between mb-1" style={{ fontSize: "0.8rem", opacity: 0.8, color: "#fff" }}>
-                      <span>GST (18%):</span>
-                      <span>{fmtInr(manualPricing.gst)}</span>
-                    </div>
-                    <div
-                      className="d-flex justify-content-between pt-2 border-top"
-                      style={{ fontSize: "0.9rem", fontWeight: "bold", color: "var(--primary-gold)", borderColor: "rgba(255, 255, 255, 0.1)" }}
-                    >
-                      <span>Total Amount:</span>
-                      <span>{fmtInr(manualPricing.total)}</span>
-                    </div>
-                  </div>
                 </div>
               )}
+
+              <div className="mb-3" style={{ borderLeft: "3px solid var(--primary-gold)", paddingLeft: 15 }}>
+                <label className="admin-form-label mb-2">Discount (optional)</label>
+                <div className="d-flex gap-2">
+                  <select
+                    className="admin-input"
+                    style={{ maxWidth: 110 }}
+                    value={manualDiscountType}
+                    onChange={(e) => setManualDiscountType(e.target.value as "flat" | "percent")}
+                  >
+                    <option value="flat">₹ Flat</option>
+                    <option value="percent">% Percent</option>
+                  </select>
+                  <input
+                    type="number"
+                    min={0}
+                    max={manualDiscountType === "percent" ? 100 : undefined}
+                    className="admin-input"
+                    placeholder="0"
+                    value={manualDiscountValue || ""}
+                    onChange={(e) => setManualDiscountValue(Math.max(0, Number(e.target.value) || 0))}
+                  />
+                </div>
+              </div>
+
+              <div
+                className="price-summary-box mt-3 p-3"
+                style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.05)", borderRadius: 8 }}
+              >
+                <div className="d-flex justify-content-between mb-1" style={{ fontSize: "0.8rem", opacity: 0.8, color: "#fff" }}>
+                  <span>Base Price:</span>
+                  <span>{fmtInr(manualPricing.base)}</span>
+                </div>
+                {manualPricing.discount > 0 && (
+                  <div className="d-flex justify-content-between mb-1" style={{ fontSize: "0.8rem", color: "#2ecc71" }}>
+                    <span>Discount:</span>
+                    <span>− {fmtInr(manualPricing.discount)}</span>
+                  </div>
+                )}
+                <div className="d-flex justify-content-between mb-1" style={{ fontSize: "0.8rem", opacity: 0.8, color: "#fff" }}>
+                  <span>GST (18%):</span>
+                  <span>{fmtInr(manualPricing.gst)}</span>
+                </div>
+                <div
+                  className="d-flex justify-content-between pt-2 border-top"
+                  style={{ fontSize: "0.9rem", fontWeight: "bold", color: "var(--primary-gold)", borderColor: "rgba(255, 255, 255, 0.1)" }}
+                >
+                  <span>Total Amount:</span>
+                  <span>{fmtInr(manualPricing.total)}</span>
+                </div>
+              </div>
 
               <div className="modal-footer px-0 pb-0 pt-3">
                 <button

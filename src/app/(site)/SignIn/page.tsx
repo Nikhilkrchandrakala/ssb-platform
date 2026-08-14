@@ -394,7 +394,8 @@ function SignInForm() {
 
             {portal === "student" && (
               <>
-                <SocialLoginButtons />
+                {/* Facebook postponed for now (2026-08-14) — Google/LinkedIn unaffected. */}
+                <SocialLoginButtons hideProviders={["facebook"]} />
 
                 {/* Signup link */}
                 <div className="col-12 text-center mt-5">

@@ -19,10 +19,26 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   try {
     const { id } = await params;
-    const { email, selectedModules } = await req.json();
+    const { email, selectedModules, discountType, discountValue } = await req.json();
 
     if (!email) {
       return NextResponse.json({ message: "Email is required" }, { status: 400 });
+    }
+
+    // Free-form admin-entered discount (comps, partner deals, negotiated
+    // prices) — deliberately not a coupon-code lookup like the sales/self-
+    // serve flows, since the admin already has full authority here and
+    // manual booking never touches Razorpay/a real coupon's usage tracking.
+    let discount = 0;
+    if (discountValue !== undefined && discountValue !== null && discountValue !== 0) {
+      if (typeof discountValue !== "number" || discountValue < 0) {
+        return NextResponse.json({ message: "discountValue must be a non-negative number" }, { status: 400 });
+      }
+      if (discountType === "percent") {
+        if (discountValue > 100) return NextResponse.json({ message: "Percent discount cannot exceed 100" }, { status: 400 });
+      } else if (discountType && discountType !== "flat") {
+        return NextResponse.json({ message: "discountType must be 'flat' or 'percent'" }, { status: 400 });
+      }
     }
 
     const cleanEmail = email.trim().toLowerCase();
@@ -90,7 +106,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const baseAmount = calculatedBaseAmount;
-    const totalWithGst = baseAmount * 1.18;
+    const originalAmount = baseAmount * 1.18;
+
+    if (discountValue) {
+      discount = discountType === "percent" ? (baseAmount * discountValue) / 100 : discountValue;
+      if (discount > baseAmount) {
+        return NextResponse.json({ message: "Discount cannot exceed the base price" }, { status: 400 });
+      }
+      discount = Math.round(discount * 100) / 100;
+    }
+
+    const netBaseAmount = baseAmount - discount;
+    const totalWithGst = Math.round(netBaseAmount * 1.18 * 100) / 100;
 
     // add user (same as payment logic)
     slot.bookedStudents.push(userId);
@@ -103,8 +130,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       userId,
       slotId: slot._id,
       price: totalWithGst,
-      originalAmount: totalWithGst,
-      discount: 0,
+      originalAmount,
+      discount,
       referralCode: null,
       status: "paid",
       selectedModules: selectedModulesFinal,

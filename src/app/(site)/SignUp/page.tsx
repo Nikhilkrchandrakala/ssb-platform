@@ -631,7 +631,8 @@ export default function SignUp() {
                 <CustomButton text={loading ? "Checking..." : "CONTINUE"} onClick={handleStep1Continue} disabled={loading} />
               </div>
 
-              <SocialLoginButtons />
+              {/* Facebook postponed for now (2026-08-14) — Google/LinkedIn unaffected. */}
+              <SocialLoginButtons hideProviders={["facebook"]} />
 
               <div className="col-12 text-center mt-5">
                 <div onClick={() => router.push("/SignIn")} className="thm-account-link" style={{ cursor: "pointer" }}>

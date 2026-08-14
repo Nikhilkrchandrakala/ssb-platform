@@ -51,20 +51,27 @@ const PROVIDERS = [
 /**
  * <SocialLoginButtons />
  * Drop-in component for both SignIn and SignUp pages.
- * Renders "OR CONTINUE WITH" divider + 3 social login buttons.
+ * Renders "OR CONTINUE WITH" divider + social login buttons.
  *
  * These are full-page redirects (not fetch calls) into the Route Handlers
  * under src/app/api/auth/* — those handlers set a short-lived CSRF state
  * cookie and redirect on to the provider's consent screen. The app is now
  * same-origin (no separate api.ssbwithisv.in host), so no base URL prefix
  * is needed — a plain relative path is enough.
+ *
+ * @param hideProviders - provider ids to omit (e.g. Facebook postponed on
+ * SignUp, 2026-08-14) without removing the /api/auth/facebook route itself —
+ * only the button is hidden, per-page.
  */
-export default function SocialLoginButtons() {
+export default function SocialLoginButtons({ hideProviders = [] }: { hideProviders?: string[] }) {
   const handleClick = (path: string) => {
     // Full-page redirect into a Route Handler, not a React-managed value.
     // eslint-disable-next-line react-hooks/immutability
     window.location.href = path;
   };
+
+  const visibleProviders = PROVIDERS.filter((provider) => !hideProviders.includes(provider.id));
+  if (visibleProviders.length === 0) return null;
 
   return (
     <div className="social-login-wrapper">
@@ -77,7 +84,7 @@ export default function SocialLoginButtons() {
 
       {/* Buttons */}
       <div className="social-btn-group">
-        {PROVIDERS.map((provider) => (
+        {visibleProviders.map((provider) => (
           <button
             key={provider.id}
             id={`social-login-${provider.id}`}
