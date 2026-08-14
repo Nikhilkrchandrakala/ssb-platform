@@ -59,7 +59,14 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
     { label: "My Dashboard", path: "/psych-battery", icon: LayoutDashboard, show: user?.role === "student", tint: "blue" as const },
     // Assessors only: candidate dossier list
     { label: "Candidates", path: "/psych-battery/assessor", icon: Users, show: user?.role === "assessor", tint: "purple" as const },
-    { label: "Meetings", path: "/psych-battery/meetings", icon: Calendar, show: user?.role === "assessor" && user?.assessorType !== "GTO", tint: "amber" as const },
+    // Assessors see their own meetings (GTO excluded, per legacy); admin/owner see every meeting.
+    {
+      label: "Meetings",
+      path: "/psych-battery/meetings",
+      icon: Calendar,
+      show: (user?.role === "assessor" && user?.assessorType !== "GTO") || isAdminUser,
+      tint: "amber" as const,
+    },
     // Admin only: admin hub
     { label: "Admin Hub", path: "/psych-battery/admin?tab=progress", icon: Shield, show: isAdminUser, tint: "rose" as const },
     // Admin only: assessment catalogue
