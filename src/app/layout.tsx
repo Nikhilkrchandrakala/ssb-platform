@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ImageRetryOnError from "@/components/ImageRetryOnError";
 
 export const metadata: Metadata = {
   title: "SSB with ISV",
@@ -12,7 +13,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ImageRetryOnError />
+        {children}
+      </body>
     </html>
   );
 }
