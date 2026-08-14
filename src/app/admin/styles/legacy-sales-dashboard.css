@@ -4,6 +4,69 @@
    language (admin-card/admin-table/admin-modal base classes from
    legacy-admin-global.css) rather than introducing a new design system. */
 
+/* Pagination controls — copied from legacy-leads-page.css's own rules
+   (same admin-wide look) rather than importing that page's stylesheet
+   cross-page. */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0 8px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.pagination-info {
+  font-size: 0.88rem;
+  color: var(--text-muted, rgba(255, 255, 255, 0.65));
+}
+.pagination-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pagination-buttons button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.88rem;
+}
+.pagination-buttons button:hover:not(:disabled) {
+  background: var(--primary-gold, #e0c214);
+  border-color: var(--primary-gold, #e0c214);
+  color: #0b0b0b;
+}
+.pagination-buttons button.active {
+  background: var(--primary-gold, #e0c214);
+  color: #0b0b0b;
+  border-color: var(--primary-gold, #e0c214);
+  font-weight: 700;
+}
+.pagination-buttons button:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+.per-page-select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.per-page-select:focus {
+  outline: none;
+  border-color: var(--primary-gold, #e0c214);
+}
+
 .sales-tab-bar {
   display: flex;
   gap: 8px;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Briefcase,
@@ -12,6 +13,9 @@ import {
   Key,
   BookOpen,
   UserPen,
+  MoreVertical,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useAdminUser } from "@/components/admin/AdminUserProvider";
 import { isBookingClosed, formatTimeRemaining } from "@/lib/batchTiming";
@@ -263,6 +267,96 @@ function installmentsSummary(order: SalesOrderItem) {
   return { installments, paid, total, remaining };
 }
 
+// Mirrors LeadsView.tsx's own pagination pattern/classes exactly (same
+// admin-wide "pagination-controls"/"pagination-buttons"/"per-page-select"
+// look) — client-side slicing of an already-fully-fetched list, appropriate
+// while these lists stay in the hundreds rather than needing a server-side
+// paged API.
+function getPageRange(current: number, total: number): (number | "...")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages: (number | "...")[] = [1];
+  if (current > 3) pages.push("...");
+  for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+    pages.push(i);
+  }
+  if (current < total - 2) pages.push("...");
+  pages.push(total);
+  return pages;
+}
+
+function paginatedSlice<T>(items: T[], page: number, perPage: number): { safePage: number; totalPages: number; pageItems: T[] } {
+  const totalPages = Math.max(1, Math.ceil(items.length / perPage));
+  const safePage = Math.min(Math.max(page, 1), totalPages);
+  const pageItems = items.slice((safePage - 1) * perPage, safePage * perPage);
+  return { safePage, totalPages, pageItems };
+}
+
+function PaginationControls({
+  setPage,
+  perPage,
+  setPerPage,
+  totalItems,
+  totalPages,
+  safePage,
+  label,
+}: {
+  setPage: (p: number) => void;
+  perPage: number;
+  setPerPage: (n: number) => void;
+  totalItems: number;
+  totalPages: number;
+  safePage: number;
+  label: string;
+}) {
+  if (totalItems === 0) return null;
+  const startIdx = (safePage - 1) * perPage;
+  const endIdx = Math.min(startIdx + perPage, totalItems);
+  return (
+    <div className="pagination-controls" style={{ display: "flex" }}>
+      <div className="pagination-info">
+        <span>
+          Showing {startIdx + 1}–{endIdx} of {totalItems} {label}
+        </span>
+        &nbsp;|&nbsp;
+        <label>
+          Per page:{" "}
+          <select
+            className="per-page-select"
+            value={perPage}
+            onChange={(e) => {
+              setPerPage(parseInt(e.target.value, 10));
+              setPage(1);
+            }}
+          >
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+        </label>
+      </div>
+      <div className="pagination-buttons">
+        <button disabled={safePage === 1} onClick={() => setPage(safePage - 1)}>
+          <ChevronLeft size={14} />
+        </button>
+        {getPageRange(safePage, totalPages).map((p, i) =>
+          p === "..." ? (
+            <button key={`ellipsis-${i}`} disabled style={{ cursor: "default" }}>
+              &hellip;
+            </button>
+          ) : (
+            <button key={p} className={p === safePage ? "active" : ""} onClick={() => setPage(p)}>
+              {p}
+            </button>
+          )
+        )}
+        <button disabled={safePage === totalPages} onClick={() => setPage(safePage + 1)}>
+          <ChevronRight size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function SalesDashboardView() {
   const { user } = useAdminUser();
   const isOwner = user?.role === "owner";
@@ -347,6 +441,9 @@ export default function SalesDashboardView() {
   // --- My Students tab ---
   const [myOrders, setMyOrders] = useState<SalesOrderItem[]>([]);
   const [myOrdersLoading, setMyOrdersLoading] = useState(true);
+  const [myPage, setMyPage] = useState(1);
+  const [myPerPage, setMyPerPage] = useState(25);
+  const myPagination = paginatedSlice(myOrders, myPage, myPerPage);
 
   const fetchMyOrders = () => {
     fetch("/api/sales/myStudents")
@@ -374,6 +471,9 @@ export default function SalesDashboardView() {
   const [teamOrders, setTeamOrders] = useState<SalesOrderItem[] | null>(null);
   const [teamExecutiveFilter, setTeamExecutiveFilter] = useState("");
   const teamLoading = teamOrders === null;
+  const [teamPage, setTeamPage] = useState(1);
+  const [teamPerPage, setTeamPerPage] = useState(25);
+  const teamPagination = paginatedSlice(teamOrders || [], teamPage, teamPerPage);
 
   const fetchTeam = (executiveId?: string) => {
     if (!canSeeTeam) return;
@@ -405,11 +505,13 @@ export default function SalesDashboardView() {
 
   const openTeamMember = (report: ReportAccount) => {
     setTeamExecutiveFilter(report._id);
+    setTeamPage(1);
     loadTeam(report._id);
   };
 
   const backToTeamRoster = () => {
     setTeamExecutiveFilter("");
+    setTeamPage(1);
     loadTeam();
   };
 
@@ -417,6 +519,9 @@ export default function SalesDashboardView() {
 
   // --- Audit Log tab (Phase 6, stretch) --- same null-sentinel pattern as Team.
   const [auditEntries, setAuditEntries] = useState<AuditLogEntry[] | null>(null);
+  const [auditPage, setAuditPage] = useState(1);
+  const [auditPerPage, setAuditPerPage] = useState(25);
+  const auditPagination = paginatedSlice(auditEntries || [], auditPage, auditPerPage);
 
   const fetchAuditLog = () => {
     fetch("/api/sales/auditLog")
@@ -599,6 +704,34 @@ export default function SalesDashboardView() {
   const [busyOrderId, setBusyOrderId] = useState<string | null>(null);
   const [detailsOrder, setDetailsOrder] = useState<SalesOrderItem | null>(null);
   const detailsSummary = detailsOrder ? installmentsSummary(detailsOrder) : null;
+
+  // Actions column collapses into one menu per row instead of a wall of
+  // buttons (grows unreadable once there are dozens/hundreds of students) —
+  // rendered via a portal to document.body since .admin-table-container is
+  // overflow-x:auto, which per spec also forces overflow-y to auto and would
+  // silently clip an absolutely-positioned menu instead of showing it as an
+  // overlay. Position is computed from the trigger button's own rect at
+  // click time rather than tracked via a ref, since only one menu is ever
+  // open at once.
+  const [actionsMenu, setActionsMenu] = useState<{ orderId: string; top: number; right: number } | null>(null);
+  useEffect(() => {
+    if (!actionsMenu) return;
+    const close = () => setActionsMenu(null);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [actionsMenu]);
+  const toggleActionsMenu = (order: SalesOrderItem, e: React.MouseEvent<HTMLButtonElement>) => {
+    if (actionsMenu?.orderId === order._id) {
+      setActionsMenu(null);
+      return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    setActionsMenu({ orderId: order._id, top: rect.bottom + 4, right: window.innerWidth - rect.right });
+  };
 
   const checkStatus = async (order: SalesOrderItem, reload: () => void) => {
     const inst = nextPendingInstallment(order);
@@ -828,6 +961,48 @@ export default function SalesDashboardView() {
     }
   };
 
+  // Self-service undo for a mistaken enrollment (wrong course/batch, wrong
+  // amount) — only works before anything's been paid; the API refuses
+  // otherwise and this button never renders once seq 1 is paid anyway (see
+  // the inst?.paymentLinkUrl branch below, which stops matching once it's
+  // paid — there's no next *pending* seq-1 installment to find a link on).
+  const cancelEnrollment = async (order: SalesOrderItem, reload: () => void) => {
+    if (!order.installmentPlanId) return;
+    const { value: reason } =
+      (await window.Swal?.fire({
+        title: "Cancel this enrollment?",
+        text: "This cancels the payment link so it can no longer be paid, and closes out the plan. Only use this before the student has paid anything.",
+        icon: "warning",
+        input: "text",
+        inputLabel: "Reason (optional)",
+        inputPlaceholder: "e.g. Wrong course selected",
+        showCancelButton: true,
+        confirmButtonColor: "#e0c214",
+        cancelButtonColor: "#555",
+        confirmButtonText: "Yes, cancel enrollment",
+        background: "#1a1a1a",
+        color: "#fff",
+      })) || {};
+    if (reason === undefined) return;
+
+    setBusyOrderId(order._id);
+    try {
+      const res = await fetch("/api/sales/cancelEnrollment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ installmentPlanId: order.installmentPlanId._id, reason: reason || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Could not cancel enrollment");
+      swalToast("success", "Enrollment cancelled");
+      reload();
+    } catch (err) {
+      swalToast("error", err instanceof Error ? err.message : "Could not cancel enrollment");
+    } finally {
+      setBusyOrderId(null);
+    }
+  };
+
   // --- My Team: add/edit executive ---
   const [teamAccountModalOpen, setTeamAccountModalOpen] = useState(false);
   const [teamAccountEditing, setTeamAccountEditing] = useState<ReportAccount | null>(null);
@@ -995,6 +1170,7 @@ export default function SalesDashboardView() {
       )}
 
       {section === "myStudents" && (
+        <>
         <div className="admin-card">
           {myOrdersLoading ? (
             <p className="text-muted">Loading…</p>
@@ -1015,7 +1191,7 @@ export default function SalesDashboardView() {
                   </tr>
                 </thead>
                 <tbody>
-                  {myOrders.map((order) => {
+                  {myPagination.pageItems.map((order) => {
                     const inst = nextPendingInstallment(order);
                     const remainingCount = (order.installmentPlanId?.installments || []).filter((i) => i.status !== "paid").length;
                     return (
@@ -1031,59 +1207,15 @@ export default function SalesDashboardView() {
                         <td>{remainingCount}</td>
                         <td>{inst ? formatDate(inst.dueDate) : "—"}</td>
                         <td>{planStatusChip(order)}</td>
-                        <td>
-                          <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap" }}>
-                            <button
-                              className="thm-btn secondary"
-                              style={{ padding: "4px 10px", fontSize: "0.75rem" }}
-                              onClick={() => setDetailsOrder(order)}
-                            >
-                              Details
-                            </button>
-                            {inst?.paymentLinkUrl ? (
-                              // Only installment 1 ever gets a sales-generated Payment Link
-                              // (enrollStudent). Once that's paid, every later installment is
-                              // paid by the student directly from their own dashboard — there's
-                              // no link for a sales person to copy/resend/check here anymore.
-                              <>
-                                <button
-                                  className="thm-btn secondary"
-                                  style={{ padding: "4px 10px", fontSize: "0.75rem" }}
-                                  onClick={() => copyLink(inst.paymentLinkUrl!)}
-                                >
-                                  Copy Link
-                                </button>
-                                <button
-                                  className="thm-btn secondary"
-                                  style={{ padding: "4px 10px", fontSize: "0.75rem" }}
-                                  disabled={busyOrderId === order._id}
-                                  onClick={() => resendLink(order)}
-                                >
-                                  Resend
-                                </button>
-                                <button
-                                  className="thm-btn"
-                                  style={{ padding: "4px 10px", fontSize: "0.75rem" }}
-                                  disabled={busyOrderId === order._id}
-                                  onClick={() => checkStatus(order, loadMyOrders)}
-                                >
-                                  Check Status
-                                </button>
-                              </>
-                            ) : (
-                              inst && <span className="small opacity-50">Pays from own dashboard</span>
-                            )}
-                            {order.installmentPlanId?.status === "defaulted" && (
-                              <button
-                                className="thm-btn"
-                                style={{ padding: "4px 10px", fontSize: "0.75rem" }}
-                                disabled={busyOrderId === order._id}
-                                onClick={() => restoreAccess(order, loadMyOrders)}
-                              >
-                                Restore Access
-                              </button>
-                            )}
-                          </div>
+                        <td style={{ textAlign: "center" }}>
+                          <button
+                            className="thm-btn secondary"
+                            style={{ padding: "4px 10px", fontSize: "0.75rem", display: "inline-flex", alignItems: "center", gap: 4 }}
+                            disabled={busyOrderId === order._id}
+                            onClick={(e) => toggleActionsMenu(order, e)}
+                          >
+                            Actions <MoreVertical size={14} style={ICON_STYLE} />
+                          </button>
                         </td>
                       </tr>
                     );
@@ -1092,7 +1224,90 @@ export default function SalesDashboardView() {
               </table>
             </div>
           )}
+          <PaginationControls
+            setPage={setMyPage}
+            perPage={myPerPage}
+            setPerPage={setMyPerPage}
+            totalItems={myOrders.length}
+            totalPages={myPagination.totalPages}
+            safePage={myPagination.safePage}
+            label="students"
+          />
         </div>
+
+        {actionsMenu &&
+          (() => {
+            const order = myOrders.find((o) => o._id === actionsMenu.orderId);
+            if (!order) return null;
+            const inst = nextPendingInstallment(order);
+            const runAction = (fn: () => void) => {
+              setActionsMenu(null);
+              fn();
+            };
+            const menuItemStyle: React.CSSProperties = {
+              display: "block",
+              width: "100%",
+              textAlign: "left",
+              padding: "8px 14px",
+              fontSize: "0.8rem",
+              color: "#fff",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+            };
+            return createPortal(
+              <>
+                <div style={{ position: "fixed", inset: 0, zIndex: 2000 }} onClick={() => setActionsMenu(null)} />
+                <div
+                  style={{
+                    position: "fixed",
+                    top: actionsMenu.top,
+                    right: actionsMenu.right,
+                    zIndex: 2001,
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    borderRadius: 6,
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+                    minWidth: 180,
+                    padding: 4,
+                  }}
+                >
+                  <button style={menuItemStyle} onClick={() => runAction(() => setDetailsOrder(order))}>
+                    Details
+                  </button>
+                  {inst?.paymentLinkUrl ? (
+                    // Only installment 1 ever gets a sales-generated Payment Link
+                    // (enrollStudent). Once that's paid, every later installment is
+                    // paid by the student directly from their own dashboard — there's
+                    // no link for a sales person to copy/resend/check here anymore.
+                    <>
+                      <button style={menuItemStyle} onClick={() => runAction(() => copyLink(inst.paymentLinkUrl!))}>
+                        Copy Link
+                      </button>
+                      <button style={menuItemStyle} onClick={() => runAction(() => resendLink(order))}>
+                        Resend
+                      </button>
+                      <button style={menuItemStyle} onClick={() => runAction(() => checkStatus(order, loadMyOrders))}>
+                        Check Status
+                      </button>
+                      <button style={{ ...menuItemStyle, color: "#e74c3c" }} onClick={() => runAction(() => cancelEnrollment(order, loadMyOrders))}>
+                        Cancel Enrollment
+                      </button>
+                    </>
+                  ) : (
+                    inst && <div style={{ ...menuItemStyle, color: "var(--text-muted)", cursor: "default" }}>Pays from own dashboard</div>
+                  )}
+                  {order.installmentPlanId?.status === "defaulted" && (
+                    <button style={menuItemStyle} onClick={() => runAction(() => restoreAccess(order, loadMyOrders))}>
+                      Restore Access
+                    </button>
+                  )}
+                </div>
+              </>,
+              document.body
+            );
+          })()}
+        </>
       )}
 
       {section === "team" && canSeeTeam && (
@@ -1187,7 +1402,7 @@ export default function SalesDashboardView() {
                       </tr>
                     </thead>
                     <tbody>
-                      {teamOrders.map((order) => (
+                      {teamPagination.pageItems.map((order) => (
                         <tr key={order._id}>
                           <td>
                             <div style={{ fontWeight: 600 }}>{order.userId?.name || "—"}</div>
@@ -1213,6 +1428,15 @@ export default function SalesDashboardView() {
                   </table>
                 </div>
               )}
+              <PaginationControls
+                setPage={setTeamPage}
+                perPage={teamPerPage}
+                setPerPage={setTeamPerPage}
+                totalItems={teamOrders?.length || 0}
+                totalPages={teamPagination.totalPages}
+                safePage={teamPagination.safePage}
+                label="students"
+              />
             </>
           )}
         </div>
@@ -1281,7 +1505,7 @@ export default function SalesDashboardView() {
                   </tr>
                 </thead>
                 <tbody>
-                  {auditEntries.map((entry) => (
+                  {auditPagination.pageItems.map((entry) => (
                     <tr key={entry._id}>
                       <td style={{ whiteSpace: "nowrap" }}>{entry.createdAt ? new Date(entry.createdAt).toLocaleString("en-IN") : "—"}</td>
                       <td>{entry.actorId?.name || entry.actorId?.email || "—"}</td>
@@ -1295,6 +1519,15 @@ export default function SalesDashboardView() {
               </table>
             </div>
           )}
+          <PaginationControls
+            setPage={setAuditPage}
+            perPage={auditPerPage}
+            setPerPage={setAuditPerPage}
+            totalItems={auditEntries?.length || 0}
+            totalPages={auditPagination.totalPages}
+            safePage={auditPagination.safePage}
+            label="entries"
+          />
         </div>
       )}
 

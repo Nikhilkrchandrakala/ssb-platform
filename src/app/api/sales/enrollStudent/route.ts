@@ -6,6 +6,7 @@ import { Slot, Order, InstallmentPlan, SalesAuditLog, User, Lead } from "@/serve
 import { getSlotBasePrice, applySalesCoupon, resolveOrderSelectedModules, describeSelectedModules, MIN_INITIAL_AMOUNT } from "@/server/sales/pricing";
 import { createPaymentLink, razorpay } from "@/server/integrations/razorpay";
 import { formatRealStartTime } from "@/lib/batchTiming";
+import { sendRegistrationPaymentEmail } from "@/server/integrations/msg91";
 
 interface SubmittedInstallment {
   amount: number;
@@ -210,6 +211,22 @@ export async function POST(req: NextRequest) {
     plan.installments[0].paymentLinkUrl = paymentLink.short_url;
     plan.installments[0].paymentLinkExpiresAt = paymentLink.expire_by ? new Date(paymentLink.expire_by * 1000) : null;
     await plan.save();
+
+    // The student's own "batch_registration_link" notification — this used
+    // to only ever fire if the sales person separately clicked "Resend"
+    // (shareLink), which meant the very first Enroll & Generate Link left
+    // the student with nothing but Razorpay's own generic notify.email
+    // (different template, not this branded one). Fire it here too, right
+    // when the link is actually created, same as shareLink's seq===1 branch.
+    sendRegistrationPaymentEmail({
+      to: studentEmail,
+      name: studentName,
+      courseName: slot.title || "—",
+      batchNo: slot.batchNo || "—",
+      startDate: formatRealStartTime(slot),
+      amount: initialAmount,
+      link: paymentLink.short_url,
+    }).catch((err) => console.error("[msg91] sendRegistrationPaymentEmail failed", err));
 
     await SalesAuditLog.create({
       actorId: user!._id,
