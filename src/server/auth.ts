@@ -5,7 +5,6 @@ import { connectDB } from "./db";
 import { User } from "./models/User";
 import { AdminUser } from "./models/AdminUser";
 import { Franchise } from "./models/Franchise";
-import { Order } from "./models/Order";
 
 const JWT_SECRET = process.env.JWT_SECRET || "hdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi78272jbkj2[]pou89ywe";
 // Legacy psych_battery fallback secret — kept only so tokens issued before this
@@ -113,6 +112,14 @@ export async function getCurrentUser() {
 
   if (!foundUser) return null;
 
+  // Captured before deletion below — requireSiteUser() uses this (not an
+  // Order lookup) to tell a still-mid-checkout quick-join lead (no password
+  // until they pay, per verifyPayment's deferred-credential pattern) apart
+  // from a genuinely registered lead who simply hasn't purchased a course
+  // yet (has a password from the full /SignUp flow or a later reset) — the
+  // latter must still be able to see their own profile.
+  foundUser.hasPassword = !!foundUser.password;
+
   // `.lean()` skips Mongoose documents entirely, so the schema-level toJSON
   // transform that strips `password` never runs — strip it explicitly here,
   // since getCurrentUser()'s result is passed straight through to Client
@@ -151,14 +158,15 @@ export async function requireSiteUser() {
   // A quick-join lead (src/app/api/quickJoin) is deliberately given a
   // session before ever paying, so checkout itself works — but that also
   // let them browse these candidate-only pages with nothing to show yet.
-  // Block that specific case (still genuinely a lead, no paid order) and
-  // send them back to finish the purchase instead; a real student (rawRole
-  // already promoted, or one that came through the full /SignUp flow) is
-  // unaffected.
-  if ((user as { rawRole?: string }).rawRole === "lead") {
-    await connectDB();
-    const hasPaid = await Order.exists({ userId: user._id, status: "paid" });
-    if (!hasPaid) redirect("/Batches");
+  // Block only that specific case: still a lead AND no password yet (a
+  // quick-join lead has none until verifyPayment issues one on first
+  // purchase). A lead who registered through the full /SignUp flow, or who
+  // set/reset a password some other way, has plenty to see on their profile
+  // even before buying a course — checking for a paid Order here instead
+  // wrongly caught that case too and sent genuine registered users back to
+  // /Batches on every login.
+  if ((user as { rawRole?: string }).rawRole === "lead" && !(user as { hasPassword?: boolean }).hasPassword) {
+    redirect("/Batches");
   }
 
   return user;
