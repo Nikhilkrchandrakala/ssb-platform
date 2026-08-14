@@ -105,16 +105,31 @@ export async function markInstallmentPaid(opts: {
 
   // Credentials, per Open Decision #3: cryptographically random, never derived
   // from name/phone/DOB, never logged. `pre("save")` hashes it via bcrypt.
-  const plainPassword = crypto.randomBytes(9).toString("base64url");
-  student.password = plainPassword;
+  // Only for a genuinely new account, though — if this email already had a
+  // password (an existing student/lead re-enrolled for another batch, or
+  // provisioned by an earlier sales payment), overwriting it here would
+  // silently invalidate whatever they already know and log in with, with no
+  // consent. `resetStudentCredentials` remains the explicit, sales-person-
+  // initiated way to actually reset an existing account's password.
+  const isNewAccount = !student.password;
+  const plainPassword = isNewAccount ? crypto.randomBytes(9).toString("base64url") : null;
+  if (plainPassword) student.password = plainPassword;
   await student.save();
 
-  const mail = await sendCredentialsEmail({
-    to: student.email,
-    name: student.name,
-    username: student.email,
-    password: plainPassword,
-  });
+  let studentCredentials: { email: string; password: string; emailDelivered: boolean } | undefined;
+  if (plainPassword) {
+    const mail = await sendCredentialsEmail({
+      to: student.email,
+      name: student.name,
+      username: student.email,
+      password: plainPassword,
+    });
+    // Surfaced to the caller (checkInstallmentStatus/webhook) so the Sales
+    // dashboard can show credentials on screen as a fallback when the email
+    // above fails to deliver — see resetStudentCredentials for the on-demand
+    // equivalent once this one-time reveal has been missed.
+    studentCredentials = { email: student.email, password: plainPassword, emailDelivered: mail.delivered };
+  }
 
   // Notify sales team
   await sendSalesNotificationEmail({
@@ -126,12 +141,8 @@ export async function markInstallmentPaid(opts: {
     orderId: order._id.toString(),
   }).catch((err) => console.error("[msg91] sendSalesNotificationEmail failed", err));
 
-  // Surfaced to the caller (checkInstallmentStatus/webhook) so the Sales
-  // dashboard can show credentials on screen as a fallback when the email
-  // above fails to deliver — see resetStudentCredentials for the on-demand
-  // equivalent once this one-time reveal has been missed.
   return {
     alreadyProcessed: false,
-    studentCredentials: { email: student.email, password: plainPassword, emailDelivered: mail.delivered },
+    studentCredentials,
   };
 }

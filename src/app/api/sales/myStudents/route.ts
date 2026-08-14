@@ -3,6 +3,7 @@ import { connectDB } from "@/server/db";
 import { getCurrentUser } from "@/server/auth";
 import { hasAdminPermission } from "@/server/adminAccess";
 import { Order } from "@/server/models";
+import { reconcilePendingSalesPayments } from "@/server/sales/reconcile";
 
 /**
  * GET /api/sales/myStudents (salesimplementation.md Phase 4).
@@ -18,12 +19,23 @@ export async function GET() {
 
   await connectDB();
 
-  const orders = await Order.find({ bookingMethod: "sales", salesPersonId: user!._id })
+  const query = { bookingMethod: "sales", salesPersonId: user!._id };
+  const orders = await Order.find(query)
     .populate("userId", "name email")
     .populate("slotId", "title batchNo startTime isFullCourse")
     .populate("installmentPlanId")
     .sort({ createdAt: -1 })
     .lean();
 
-  return NextResponse.json({ orders });
+  const reconciled = await reconcilePendingSalesPayments(orders);
+  if (reconciled === 0) return NextResponse.json({ orders });
+
+  const freshOrders = await Order.find(query)
+    .populate("userId", "name email")
+    .populate("slotId", "title batchNo startTime isFullCourse")
+    .populate("installmentPlanId")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return NextResponse.json({ orders: freshOrders });
 }

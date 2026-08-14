@@ -67,7 +67,7 @@ export const coursesData = [
         white2: "Hackathon",
         sessions: "10",
         hours: "60",
-        description: `${""}`,
+        description: "10 Days SSB Hackathon",
         image: "/assets/website/course5.webp",
         price: " 12499 + 18% GST"
     },

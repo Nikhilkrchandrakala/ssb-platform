@@ -1447,6 +1447,10 @@ export default function SalesDashboardView() {
                         <strong style={{ color: "#fff" }}>₹{finalPriceInclGST.toFixed(2)}</strong>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: "0.85rem" }}>
+                        <span className="text-muted">Initial payment (paid now — link generated on Enroll)</span>
+                        <strong style={{ color: "var(--primary-gold)" }}>₹{initialAmount.toFixed(2)}</strong>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: "0.85rem" }}>
                         <span className="text-muted">Remaining after initial payment</span>
                         <strong style={{ color: "#fff" }}>₹{(remaining ?? 0).toFixed(2)}</strong>
                       </div>

@@ -3,6 +3,7 @@ import { connectDB } from "@/server/db";
 import { getCurrentUser } from "@/server/auth";
 import { hasAdminPermission } from "@/server/adminAccess";
 import { Order, AdminUser } from "@/server/models";
+import { reconcilePendingSalesPayments } from "@/server/sales/reconcile";
 
 interface AdminUserLean {
   _id: unknown;
@@ -61,7 +62,8 @@ export async function GET(req: NextRequest) {
     salesPersonFilter = isOwner ? {} : { salesPersonId: { $in: inScopeIds } };
   }
 
-  const orders = await Order.find({ bookingMethod: "sales", ...salesPersonFilter })
+  const orderQuery = { bookingMethod: "sales", ...salesPersonFilter };
+  const orders = await Order.find(orderQuery)
     .populate("userId", "name email")
     .populate("slotId", "title batchNo startTime isFullCourse")
     .populate("installmentPlanId")
@@ -69,5 +71,18 @@ export async function GET(req: NextRequest) {
     .sort({ createdAt: -1 })
     .lean();
 
-  return NextResponse.json({ scope: isOwner ? "owner" : "head", reports, orders });
+  const reconciled = await reconcilePendingSalesPayments(orders);
+  if (reconciled === 0) {
+    return NextResponse.json({ scope: isOwner ? "owner" : "head", reports, orders });
+  }
+
+  const freshOrders = await Order.find(orderQuery)
+    .populate("userId", "name email")
+    .populate("slotId", "title batchNo startTime isFullCourse")
+    .populate("installmentPlanId")
+    .populate("salesPersonId", "name email")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return NextResponse.json({ scope: isOwner ? "owner" : "head", reports, orders: freshOrders });
 }

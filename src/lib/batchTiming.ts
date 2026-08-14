@@ -3,15 +3,18 @@
 // from a plain <input type="date">) — it never carries a real time of day.
 // Per owner decision (2026-08-04): a batch's *real* start clock-time is
 // fixed by session type rather than admin-entered, so every Morning batch
-// starts 7:30 AM IST and every Evening batch starts 5:00 PM IST, on
+// starts 7:30 AM IST and every Evening batch starts 7:30 PM IST, on
 // whatever calendar date Slot.startTime encodes. This lets every consumer
 // derive the real start time (and the "closes 1 hour before" cutoff) purely
 // from existing data — no DB migration/backfill needed.
+// Evening corrected from 5:00 PM to 7:30 PM (2026-08-14) to match the site's
+// own published day-by-day schedule (src/util/data.ts's "evening" block,
+// every session listed as "7:30 - 11:00 PM") — 5:00 PM was never correct.
 const IST_OFFSET_HOURS = 5;
 const IST_OFFSET_MINUTES = 30;
 
 export const MORNING_START_IST = { hour: 7, minute: 30 };
-export const EVENING_START_IST = { hour: 17, minute: 0 };
+export const EVENING_START_IST = { hour: 19, minute: 30 };
 
 export const BOOKING_CUTOFF_MS_BEFORE_START = 60 * 60 * 1000; // 1 hour
 

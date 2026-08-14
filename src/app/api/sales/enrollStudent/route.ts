@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/server/auth";
 import { hasAdminPermission } from "@/server/adminAccess";
 import { Slot, Order, InstallmentPlan, SalesAuditLog, User, Lead } from "@/server/models";
 import { getSlotBasePrice, applySalesCoupon, resolveOrderSelectedModules, describeSelectedModules, MIN_INITIAL_AMOUNT } from "@/server/sales/pricing";
-import { createPaymentLink } from "@/server/integrations/razorpay";
+import { createPaymentLink, razorpay } from "@/server/integrations/razorpay";
 import { formatRealStartTime } from "@/lib/batchTiming";
 
 interface SubmittedInstallment {
@@ -90,6 +90,40 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Supersede any other still-open sales enrollment this student already
+    // has (an earlier abandoned/duplicate Enroll & Generate Link attempt) —
+    // cancel its Razorpay Payment Link and close out its plan, so that old
+    // link can't still be paid later and re-trigger unlock/provisioning for
+    // a stale order once markInstallmentPaid picks it up.
+    const priorOrders = await Order.find({ userId: student._id, bookingMethod: "sales", status: "pending" }).populate(
+      "installmentPlanId"
+    );
+    for (const prior of priorOrders) {
+      const priorPlan = prior.installmentPlanId as unknown as {
+        _id: unknown;
+        status: string;
+        installments: { seq: number; status: string; paymentLinkId?: string | null }[];
+      } | null;
+      if (!priorPlan || priorPlan.status !== "active") continue;
+
+      const firstPending = priorPlan.installments.find((i) => i.status !== "paid" && i.paymentLinkId);
+      if (firstPending?.paymentLinkId) {
+        try {
+          await razorpay.paymentLink.cancel(firstPending.paymentLinkId);
+        } catch (err) {
+          console.error("[sales/enrollStudent] failed to cancel superseded payment link", firstPending.paymentLinkId, err);
+        }
+      }
+      await InstallmentPlan.findByIdAndUpdate(priorPlan._id, { status: "cancelled" });
+      await SalesAuditLog.create({
+        actorId: user!._id,
+        action: "PLAN_EDITED",
+        orderId: prior._id,
+        installmentPlanId: priorPlan._id,
+        meta: { supersededByNewEnrollment: true, reason: "Replaced by a new Enroll & Generate Link for the same student" },
+      });
+    }
+
     const order = await Order.create({
       userId: student._id,
       slotId: slot._id,
@@ -135,11 +169,17 @@ export async function POST(req: NextRequest) {
     );
 
     // Batch number + real start date/time + course/module, so the payment
-    // page ("Payment for: ...") tells the student which specific batch and
-    // session this is for, not just a bare batch-type name.
+    // page tells the student which specific batch and session this is for.
+    // Client requirement (2026-08-14): lead with the actual course/module
+    // name rather than a generic "Initial payment" label, and say the module
+    // is being paid in full when this link covers the whole price rather
+    // than just a first installment.
     const batchLabel = `${slot.title}${slot.batchNo ? ` (#${slot.batchNo})` : ""}`;
     const moduleLabel = describeSelectedModules(order.selectedModules || []);
-    const description = `Initial payment — ${batchLabel} — ${formatRealStartTime(slot)} — ${moduleLabel}`;
+    const isFullPayment = remaining <= 0;
+    const description = isFullPayment
+      ? `${moduleLabel} Fee — ${batchLabel} — ${formatRealStartTime(slot)}`
+      : `${moduleLabel} — Registration Fee — ${batchLabel} — ${formatRealStartTime(slot)}`;
 
     const paymentLink = await createPaymentLink({
       amountRupees: initialAmount,
