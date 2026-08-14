@@ -549,7 +549,7 @@ export default function SalesDashboardView() {
   const [installmentRows, setInstallmentRows] = useState<SuggestedInstallment[]>([]);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
-  const [enrollResult, setEnrollResult] = useState<{ paymentLink: string } | null>(null);
+  const [enrollResult, setEnrollResult] = useState<{ paymentLink: string; registrationEmailDelivered: boolean } | null>(null);
   const EMPTY_MODULE_CHECKS: Record<string, boolean> = { full_course: false, ssb_ppdt: false, psych: false, interview: false, group_testing: false };
   const [moduleChecks, setModuleChecks] = useState<Record<string, boolean>>(EMPTY_MODULE_CHECKS);
   const [couponCode, setCouponCode] = useState("");
@@ -685,7 +685,7 @@ export default function SalesDashboardView() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Enrollment failed");
-      setEnrollResult({ paymentLink: data.paymentLink });
+      setEnrollResult({ paymentLink: data.paymentLink, registrationEmailDelivered: data.registrationEmailDelivered !== false });
       loadMyOrders();
       swalToast("success", "Student enrolled — payment link generated");
     } catch (err) {
@@ -1561,6 +1561,12 @@ export default function SalesDashboardView() {
                       Copy
                     </button>
                   </div>
+                  {!enrollResult.registrationEmailDelivered && (
+                    <p style={{ color: "#e74c3c", fontSize: "0.82rem", marginTop: 10 }}>
+                      The registration email to the student couldn&apos;t be sent (even after a retry). Share the link above
+                      directly, or use &quot;Resend&quot; from that student&apos;s row in My Students once you close this.
+                    </p>
+                  )}
                   <div className="d-flex justify-content-end mt-4">
                     <button className="thm-btn" onClick={closeEnrollModal}>
                       Done

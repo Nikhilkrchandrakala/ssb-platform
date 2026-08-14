@@ -218,7 +218,10 @@ export async function POST(req: NextRequest) {
     // the student with nothing but Razorpay's own generic notify.email
     // (different template, not this branded one). Fire it here too, right
     // when the link is actually created, same as shareLink's seq===1 branch.
-    sendRegistrationPaymentEmail({
+    // Awaited (not fire-and-forget) so a failure — sendTemplateEmail already
+    // retries once internally — can be surfaced back to the sales person
+    // instead of only ever landing in a server log nobody sees.
+    const registrationMail = await sendRegistrationPaymentEmail({
       to: studentEmail,
       name: studentName,
       courseName: slot.title || "—",
@@ -226,7 +229,10 @@ export async function POST(req: NextRequest) {
       startDate: formatRealStartTime(slot),
       amount: initialAmount,
       link: paymentLink.short_url,
-    }).catch((err) => console.error("[msg91] sendRegistrationPaymentEmail failed", err));
+    }).catch((err) => {
+      console.error("[msg91] sendRegistrationPaymentEmail failed", err);
+      return { delivered: false };
+    });
 
     await SalesAuditLog.create({
       actorId: user!._id,
@@ -244,6 +250,7 @@ export async function POST(req: NextRequest) {
       finalPriceInclGST,
       discount,
       couponCode: appliedCouponCode,
+      registrationEmailDelivered: registrationMail.delivered,
     });
   } catch (err) {
     console.error(err);

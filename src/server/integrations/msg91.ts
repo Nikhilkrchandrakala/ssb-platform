@@ -96,6 +96,27 @@ const IO_INTERVIEW_TEMPLATE_ID = process.env.MSG91_IO_INTERVIEW_TEMPLATE_ID || "
 const INTERVIEW_TEMPLATE_6_ID = process.env.MSG91_INTERVIEW_TEMPLATE_6_ID || "interview_template_6";
 const NEW_ENROLLMENT_ALERT_TEMPLATE_ID = process.env.MSG91_NEW_ENROLLMENT_ALERT_TEMPLATE_ID || "new_enrollment_alert";
 
+async function postEmail(params: { to: string; name: string; templateId: string; variables: Record<string, string> }): Promise<boolean> {
+  const { data } = await axios.post(
+    EMAIL_API_URL,
+    {
+      recipients: [{ to: [{ email: params.to, name: params.name }], variables: params.variables }],
+      from: { email: EMAIL_FROM },
+      domain: EMAIL_DOMAIN,
+      template_id: params.templateId,
+    },
+    { headers: { "Content-Type": "application/json", Accept: "application/json", authkey: process.env.MSG91_AUTHKEY } }
+  );
+  const failed = data?.hasError === true || data?.status === "error" || data?.type === "error";
+  return !failed;
+}
+
+// Observed in production (2026-08-14): a "batch_registration_link" send
+// failed with a plain 409 from MSG91, then succeeded immediately on a
+// manual replay of the identical payload — a transient provider-side
+// hiccup, not a bad template/domain/authkey. One retry after a short delay
+// covers that class of failure without masking a genuinely broken config
+// (which will fail the retry too and still report undelivered).
 async function sendTemplateEmail(params: {
   to: string;
   name: string;
@@ -107,21 +128,16 @@ async function sendTemplateEmail(params: {
     return { delivered: false };
   }
   try {
-    const { data } = await axios.post(
-      EMAIL_API_URL,
-      {
-        recipients: [{ to: [{ email: params.to, name: params.name }], variables: params.variables }],
-        from: { email: EMAIL_FROM },
-        domain: EMAIL_DOMAIN,
-        template_id: params.templateId,
-      },
-      { headers: { "Content-Type": "application/json", Accept: "application/json", authkey: process.env.MSG91_AUTHKEY } }
-    );
-    const failed = data?.hasError === true || data?.status === "error" || data?.type === "error";
-    return { delivered: !failed };
+    return { delivered: await postEmail(params) };
   } catch (err) {
-    console.error("[msg91 email] send failed:", err instanceof Error ? err.message : err);
-    return { delivered: false };
+    console.error("[msg91 email] send failed, retrying once:", err instanceof Error ? err.message : err);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      return { delivered: await postEmail(params) };
+    } catch (retryErr) {
+      console.error("[msg91 email] retry failed:", retryErr instanceof Error ? retryErr.message : retryErr);
+      return { delivered: false };
+    }
   }
 }
 
