@@ -25,7 +25,7 @@ export default function QuickJoinPanel({ onAuthenticated }: { onAuthenticated: (
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
-  const handleQuickJoinSubmit = async (fields: { name: string; email: string; phone: string }) => {
+  const handleQuickJoinSubmit = async (fields: { name: string; email: string; phone: string; turnstileToken: string }) => {
     setIsSubmitting(true);
     setError("");
     try {

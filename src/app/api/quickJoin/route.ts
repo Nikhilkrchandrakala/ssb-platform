@@ -3,6 +3,7 @@ import { connectDB } from "@/server/db";
 import { User, Lead } from "@/server/models";
 import { signSessionToken, setSessionCookie } from "@/server/auth";
 import { last10 } from "@/server/integrations/msg91";
+import { verifyTurnstileToken } from "@/server/turnstile";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -38,6 +39,11 @@ export async function POST(req: NextRequest) {
     }
     if (!phone || last10(phone).length !== 10) {
       return NextResponse.json({ message: "A valid 10-digit phone number is required" }, { status: 400 });
+    }
+
+    const turnstileOk = await verifyTurnstileToken(body.turnstileToken, req.headers.get("cf-connecting-ip") || undefined);
+    if (!turnstileOk) {
+      return NextResponse.json({ message: "Verification failed. Please try again." }, { status: 400 });
     }
 
     await connectDB();

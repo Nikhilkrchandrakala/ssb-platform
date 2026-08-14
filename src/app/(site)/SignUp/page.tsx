@@ -4,6 +4,7 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import CustomButton from "@/components/site/CustomButton";
 import SocialLoginButtons from "@/components/site/SocialLoginButtons";
+import TurnstileWidget from "@/components/TurnstileWidget";
 import { BiArrowBack } from "react-icons/bi";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import toast from "react-hot-toast";
@@ -155,6 +156,7 @@ export default function SignUp() {
     name: "", email: "", phone: "", password: "", confirmPassword: "", serviceConsent: "",
   });
   const [serviceConsent, setServiceConsent] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   // Refs
   const otpInputRef = useRef<HTMLInputElement>(null);
@@ -261,6 +263,10 @@ export default function SignUp() {
       setErrorMsg("Please fix all errors before continuing.");
       return;
     }
+    if (!turnstileToken) {
+      setErrorMsg("Please complete the verification challenge before continuing.");
+      return;
+    }
 
     setErrorMsg("");
     setLoading(true);
@@ -288,7 +294,7 @@ export default function SignUp() {
     setErrorMsg("");
     setSuccessMsg("");
     try {
-      await postJSON("/api/signup/send-email-otp", { email });
+      await postJSON("/api/signup/send-email-otp", { email, turnstileToken });
       setSuccessMsg("Verification OTP sent to " + email);
       setEmailTimer(300);
       setTimeout(() => otpInputRef.current?.focus(), 100);
@@ -627,8 +633,12 @@ export default function SignUp() {
                 {fieldErrors.serviceConsent && <div className="field-error">{fieldErrors.serviceConsent}</div>}
               </div>
 
-              <div className="col-12 d-flex justify-content-center mt-5">
-                <CustomButton text={loading ? "Checking..." : "CONTINUE"} onClick={handleStep1Continue} disabled={loading} />
+              <div className="col-12 d-flex justify-content-center">
+                <TurnstileWidget onVerify={setTurnstileToken} onExpire={() => setTurnstileToken("")} />
+              </div>
+
+              <div className="col-12 d-flex justify-content-center mt-4">
+                <CustomButton text={loading ? "Checking..." : "CONTINUE"} onClick={handleStep1Continue} disabled={loading || !turnstileToken} />
               </div>
 
               {/* Facebook postponed for now (2026-08-14) — Google/LinkedIn unaffected. */}

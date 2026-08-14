@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import TurnstileWidget from "@/components/TurnstileWidget";
 
 // This is the client's exact Zoho Web-to-Contact embed ("Webform Booking"
 // lead source), pasted verbatim except for CSS/color values (background,
@@ -595,8 +596,19 @@ const ZOHO_FORM_HTML = `
  * `/api/quickJoin` call in parallel with — not instead of, and without
  * altering — the pasted form's own Zoho submission.
  */
-export default function ZohoQuickJoinForm({ onSubmitAttempt }: { onSubmitAttempt: (fields: { name: string; email: string; phone: string }) => void }) {
+export default function ZohoQuickJoinForm({
+  onSubmitAttempt,
+}: {
+  onSubmitAttempt: (fields: { name: string; email: string; phone: string; turnstileToken: string }) => void;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
+  // Not part of the pasted Zoho markup — Turnstile's token lives entirely
+  // outside the form's own fields/JS so it can never affect Zoho's field
+  // mapping. The pasted submit button is disabled/enabled via plain DOM
+  // property toggling (not an edit to the pasted HTML/JS itself) so a bot
+  // can't fire our own /api/quickJoin call without solving the challenge —
+  // Zoho's own submission is completely unaffected either way.
+  const turnstileTokenRef = useRef("");
 
   useEffect(() => {
     const container = containerRef.current;
@@ -635,6 +647,11 @@ export default function ZohoQuickJoinForm({ onSubmitAttempt }: { onSubmitAttempt
       return () => window.removeEventListener("error", suppressZohoScriptErrors);
     }
 
+    // Disabled until Turnstile verifies (see the widget's onVerify/onExpire
+    // below) — re-enabling is handled there, not here.
+    const submitBtn = form.querySelector<HTMLInputElement>("#formsubmit");
+    if (submitBtn) submitBtn.disabled = true;
+
     const handleSubmit = () => {
       const getVal = (name: string) => (form.elements.namedItem(name) as HTMLInputElement | null)?.value?.trim() || "";
       const firstName = getVal("First Name");
@@ -642,7 +659,8 @@ export default function ZohoQuickJoinForm({ onSubmitAttempt }: { onSubmitAttempt
       const email = getVal("Email");
       const phone = getVal("Mobile");
       if (!firstName || !lastName || !email || !phone) return; // the pasted script's own alert() already covers this
-      onSubmitAttempt({ name: `${firstName} ${lastName}`.trim(), email, phone });
+      if (!turnstileTokenRef.current) return; // submit button is disabled until this is set — belt and suspenders
+      onSubmitAttempt({ name: `${firstName} ${lastName}`.trim(), email, phone, turnstileToken: turnstileTokenRef.current });
     };
 
     form.addEventListener("submit", handleSubmit);
@@ -653,5 +671,24 @@ export default function ZohoQuickJoinForm({ onSubmitAttempt }: { onSubmitAttempt
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return <div ref={containerRef} dangerouslySetInnerHTML={{ __html: ZOHO_FORM_HTML }} />;
+  const setSubmitDisabled = (disabled: boolean) => {
+    const submitBtn = document.querySelector<HTMLInputElement>("#webform736128000002995001 #formsubmit");
+    if (submitBtn) submitBtn.disabled = disabled;
+  };
+
+  return (
+    <>
+      <div ref={containerRef} dangerouslySetInnerHTML={{ __html: ZOHO_FORM_HTML }} />
+      <TurnstileWidget
+        onVerify={(token) => {
+          turnstileTokenRef.current = token;
+          setSubmitDisabled(false);
+        }}
+        onExpire={() => {
+          turnstileTokenRef.current = "";
+          setSubmitDisabled(true);
+        }}
+      />
+    </>
+  );
 }
