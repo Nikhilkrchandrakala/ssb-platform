@@ -5,12 +5,18 @@ import { computeBatchAllotmentSummary } from "@/server/allotmentSummary";
 import { sendAllotmentNotificationEmail, sendAllotmentNotificationSms } from "@/server/integrations/msg91";
 
 /**
- * POST /api/admin/allotment-summary/notify  { batch: string }
+ * POST /api/admin/allotment-summary/notify  { batch: string, assessorIds?: string[] }
  * The "Notify Assessors" button. Recomputes the batch's assessor counts
  * fresh (never trusts a client-submitted count — allotments may have
  * changed since the page was loaded) and sends one email + one SMS per
  * assessor with their current total, per the 2026-08-05 product decision:
  * one notification per assessor per batch, not one per candidate.
+ *
+ * `assessorIds`, if given, limits the send to just those assessors —
+ * added 2026-08-14 so reassigning a single candidate's assessor doesn't
+ * force re-notifying every other assessor in the batch whose count hasn't
+ * actually changed. Omitted/empty falls back to notifying everyone (the
+ * original behavior), so existing callers are unaffected.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -22,12 +28,14 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const { batch } = await req.json();
+    const { batch, assessorIds } = await req.json();
     if (!batch || typeof batch !== "string") {
       return NextResponse.json({ error: "batch is required" }, { status: 400 });
     }
 
-    const assessors = await computeBatchAllotmentSummary(batch);
+    const allAssessors = await computeBatchAllotmentSummary(batch);
+    const targetIds = Array.isArray(assessorIds) ? new Set<string>(assessorIds) : null;
+    const assessors = targetIds && targetIds.size > 0 ? allAssessors.filter((a) => targetIds.has(a.id)) : allAssessors;
 
     const results = await Promise.all(
       assessors.map(async (a) => {

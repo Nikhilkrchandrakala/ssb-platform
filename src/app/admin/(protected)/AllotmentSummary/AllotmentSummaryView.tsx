@@ -31,6 +31,11 @@ export default function AllotmentSummaryView() {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [lastResults, setLastResults] = useState<NotifyResult[] | null>(null);
+  // Which assessors to actually notify — defaults to everyone (matches the
+  // prior all-or-nothing behavior), but lets the admin narrow it down to
+  // just the one(s) whose allotment actually changed, instead of re-alerting
+  // every already-notified assessor in the batch on every send.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetch("/api/admin/allotment-summary")
@@ -49,17 +54,37 @@ export default function AllotmentSummaryView() {
     setLoading(true);
     fetch(`/api/admin/allotment-summary?batch=${encodeURIComponent(batch)}`)
       .then((res) => res.json())
-      .then((data) => setAssessors(data.assessors || []))
-      .catch(() => setAssessors([]))
+      .then((data) => {
+        const rows: AssessorRow[] = data.assessors || [];
+        setAssessors(rows);
+        setSelectedIds(new Set(rows.map((a) => a.id)));
+      })
+      .catch(() => {
+        setAssessors([]);
+        setSelectedIds(new Set());
+      })
       .finally(() => setLoading(false));
   };
 
+  const toggleAssessor = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) => (prev.size === assessors.length ? new Set() : new Set(assessors.map((a) => a.id))));
+  };
+
   const handleSend = async () => {
-    if (!selectedBatch || assessors.length === 0) return;
+    if (!selectedBatch || selectedIds.size === 0) return;
 
     const result = await window.Swal?.fire({
       title: "Send Allotment Notifications?",
-      html: `This will email + SMS <strong>${assessors.length}</strong> assessor(s) their current candidate count for <strong>Batch ${selectedBatch}</strong>.`,
+      html: `This will email + SMS <strong>${selectedIds.size}</strong> of ${assessors.length} assessor(s) their current candidate count for <strong>Batch ${selectedBatch}</strong>.`,
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#e0c214",
@@ -75,7 +100,7 @@ export default function AllotmentSummaryView() {
       const response = await fetch("/api/admin/allotment-summary/notify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ batch: selectedBatch }),
+        body: JSON.stringify({ batch: selectedBatch, assessorIds: Array.from(selectedIds) }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Failed to send notifications");
@@ -111,12 +136,15 @@ export default function AllotmentSummaryView() {
           <h1 className="admin-page-title">
             <Send size={20} className="me-2" style={ICON_STYLE} /> Notify Assessors
           </h1>
-          <p className="text-muted mb-0">Send each assessor their current candidate count for a batch — one notification per assessor, not per candidate.</p>
+          <p className="text-muted mb-0">
+            Send an assessor their current candidate count for a batch — one notification per assessor, not per candidate. Uncheck
+            anyone whose allotment hasn&apos;t changed so they don&apos;t get a repeat alert.
+          </p>
         </div>
         <button
           className="thm-btn"
           onClick={handleSend}
-          disabled={sending || loading || !selectedBatch || assessors.length === 0}
+          disabled={sending || loading || !selectedBatch || selectedIds.size === 0}
         >
           {sending ? (
             <>
@@ -168,6 +196,14 @@ export default function AllotmentSummaryView() {
             <table className="admin-table">
               <thead>
                 <tr>
+                  <th style={{ width: 36 }}>
+                    <input
+                      type="checkbox"
+                      checked={assessors.length > 0 && selectedIds.size === assessors.length}
+                      onChange={toggleSelectAll}
+                      title="Select all"
+                    />
+                  </th>
                   <th>Assessor</th>
                   <th>Role</th>
                   <th>Candidates in Batch {selectedBatch}</th>
@@ -179,6 +215,9 @@ export default function AllotmentSummaryView() {
                   const result = lastResults?.find((r) => r.assessorId === a.id);
                   return (
                     <tr key={a.id}>
+                      <td>
+                        <input type="checkbox" checked={selectedIds.has(a.id)} onChange={() => toggleAssessor(a.id)} />
+                      </td>
                       <td>
                         <span style={{ fontWeight: 600, color: "var(--primary-gold)" }}>{a.name}</span>
                         {a.email && <div className="small opacity-50">{a.email}</div>}
