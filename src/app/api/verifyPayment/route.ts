@@ -1,9 +1,10 @@
+import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/server/db";
 import { getCurrentUser } from "@/server/auth";
 import { Order, Slot, Coupon, User } from "@/server/models";
 import { verifyRazorpaySignature } from "@/server/integrations/razorpay";
-import { sendSalesNotificationEmail } from "@/server/integrations/msg91";
+import { sendSalesNotificationEmail, sendCredentialsEmail } from "@/server/integrations/msg91";
 
 export async function POST(req: NextRequest) {
   try {
@@ -73,8 +74,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Notify sales team
     const student = await User.findById(order.userId);
+
+    // A quick-join buyer (src/app/api/quickJoin) has no password — this is
+    // the only place they'd ever get one, since checkout is the first real
+    // proof they own the email. Mirrors markInstallmentPaid.ts's identical
+    // isNewAccount guard exactly: never touches a password that's already
+    // set (e.g. a buyer who came through the full /SignUp flow), so this
+    // never silently invalidates a working login.
+    if (student && !student.password) {
+      const plainPassword = crypto.randomBytes(9).toString("base64url");
+      student.password = plainPassword;
+      await student.save();
+      await sendCredentialsEmail({
+        to: student.email,
+        name: student.name,
+        username: student.email,
+        password: plainPassword,
+      });
+    }
+
+    // Notify sales team
     if (student) {
       await sendSalesNotificationEmail({
         studentName: student.name,

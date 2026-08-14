@@ -23,6 +23,7 @@ import {
   FaStar,
 } from "react-icons/fa";
 import { useSiteUser } from "@/components/site/SiteUserProvider";
+import QuickJoinPanel from "@/components/site/QuickJoinPanel";
 import { postJSON, ApiError } from "@/lib/authApi";
 import type { RazorpayOptions } from "@/global";
 import { isBookingClosed, formatTimeRemaining, formatRealStartTime } from "@/lib/batchTiming";
@@ -102,6 +103,14 @@ export default function BatchesView() {
   const [couponSuccess, setCouponSuccess] = useState("");
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
+  // Shown inline in the booking modal instead of redirecting to /SignUp —
+  // selectedBatch/selectedModules/coupon state all stay intact since we
+  // never navigate away. Only meaningful while `!user`.
+  const [showAuthPanel, setShowAuthPanel] = useState(false);
+  const handleAuthenticated = () => {
+    setShowAuthPanel(false);
+    router.refresh();
+  };
 
   // Keep the body scroll lock in sync with the booking modal — an effect rather than
   // toggling it inline inside openModal/closeModal, so it stays correct however the modal
@@ -337,19 +346,15 @@ export default function BatchesView() {
   };
 
   const handlePayment = async () => {
+    if (!user) {
+      setShowAuthPanel(true);
+      return;
+    }
+
     if (isPaying) return;
     setIsPaying(true);
 
     try {
-      if (!user) {
-        localStorage.setItem("pendingBatch", JSON.stringify(selectedBatch));
-        if (appliedCoupon) {
-          localStorage.setItem("pendingCoupon", appliedCoupon.code);
-        }
-        router.push("/SignUp");
-        return;
-      }
-
       if (!selectedBatch) {
         toast.error("No batch selected");
         return;
@@ -442,6 +447,7 @@ export default function BatchesView() {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedBatch(null);
+    setShowAuthPanel(false);
     resetCouponState();
   };
 
@@ -462,9 +468,7 @@ export default function BatchesView() {
 
   const handleApplyCoupon = async () => {
     if (!user) {
-      if (selectedBatch) localStorage.setItem("pendingBatch", JSON.stringify(selectedBatch));
-      localStorage.setItem("pendingCoupon", couponCode.toUpperCase());
-      router.push("/SignUp");
+      setShowAuthPanel(true);
       return;
     }
 
@@ -829,8 +833,12 @@ export default function BatchesView() {
                 </div>
               )}
 
-              {selectedBatch.isFullCourse &&
-              (selectedModules.includes("full_course") || selectedModules.filter((id) => id !== "full_course").length === 4) ? (
+              {!user && showAuthPanel ? (
+                <QuickJoinPanel onAuthenticated={handleAuthenticated} />
+              ) : (
+                <>
+                  {selectedBatch.isFullCourse &&
+                  (selectedModules.includes("full_course") || selectedModules.filter((id) => id !== "full_course").length === 4) ? (
                 <div className={styles.modalCoupon}>
                   <h4>
                     <FaTicketAlt /> Apply Coupon
@@ -927,13 +935,16 @@ export default function BatchesView() {
                   <FaArrowRight />
                 </button>
 
-                <div className={styles.modalNote}>
-                  <span>
-                    <FaStar /> Proceeding to checkout will prompt you to create an account. Account creation is mandatory to see your
-                    course progress, access Psych Test and VTX<sup>TM</sup>
-                  </span>
-                </div>
+                {!user && (
+                  <div className={styles.modalNote}>
+                    <span>
+                      <FaStar /> Proceeding to checkout will ask for just your name, email, and phone — no password or OTP needed.
+                    </span>
+                  </div>
+                )}
               </div>
+                </>
+              )}
             </div>
           </div>
         </div>

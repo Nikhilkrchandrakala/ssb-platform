@@ -5,6 +5,7 @@ import { connectDB } from "./db";
 import { User } from "./models/User";
 import { AdminUser } from "./models/AdminUser";
 import { Franchise } from "./models/Franchise";
+import { Order } from "./models/Order";
 
 const JWT_SECRET = process.env.JWT_SECRET || "hdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi78272jbkj2[]pou89ywe";
 // Legacy psych_battery fallback secret — kept only so tokens issued before this
@@ -101,7 +102,12 @@ export async function getCurrentUser() {
       .lean();
     if (user) {
       const role = payload.role || (user as { role?: string }).role || "student";
-      foundUser = { ...user, role: role === "lead" ? "student" : role };
+      // rawRole preserves "lead" before the normalization below overwrites
+      // `role` to "student" (needed so a not-yet-paid lead's session still
+      // passes truthy/student-shaped checks in the checkout flow itself) —
+      // requireSiteUser() uses it to tell a genuine student apart from an
+      // unpaid lead who'd otherwise also pass that same check.
+      foundUser = { ...user, role: role === "lead" ? "student" : role, rawRole: role };
     }
   }
 
@@ -141,5 +147,19 @@ export async function requireSiteUser() {
   const user = await getCurrentUser();
   if (!user) redirect("/SignIn");
   if (user.role !== "student") redirect("/admin");
+
+  // A quick-join lead (src/app/api/quickJoin) is deliberately given a
+  // session before ever paying, so checkout itself works — but that also
+  // let them browse these candidate-only pages with nothing to show yet.
+  // Block that specific case (still genuinely a lead, no paid order) and
+  // send them back to finish the purchase instead; a real student (rawRole
+  // already promoted, or one that came through the full /SignUp flow) is
+  // unaffected.
+  if ((user as { rawRole?: string }).rawRole === "lead") {
+    await connectDB();
+    const hasPaid = await Order.exists({ userId: user._id, status: "paid" });
+    if (!hasPaid) redirect("/Batches");
+  }
+
   return user;
 }
