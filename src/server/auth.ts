@@ -71,13 +71,6 @@ export async function setSessionCookie(token: string) {
   });
 }
 
-export async function clearSessionCookie() {
-  const store = await cookies();
-  // Must match the domain the cookie was set with (setSessionCookie above) —
-  // deleting without it is a no-op against a cookie that has one.
-  store.set(SESSION_COOKIE_NAME, "", { path: "/", domain: COOKIE_DOMAIN, maxAge: 0 });
-}
-
 async function getSessionPayload(): Promise<SessionPayload | null> {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE_NAME)?.value;
