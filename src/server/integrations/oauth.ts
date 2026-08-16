@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/server/db";
 import { User } from "@/server/models/User";
-import { signSessionToken, setSessionCookie } from "@/server/auth";
+import { signSessionToken, setSessionCookie, COOKIE_DOMAIN } from "@/server/auth";
 
 export type OAuthProvider = "google" | "facebook" | "linkedin";
 
@@ -217,6 +217,7 @@ export async function oauthAuthorizeRedirect(provider: OAuthProvider): Promise<N
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
+    domain: COOKIE_DOMAIN,
     maxAge: 10 * 60, // 10 min handshake window
   });
 
@@ -250,7 +251,7 @@ export async function oauthCallback(provider: OAuthProvider, req: NextRequest): 
 
   const store = await cookies();
   const savedState = store.get(OAUTH_STATE_COOKIE)?.value;
-  store.delete(OAUTH_STATE_COOKIE);
+  store.set(OAUTH_STATE_COOKIE, "", { path: "/", domain: COOKIE_DOMAIN, maxAge: 0 });
 
   if (!code || !state || !savedState || state !== savedState) {
     return NextResponse.redirect(`${CLIENT_URL}/SignIn?oauthError=true`);

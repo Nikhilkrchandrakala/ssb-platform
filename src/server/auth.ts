@@ -16,6 +16,25 @@ const JWT_FALLBACK_SECRET =
 const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || "ssb_session";
 const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 days
 
+// Cookies set with no explicit Domain are host-only — a cookie set while on
+// www.ssbwithisv.in is never sent back on a request to bare ssbwithisv.in
+// (or vice versa), even though Nginx serves both identically. That silently
+// broke Google/LinkedIn OAuth (the state cookie set during sign-in wasn't
+// present when Google's redirect landed back on whichever host the
+// hardcoded callback URL points to) and would equally cause a logged-in
+// session to appear logged-out when switching between the two hosts.
+// Leading-dot form shares the cookie across the apex and all subdomains.
+// Left unset for localhost/raw-IP dev so cookies stay host-only there.
+export const COOKIE_DOMAIN: string | undefined = (() => {
+  try {
+    const host = new URL(process.env.CLIENT_URL || "http://localhost:3000").hostname;
+    if (host === "localhost" || /^\d+\.\d+\.\d+\.\d+$/.test(host)) return undefined;
+    return `.${host.replace(/^www\./, "")}`;
+  } catch {
+    return undefined;
+  }
+})();
+
 export type SessionRole = "lead" | "student" | "assessor" | "admin" | "owner" | "franchise";
 
 export interface SessionPayload {
@@ -47,13 +66,16 @@ export async function setSessionCookie(token: string) {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
+    domain: COOKIE_DOMAIN,
     maxAge: SESSION_MAX_AGE_SECONDS,
   });
 }
 
 export async function clearSessionCookie() {
   const store = await cookies();
-  store.delete(SESSION_COOKIE_NAME);
+  // Must match the domain the cookie was set with (setSessionCookie above) —
+  // deleting without it is a no-op against a cookie that has one.
+  store.set(SESSION_COOKIE_NAME, "", { path: "/", domain: COOKIE_DOMAIN, maxAge: 0 });
 }
 
 async function getSessionPayload(): Promise<SessionPayload | null> {
@@ -158,14 +180,18 @@ export async function requireSiteUser() {
   // A quick-join lead (src/app/api/quickJoin) is deliberately given a
   // session before ever paying, so checkout itself works — but that also
   // let them browse these candidate-only pages with nothing to show yet.
-  // Block only that specific case: still a lead AND no password yet (a
-  // quick-join lead has none until verifyPayment issues one on first
-  // purchase). A lead who registered through the full /SignUp flow, or who
-  // set/reset a password some other way, has plenty to see on their profile
-  // even before buying a course — checking for a paid Order here instead
-  // wrongly caught that case too and sent genuine registered users back to
-  // /Batches on every login.
-  if ((user as { rawRole?: string }).rawRole === "lead" && !(user as { hasPassword?: boolean }).hasPassword) {
+  // Block only that specific case: still a lead, no password, AND not an
+  // OAuth account. A quick-join lead has neither. But OAuth signups
+  // (Google/LinkedIn) never get a password by design either — checking
+  // hasPassword alone wrongly caught every legitimate OAuth user who simply
+  // hadn't purchased yet, sending them to /Batches instead of their own
+  // profile on every login. A lead who registered through the full /SignUp
+  // flow (always has a password) or via OAuth (always has oauthProvider)
+  // has plenty to see on their profile even before buying a course.
+  const rawRole = (user as { rawRole?: string }).rawRole;
+  const hasPassword = (user as { hasPassword?: boolean }).hasPassword;
+  const oauthProvider = (user as { oauthProvider?: string | null }).oauthProvider;
+  if (rawRole === "lead" && !hasPassword && !oauthProvider) {
     redirect("/Batches");
   }
 
