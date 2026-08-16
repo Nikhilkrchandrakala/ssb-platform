@@ -7,6 +7,7 @@
 .admin-shell-layout {
     display: flex;
     min-height: 100vh;
+    min-height: 100dvh;
     background-color: var(--bg-dark, #0b0b0b);
     color: var(--text-white, #ffffff);
     position: relative;
@@ -30,6 +31,7 @@
 .admin-shell-content {
     flex: 1;
     min-height: calc(100vh - 72px);
+    min-height: calc(100dvh - 72px);
     position: relative;
     z-index: 1;
 }
@@ -44,7 +46,9 @@
     left: 0;
     bottom: 0;
     height: 100vh;
+    height: 100dvh;
     max-height: 100vh;
+    max-height: 100dvh;
     width: 270px;
     flex-shrink: 0;
     display: flex;
@@ -711,6 +715,7 @@
         top: 0;
         left: -100%;
         height: 100vh;
+        height: 100dvh;
         width: 285px !important;
         z-index: 1050;
         transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);

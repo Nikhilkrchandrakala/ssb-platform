@@ -18,6 +18,7 @@ import {
   Save,
   Plus,
   User,
+  Trash2,
   type LucideIcon,
 } from "lucide-react";
 import { assessorLabel } from "@/lib/assessorLabels";
@@ -375,6 +376,31 @@ export default function StudentRosterView() {
     }
   };
 
+  const handleDelete = (id: string, name: string) => {
+    window.Swal?.fire({
+      title: "Are you sure?",
+      text: `${name}'s candidate record and account will be removed permanently.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ff6b6b",
+      cancelButtonColor: "rgba(255,255,255,0.1)",
+      confirmButtonText: "Yes, delete it!",
+      background: "#1a1a1a",
+      color: "#fff",
+    }).then(async (result) => {
+      if (!result.isConfirmed) return;
+      try {
+        const response = await fetch(`/api/admin/students/${id}`, { method: "DELETE" });
+        const resData = await response.json();
+        if (!response.ok) throw new Error(resData.error || "Delete failed");
+        window.Swal?.fire({ icon: "success", title: "Deleted", background: "#1a1a1a", color: "#fff", timer: 1500, showConfirmButton: false });
+        loadStudents();
+      } catch (error) {
+        window.Swal?.fire({ icon: "error", title: "Error", text: error instanceof Error ? error.message : "Delete failed", background: "#1a1a1a", color: "#fff" });
+      }
+    });
+  };
+
   const openAddModal = () => {
     setAddForm(EMPTY_ADD_FORM);
     setIsAddOpen(true);
@@ -618,7 +644,7 @@ export default function StudentRosterView() {
                 <th style={{ width: 220 }}>Course</th>
                 <th>Assigned Assessments</th>
                 <th>Assigned Officer Allotments</th>
-                <th style={{ width: 130, textAlign: "center" }}>View Details</th>
+                <th style={{ width: 100, textAlign: "center" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -733,9 +759,14 @@ export default function StudentRosterView() {
                         )}
                       </td>
                       <td style={{ textAlign: "center" }}>
-                        <button className="action-btn" title="View Full Profile" onClick={() => openDetailModal(s._id)} disabled={detailLoading}>
-                          <Eye size={14} />
-                        </button>
+                        <div className="d-flex gap-2 justify-content-center">
+                          <button className="action-btn" title="View Full Profile" onClick={() => openDetailModal(s._id)} disabled={detailLoading}>
+                            <Eye size={14} />
+                          </button>
+                          <button className="action-btn delete-btn" title="Delete" onClick={() => handleDelete(s._id, s.name)}>
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

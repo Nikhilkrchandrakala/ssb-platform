@@ -116,3 +116,31 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to update student" }, { status: 500 });
   }
 }
+
+/**
+ * DELETE /api/admin/students/:id
+ * Permanently removes a candidate trainee's account.
+ */
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!hasRole(currentUser, ["admin", "owner"])) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    await connectDB();
+
+    const { id } = await params;
+    const student = await User.findByIdAndDelete(id);
+
+    if (!student) {
+      return NextResponse.json({ error: "Student not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ status: "ok", message: "Student deleted successfully" });
+  } catch (error) {
+    console.error("DELETE /api/admin/students/:id error:", error);
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to delete student" }, { status: 500 });
+  }
+}
