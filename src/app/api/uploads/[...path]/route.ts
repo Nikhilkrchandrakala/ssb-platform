@@ -68,6 +68,14 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pat
         "Content-Type": contentType,
         "Content-Length": String(stats.size),
         "Cache-Control": "public, max-age=86400",
+        // The site is reachable on both www and bare-domain hosts, so a page
+        // served from one can request an /uploads/ URL that resolves to the
+        // other — a cross-origin fetch from the browser's point of view.
+        // pdf.js fetches PDFs directly (not via <img>/<a>), so without this
+        // header Chromium browsers block the response outright with a CORS
+        // error. Confirmed 2026-08-16: PdfViewer failed in Edge because the
+        // page was on www.ssbwithisv.in and the PDF on ssbwithisv.in.
+        "Access-Control-Allow-Origin": "*",
       },
     });
   } catch {
