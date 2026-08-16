@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/server/db";
 import { getCurrentUser, hasRole } from "@/server/auth";
 import { AuthDisplaySettings } from "@/server/models";
+import { getAuthDisplaySettings } from "@/server/authDisplaySettings";
 
 /**
  * GET /api/authDisplaySettings
@@ -10,20 +11,7 @@ import { AuthDisplaySettings } from "@/server/models";
  */
 export async function GET() {
   try {
-    await connectDB();
-
-    let settings = await AuthDisplaySettings.findOne();
-    if (!settings) {
-      settings = new AuthDisplaySettings({
-        mode: "slideshow",
-        slideshowImages: [],
-        adImage: "",
-        adLink: "",
-        transitionValue: 5,
-        transitionUnit: "seconds",
-      });
-      await settings.save();
-    }
+    const settings = await getAuthDisplaySettings();
     return NextResponse.json(settings);
   } catch (err) {
     return NextResponse.json({ message: err instanceof Error ? err.message : "Failed to fetch settings" }, { status: 500 });
