@@ -13,7 +13,7 @@ const JWT_FALLBACK_SECRET =
   process.env.JWT_FALLBACK_SECRET ||
   "hvdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi78272jbkj?[]]pou89ywe";
 
-const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || "ssb_session";
+export const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || "ssb_session";
 const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 days
 
 // Cookies set with no explicit Domain are host-only — a cookie set while on
