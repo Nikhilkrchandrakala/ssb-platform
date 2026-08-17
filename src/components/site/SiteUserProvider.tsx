@@ -11,6 +11,13 @@ export interface SiteUser {
   phone?: string;
   profileImage?: string;
   role?: string;
+  // Set by getCurrentUser() (src/server/auth.ts) — rawRole preserves "lead"
+  // before it's normalized to "student" for checkout, and hasPassword tells
+  // a genuinely signed-up/paid account apart from a bare quickJoin lead
+  // session. Use isSignedUpSiteUser() (src/lib/siteAccess.ts) rather than
+  // reading these two fields directly.
+  rawRole?: string;
+  hasPassword?: boolean;
 }
 
 interface SiteUserContextValue {

@@ -45,6 +45,10 @@ interface DetailOrder {
   _id: string;
   slotId?: { title?: string; startTime?: string };
   userId?: { name?: string; email?: string };
+  // Purchase-time snapshot — falls back to this when userId is a dangling
+  // reference (the candidate's account was later deleted).
+  buyerName?: string | null;
+  buyerEmail?: string | null;
   price?: number;
   status?: string;
   createdAt: string;
@@ -536,8 +540,8 @@ export default function FranchiseView() {
                 ) : (
                   detailData.orders.map((order) => {
                     const slotTitle = order.slotId?.title || "N/A";
-                    const userName = order.userId?.name || "N/A";
-                    const userEmail = order.userId?.email || "N/A";
+                    const userName = order.userId?.name || order.buyerName || "N/A";
+                    const userEmail = order.userId?.email || order.buyerEmail || "N/A";
                     const price = order.price || 0;
                     const status = order.status || "pending";
                     const statusClass = status === "completed" || status === "paid" ? "status-paid" : status === "cancelled" ? "status-cancelled" : "status-pending";

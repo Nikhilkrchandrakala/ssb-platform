@@ -44,6 +44,17 @@ interface StudentDetail extends DirectoryUser {
   assignedGTO?: AssessorRef | null;
   assignedTO?: AssessorRef | null;
   assignedIO?: AssessorRef | null;
+  assessorType?: string | null;
+}
+
+// The trainee-specific sections (course modules, orders, allotted evaluators)
+// only make sense for a candidate — a lead who hasn't paid yet still counts
+// (those fields are just empty/unchecked for them), but an assessor/admin/
+// franchise account isn't a candidate at all, so "Allotted Evaluators"
+// showing four "Unassigned" rows for e.g. a GTO assessor is meaningless
+// clutter, not a real status.
+function isTraineeRole(role?: string) {
+  return role === "student" || role === "lead";
 }
 
 interface OrderSlot {
@@ -241,7 +252,17 @@ export default function AllUsersView() {
 
       window.Swal?.close();
 
-      const activeStages = (student.clinicalStage || "full_course").split(",").map((s) => s.trim()).filter(Boolean);
+      // Only a paying student's blank clinicalStage falls back to "full_course"
+      // (legacy records from before this field existed) — a lead has never
+      // paid for anything, so an unset clinicalStage there means no course
+      // access at all, matching the "No Course Access" the table row already
+      // shows for them. Defaulting this to "full_course" unconditionally used
+      // to pre-check that box for every lead, and saving the form as-is would
+      // write a fabricated "full_course" enrollment straight into their record.
+      const activeStages = (student.clinicalStage || (student.role === "student" ? "full_course" : ""))
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
 
       setStudentDetail(student);
       setStudentOrders(orders);
@@ -288,7 +309,8 @@ export default function AllUsersView() {
   const submitEditProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setSavingProfile(true);
-    const clinicalStage = editForm.modules.length > 0 ? editForm.modules.join(",") : "full_course";
+    const trainee = isTraineeRole(studentDetail?.role);
+    const isPayingStudent = studentDetail?.role === "student";
 
     window.Swal?.fire({
       title: "Saving Credentials...",
@@ -306,9 +328,20 @@ export default function AllUsersView() {
           name: editForm.name.trim(),
           email: editForm.email.trim(),
           phone: editForm.phone.trim(),
-          batch: editForm.batch.trim(),
-          clinicalStage,
-          chestNo: editForm.chestNo.trim(),
+          // Batch/chest no./course modules are candidate-only concepts tied to
+          // an actual paid registration — an assessor/admin/franchise account
+          // has nothing to save here, and a lead has no batch/order yet, so
+          // neither should have these fields touched at all (the inputs are
+          // hidden for a lead precisely so there's nothing here to send).
+          ...(isPayingStudent
+            ? {
+                batch: editForm.batch.trim(),
+                clinicalStage: editForm.modules.length > 0 ? editForm.modules.join(",") : "full_course",
+                chestNo: editForm.chestNo.trim(),
+              }
+            : trainee
+              ? { clinicalStage: "" }
+              : {}),
         }),
       });
       const result = await res.json();
@@ -616,180 +649,277 @@ export default function AllUsersView() {
           <div className="admin-modal" style={{ maxWidth: 1200, width: "95%", margin: "20px auto" }}>
             <div className="admin-modal-header">
               <h3 className="admin-modal-title">
-                <IdCard size={18} className="me-2" style={ICON_STYLE} /> Complete Trainee Profile
+                <IdCard size={18} className="me-2" style={ICON_STYLE} />
+                {isTraineeRole(studentDetail.role) ? "Complete Trainee Profile" : "Staff Account Details"}
               </h3>
               <button type="button" className="btn-close btn-close-white" onClick={closeStudentModal}></button>
             </div>
 
-            <div className="row">
-              <div className="col-md-4 border-end border-secondary pe-4">
-                <h5 className="text-warning mb-3" style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                  Trainee Credentials
-                </h5>
+            {isTraineeRole(studentDetail.role) ? (
+              <div className="row">
+                <div className="col-md-4 border-end border-secondary pe-4">
+                  <h5 className="text-warning mb-3" style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    Trainee Credentials
+                  </h5>
 
-                <form id="editProfileForm" onSubmit={submitEditProfile}>
-                  <div className="d-flex align-items-center gap-3 mb-4">
-                    <Avatar name={editForm.name} src={studentDetail.profileImage} />
-                    <div className="w-100">
-                      <label className="admin-form-label mb-0" style={{ fontSize: "0.7rem" }}>
-                        Name
-                      </label>
-                      <input
-                        type="text"
-                        className="admin-input py-1 px-2 mb-1"
-                        style={{ fontSize: "0.95rem", fontWeight: 700 }}
-                        required
-                        value={editForm.name}
-                        onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
-                      />
-                      <div className="d-flex flex-wrap gap-1 mt-1">
-                        {editForm.modules.map((st) => (
-                          <span className="badge" style={{ background: "rgba(224,194,20,0.15)", color: "var(--primary-gold)" }} key={st}>
-                            {STAGE_TITLES[st] || st}
-                          </span>
-                        ))}
+                  <form id="editProfileForm" onSubmit={submitEditProfile}>
+                    <div className="d-flex align-items-center gap-3 mb-4">
+                      <Avatar name={editForm.name} src={studentDetail.profileImage} />
+                      <div className="w-100">
+                        <label className="admin-form-label mb-0" style={{ fontSize: "0.7rem" }}>
+                          Name
+                        </label>
+                        <input
+                          type="text"
+                          className="admin-input py-1 px-2 mb-1"
+                          style={{ fontSize: "0.95rem", fontWeight: 700 }}
+                          required
+                          value={editForm.name}
+                          onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
+                        />
+                        <div className="d-flex flex-wrap gap-1 mt-1">
+                          {studentDetail.role === "lead" ? (
+                            <span className="badge bg-warning text-dark">Lead — Unpaid</span>
+                          ) : (
+                            editForm.modules.map((st) => (
+                              <span className="badge" style={{ background: "rgba(224,194,20,0.15)", color: "var(--primary-gold)" }} key={st}>
+                                {STAGE_TITLES[st] || st}
+                              </span>
+                            ))
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="mb-3">
-                    <label className="admin-form-label">Email ID</label>
-                    <input
-                      type="email"
-                      className="admin-input"
-                      required
-                      value={editForm.email}
-                      onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
-                    />
-                  </div>
+                    <div className="mb-3">
+                      <label className="admin-form-label">Email ID</label>
+                      <input
+                        type="email"
+                        className="admin-input"
+                        required
+                        value={editForm.email}
+                        onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
+                      />
+                    </div>
 
-                  <div className="mb-3">
-                    <label className="admin-form-label">Phone Contact</label>
-                    <input
-                      type="text"
-                      className="admin-input"
-                      value={editForm.phone}
-                      onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))}
-                    />
-                  </div>
-
-                  <div className="row mb-3">
-                    <div className="col-6">
-                      <label className="admin-form-label">Batch Info</label>
+                    <div className="mb-3">
+                      <label className="admin-form-label">Phone Contact</label>
                       <input
                         type="text"
                         className="admin-input"
-                        placeholder="e.g. B2405"
-                        value={editForm.batch}
-                        onChange={(e) => setEditForm((prev) => ({ ...prev, batch: e.target.value }))}
+                        value={editForm.phone}
+                        onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))}
                       />
                     </div>
-                    <div className="col-6">
-                      <label className="admin-form-label">Chest No.</label>
-                      <input
-                        type="text"
-                        className="admin-input"
-                        placeholder="e.g. 12"
-                        value={editForm.chestNo}
-                        onChange={(e) => setEditForm((prev) => ({ ...prev, chestNo: e.target.value }))}
-                      />
-                    </div>
-                  </div>
 
-                  <div className="mb-3">
-                    <label className="admin-form-label d-block mb-2">Assigned Course Modules</label>
-                    <div
-                      className="d-flex flex-column gap-2"
-                      style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.05)", borderRadius: 8, padding: 12 }}
-                    >
-                      {MODULES.map((mod) => {
-                        const checked = editForm.modules.includes(mod.value);
-                        const disabled = mod.value === "full_course" ? othersSelected : fullSelected;
-                        return (
-                          <div className="form-check" key={mod.value}>
-                            <input
-                              className="form-check-input module-checkbox"
-                              type="checkbox"
-                              checked={checked}
-                              disabled={disabled}
-                              onChange={() => toggleModule(mod.value)}
-                              id={`mod_${mod.value}`}
-                            />
-                            <label className="form-check-label text-white small" htmlFor={`mod_${mod.value}`}>
-                              {mod.label}
-                            </label>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </form>
-              </div>
+                    {studentDetail.role !== "lead" && (
+                      // Batch/chest no. are assigned once someone actually
+                      // registers into a batch slot (a real Order) — a lead
+                      // has no batch to be in yet, so these are meaningless
+                      // (and editable-but-fake) for them.
+                      <div className="row mb-3">
+                        <div className="col-6">
+                          <label className="admin-form-label">Batch Info</label>
+                          <input
+                            type="text"
+                            className="admin-input"
+                            placeholder="e.g. B2405"
+                            value={editForm.batch}
+                            onChange={(e) => setEditForm((prev) => ({ ...prev, batch: e.target.value }))}
+                          />
+                        </div>
+                        <div className="col-6">
+                          <label className="admin-form-label">Chest No.</label>
+                          <input
+                            type="text"
+                            className="admin-input"
+                            placeholder="e.g. 12"
+                            value={editForm.chestNo}
+                            onChange={(e) => setEditForm((prev) => ({ ...prev, chestNo: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                    )}
 
-              <div className="col-md-8 ps-4">
-                <div className="row h-100">
-                  <div className="col-md-7 border-end border-secondary pe-4 d-flex flex-column" style={{ minHeight: 480 }}>
-                    <h5 className="text-warning mb-3" style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                      Registered Courses &amp; Batches
-                    </h5>
-                    <div style={{ maxHeight: 180, overflowY: "auto", paddingRight: 5, marginBottom: 20 }}>
-                      <div className="course-card-list">
-                        {studentOrders.length === 0 ? (
-                          <div className="text-center p-5 opacity-40">
-                            <Receipt size={32} className="mb-2" />
-                            <p className="small mb-0">No paid courses or batch slots found for this candidate</p>
-                          </div>
-                        ) : (
-                          studentOrders.map((o) => {
-                            const price = o.price || 0;
-                            const date = new Date(o.createdAt).toLocaleDateString("en-IN", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            });
-                            const slotTitle = o.slotId?.title || "Purchased Course Registration";
-                            const batchNo = o.slotId?.batchNo ? `Batch #${o.slotId.batchNo}` : "Course Module";
+                    {studentDetail.role === "lead" ? (
+                      // A lead hasn't paid for anything yet, so there's
+                      // nothing to "assign" here — course modules get set
+                      // automatically from the actual purchase once they pay
+                      // (see verifyPayment/manualBookSlot/markInstallmentPaid).
+                      // Showing editable checkboxes here invited exactly the
+                      // earlier bug: an admin could tick/save a module for an
+                      // unpaid lead with no order behind it.
+                      <div className="mb-3">
+                        <label className="admin-form-label d-block mb-2">Assigned Course Modules</label>
+                        <div
+                          className="text-muted small p-3"
+                          style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.05)", borderRadius: 8 }}
+                        >
+                          Not applicable — this candidate hasn&apos;t purchased a course yet. Modules are assigned automatically once they pay.
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mb-3">
+                        <label className="admin-form-label d-block mb-2">Assigned Course Modules</label>
+                        <div
+                          className="d-flex flex-column gap-2"
+                          style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.05)", borderRadius: 8, padding: 12 }}
+                        >
+                          {MODULES.map((mod) => {
+                            const checked = editForm.modules.includes(mod.value);
+                            const disabled = mod.value === "full_course" ? othersSelected : fullSelected;
                             return (
-                              <div className="course-item-card" key={o._id}>
-                                <div className="course-item-left">
-                                  <h6>{slotTitle}</h6>
-                                  <p>
-                                    <code style={{ color: "var(--primary-gold)" }}>#{(o.orderId || o._id).substring(0, 10)}</code> &nbsp;|&nbsp; {batchNo}
-                                  </p>
-                                </div>
-                                <div className="course-item-right">
-                                  <div className="price">₹{price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
-                                  <div className="date">{date}</div>
-                                </div>
+                              <div className="form-check" key={mod.value}>
+                                <input
+                                  className="form-check-input module-checkbox"
+                                  type="checkbox"
+                                  checked={checked}
+                                  disabled={disabled}
+                                  onChange={() => toggleModule(mod.value)}
+                                  id={`mod_${mod.value}`}
+                                />
+                                <label className="form-check-label text-white small" htmlFor={`mod_${mod.value}`}>
+                                  {mod.label}
+                                </label>
                               </div>
                             );
-                          })
-                        )}
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    )}
+                  </form>
+                </div>
 
-                  <div className="col-md-5 ps-4 d-flex flex-column justify-content-between" style={{ minHeight: 480 }}>
-                    <div>
+                <div className="col-md-8 ps-4">
+                  <div className="row h-100">
+                    <div className="col-md-7 border-end border-secondary pe-4 d-flex flex-column" style={{ minHeight: 480 }}>
                       <h5 className="text-warning mb-3" style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                        Allotted Evaluators
+                        Registered Courses &amp; Batches
                       </h5>
-                      <div className="assessor-badge-stack w-100 mb-4">
-                        {renderAssessorBadge(studentDetail.assignedPsych, "Psychology")}
-                        {renderAssessorBadge(studentDetail.assignedGTO, "Group Testing (GTO)")}
-                        {renderAssessorBadge(studentDetail.assignedTO, "Technical (TO)")}
-                        {renderAssessorBadge(studentDetail.assignedIO, "Interviewing (IO)")}
+                      <div style={{ maxHeight: 180, overflowY: "auto", paddingRight: 5, marginBottom: 20 }}>
+                        <div className="course-card-list">
+                          {studentOrders.length === 0 ? (
+                            <div className="text-center p-5 opacity-40">
+                              <Receipt size={32} className="mb-2" />
+                              <p className="small mb-0">No paid courses or batch slots found for this candidate</p>
+                            </div>
+                          ) : (
+                            studentOrders.map((o) => {
+                              const price = o.price || 0;
+                              const date = new Date(o.createdAt).toLocaleDateString("en-IN", {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              });
+                              const slotTitle = o.slotId?.title || "Purchased Course Registration";
+                              const batchNo = o.slotId?.batchNo ? `Batch #${o.slotId.batchNo}` : "Course Module";
+                              return (
+                                <div className="course-item-card" key={o._id}>
+                                  <div className="course-item-left">
+                                    <h6>{slotTitle}</h6>
+                                    <p>
+                                      <code style={{ color: "var(--primary-gold)" }}>#{(o.orderId || o._id).substring(0, 10)}</code> &nbsp;|&nbsp; {batchNo}
+                                    </p>
+                                  </div>
+                                  <div className="course-item-right">
+                                    <div className="price">₹{price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+                                    <div className="date">{date}</div>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div>
-                      <button type="submit" form="editProfileForm" className="thm-btn py-2 w-100" disabled={savingProfile}>
-                        <Save size={16} className="me-2" style={ICON_STYLE} /> {savingProfile ? "Saving..." : "Save Profile"}
-                      </button>
+
+                    <div className="col-md-5 ps-4 d-flex flex-column justify-content-between" style={{ minHeight: 480 }}>
+                      <div>
+                        <h5 className="text-warning mb-3" style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                          Allotted Evaluators
+                        </h5>
+                        <div className="assessor-badge-stack w-100 mb-4">
+                          {renderAssessorBadge(studentDetail.assignedPsych, "Psychology")}
+                          {renderAssessorBadge(studentDetail.assignedGTO, "Group Testing (GTO)")}
+                          {renderAssessorBadge(studentDetail.assignedTO, "Technical (TO)")}
+                          {renderAssessorBadge(studentDetail.assignedIO, "Interviewing (IO)")}
+                        </div>
+                      </div>
+                      <div>
+                        <button type="submit" form="editProfileForm" className="thm-btn py-2 w-100" disabled={savingProfile}>
+                          <Save size={16} className="me-2" style={ICON_STYLE} /> {savingProfile ? "Saving..." : "Save Profile"}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              // Not a candidate — assessor/admin/superadmin/franchise. None of
+              // the trainee-only concepts above (course modules, paid orders,
+              // allotted evaluators) apply to a staff account, so this is a
+              // plain credentials panel instead of the trainee template.
+              <div className="row">
+                <div className="col-md-6 mx-auto">
+                  <h5 className="text-warning mb-3" style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    Account Credentials
+                  </h5>
+
+                  <div className="d-flex flex-wrap gap-2 mb-4">
+                    <span className={`badge ${ROLE_BADGE_CLASS[studentDetail.role || ""] || "bg-secondary"} text-uppercase`}>
+                      {studentDetail.role || "unknown"}
+                    </span>
+                    {studentDetail.assessorType && (
+                      <span className="badge bg-dark border border-secondary text-light">{studentDetail.assessorType}</span>
+                    )}
+                  </div>
+
+                  <form id="editProfileForm" onSubmit={submitEditProfile}>
+                    <div className="d-flex align-items-center gap-3 mb-4">
+                      <Avatar name={editForm.name} src={studentDetail.profileImage} />
+                      <div className="w-100">
+                        <label className="admin-form-label mb-0" style={{ fontSize: "0.7rem" }}>
+                          Name
+                        </label>
+                        <input
+                          type="text"
+                          className="admin-input py-1 px-2"
+                          style={{ fontSize: "0.95rem", fontWeight: 700 }}
+                          required
+                          value={editForm.name}
+                          onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="admin-form-label">Email ID</label>
+                      <input
+                        type="email"
+                        className="admin-input"
+                        required
+                        value={editForm.email}
+                        onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="admin-form-label">Phone Contact</label>
+                      <input
+                        type="text"
+                        className="admin-input"
+                        value={editForm.phone}
+                        onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))}
+                      />
+                    </div>
+                  </form>
+
+                  <button type="submit" form="editProfileForm" className="thm-btn py-2 w-100" disabled={savingProfile}>
+                    <Save size={16} className="me-2" style={ICON_STYLE} /> {savingProfile ? "Saving..." : "Save Profile"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

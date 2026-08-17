@@ -12,6 +12,17 @@ const notificationSchema = new Schema(
     message: { type: String, required: true },
     type: { type: String, enum: ["ALLOTMENT", "SYSTEM", "ASSESSMENT"], default: "SYSTEM" },
     isRead: { type: Boolean, default: false },
+
+    // Set only by the "Notify Assessors" batch-summary send (see
+    // POST /api/admin/allotment-summary/notify) — lets that admin screen
+    // query "who was already notified, and did it deliver" for a batch
+    // instead of only holding the last send result in throwaway React state
+    // (the original bug: reselecting the batch, or just navigating back,
+    // showed nothing because nothing had ever been persisted).
+    batch: { type: String, default: null },
+    count: { type: Number, default: null },
+    emailDelivered: { type: Boolean, default: null },
+    smsDelivered: { type: Boolean, default: null },
   },
   { timestamps: true }
 );

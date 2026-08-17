@@ -67,6 +67,10 @@ interface SalesOrderItem {
   accessRevoked?: boolean;
   createdAt?: string;
   userId?: { name?: string; email?: string } | null;
+  // Snapshot taken at purchase time — falls back to this when userId is a
+  // dangling reference (the candidate's account was later deleted).
+  buyerName?: string | null;
+  buyerEmail?: string | null;
   slotId?: { title?: string; batchNo?: string; startTime?: string; isFullCourse?: boolean } | null;
   salesPersonId?: { name?: string; email?: string } | null;
   installmentPlanId?: InstallmentPlanPopulated | null;
@@ -1197,8 +1201,8 @@ export default function SalesDashboardView() {
                     return (
                       <tr key={order._id}>
                         <td>
-                          <div style={{ fontWeight: 600 }}>{order.userId?.name || "—"}</div>
-                          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{order.userId?.email}</div>
+                          <div style={{ fontWeight: 600 }}>{order.userId?.name || order.buyerName || "—"}</div>
+                          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{order.userId?.email || order.buyerEmail}</div>
                         </td>
                         <td>
                           {order.slotId?.title} {order.slotId?.batchNo ? `(#${order.slotId.batchNo})` : ""}
@@ -1405,8 +1409,8 @@ export default function SalesDashboardView() {
                       {teamPagination.pageItems.map((order) => (
                         <tr key={order._id}>
                           <td>
-                            <div style={{ fontWeight: 600 }}>{order.userId?.name || "—"}</div>
-                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{order.userId?.email}</div>
+                            <div style={{ fontWeight: 600 }}>{order.userId?.name || order.buyerName || "—"}</div>
+                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{order.userId?.email || order.buyerEmail}</div>
                           </td>
                           <td>
                             {order.slotId?.title} {order.slotId?.batchNo ? `(#${order.slotId.batchNo})` : ""}
@@ -1824,8 +1828,8 @@ export default function SalesDashboardView() {
               </div>
 
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontWeight: 600, fontSize: "1.05rem" }}>{detailsOrder.userId?.name || "—"}</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{detailsOrder.userId?.email}</div>
+                <div style={{ fontWeight: 600, fontSize: "1.05rem" }}>{detailsOrder.userId?.name || detailsOrder.buyerName || "—"}</div>
+                <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{detailsOrder.userId?.email || detailsOrder.buyerEmail}</div>
                 <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: 4 }}>
                   {detailsOrder.slotId?.title} {detailsOrder.slotId?.batchNo ? `(#${detailsOrder.slotId.batchNo})` : ""}
                   {detailsOrder.selectedModules?.length ? ` — ${detailsOrder.selectedModules.join(", ")}` : ""}

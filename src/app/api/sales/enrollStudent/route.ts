@@ -144,6 +144,8 @@ export async function POST(req: NextRequest) {
 
     const order = await Order.create({
       userId: student._id,
+      buyerName: studentName,
+      buyerEmail: studentEmail,
       slotId: slot._id,
       price: finalPriceInclGST,
       originalAmount: Math.round(baseAmount * 1.18 * 100) / 100,

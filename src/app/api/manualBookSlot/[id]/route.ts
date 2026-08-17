@@ -128,6 +128,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const order = new Order({
       userId,
+      buyerName: targetUser.name,
+      buyerEmail: targetUser.email,
       slotId: slot._id,
       price: totalWithGst,
       originalAmount,

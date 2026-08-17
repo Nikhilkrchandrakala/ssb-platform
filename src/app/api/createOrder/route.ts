@@ -117,6 +117,8 @@ export async function POST(req: NextRequest) {
     // CREATE ORDER FIRST (IMPORTANT FOR REFERENCE)
     const order = new Order({
       userId,
+      buyerName: user.name,
+      buyerEmail: user.email,
       slotId,
       price: finalAmount,
       originalAmount: originalAmountWithGST,

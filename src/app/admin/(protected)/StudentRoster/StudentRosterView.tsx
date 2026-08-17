@@ -93,6 +93,26 @@ interface SubmissionItem {
   uploadedFiles?: string[];
 }
 
+interface DeletedUserLogItem {
+  _id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role?: string;
+  batch?: string;
+  chestNo?: string;
+  deletedByName?: string;
+  createdAt: string;
+  purged?: {
+    orders: number;
+    submissions: number;
+    installmentPlans: number;
+    notifications: number;
+    salesAuditLogs: number;
+    slotSeatsFreed: number;
+  };
+}
+
 interface AddFormState {
   name: string;
   email: string;
@@ -190,6 +210,24 @@ export default function StudentRosterView() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [addForm, setAddForm] = useState<AddFormState>(EMPTY_ADD_FORM);
   const [addSubmitting, setAddSubmitting] = useState(false);
+
+  // Recent Deletes modal state — DELETE /api/admin/students/[id] now purges
+  // the account plus every record that referenced it, so this log (backed by
+  // DeletedUserLog) is the only place left to see who was removed and when.
+  const [isDeletedLogOpen, setIsDeletedLogOpen] = useState(false);
+  const [deletedLogLoading, setDeletedLogLoading] = useState(false);
+  const [deletedLog, setDeletedLog] = useState<DeletedUserLogItem[]>([]);
+
+  const openDeletedLog = () => {
+    setIsDeletedLogOpen(true);
+    setDeletedLogLoading(true);
+    fetch("/api/admin/deleted-users")
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error("Failed to fetch deletion log"))))
+      .then((data) => setDeletedLog(data.logs || []))
+      .catch(() => setDeletedLog([]))
+      .finally(() => setDeletedLogLoading(false));
+  };
+  const closeDeletedLog = () => setIsDeletedLogOpen(false);
 
   const loadStudents = () => {
     setLoading(true);
@@ -569,9 +607,14 @@ export default function StudentRosterView() {
           </h1>
           <p className="text-muted mb-0">View and manage trainees assigned to batches, their transactions, and documents</p>
         </div>
-        <button className="thm-btn" onClick={openAddModal}>
-          <UserPlus size={16} style={ICON_STYLE} /> Add Candidate
-        </button>
+        <div className="d-flex gap-2">
+          <button className="thm-btn cancel-btn" onClick={openDeletedLog}>
+            <Trash2 size={16} style={ICON_STYLE} /> Recent Deletes
+          </button>
+          <button className="thm-btn" onClick={openAddModal}>
+            <UserPlus size={16} style={ICON_STYLE} /> Add Candidate
+          </button>
+        </div>
       </div>
 
       <div className="admin-card">
@@ -1150,6 +1193,90 @@ export default function StudentRosterView() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {isDeletedLogOpen && (
+        <div
+          className="admin-modal-overlay"
+          style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.8)", zIndex: 1050, overflowY: "auto", padding: "40px 10px" }}
+        >
+          <div className="admin-modal" style={{ maxWidth: 900, width: "95%", background: "var(--surface-dark)", border: "var(--border-gold)", borderRadius: "var(--radius-md)", padding: 25, color: "var(--text-white)", margin: "auto" }}>
+            <div className="admin-modal-header d-flex justify-content-between align-items-center mb-4" style={{ borderBottom: "1px solid rgba(224,194,20,0.1)", paddingBottom: 15 }}>
+              <h3 className="admin-modal-title" style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--primary-gold)", margin: 0 }}>
+                <Trash2 size={18} className="me-2" style={ICON_STYLE} /> Recent Deletes
+              </h3>
+              <button type="button" className="btn-close btn-close-white" onClick={closeDeletedLog}></button>
+            </div>
+
+            <p className="text-muted small mb-3">
+              Deleting a candidate permanently removes their account and every order, submission, installment plan,
+              and notification tied to it. This log is the only remaining record of who was deleted, when, and how
+              much it touched.
+            </p>
+
+            {deletedLogLoading ? (
+              <div className="text-center py-5">
+                <div className="spinner-border text-warning" role="status"></div>
+              </div>
+            ) : deletedLog.length === 0 ? (
+              <div className="text-center py-5 opacity-50">
+                <Database size={32} className="mb-3" />
+                <p className="mb-0">No candidates have been deleted yet.</p>
+              </div>
+            ) : (
+              <div className="admin-table-container" style={{ maxHeight: 500, overflowY: "auto" }}>
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Candidate</th>
+                      <th>Role</th>
+                      <th>Deleted By</th>
+                      <th>Deleted At</th>
+                      <th>Records Purged</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {deletedLog.map((log) => {
+                      const p = log.purged;
+                      const purgedParts = p
+                        ? [
+                            p.orders ? `${p.orders} order(s)` : null,
+                            p.submissions ? `${p.submissions} submission(s)` : null,
+                            p.installmentPlans ? `${p.installmentPlans} plan(s)` : null,
+                            p.notifications ? `${p.notifications} notification(s)` : null,
+                            p.salesAuditLogs ? `${p.salesAuditLogs} audit log(s)` : null,
+                            p.slotSeatsFreed ? `${p.slotSeatsFreed} seat(s) freed` : null,
+                          ].filter(Boolean)
+                        : [];
+                      return (
+                        <tr key={log._id}>
+                          <td>
+                            <div style={{ fontWeight: 600 }}>{log.name}</div>
+                            <div className="small opacity-50">{log.email}</div>
+                          </td>
+                          <td>
+                            <span className="badge bg-secondary text-uppercase" style={{ fontSize: "0.7rem" }}>
+                              {log.role || "unknown"}
+                            </span>
+                          </td>
+                          <td>{log.deletedByName || "—"}</td>
+                          <td>
+                            <span style={{ fontSize: "0.85rem", opacity: 0.7 }}>
+                              {new Date(log.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                            </span>
+                          </td>
+                          <td>
+                            <span className="small opacity-70">{purgedParts.length > 0 ? purgedParts.join(", ") : "—"}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       )}

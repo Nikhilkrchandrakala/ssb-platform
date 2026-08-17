@@ -20,6 +20,10 @@ const ICON_STYLE = { verticalAlign: -2 };
 interface DashboardOrder {
   _id: string;
   userId?: { name?: string; email?: string };
+  // Purchase-time snapshot — falls back to this when userId is a dangling
+  // reference (the candidate's account was later deleted).
+  buyerName?: string | null;
+  buyerEmail?: string | null;
   slotId?: { title?: string };
   originalAmount?: number;
   discount?: number;
@@ -182,8 +186,8 @@ export default function FranchiseDashboardView() {
                   ) : (
                     data.orders.map((order) => {
                       const date = new Date(order.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-                      const userName = order.userId?.name || "Unknown";
-                      const userEmail = order.userId?.email || "-";
+                      const userName = order.userId?.name || order.buyerName || "Unknown";
+                      const userEmail = order.userId?.email || order.buyerEmail || "-";
                       const slotTitle = order.slotId?.title || "Course Batch";
                       const original = order.originalAmount || 0;
                       const discount = order.discount || 0;

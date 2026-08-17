@@ -18,10 +18,11 @@ interface AssessorRow {
 
 interface NotifyResult {
   assessorId: string;
-  name: string;
-  count: number;
+  name?: string;
+  count?: number;
   emailDelivered: boolean;
   smsDelivered: boolean;
+  sentAt?: string;
 }
 
 export default function AllotmentSummaryView() {
@@ -64,6 +65,16 @@ export default function AllotmentSummaryView() {
         setSelectedIds(new Set());
       })
       .finally(() => setLoading(false));
+
+    // Hydrate from previously-persisted sends so "who did I already notify"
+    // survives reselecting the batch or coming back later — not just the
+    // current browser session's in-memory state from the last send.
+    fetch(`/api/admin/allotment-summary/notify?batch=${encodeURIComponent(batch)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.results?.length) setLastResults(data.results);
+      })
+      .catch(() => {});
   };
 
   const toggleAssessor = (id: string) => {
@@ -246,6 +257,11 @@ export default function AllotmentSummaryView() {
                                   <XCircle size={13} color="#ff6b6b" style={ICON_STYLE} />
                                 )}
                               </span>
+                              {result.sentAt && (
+                                <span className="small opacity-50">
+                                  {new Date(result.sentAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                                </span>
+                              )}
                             </div>
                           ) : (
                             <span className="opacity-50">—</span>

@@ -10,11 +10,14 @@ import { useSiteUser } from "@/components/site/SiteUserProvider";
 import { postJSON } from "@/lib/authApi";
 import { BiX, BiEdit, BiFullscreen } from "react-icons/bi";
 import { resolveLegacyAssetUrl } from "@/lib/legacyAssets";
+import { isSignedUpSiteUser } from "@/lib/siteAccess";
 
 interface MagazineItem {
   _id: string;
   pdfTitle: string;
-  pdfFilePath: string;
+  // Omitted by /api/allMagazinePdfs for visitors who aren't a genuine
+  // signed-up account yet — see that route for why.
+  pdfFilePath?: string;
   magazineFrontImage: string;
   uploadDate?: string;
   tags: string;
@@ -38,6 +41,11 @@ const ITEMS_PER_PAGE = 8;
 export default function MagazineView() {
   const router = useRouter();
   const { user } = useSiteUser();
+  // A quick-join lead (src/app/api/quickJoin) already has a session cookie
+  // before ever proving they own their email or paying anything — `!!user`
+  // alone would let that fake-email session unlock the magazine. Require an
+  // actual signed-up/paid account instead (see src/lib/siteAccess.ts).
+  const signedUp = isSignedUpSiteUser(user);
 
   const [allMagazineData, setAllMagazineData] = useState<MagazineItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -137,8 +145,8 @@ export default function MagazineView() {
   // disk path (confirmed via Atlas query) — resolveLegacyAssetUrl() covers both.
   const viewPdf = useCallback(
     (item: MagazineItem) => {
-      if (!user) {
-        router.push("/SignIn");
+      if (!signedUp || !item.pdfFilePath) {
+        router.push(user ? "/SignUp" : "/SignIn");
         return;
       }
 
@@ -148,7 +156,7 @@ export default function MagazineView() {
         postJSON("/api/trackDownload", { magazineId: item._id }).catch(() => {});
       }
     },
-    [user, router]
+    [user, signedUp, router]
   );
 
   const downloadNotes = (title: string, text: string) => {
@@ -220,7 +228,7 @@ export default function MagazineView() {
         </div>
 
         <div className="row align-items-center justify-content-between g-3 mt-5">
-          {!user && (
+          {!signedUp && (
             <div className="col-12 col-md-8">
               <p className="d-flex justify-content-start m-0 downloadYourRes">
                 <span onClick={() => router.push("/SignUp")}> Sign up</span> to download your free magazine.
