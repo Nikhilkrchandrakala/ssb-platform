@@ -1,7 +1,9 @@
 "use client";
 
-import type { FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import Button from "./Button";
+
+const ZOHO_ENDPOINT = "https://crm.zoho.in/crm/WebToContactForm";
 
 const EXPERIENCE_OPTIONS = ["Fresher", "Screened Out", "Conference Out"];
 
@@ -24,13 +26,44 @@ const ENTRY_OPTIONS = [
 
 const labelStyle = { display: "block", font: "400 12.5px/1.3 var(--font-body)", color: "var(--base-cream-500)", marginBottom: 4 };
 
+type Status = "idle" | "submitting" | "success" | "error";
+
 export default function LeadForm() {
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  const [status, setStatus] = useState<Status>("idle");
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     const form = e.currentTarget;
+
     const email = (form.elements.namedItem("Email") as HTMLInputElement | null)?.value ?? "";
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      e.preventDefault();
       alert("Please enter a valid email address.");
+      return;
+    }
+
+    setStatus("submitting");
+
+    // A plain <form action="..."> POST fully navigates the visitor away to
+    // crm.zoho.in with zero on-page feedback — and third-party POSTs to a
+    // known CRM/tracker domain like that are exactly what ad blockers and
+    // privacy extensions silently drop, with no error visible to the user.
+    // Submitting via fetch instead — same endpoint, same fields — keeps the
+    // visitor on the page and lets a failure actually surface as an error
+    // instead of looking like a dead button.
+    try {
+      const body = new URLSearchParams(new FormData(form) as unknown as Record<string, string>);
+      const res = await fetch(ZOHO_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+        body: body.toString(),
+        cache: "no-cache",
+      });
+      if (!res.ok) throw new Error(`Zoho responded ${res.status}`);
+      setStatus("success");
+      form.reset();
+    } catch (err) {
+      console.error("[ssb-coaching LeadForm] Zoho submission failed:", err);
+      setStatus("error");
     }
   }
 
@@ -120,11 +153,23 @@ export default function LeadForm() {
         </div>
         <input type="hidden" name="Lead Source" defaultValue="Google Ads" />
 
-        <Button variant="solid" type="submit" style={{ width: "100%", marginTop: 4 }}>
+        <Button variant="solid" type="submit" disabled={status === "submitting"} style={{ width: "100%", marginTop: 4 }}>
           <span style={{ fontFamily: "'Monoform', ui-monospace, 'SF Mono', Menlo, Consolas, monospace", letterSpacing: "0.05em" }}>
-            SIGN UP FOR UPCOMING BATCH →
+            {status === "submitting" ? "SUBMITTING…" : "SIGN UP FOR UPCOMING BATCH →"}
           </span>
         </Button>
+
+        {status === "success" && (
+          <span style={{ font: "500 13px/1.5 var(--font-body)", color: "var(--base-gold-source)", textAlign: "center" }}>
+            Thanks! We&apos;ve received your details and will call you within 24 hours.
+          </span>
+        )}
+        {status === "error" && (
+          <span style={{ font: "500 13px/1.5 var(--font-body)", color: "rgb(224,120,110)", textAlign: "center" }}>
+            Something went wrong sending your details. Please try again, or message us on WhatsApp below.
+          </span>
+        )}
+
         <span style={{ font: "400 12px/1.5 var(--font-body)", color: "var(--base-cream-600)", textAlign: "center" }}>
           No spam. We&apos;ll call you within 24 hours.
         </span>

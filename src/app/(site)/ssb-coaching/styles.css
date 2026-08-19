@@ -122,6 +122,14 @@
 }
 .ssb-lp select[multiple] { font: 400 16px/1.5 var(--font-body) !important; padding: 8px !important; height: 120px !important; }
 .ssb-lp input:focus, .ssb-lp select:focus { border-color: var(--base-gold-source) !important; }
+/* color-scheme:dark alone doesn't reliably dark-theme a native <select>'s
+   popup/options in Chromium — it falls back to a washed-out white list
+   unless option background/color are set explicitly too. */
+.ssb-lp select option {
+  background: var(--base-ink-900) !important;
+  color: var(--color-text-primary) !important;
+}
+.ssb-lp select option:checked { background: var(--base-cream-900) !important; }
 
 .ssb-lp .chip {
   display: inline-flex;
