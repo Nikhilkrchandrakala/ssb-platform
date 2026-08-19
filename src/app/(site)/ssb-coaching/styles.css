@@ -1,0 +1,172 @@
+/* SSB with ISV — Ads Landing Page design system, ported verbatim from the
+   client-supplied Claude Design canvas ("SSB Ads Landing Page.dc.html")
+   and its design-system tokens (colors.css / typography.css / spacing.css). */
+
+@import url("https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;500;600&display=swap");
+
+@font-face { font-family: "Monoform"; src: url("/fonts/ssb-coaching/MonoForm_Light.otf") format("opentype"); font-weight: 300; font-style: normal; }
+@font-face { font-family: "Monoform"; src: url("/fonts/ssb-coaching/MonoForm_Regular.otf") format("opentype"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Monoform"; src: url("/fonts/ssb-coaching/MonoForm_Bold.otf") format("opentype"); font-weight: 700; font-style: normal; }
+@font-face { font-family: "Monoform"; src: url("/fonts/ssb-coaching/MonoForm_LightItalic.otf") format("opentype"); font-weight: 300; font-style: italic; }
+@font-face { font-family: "Monoform"; src: url("/fonts/ssb-coaching/MonoForm_Italics.otf") format("opentype"); font-weight: 400; font-style: italic; }
+@font-face { font-family: "Monoform"; src: url("/fonts/ssb-coaching/MonoForm_BoldItalics.otf") format("opentype"); font-weight: 700; font-style: italic; }
+
+@font-face { font-family: "Kelson"; src: url("/fonts/ssb-coaching/Armasen_-_Kelson-Thin.otf") format("opentype"); font-weight: 100; font-style: normal; }
+@font-face { font-family: "Kelson"; src: url("/fonts/ssb-coaching/Armasen_-_Kelson-Light.otf") format("opentype"); font-weight: 300; font-style: normal; }
+@font-face { font-family: "Kelson"; src: url("/fonts/ssb-coaching/Armasen_-_Kelson.otf") format("opentype"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Kelson"; src: url("/fonts/ssb-coaching/Armasen_-_Kelson-Medium.otf") format("opentype"); font-weight: 500; font-style: normal; }
+@font-face { font-family: "Kelson"; src: url("/fonts/ssb-coaching/Armasen_-_Kelson-Bold.otf") format("opentype"); font-weight: 700; font-style: normal; }
+@font-face { font-family: "Kelson"; src: url("/fonts/ssb-coaching/Armasen_-_Kelson-ExtraBold.otf") format("opentype"); font-weight: 800; font-style: normal; }
+
+.ssb-lp {
+  /* ---- Base neutrals ---- */
+  --base-ink-950: rgb(17, 16, 21);
+  --base-ink-900: rgb(31, 31, 33);
+  --base-ink-800: rgb(57, 57, 59);
+  --base-ink-700: rgb(75, 75, 77);
+  --base-ink-600: rgb(94, 94, 96);
+  --base-ink-500: rgb(114, 114, 116);
+  --base-ink-400: rgb(155, 155, 157);
+
+  /* ---- Base cream / khaki ---- */
+  --base-cream-50: rgb(245, 244, 233);
+  --base-cream-100: rgb(223, 221, 209);
+  --base-cream-300: rgb(179, 177, 164);
+  --base-cream-500: rgb(136, 135, 121);
+  --base-cream-600: rgb(116, 114, 102);
+  --base-cream-700: rgb(96, 95, 83);
+  --base-cream-900: rgb(59, 57, 48);
+  --base-cream-source: rgb(198, 197, 175);
+
+  /* ---- Base gold ---- */
+  --base-gold-50: rgb(255, 243, 124);
+  --base-gold-100: rgb(249, 220, 88);
+  --base-gold-300: rgb(202, 176, 0);
+  --base-gold-400: rgb(178, 155, 0);
+  --base-gold-500: rgb(155, 134, 0);
+  --base-gold-700: rgb(110, 95, 0);
+  --base-gold-source: rgb(227, 198, 7);
+  --base-gold-warm: rgb(210, 161, 0);
+  --base-gold-warm-2: rgb(224, 194, 20);
+  --base-gold-deep: rgb(158, 131, 52);
+  --base-gold-deep-2: rgb(113, 92, 32);
+
+  --base-teal-source: rgb(89, 192, 215);
+
+  /* ---- Semantic ---- */
+  --color-bg-page: var(--base-ink-950);
+  --color-bg-surface: var(--base-ink-900);
+  --color-bg-surface-elevated: rgb(11, 11, 11);
+  --color-border-surface: var(--base-ink-700);
+
+  --color-text-primary: var(--base-cream-source);
+  --color-text-muted: var(--base-cream-600);
+  --color-text-faint: var(--base-cream-500);
+  --color-text-on-gold: var(--base-ink-950);
+  --color-text-inverse: rgb(255, 255, 255);
+
+  --color-accent-gold: var(--base-gold-source);
+  --color-accent-gold-gradient: linear-gradient(210.677deg, var(--base-gold-warm) -0.65%, var(--base-gold-warm-2) 49.68%, var(--base-gold-warm) 100%);
+  --color-accent-glow: rgba(158, 131, 52, 0.5);
+
+  --color-glass-bg: rgba(59, 57, 48, 0.5);
+  --color-glass-bg-strong: rgba(31, 31, 33, 0.4);
+  --color-glass-border: rgba(198, 197, 175, 0.5);
+  --color-glass-blur: 20px;
+
+  --color-solid-cta-bg: var(--base-cream-900);
+  --color-solid-cta-text: var(--base-cream-50);
+  --color-solid-cta-border: rgb(242, 240, 225);
+
+  --color-overlay-scrim-30: rgba(0, 0, 0, 0.3);
+  --color-overlay-scrim-40: rgba(0, 0, 0, 0.4);
+  --color-overlay-scrim-50: rgba(0, 0, 0, 0.5);
+
+  /* ---- Typography ---- */
+  --font-display: "Kelson", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Kelson", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-cta: "Monoform", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-label: "Martian Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --text-cta: 500 18px/28px var(--font-cta);
+  --cta-letter-spacing: 0.05em;
+
+  /* ---- Spacing / effects ---- */
+  --shadow-glass: 0px 0px 12px 0px rgba(0, 0, 0, 0.5);
+  --shadow-card: inset 0 0 0 1.5px var(--base-ink-700), 0px 0px 20px 0px rgba(0, 0, 0, 0.4);
+  --shadow-chip: inset 0 0 0 1px rgba(198, 197, 175, 0.5);
+  --shadow-ring: inset 0 0 0 1.5px rgb(217, 217, 217);
+  --border-solid-cta: inset 0 0 0 1.25px rgb(242, 240, 225);
+
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+  font: 400 18px/1.5 var(--font-body);
+}
+
+.ssb-lp * { box-sizing: border-box; }
+.ssb-lp a { color: var(--base-gold-source); text-decoration: none; }
+.ssb-lp a:hover { color: var(--base-gold-100); }
+.ssb-lp img { max-width: 100%; display: block; }
+
+.ssb-lp input,
+.ssb-lp select {
+  color-scheme: dark !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 13px 16px !important;
+  background: rgba(59, 57, 48, 0.35) !important;
+  border: 1px solid rgb(75, 75, 77) !important;
+  color: var(--color-text-primary) !important;
+  font: 400 16px/1.4 var(--font-body) !important;
+  outline: none !important;
+  border-radius: 0 !important;
+}
+.ssb-lp select[multiple] { font: 400 16px/1.5 var(--font-body) !important; padding: 8px !important; height: 120px !important; }
+.ssb-lp input:focus, .ssb-lp select:focus { border-color: var(--base-gold-source) !important; }
+
+.ssb-lp .chip {
+  display: inline-flex;
+  flex-direction: row;
+  gap: 10px;
+  padding: 8px 24px;
+  justify-content: center;
+  align-items: center;
+  white-space: nowrap;
+  background-color: rgba(59, 57, 48, 0.5);
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-chip);
+  font: 400 16px/1 var(--font-body);
+  letter-spacing: 0.05em;
+  color: var(--color-text-primary);
+}
+.ssb-lp .chip.active {
+  background-color: rgba(59, 57, 48, 0.75);
+  box-shadow: inset 0 0 0 1px rgb(223, 221, 209), 0px 0px 8px 0px rgba(0, 0, 0, 0.3);
+  color: rgb(223, 221, 209);
+}
+
+.ssb-lp .btn {
+  display: inline-flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border: none;
+  cursor: pointer;
+  font: var(--text-cta);
+  letter-spacing: var(--cta-letter-spacing);
+  transition: filter 0.15s ease, transform 0.1s ease;
+  padding: 12px 20px;
+  background-color: var(--color-solid-cta-bg);
+  box-shadow: var(--border-solid-cta);
+  color: var(--color-solid-cta-text);
+}
+.ssb-lp .btn:hover { filter: brightness(1.15); }
+.ssb-lp .btn:disabled { cursor: not-allowed; filter: brightness(0.85); }
+
+.ssb-lp .section { padding: 0 clamp(20px, 4vw, 64px) 72px; max-width: 1280px; margin: 0 auto; }
+.ssb-lp .section-label { font: 500 20px/1 var(--font-cta); letter-spacing: 0.05em; color: var(--base-gold-source); }
+.ssb-lp .section-heading { margin: 16px 0 20px; font: 500 clamp(24px, 2.8vw, 36px)/1.25 var(--font-display); text-wrap: pretty; }
+.ssb-lp .section-lead { margin: 0 0 24px; font: 400 17px/1.6 var(--font-body); color: var(--base-cream-300); max-width: 78ch; text-wrap: pretty; }
+
+.ssb-lp .card { background: rgb(11, 11, 11); box-shadow: inset 0 0 0 1.5px rgb(75, 75, 77); }
