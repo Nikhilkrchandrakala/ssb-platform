@@ -125,7 +125,6 @@ export default function LeadForm() {
             Hold Ctrl/Cmd to select more than one.
           </span>
         </div>
-        <input type="hidden" name="Lead Source" defaultValue="Google Ads" />
 
         <Button variant="solid" type="submit" style={{ width: "100%", marginTop: 4 }}>
           <span style={{ fontFamily: "'Monoform', ui-monospace, 'SF Mono', Menlo, Consolas, monospace", letterSpacing: "0.05em" }}>
