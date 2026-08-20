@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import "./styles.css";
 import Chip from "./Chip";
 import Button from "./Button";
 import LeadForm from "./LeadForm";
 
-const PAGE_TITLE = "SSB with ISV - India's #1 Online SSB Coaching | Book Your Free Discovery Call";
+// No literal "#" in this title — Zoho SalesIQ's own widget-init API 400s on
+// any page_title containing one ({"code":1015,"message":"Either the
+// inputstream is invalid or absent"}, confirmed 2026-08-20), which silently
+// breaks the chat button since the widget never finishes initializing.
+const PAGE_TITLE = "SSB with ISV - India's No. 1 Online SSB Coaching | Book Your Free Discovery Call";
 const PAGE_DESCRIPTION =
   "Authentic online SSB mentorship by a DIPR-certified GTO. Assessor-led, personality-first coaching for Army, Navy & Air Force aspirants - fully online. ~35% success rate.";
 
@@ -151,12 +156,14 @@ export default function SsbCoachingLandingPage() {
 
       {/* Brand row */}
       <div style={{ display: "flex", alignItems: "center", gap: 20, padding: "12px clamp(20px,4vw,64px) 0", flexWrap: "wrap" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`${IMG}/ssb-logo.png`} alt="CS Joint Services Academy crest" style={{ width: 72, height: 72, objectFit: "contain" }} />
-        <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1 }}>
-          <span style={{ font: "500 26px/1.2 var(--font-display)", letterSpacing: "0.02em" }}>SSB with ISV</span>
-          <span style={{ font: "400 16px/1.2 var(--font-body)", color: "var(--base-cream-500)" }}>Integrated SSB Virtuosos</span>
-        </div>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 20, color: "inherit" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={`${IMG}/ssb-logo.png`} alt="CS Joint Services Academy crest" style={{ width: 72, height: 72, objectFit: "contain" }} />
+          <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1 }}>
+            <span style={{ font: "500 26px/1.2 var(--font-display)", letterSpacing: "0.02em" }}>SSB with ISV</span>
+            <span style={{ font: "400 16px/1.2 var(--font-body)", color: "var(--base-cream-500)" }}>Integrated SSB Virtuosos</span>
+          </div>
+        </Link>
         <span style={{ font: "italic 700 18px/1.4 var(--font-body)", color: "var(--base-cream-500)", marginLeft: "auto", textAlign: "right" }}>
           Online SSB mentoring on India&apos;s 1st Virtual GTO ground
         </span>
