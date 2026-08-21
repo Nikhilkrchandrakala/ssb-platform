@@ -99,8 +99,10 @@ export default function Footer({ contactSettings }: { contactSettings: ContactSe
           <ul>
             <li onClick={() => router.push("/")}>Home</li>
             <li onClick={() => router.push("/aboutSSB")}>What is SSB?</li>
+            <li onClick={() => router.push("/OfficerLikeQualities")}>Officer Like Qualities</li>
             <li onClick={() => router.push("/ContactUS")}>Enquire with us</li>
             <li onClick={() => router.push("/PrivacyPolicy")}>Privacy policy</li>
+            <li onClick={() => router.push("/RefundCancellation")}>Refund & Cancellation Policy</li>
           </ul>
         </div>
 

@@ -20,6 +20,7 @@ const staticRoutes = [
   { path: "/PrivacyPolicy", changeFrequency: "yearly" as const, priority: 0.3 },
   { path: "/TermsConditions", changeFrequency: "yearly" as const, priority: 0.3 },
   { path: "/RefundCancellation", changeFrequency: "yearly" as const, priority: 0.3 },
+  { path: "/OfficerLikeQualities", changeFrequency: "monthly" as const, priority: 0.7 },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

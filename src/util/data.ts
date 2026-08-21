@@ -3,56 +3,120 @@ export const mentorsData = [
     {
         id: 1,
         image: "/assets/team-8.webp",
+        modalImage: "/assets/img/mentors/pankaj.jpeg",
         role: "Interviewing Officer",
         name: "Commodore Pankaj Singh (Retd.)",
         instagram: "",
         linkedin: "https://www.linkedin.com/in/commodore-pankaj-singh-r-12062963/",
-
+        biodata: "#",
         description: [
             "Ex Board President, 12 SSB Bangalore",
             "Held command of various Indian Naval Ships and Bases",
             "Participated in  Operations  Vijay , Cactus, Pawan and Parakaram",
-
             "20000+ candidates assessed",
-            // Ex Board President, 12 SSB Bangalore
-            // Held command of various Indian Naval Ships and Bases
-            // Participated in Operations Vijay, Cactus, Pawan and Parakaram
-
-
         ],
+        fullBiodata: {
+            type: "structured",
+            commissionDate: "01 Jul 1987",
+            retirementDate: "31 Aug 2021",
+            branch: "Executive/Anti Submarine Warfare",
+            ships: "INS Nilgiri, INS Kesari, INS Akshay, INS Ajay, INS Rana, INS Ranjit, INS Prabal and INS Aditya",
+            commandAfloat: "INS Aditya (Western Fleet), INS Prabal (Div Cdr and CO) and INS Akshay (Flotilla)",
+            commandAshore: "INS Kadamba (Karwar) and Naval Officer Incharge (Goa)",
+            otherAppointments: "Div Officer/Indian Naval Academy, Joint Director/IHQMoD(N), Command Plans Officer/HQWNC, Chief Staff Officer/Headquarters Goa Naval Area, Commodore of Yard/Naval Dockyard Mumbai and President, 12 Services Selection Board, Bangalore",
+            education: [
+                "Schooling at Sainik School (Rewa)",
+                "BSc from JNU at NDA",
+                "Anti Submarine Warfare Specialisation in Navy",
+                "MSc Defense Studies / Madras University",
+                "MPhil / NHCC from Naval War College, Mumbai / Mumbai University",
+                "Certificate in Psychological Assessment from DIPR"
+            ]
+        }
     },
     {
         id: 2,
         image: "/assets/founder.webp",
+        modalImage: "/assets/img/mentors/nikhil.jpeg",
         role: "Group Testing Officer",
         name: "Lt. Commander Nikhil Kumar Chandrakala (Retd.)",
         instagram: "https://www.instagram.com/ltcdr_nikhil_the_gto?igsh=MXRxdGdqcHZocjdwZA%3D%3D&utm_source=qr",
         linkedin: "https://www.linkedin.com/in/lcnkc/",
+        biodata: "#",
         description: [
             "Youngest GTO since 1947",
             "Commissioning crew, SSB (Kolkata)",
             "Ex 12 SSB & NSB (Coimbatore)",
             "13000+ candidates assessed",
-
-            //             Youngest GTO since 1947
-            // Commissioning Crew - SSB(Kolkata)
-            // Ex 12 SSB & NSB(Coimbatore)
-            // 13000 + candidates assessed
-
         ],
+        fullBiodata: {
+            type: "structured",
+            commissionDate: "04 Jul 2011",
+            retirementDate: "04 Jul 2021",
+            branch: "Executive",
+            ships: "INS Shardul, INS Ganga, INS Prabal, INS Abhay",
+            commandAfloat: "IN ISV T-15, Squadron Commander - 81st ISV Squadron, Senior Officer - ISVs (West)",
+            commandAshore: "Flag Lieutenant to Flag Officer Commanding Maharashtra & Gujarat Naval Area, Commissioning crew: SSB (Kolkata), Ex Naval Selection Board, Coimbatore & 12 Services Selection Board, Bangalore",
+            education: [
+                "Schooling from St. Aloysius, Yavatmal",
+                "B. Tech, Electrical Engineering - NIT Srinagar",
+                "M.A. Psychology",
+                "Masters in Mobility Engineering - Indian Institute of Science, Bangalore",
+                "Certificate in Group Testing from DIPR"
+            ]
+        }
     },
     {
         id: 3,
         image: "/assets/lalit_kumar.jpg",
+        modalImage: "/assets/img/mentors/lalit.jpeg",
         role: "Psychologist",
         name: "Lt. Commander Lalit Kumar (Retd.)",
         instagram: "",
         linkedin: "",
+        biodata: "#",
         description: [
             "Ex Technical Officer (Psychologist), NSB Vizag & 12 SSB Bangalore",
             "Electrical Officer onboard various frontline warships",
             "20000+ candidates assessed"
         ],
+        fullBiodata: {
+            type: "structured",
+            commissionDate: "25 Jun 2012",
+            retirementDate: "24 Jun 2024",
+            branch: "Electrical (GS)",
+            ships: "INS Tarkash, INS Ranvijay, SPB Squadron (Vzg)",
+            commandAshore: "NSB (Vizag) and 12 SSB Bangalore",
+            education: [
+                "Master in Data Science and Analytics",
+                "Master in Psychology (Industrial and Organisational Psychology)",
+                "Certificate in Psychological Assessment from DIPR",
+                "B.Tech (Electrical and Electronics Engineering)"
+            ]
+        }
+    },
+    {
+        id: 4,
+        image: "/assets/vivek_talwar.jpeg",
+        modalImage: "/assets/img/mentors/vivek.jpeg",
+        role: "Mentor in Residence & Principal Insights Officer",
+        name: "Lt Colonel Vivek Talwar (Retd.)",
+        instagram: "",
+        linkedin: "",
+        biodata: "#",
+        description: [
+            "Ex Coord Officer, Selection Center South (Bangalore)",
+            "21+ years of experience in strategic operations across broad theaters"
+        ],
+        fullBiodata: {
+            type: "narrative",
+            paragraphs: [
+                "Lt Col Vivek Talwar is a distinguished Indian Army Veteran of the elite Armoured Corps, bringing in 23 years of formidable combat and leadership experience across high-altitude, jungle, desert terrain, and counter-terrorism operations. He is an alumnus of St Xavier’s College, Kolkata, with a masters in Human Resources, Human Rights, and Marketing. He is a seasoned writer and has immensely contributed to various military white papers, magazines & journals on varied topics. As an officer he has had a prolific service profile, having attended various prestigious military courses, bilateral military exercises and has the good fortune of raising a new Armoured Regiment of the Indian Army as its first, second-in-command.",
+                "An avid sportsman and an adventure enthusiast, he is presently working on nation-building initiatives and social impact areas for the development of youth coming from disturbed regions where he and his team are focused on value-based education, soft skill training, career mentoring, recommendatory & behavioural counselling, aversion therapy, mindfulness, health & wellness of the underserved. He is also actively involved with the welfare and reintegration of Ex-Servicemen of the Indian Armed Forces.",
+                "At SSB with ISV, Col Talwar mentors aspirants on current-affairs, leadership, self-awareness, communication, decision-making, military orientation and the responsibilities of officership, drawing upon lessons from more than two decades of leading men and serving in demanding operational environments."
+            ],
+            philosophy: "Don’t prepare to look like an officer. Prepare to become worthy of being one."
+        }
     },
 ];
 
@@ -65,7 +129,7 @@ export const coursesData = [
         white: "10 days ",
         gray: "Services Selection Board",
         white2: "Hackathon",
-        sessions: "10",
+        sessions: "14",
         hours: "60",
         description: "10 Days SSB Hackathon",
         image: "/assets/website/course5.webp",
@@ -125,8 +189,8 @@ export const coursesData = [
         white: "Group ",
         gray: "Testing",
         white2: "Course",
-        sessions: "08",
-        hours: "30",
+        sessions: "05",
+        hours: "20",
         description:
             "Complete preparation for 9  group situational tasks",
         // image: "/assets/98c7a7f50b4f84914d4384c7773d36774b2c9ad3.jpg",
@@ -1119,21 +1183,21 @@ export const CoursesfaqData = [
 export const vtxFaqData = [
     {
         id: "vtxFaq1",
-        question: "What is VTX™  in SSB preparation?",
+        question: "What is VTX<sup>TM</sup> in SSB preparation?",
         answer:
-            "VTX™  (Virtual Training Xperience) is a virtual training environment designed to simulate the GTO ground used in the Services Selection Board interview. It helps aspirants understand how group tasks are structured and how behaviour is observed during the SSB assessment process.",
+            "VTX<sup>TM</sup> (Virtual Training Xperience) is a virtual training environment designed to simulate the GTO ground used in the Services Selection Board interview. It helps aspirants understand how group tasks are structured and how behaviour is observed during the SSB assessment process.",
         isOpen: true
     },
     {
         id: "vtxFaq2",
         question: "Can SSB preparation be done online?",
         answer:
-            "Yes. With structured mentoring programs and simulation platforms like VTX™ , candidates can prepare effectively for the SSB interview remotely. Online preparation helps aspirants understand the selection process, psychological tests, and group task dynamics before appearing at the board.",
+            "Yes. With structured mentoring programs and simulation platforms like VTX<sup>TM</sup>, candidates can prepare effectively for the SSB interview remotely. Online preparation helps aspirants understand the selection process, psychological tests, and group task dynamics before appearing at the board.",
         isOpen: false
     },
     {
         id: "vtxFaq3",
-        question: "Does VTX™  help in understanding GTO tasks?",
+        question: "Does VTX<sup>TM</sup> help in understanding GTO tasks?",
         answer:
             " Yes. The platform helps aspirants understand how tasks such as PGT, HGT, FGT, Command Tasks, and group discussions are structured and evaluated.",
         isOpen: false
@@ -1142,14 +1206,14 @@ export const vtxFaqData = [
         id: "vtxFaq4",
         question: "Who should use virtual SSB training?",
         answer:
-            " Candidates preparing for NDA, CDS, AFCAT, and other defence entries online and do not have an access to physical GTO ground can benefit from virtual SSB preparation at SSB with ISV with VTX™ .",
+            " Candidates preparing for NDA, CDS, AFCAT, and other defence entries online and do not have an access to physical GTO ground can benefit from virtual SSB preparation at SSB with ISV with VTX<sup>TM</sup>.",
         isOpen: false
     },
     {
         id: "vtxFaq5",
-        question: "Is VTX™  a shortcut for SSB preparation?",
+        question: "Is VTX<sup>TM</sup> a shortcut for SSB preparation?",
         answer:
-            "No. VTX™  (Virtual Training Xperience) is not a shortcut to clearing the SSB interview. VTX™  is “The GTO ground before the GTO ground”. VTX™ gives a first hand exposure of a full-fledged GTO ground that the candidates will encounter during SSB/ AFSB. The Services Selection Board evaluates a candidate’s personality, leadership potential, decision-making ability, and officer-like qualities, which cannot be developed through shortcuts or memorized responses.",
+            "No. VTX<sup>TM</sup> (Virtual Training Xperience) is not a shortcut to clearing the SSB interview. VTX<sup>TM</sup> is “The GTO ground before the GTO ground”. VTX<sup>TM</sup> gives a first hand exposure of a full-fledged GTO ground that the candidates will encounter during SSB/ AFSB. The Services Selection Board evaluates a candidate’s personality, leadership potential, decision-making ability, and officer-like qualities, which cannot be developed through shortcuts or memorized responses.",
         isOpen: false
     }
 ];
@@ -1399,9 +1463,9 @@ This session helps aspirants understand:`,
 
 
 export const tabs = [
-    { id: "c1", label: "10 days Services Selection Board Hackathon" },
-    { id: "c2", label: "Introduction to SSB & PPDT, Stage 1 Process" },
-    { id: "c3", label: "Psychology Test Preparation Program" },
-    { id: "c4", label: "Interview Theory Course and Mock Interview" },
-    { id: "c5", label: "Group Testing Course" },
+    { id: "c1", label: "10 Days Services Selection<br /><b>Board Hackathon</b>" },
+    { id: "c2", label: "Introduction to SSB & PPDT,<br />Stage 1 Process" },
+    { id: "c3", label: "Psychology Test<br />Preparation Program" },
+    { id: "c4", label: "Interview Theory Course<br />and Mock Interview" },
+    { id: "c5", label: "Group Testing<br />Course" },
 ];

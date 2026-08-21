@@ -1279,47 +1279,50 @@ p {
 
 /* =========== course page course card css ========== */
 .course-nav-tabs {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 12px;
-    overflow-y: hidden;
-    overflow-x: auto;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    /* padding-bottom: 10px; */
-    padding-top: 10px;
-    margin-bottom: 2rem;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    justify-content: space-between !important;
+    align-items: stretch !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+    padding-top: 10px !important;
+    margin-bottom: 2rem !important;
+    width: 100% !important;
+    overflow: hidden !important;
 }
 
-.course-nav-tabs::-webkit-scrollbar {
-    height: 0px;
-    border-radius: 5px;
-}
-
-.course-nav-tabs::-webkit-scrollbar-thumb {
-    background: #715c20;
-    border-radius: 5px;
+.course-nav-tabs .nav-item {
+    flex: 1 1 0% !important;
+    text-align: center !important;
+    display: flex !important;
+    justify-content: center !important;
+    width: auto !important;
 }
 
 .course-nav-tabs .nav-link {
-    background: transparent;
-    border: none;
-    color: #c6c5af;
-    font-size: 16px;
-    font-weight: 500;
-    padding: 0;
-    padding-left: 15px;
-    padding-right: 15px;
-    white-space: nowrap;
-    position: relative;
-    opacity: 0.6;
+    background: transparent !important;
+    border: none !important;
+    color: #c6c5af !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    padding: 0 5px 10px !important;
+    white-space: normal !important;
+    text-align: center !important;
+    position: relative !important;
+    opacity: 0.6 !important;
+    width: 100% !important;
+    word-wrap: break-word !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1.3 !important;
 }
 
 .course-nav-tabs .nav-link.active {
-    color: #c6c5af;
-    font-weight: 600;
-    opacity: 1;
-    border-bottom: 2px solid var(--theme-color);
-    padding-bottom: 10px;
+    color: #c6c5af !important;
+    font-weight: 600 !important;
+    opacity: 1 !important;
+    border-bottom: 2px solid var(--theme-color) !important;
+    padding-bottom: 10px !important;
 }
 
 .course-nav-tabs .nav-link.active::after {

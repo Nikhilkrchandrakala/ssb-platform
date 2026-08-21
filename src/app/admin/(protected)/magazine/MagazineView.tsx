@@ -462,7 +462,7 @@ export default function MagazineView() {
                     type="text"
                     className="admin-input"
                     required
-                    placeholder="e.g. SSB Monthly May 2024"
+                    placeholder="e.g. SSB Fortnightly May 2024"
                     value={magTitle}
                     onChange={(e) => setMagTitle(e.target.value)}
                   />

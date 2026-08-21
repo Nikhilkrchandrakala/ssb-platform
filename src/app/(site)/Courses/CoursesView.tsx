@@ -12,8 +12,8 @@ interface DbCourse {
 }
 
 const headerData = {
-  heading: "Our Courses - SSB Coaching & Interview Preparation Program",
-  text: "Preparing for the Services Selection Board (SSB) interview requires much more than academic knowledge. The SSB selection process is designed to assess a candidate's personality, leadership potential, decision-making ability, emotional intelligence, and officer-like qualities through a structured five-day evaluation system.",
+  heading: "Our online SSB courses",
+  text: "At SSB with ISV, we offer a comprehensive SSB coaching and interview preparation program designed to help aspirants understand the psychology behind the SSB selection process and develop the behavioural traits expected of future officers in the Indian Armed Forces. Our structured mentoring program combines theoretical understanding, practical training, mock assessments, and personalised feedback to help candidates build clarity, confidence, and authenticity during the SSB interview. With expert mentoring by professionals who understand the SSB assessment system, this program focuses on holistic personality development and officer-like qualities training, ensuring candidates are well prepared to face every stage of the SSB interview process.",
   banner: "/assets/website/courses_banner.webp",
 };
 
@@ -56,20 +56,9 @@ export default function CoursesView() {
 
       <section className="container sectionspace80">
         <div className="course-intro">
-          <p>
-            At SSB with ISV, we offer a comprehensive SSB coaching and interview preparation program designed to help
-            aspirants understand the psychology behind the SSB selection process and develop the behavioural traits
-            expected of future officers in the Indian Armed Forces.
-          </p>
-
-          <p>
-            Our structured mentoring program combines theoretical understanding, practical training, mock
-            assessments, and personalised feedback to help candidates build clarity, confidence, and authenticity
-            during the SSB interview.
-          </p>
 
           <div className="mvk-benefits">
-            <h3> The course is designed for aspirants preparing for:</h3>
+            <h3>Our Online SSB Courses are designed for aspirants for:</h3>
 
             <ul>
               <li>NDA SSB Interview</li>
@@ -86,12 +75,6 @@ export default function CoursesView() {
                 Logistics, Engineering, Electrical, Naval Armament, Naval Constructor)
               </li>
             </ul>
-
-            <p style={{ margin: "20px" }}>
-              With expert mentoring by professionals who understand the SSB assessment system, this program focuses
-              on holistic personality development and officer-like qualities training, ensuring candidates are well
-              prepared to face every stage of the SSB interview process.
-            </p>
           </div>
         </div>
 
@@ -127,9 +110,8 @@ export default function CoursesView() {
                 <button
                   className={`nav-link ${activeTab === tab.id ? "active" : ""}`}
                   onClick={() => setActiveTab(tab.id)}
-                >
-                  {tab.label}
-                </button>
+                  dangerouslySetInnerHTML={{ __html: tab.label }}
+                />
               </li>
             ))}
           </ul>
@@ -147,13 +129,13 @@ export default function CoursesView() {
                 </div>
 
                 <h3 className="course-tab-card-hours">
-                  <strong>Total Sessions:</strong> 17 | <strong>Total Learning Hours:</strong> 60
+                  <strong>Total Sessions:</strong> 14 | <strong>Total Learning Hours:</strong> 60
                 </h3>
 
                 <p>
                   This intensive SSB training program is designed to simulate the learning and behavioural
                   development required to successfully navigate the Services Selection Board interview process. Over
-                  fifteen structured sessions, candidates receive training across all major areas evaluated during
+                  fourteen structured sessions, candidates receive training across all major areas evaluated during
                   the SSB selection process, including screening tests, psychological assessments, group testing
                   officer tasks, personal interview preparation, and officer-like qualities development. The program
                   blends theoretical learning with practical exercises, mock tests, and expert feedback, helping
@@ -267,7 +249,7 @@ export default function CoursesView() {
                   <li>Final Group Task</li>
                   <li>Genesis of the Group Testing Technique and what GTO looks at during the Group Testing.</li>
                   <li>Feedback by a DIPR certified Group Testing Officer.</li>
-                  <li>The entire course is covered through a virtual GTO Ground.</li>
+                  <li>The entire course is covered through VTX<sup>TM</sup> (Virtual Training Xperience) - India’s first virtual GTO ground.</li>
                 </ul>
               </div>
             )}
@@ -354,7 +336,7 @@ export default function CoursesView() {
           <h3>Why choose SSB with ISV for SSB coaching?</h3>
           <p>
             SSB with ISV focuses on authentic personality development rather than superficial coaching
-            techniques.Our training philosophy is based on the principle of Manasa – Vacha – Karmana, emphasizing
+            techniques. Our training philosophy is based on the principle of Manasa – Vacha – Karmana, emphasizing
             alignment between thought, communication, and action. Through structured mentoring, behavioural training,
             and realistic simulations, we help candidates develop the mindset and qualities required to succeed in
             the SSB interview and eventually serve as officers in the Indian Armed Forces.

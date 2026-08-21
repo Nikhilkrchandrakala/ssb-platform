@@ -34,10 +34,9 @@ const breadcrumbSchema = {
 };
 
 const headerData = {
-  text: `SSB Coaching & Mentoring for Services Selection Board Preparation  SSB with ISV is a mentoring platform dedicated to helping defence aspirants understand and prepare for the Services Selection Board (SSB) interview through authentic guidance, leadership development, and behavioural insight.
-What makes SSB with ISV different from conventional coaching institutes is that the mentoring is delivered by DIPR certified ex-SSB assessors who have had direct experience with the SSB selection system itself. Candidates receive SSB coaching by an Ex Group Testing Officer (GTO), an Ex Interviewing Officer (IO) and an Ex Psychologist (Psych) along with guidance from former regular armed forces officers (veterans), providing insights that go far beyond theoretical preparation. This unique perspective helps aspirants understand how candidates are evaluated during the SSB interview and how officer-like qualities are observed in real situations. `,
+  text: "CS Joint Services Academy operates under the brand name Integrated SSB Virtuosos. SSB with ISV is an online SSB mentoring platform dedicated to help defence aspirants understand and prepare for the Services Selection Board/ Airforce Selection Board through authentic guidance, leadership development, and behavioural insights. What makes SSB with ISV different from conventional coaching institutes is that the mentoring is delivered by DIPR certified ex-SSB assessors who have had direct experience with the SSB selection system itself. Candidates receive SSB coaching by an Ex Group Testing Officer (GTO), an Ex Interviewing Officer (IO) and Ex Psychologist (Psych) along with guidance from former regular armed forces officers (veterans), providing insights that go far beyond the theoretical preparation. This unique perspective helps aspirants understand how candidates are evaluated during the SSB interview and how officer-like-qualities are observed in real situations.",
   banner: "/assets/website/about_us_banner.webp",
-  heading: "About SSB with ISV ",
+  heading: "Integrated SSB Virtuosos",
 };
 
 export default function AboutPage() {

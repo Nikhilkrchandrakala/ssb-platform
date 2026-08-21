@@ -6,6 +6,7 @@ import Methodology from "./Methodology";
 import DaySchedule from "./DaySchedule";
 import TipsToExcel from "./TipsToExcel";
 import SelectionMap from "./SelectionMap";
+import OfficerEntriesChart from "./OfficerEntriesChart";
 
 export const metadata: Metadata = {
   title: "What is Services Selection Board? | Complete SSB Selection Explained",
@@ -105,6 +106,22 @@ export default function SsbPage() {
             cooperation, determination, and clarity of thought.
           </p>
 
+          {/* ===== IMPORTANCE ===== */}
+          <div className="sct-title mb-4 text-center mt-5">
+            <h2>Why does understanding the SSB process matter?</h2>
+          </div>
+
+          <p className="ssb-philosophy-text">
+            Many candidates approach the SSB interview without fully understanding how the selection process works.
+            This often leads to confusion during group discussions, psychological tests, and interviews.
+          </p>
+
+          <p className="ssb-philosophy-text">
+            Preparation for the SSB interview is not about memorizing answers or following shortcuts. Instead, it
+            involves developing self-awareness, leadership behaviour, communication skills, and the officer-like
+            qualities expected from future leaders of the Indian Armed Forces.
+          </p>
+
           {/* ===== FIVE DAY PROCESS ===== */}
           <div className="sct-title mb-4 text-center mt-5">
             <h2>The Five-Day SSB Interview Process</h2>
@@ -128,27 +145,12 @@ export default function SsbPage() {
             This three-dimensional evaluation system ensures that a candidate’s personality is assessed from
             different perspectives before the final recommendation is made.
           </p>
-
-          {/* ===== IMPORTANCE ===== */}
-          <div className="sct-title mb-4 text-center mt-5">
-            <h2>Why does understanding the SSB process matter?</h2>
-          </div>
-
-          <p className="ssb-philosophy-text">
-            Many candidates approach the SSB interview without fully understanding how the selection process works.
-            This often leads to confusion during group discussions, psychological tests, and interviews.
-          </p>
-
-          <p className="ssb-philosophy-text">
-            Preparation for the SSB interview is not about memorizing answers or following shortcuts. Instead, it
-            involves developing self-awareness, leadership behaviour, communication skills, and the officer-like
-            qualities expected from future leaders of the Indian Armed Forces.
-          </p>
         </div>
       </section>
 
       <Methodology />
       <DaySchedule />
+      <OfficerEntriesChart />
       <TipsToExcel />
       <SelectionMap />
 

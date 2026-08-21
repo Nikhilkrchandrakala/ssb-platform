@@ -1,0 +1,319 @@
+.chartSection {
+  width: 100%;
+  padding: 60px 24px;
+  box-sizing: border-box;
+  position: relative;
+  font-family: var(--font1);
+  color: #c6c5af;
+}
+
+.titleArea {
+  text-align: center;
+  margin-bottom: 40px;
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.titleArea.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.subtitle {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: rgba(198, 197, 175, 0.5);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.mainTitle {
+  font-size: 40px;
+  color: #f2f0e1;
+  margin: 0 auto 14px;
+  width: 100%;
+  line-height: 1.3;
+}
+
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+  font-size: 13px;
+  color: rgba(198, 197, 175, 0.5);
+}
+
+.dotSeparator {
+  color: rgba(198, 197, 175, 0.3);
+}
+
+/* GRID LAYOUT */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* CARDS */
+.card {
+  background: #111015;
+  border: 1.5px solid rgba(210, 161, 0, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.6s ease, transform 0.6s ease, border-color 0.3s ease;
+}
+
+.card:hover {
+  border-color: rgba(210, 161, 0, 0.8);
+}
+
+.card.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(198, 197, 175, 0.1);
+}
+
+.headerDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d2a100;
+  flex-shrink: 0;
+}
+
+.headerText {
+  font-size: 18px;
+  font-weight: 500;
+  color: #f2f0e1;
+}
+
+.cardBody {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* INTERNAL COMPONENTS */
+.entryTypeBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.badgeHeader {
+  display: inline-block;
+  background: rgba(198, 197, 175, 0.08);
+  border: 1px solid rgba(198, 197, 175, 0.2);
+  color: #f2f0e1;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  width: fit-content;
+  border-radius: 4px;
+}
+
+.entryList {
+  margin-top: 5px;
+  margin-left: 8px;
+  padding-left: 14px;
+  border-left: 1px solid rgba(198, 197, 175, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.itemGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.entryButton {
+  display: inline-block;
+  border: 1px solid rgba(198, 197, 175, 0.2);
+  color: #f2f0e1;
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  width: fit-content;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.entryButton:hover {
+  background: rgba(210, 161, 0, 0.1);
+  border-color: #d2a100;
+  color: #f2f0e1;
+}
+
+.branchList {
+  margin-left: 8px;
+  padding-left: 14px;
+  border-left: 1px solid rgba(198, 197, 175, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.branchDesc {
+  color: rgba(198, 197, 175, 0.7);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.goldBox {
+  border: 1px solid rgba(210, 161, 0, 0.4);
+  color: #d2a100;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.8;
+  padding: 8px 12px;
+  background: rgba(210, 161, 0, 0.03);
+  border-radius: 4px;
+}
+
+.goldBadge {
+  display: inline-block;
+  border: 1px solid rgba(210, 161, 0, 0.4);
+  color: #d2a100;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 9px;
+  border-radius: 4px;
+  background: rgba(210, 161, 0, 0.03);
+  width: fit-content;
+}
+
+.flatBadge {
+  background: rgba(198, 197, 175, 0.08);
+  color: #f2f0e1;
+  font-size: 12px;
+  text-transform: uppercase;
+  padding: 5px 9px;
+  border-radius: 4px;
+}
+
+.flexBadges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.multiBranchBox {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.miniCol {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ROADMAP TIMELINE */
+.timelineWrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto 50px;
+  padding: 0 40px;
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.6s ease 0.3s, transform 0.6s ease 0.3s;
+}
+
+.timelineWrapper.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.timelineLine {
+  position: absolute;
+  top: 50%;
+  left: 100px;
+  right: 100px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(210, 161, 0, 0.1), #d2a100 50%, rgba(210, 161, 0, 0.1));
+  z-index: 1;
+  transform: translateY(-50%);
+}
+
+.timelineNode {
+  position: relative;
+  z-index: 2;
+  background: #111015;
+  border: 1.5px solid rgba(210, 161, 0, 0.3);
+  padding: 10px 24px;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+}
+
+.timelineNode:hover {
+  border-color: #d2a100;
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(210, 161, 0, 0.4);
+}
+
+.nodeNum {
+  background: #d2a100;
+  color: #111015;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.nodeLabel {
+  color: #f2f0e1;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .chartSection {
+    padding: 40px 16px;
+  }
+  .mainTitle {
+    font-size: 28px;
+  }
+  .timelineWrapper {
+    display: none;
+  }
+}

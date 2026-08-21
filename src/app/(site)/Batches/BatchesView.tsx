@@ -26,7 +26,7 @@ import { useSiteUser } from "@/components/site/SiteUserProvider";
 import QuickJoinPanel from "@/components/site/QuickJoinPanel";
 import { postJSON, ApiError } from "@/lib/authApi";
 import type { RazorpayOptions } from "@/global";
-import { isBookingClosed, formatTimeRemaining, formatRealStartTime } from "@/lib/batchTiming";
+import { isBookingClosed, formatTimeRemaining, formatRealStartTime, getRealStartTime } from "@/lib/batchTiming";
 import styles from "@/style/BatchPage.module.css";
 
 interface Slot {
@@ -651,9 +651,23 @@ export default function BatchesView() {
 
             const isClosed = isBookingClosed(batch, now);
             const disableBooking = isFull || isClosed;
-
             const timeRemaining = !isClosed ? formatTimeRemaining(batch, now) : null;
             const seatsLeft = (batch.maxStudents || 0) - (batch.bookedStudents?.length || 0);
+
+            const realStart = getRealStartTime(batch);
+            const dateStr = realStart ? realStart.toLocaleString("en-IN", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+              timeZone: "Asia/Kolkata",
+            }) : "N/A";
+
+            const timeStr = realStart ? realStart.toLocaleString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+              timeZone: "Asia/Kolkata",
+            }).toUpperCase() : "";
 
             return (
               <div
@@ -662,14 +676,21 @@ export default function BatchesView() {
                 onClick={() => !isFull && !isClosed && openModal(batch)}
               >
                 <div className={styles.batchHeader}>
-                  <div className={styles.batchTime}>
-                    <FaClock />
-                    <span>{formatDateTime(batch)}</span>
+                  <div className={styles.batchDateTimeContainer}>
+                    <div className={styles.batchDateLine}>{dateStr}</div>
+                    {timeStr && <div className={styles.batchTimeLine}>{timeStr}</div>}
                   </div>
 
-                  <p className={`${styles.batchTitle} ${batchClass}`}>
-                    {batchIcon} {batch.title} {batch.batchNo ? `(#${batch.batchNo})` : ""}
-                  </p>
+                  <div className={styles.batchInfoContainer}>
+                    <div className={`${styles.batchTitleLine} ${batchClass}`}>
+                      <span>{batch.title}</span> {batchIcon}
+                    </div>
+                    {batch.batchNo && (
+                      <div className={styles.batchNoLine}>
+                        Batch # {batch.batchNo}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {!isClosed && !isFull && timeRemaining && <div className={styles.cutoffMessageUrgent}>⏰ {timeRemaining}</div>}

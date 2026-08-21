@@ -48,8 +48,8 @@ export default function GtoTrainPage() {
           <p>
             India&rsquo;s first online GTO ground simulation designed to help defence aspirants understand and
             practice the GTO tasks conducted during the Services Selection Board interview. The Virtual Training
-            Xperience (VTX™) is an innovative online SSB training platform designed to simulate the outdoor Group
-            Testing Officer&rsquo;s (GTO) ground used in the Services Selection Board interview process.
+            Xperience (VTX<sup>TM</sup>) is an innovative online SSB training platform designed to simulate the outdoor Group
+            Testing Officer&rsquo;s (GTO) ground of the Services Selection Board/ Airforce Selection Board.
           </p>
           <div className="sct-title">
             <h2>The pedagogical intent</h2>
@@ -64,7 +64,7 @@ export default function GtoTrainPage() {
               <p>
                 The SSB interview evaluates leadership, teamwork, problem-solving ability, and officer-like qualities
                 through a series of structured group tasks. For many aspirants preparing remotely, access to a real
-                GTO ground is limited. The VTX™ platform bridges this gap by providing a virtual SSB training
+                GTO ground is limited. The VTX<sup>TM</sup> platform bridges this gap by providing a virtual SSB training
                 environment where candidates can understand how GTO tasks are structured, executed, and evaluated.
                 Through guided training sessions, candidates learn the principles behind tasks such as the
                 Progressive Group Task, Half Group Task, Group Planning Exercise, Group Discussions, Command Task,
@@ -83,7 +83,7 @@ export default function GtoTrainPage() {
             {/* CONTENT */}
             <div className="col-lg-12">
               <div className="sct-title mb-3">
-                <h2>Why Virtual Training is Important for SSB Preparation</h2>
+                <h2>Why Virtual Training Xperience (VTX<sup>TM</sup>)</h2>
               </div>
 
               <p className={styles.virtualTrainingText}>
@@ -93,7 +93,7 @@ export default function GtoTrainPage() {
               </p>
 
               <div className="mvk-benefits">
-                <h3> Virtual training helps aspirants:</h3>
+                <h3> Virtual Training Xperience (VTX<sup>TM</sup>) helps aspirants:</h3>
 
                 <ul>
                   <li>Understand the structure of GTO tasks</li>
@@ -123,7 +123,7 @@ export default function GtoTrainPage() {
             {/* LEFT CONTENT */}
             <div className="col-lg-5">
               <div className="sct-title mb-3">
-                <h2>What you learn in the Virtual Training Xperience (VTX™)</h2>
+                <h2>What you learn in the Virtual Training Xperience (VTX<sup>TM</sup>)</h2>
               </div>
 
               <div className="enable-list">
@@ -206,7 +206,7 @@ export default function GtoTrainPage() {
             {/* CONTENT */}
             <div className="col-lg-6 order-lg-2 order-1">
               <div className="sct-title mb-3">
-                <h2>Who should use VTX™ </h2>
+                <h2>Who should use VTX<sup>TM</sup> </h2>
               </div>
 
               <p className={styles.vtxAudienceText}>
@@ -271,16 +271,16 @@ export default function GtoTrainPage() {
       <section className="enable-section sectionspace80">
         <div className="container">
           <div className="mvk-benefits">
-            <h3> Integrating Virtual Training with SSB coaching</h3>
+            <h3> Integrating Virtual Training Xperience (VTX<sup>TM</sup>) with SSB</h3>
             <p className={styles.vtxIntegrationText}>
-              The Virtual Training Xperience (VTX™) is integrated with the SSB mentoring program offered by SSB with
+              The Virtual Training Xperience (VTX<sup>TM</sup>) is integrated with the SSB mentoring program offered by SSB with
               ISV. Candidates combine:
             </p>
 
             <ul>
               <li>Conceptual learning</li>
               <li>Psychological test preparation</li>
-              <li>Group task understanding</li>
+              <li>Group situational tasks</li>
               <li>Interview training</li>
               <li>Leadership development</li>
             </ul>
@@ -311,7 +311,7 @@ export default function GtoTrainPage() {
                   <h2>Built with experience, used with responsibility</h2>
                 </div>
                 <p className="text-center">
-                  Created by an ex-GTO, VTX™ blends real assessment insight with modern technology <br />
+                  Created by an ex-GTO, VTX<sup>TM</sup> blends real assessment insight with modern technology <br />
                   staying fully aligned with the spirit and integrity of the SSB process.
                 </p>
               </div>

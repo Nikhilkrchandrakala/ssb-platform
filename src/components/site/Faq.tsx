@@ -40,13 +40,12 @@ export default function Faq({ data }: { data?: FaqItem[] }) {
                         type="button"
                         aria-expanded={isOpen}
                         onClick={() => setOpenId(isOpen ? null : item.id)}
-                      >
-                        {item.question}
-                      </button>
+                        dangerouslySetInnerHTML={{ __html: item.question }}
+                      />
                     </h2>
 
                     <div id={item.id} className={`accordion-collapse collapse ${isOpen ? "show" : ""}`}>
-                      <div className="accordion-body">{item.answer}</div>
+                      <div className="accordion-body" dangerouslySetInnerHTML={{ __html: item.answer }} />
                     </div>
                   </div>
                 );

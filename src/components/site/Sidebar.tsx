@@ -17,11 +17,12 @@ const getInitials = (name?: string) => {
 };
 
 const NAV_LINKS = [
-  { href: "/Courses", label: "Courses" },
-  { href: "/ssbVirtualTrainingXperience", label: "VTX™" },
-  { href: "/Magazine", label: "Roger That - Our monthly magazine" },
+  { href: "/Courses", label: "SSB Courses" },
+  { href: "/ssbVirtualTrainingXperience", label: "VTX<sup>TM</sup> - India’s 1st virtual GTO ground" },
+  { href: "/Magazine", label: "Roger That - Fortnightly Current Affairs Magazine" },
   { href: "/HalfOfFame", label: "Hall of fame" },
-  { href: "/aboutSSB", label: "About SSB" },
+  { href: "/aboutSSB", label: "What is SSB" },
+  { href: "/OfficerLikeQualities", label: "Officer Like Qualities (OLQs)" },
   { href: "/aboutssbwithisv", label: "About us" },
   { href: "/Gallery", label: "Gallery" },
   { href: "/blogs", label: "Blogs" },
@@ -109,7 +110,7 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
 
             {NAV_LINKS.map((link) => (
               <Link key={link.href} href={link.href} onClick={onClose} className={pathname === link.href ? styles.active : ""}>
-                {link.label}
+                <span dangerouslySetInnerHTML={{ __html: link.label }} />
               </Link>
             ))}
 

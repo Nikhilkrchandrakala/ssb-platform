@@ -80,75 +80,137 @@ const DATA: Record<StageKey, MethodologyStage> = {
 };
 
 export default function Methodology() {
-  const [activeTab, setActiveTab] = useState<StageKey>("stage2");
-
-  const currentData = DATA[activeTab];
-
   return (
     <section className={styles.section}>
       <Background />
       <div className={styles.wrapper}>
         {/* TITLE */}
         <h2 className={styles.title}>
-          Methodology of selection of officers <br />
-          at Services Selection Board
+          Methodology & Chronology of Selection of Officers <br />
+          at the Services Selection Board
         </h2>
 
-        {/* TABS */}
-        <div className={styles.tabs}>
-          <span
-            className={`${styles.tab} ${activeTab === "stage1" ? styles.active : ""}`}
-            onClick={() => setActiveTab("stage1")}
-          >
-            Stage 1 Testing
-          </span>
+        {/* 3-COLUMN ROADMAP TABLE */}
+        <div className={styles.tableWrapper}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th className={styles.th}>Stage 1 Testing</th>
+                <th className={styles.th}>Stage 2 Testing</th>
+                <th className={styles.th}>Board Conference</th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* ROW 1: CHRONOLOGY / TIMELINE */}
+              <tr className={styles.trTimeline}>
+                <td className={styles.tdCol}>
+                  <div className={styles.rowLabel}>Phase / Timeline</div>
+                  <div className={styles.timelineValue}>Day 1 (Screening)</div>
+                </td>
+                <td className={styles.tdCol}>
+                  <div className={styles.rowLabel}>Phase / Timeline</div>
+                  <div className={styles.timelineValue}>Days 2 - 4 (Detailed Assessment)</div>
+                </td>
+                <td className={styles.tdCol}>
+                  <div className={styles.rowLabel}>Phase / Timeline</div>
+                  <div className={styles.timelineValue}>Day 5 (Final Selection)</div>
+                </td>
+              </tr>
 
-          <span
-            className={`${styles.tab} ${activeTab === "stage2" ? styles.active : ""}`}
-            onClick={() => setActiveTab("stage2")}
-          >
-            Stage 2 Testing
-          </span>
+              {/* ROW 2: CORE ASSESSMENTS */}
+              <tr>
+                <td className={styles.tdCol}>
+                  <div className={styles.rowLabel}>Core Assessments</div>
+                  <div className={styles.tableItem}>
+                    <strong className={styles.itemTitle}>Officer Intelligence Rating (OIR)</strong>
+                    <p className={styles.itemDesc}>Verbal and Non-Verbal intelligence tests to assess reasoning ability.</p>
+                  </div>
+                  <div className={styles.tableItem}>
+                    <strong className={styles.itemTitle}>Picture Perception & Description (PPDT)</strong>
+                    <p className={styles.itemDesc}>Candidates write a story on a picture and participate in group discussion.</p>
+                  </div>
+                </td>
+                <td className={styles.tdCol}>
+                  <div className={styles.rowLabel}>Core Assessments</div>
+                  <div className={styles.tableItem}>
+                    <strong className={styles.itemTitle}>Personal Interview (IO)</strong>
+                    <p className={styles.itemDesc}>One-on-one interview to evaluate character, general awareness, values, and background.</p>
+                  </div>
+                  <div className={styles.tableItem}>
+                    <strong className={styles.itemTitle}>Psychological Tests (Psych)</strong>
+                    <p className={styles.itemDesc}>Thematic Apperception Test (TAT), Word Association Test (WAT), Situation Reaction (SRT), and Self Description (SDT).</p>
+                  </div>
+                  <div className={styles.tableItem}>
+                    <strong className={styles.itemTitle}>Group Testing (GTO)</strong>
+                    <div className={styles.itemDesc}>
+                      The GTO evaluates team dynamics, group effectiveness, and leadership skills.
+                      <div className={styles.gtoTasksTitle}>Comprises 09 group situational tasks:</div>
+                      <ol className={styles.gtoTasksList}>
+                        <li>Group Discussion (GD)</li>
+                        <li>Group Planning Exercise (GPE)</li>
+                        <li>Progressive Group Task (PGT)</li>
+                        <li>Group Obstacle Race (GOR)</li>
+                        <li>Half Group Task (HGT)</li>
+                        <li>Lecturette (Lect)</li>
+                        <li>Individual Obstacles (IO)</li>
+                        <li>Command Task (CT)</li>
+                        <li>Final Group Task (FGT)</li>
+                      </ol>
+                    </div>
+                  </div>
+                </td>
+                <td className={styles.tdCol}>
+                  <div className={styles.rowLabel}>Core Assessments</div>
+                  <div className={styles.tableItem}>
+                    <strong className={styles.itemTitle}>Conference Procedure</strong>
+                    <p className={styles.itemDesc}>Candidates meet the board members together. The assessors discuss findings to make final recommendations.</p>
+                  </div>
+                  <div className={styles.tableItem}>
+                    <strong className={styles.itemTitle}>Final Recommendation</strong>
+                    <p className={styles.itemDesc}>Candidates recommended undergo medical examinations for the final merit list (NDA, IMA, INA, AFA, OTA).</p>
+                  </div>
+                </td>
+              </tr>
 
-          <span
-            className={`${styles.tab} ${activeTab === "conference" ? styles.active : ""}`}
-            onClick={() => setActiveTab("conference")}
-          >
-            Board Conference
-          </span>
+              {/* ROW 3: OBJECTIVE & FOCUS */}
+              <tr>
+                <td className={styles.tdCol}>
+                  <div className={styles.rowLabel}>Objective & Focus</div>
+                  <p className={styles.itemDesc}>Evaluate basic cognitive abilities and initial communication skills to filter candidates for Stage 2.</p>
+                </td>
+                <td className={styles.tdCol}>
+                  <div className={styles.rowLabel}>Objective & Focus</div>
+                  <p className={styles.itemDesc}>Perform a deep 3-dimensional assessment (Manso, Vacha, Karmana) of personality, social effectiveness, and leadership qualities in VUCA situations.</p>
+                </td>
+                <td className={styles.tdCol}>
+                  <div className={styles.rowLabel}>Objective & Focus</div>
+                  <p className={styles.itemDesc}>Reconcile independent evaluations by all three specialists (IO, GTO, Psych) to make a joint final selection decision.</p>
+                </td>
+              </tr>
+
+              {/* ROW 4: OUTCOME */}
+              <tr>
+                <td className={styles.tdCol}>
+                  <div className={styles.rowLabel}>Expected Outcome</div>
+                  <span className={styles.outcomeBadge}>Screened-In / Out</span>
+                </td>
+                <td className={styles.tdCol}>
+                  <div className={styles.rowLabel}>Expected Outcome</div>
+                  <span className={styles.outcomeBadge}>Detailed Profile Compiled</span>
+                </td>
+                <td className={styles.tdCol}>
+                  <div className={styles.rowLabel}>Expected Outcome</div>
+                  <span className={styles.outcomeBadge}>Recommended / Not Recommended</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        {/* CONTENT */}
-        <div className={styles.content}>
-          <p className={styles.intro}>{currentData.intro}</p>
-
-          {currentData.items.map((item, index) => (
-            <div key={index}>
-              <div className={styles.item}>
-                <span className={styles.index}>{index + 1}.</span>
-                <span className={styles.text}>{item.title}</span>
-              </div>
-
-              {item.desc && <p className={styles.subText}>{item.desc}</p>}
-
-              {item.titleTwo && <p className={styles.subTextTwo}>{item.titleTwo}</p>}
-
-              {item?.descTwo &&
-                item.descTwo.map((line, idx) => (
-                  <div className={styles.subTextWrapper} key={idx}>
-                    <p className={styles.subText}>{line}</p>
-                  </div>
-                ))}
-
-              {index !== currentData.items.length - 1 && <div className={styles.divider}></div>}
-            </div>
-          ))}
-
-          <div className={styles.bottomLineWrapper}>
-            <div className={style.topLine}>
-              <span className={style.line}></span>
-              <span className={`${style.dot} ${style.dotLeftToRight}`}></span>
-            </div>
+        <div className={styles.bottomLineWrapper}>
+          <div className={style.topLine}>
+            <span className={style.line}></span>
+            <span className={`${style.dot} ${style.dotLeftToRight}`}></span>
           </div>
         </div>
       </div>

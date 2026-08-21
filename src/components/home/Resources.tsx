@@ -56,7 +56,7 @@ const Resources = () => {
 
       {!user && (
         <p className="downloadYour">
-          <span onClick={() => router.push("/SignUp")}>Sign up</span> to download your free magazine.
+          <span onClick={() => router.push("/SignUp")}>Sign up</span> to read your free magazine.
         </p>
       )}
 

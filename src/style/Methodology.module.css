@@ -13,7 +13,7 @@
 }
 
 .wrapper {
-  max-width: 900px;
+  max-width: 1300px;
   text-align: center;
   width: 100%;
 }
@@ -251,15 +251,205 @@
   margin-top: 40px;
 }
 
+/* TABLE DESIGN */
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin: 40px auto 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(198, 197, 175, 0.2);
+  backdrop-filter: blur(12px);
+  padding: 20px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+}
 
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+  table-layout: fixed;
+}
 
+.th {
+  background: rgba(198, 197, 175, 0.08);
+  color: #f2f0e1;
+  font-weight: 500;
+  padding: 16px 20px;
+  border-bottom: 2px solid rgba(198, 197, 175, 0.3);
+  border-right: 1px solid rgba(198, 197, 175, 0.15);
+  text-transform: uppercase;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  text-align: center;
+  width: 33.33%;
+}
 
+.th:last-child {
+  border-right: none;
+}
 
+.table tr {
+  border-bottom: none;
+}
 
+.tdCol {
+  padding: 25px 20px;
+  vertical-align: top;
+  border-right: 1px solid rgba(198, 197, 175, 0.15);
+  width: 33.33%;
+}
 
+.tdCol:last-child {
+  border-right: none;
+}
 
+.stageIntro {
+  font-size: 12px;
+  color: rgba(198, 197, 175, 0.6);
+  line-height: 1.4;
+  margin-bottom: 25px;
+  font-style: italic;
+  text-align: center;
+  border-bottom: 1px solid rgba(198, 197, 175, 0.15);
+  padding-bottom: 15px;
+}
 
+.tableItem {
+  margin-bottom: 30px;
+  text-align: left;
+}
 
+.tableItem:last-child {
+  margin-bottom: 0;
+}
 
+.itemTitle {
+  display: block;
+  font-size: 16px;
+  color: var(--theme-color, #d2a100);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
 
+.itemDesc {
+  font-size: 13.5px;
+  color: rgba(198, 197, 175, 0.85);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.gtoTasksTitle {
+  margin-top: 12px;
+  font-weight: 500;
+  color: #f2f0e1;
+  font-size: 13.5px;
+}
+
+.gtoTasksList {
+  margin-top: 8px;
+  padding-left: 20px;
+  list-style-type: decimal;
+}
+
+.gtoTasksList li {
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: rgba(198, 197, 175, 0.75);
+}
+
+@media (max-width: 991px) {
+  .gtoTasksList {
+    column-count: 1;
+  }
+}
+
+.trTimeline {
+  border-bottom: 2px solid rgba(198, 197, 175, 0.25) !important;
+  background: rgba(210, 161, 0, 0.03);
+}
+
+.timelineLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: rgba(198, 197, 175, 0.5);
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.timelineValue {
+  font-size: 16px;
+  font-weight: 600;
+  color: #d2a100;
+}
+
+.rowLabel {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: rgba(210, 161, 0, 0.6);
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  border-bottom: 1px dashed rgba(198, 197, 175, 0.15);
+  padding-bottom: 6px;
+}
+
+.outcomeBadge {
+  display: inline-block;
+  background: rgba(210, 161, 0, 0.08);
+  border: 1.5px solid rgba(210, 161, 0, 0.4);
+  color: #d2a100;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table tr {
+  border-bottom: 1px solid rgba(198, 197, 175, 0.15) !important;
+}
+
+.table tr:last-child {
+  border-bottom: none !important;
+}
+
+@media (max-width: 768px) {
+  .tableWrapper {
+    border: none;
+    background: transparent;
+    padding: 0;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+  
+  .table, .table tbody, .table tr, .table td, .table th {
+    display: block;
+    width: 100% !important;
+  }
+  
+  .table thead {
+    display: none;
+  }
+  
+  .tdCol {
+    border: 1px solid rgba(198, 197, 175, 0.2) !important;
+    padding: 20px !important;
+    margin-bottom: 25px;
+    background: rgba(0, 0, 0, 0.45) !important;
+    border-radius: 8px;
+  }
+  
+  .tdCol:last-child {
+    margin-bottom: 0;
+  }
+  
+  .rowLabel {
+    color: #d2a100;
+    font-size: 10px;
+    margin-bottom: 8px;
+  }
+}
 

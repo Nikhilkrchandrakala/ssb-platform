@@ -22,7 +22,7 @@ export default function SweepTitle() {
 
   return (
     <h1 ref={ref} className="sct-title-gtx">
-      <span className="title-gtx shimmerText">VTX™ is a preparatory bridge — designed to support authentic performance</span>
+      <span className="title-gtx shimmerText">VTX<sup>TM</sup> is a preparatory bridge — designed to support authentic performance</span>
     </h1>
   );
 }

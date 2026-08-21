@@ -8,6 +8,42 @@
   justify-content: center;
   padding: 60px 20px;
   color: #dcdcdc;
+  position: relative;
+}
+
+.BackBtn {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  font-size: 28px;
+  color: #c6c5af;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(198, 197, 175, 0.15);
+}
+
+.BackBtn:hover {
+  color: #d2a100;
+  border-color: #d2a100;
+  background: rgba(210, 161, 0, 0.08);
+  transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+  .BackBtn {
+    top: 15px;
+    left: 15px;
+    width: 36px;
+    height: 36px;
+    font-size: 22px;
+  }
 }
 
 .refund-container {

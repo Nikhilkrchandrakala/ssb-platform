@@ -37,7 +37,7 @@ const UniquePedagogy = () => {
 
         <div className={styles.right}>
           <p>
-            VTX™ allows aspirants to see, understand, and mentally Xperiencethe structure of GTO tasks before they
+            VTX™ allows aspirants to see, understand, and mentally experience the structure of GTO tasks before they
             step onto the physical ground — how tasks are laid out, how groups move, how time pressure unfolds, and
             how observation happens in real conditions. It brings the unseen into view.
           </p>

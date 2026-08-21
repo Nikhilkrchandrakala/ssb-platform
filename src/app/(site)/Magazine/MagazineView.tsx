@@ -30,8 +30,8 @@ interface ViewingPdf {
 }
 
 const headerData = {
-  heading: "Roger That - Our monthly magazine",
-  text: "Our monthly magazine Roger That is your go- to resource for in-depth insights, real - world perspectives, and expert analysis tailored to the Services Selection Board (SSB) process. Curated with a strong focus on current affairs, the magazine features probable Group Discussion and Lecturette topics, helping aspirants stay informed, articulate, and assessment - ready",
+  heading: "Roger That - Our fortnightly magazine",
+  text: "Our fortnightly magazine Roger That is your go-to resource for in-depth insights, real-world perspectives, and expert analysis tailored to the Services Selection Board (SSB) process. Curated with a strong focus on current affairs, the magazine features probable Group Discussion and Lecturette topics, helping aspirants stay informed, articulate, and assessment-ready",
   banner: "/assets/website/rogerthat_banner.webp",
 };
 
@@ -187,7 +187,7 @@ export default function MagazineView() {
             <br />
 
             <p className="magazine-intro-text">
-              Our monthly magazine brings together insights on global news, geopolitics, defence developments, social
+              Our fortnightly magazine brings together insights on global news, geopolitics, defence developments, social
               issues, technology, and leadership, helping candidates build a deeper understanding of the world around
               them. By engaging with diverse perspectives and analytical viewpoints, aspirants can develop the
               intellectual awareness and balanced thinking expected from future officers in the Armed Forces.
@@ -231,7 +231,7 @@ export default function MagazineView() {
           {!signedUp && (
             <div className="col-12 col-md-8">
               <p className="d-flex justify-content-start m-0 downloadYourRes">
-                <span onClick={() => router.push("/SignUp")}> Sign up</span> to download your free magazine.
+                <span onClick={() => router.push("/SignUp")}> Sign up</span> to read your free magazine.
               </p>
             </div>
           )}

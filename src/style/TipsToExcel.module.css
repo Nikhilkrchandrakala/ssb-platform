@@ -7,15 +7,12 @@
 }
 
 /* HEADER */
-.header h1 {
-    font-size: 64px;
-    font-weight: 400;
-    color: #f2f0e1;
-    margin-bottom: 20px;
+.header {
+    text-align: center;
 }
 
-.header h2 {
-    font-size: 36px;
+.header h1 {
+    font-size: 64px;
     font-weight: 400;
     color: #f2f0e1;
     margin-bottom: 20px;
@@ -26,91 +23,176 @@
     font-size: 16px;
     line-height: 1.6;
     margin-bottom: 60px;
-}
-
-/* CONTENT LAYOUT */
-.content {
-    display: grid;
-    grid-template-columns: 1.1fr 1.2fr;
-    gap: 60px;
-}
-
-/* FACTORS */
-.factors {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 30px;
-}
-
-.factorCard {
-    border: 1px solid rgba(198, 197, 175, 0.35);
-    background: rgba(0, 0, 0, 0.55);
-    padding: 30px 0;
+    margin-left: auto;
+    margin-right: auto;
     text-align: center;
 }
 
-/* .factorCard h3 {
-    font-size: 14px;
-    color: #c6c5af;
-    opacity: 0.7;
-} */
-
-.factorCard_heading_OfH4  {
-    font-size: 22px;
-    margin: 10px 0 20px;
-    color: #f2f0e1;
-    line-height: 20px;
-}
-
-.factorCard ul {
-    list-style: none;
-    padding: 0;
-}
-
-.factorCard li {
-    font-size: 14px;
-    margin-bottom: 8px;
-    opacity: 0.85;
-}
-
-/* TIPS */
-.tips {
+/* STEPS ACCORDION LAYOUT */
+.stepsContainer {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
+    max-width: 1300px;
+    margin: 0 auto;
+    width: 100%;
 }
 
-.tip {
-    background: linear-gradient(180deg, #2a2a2a, #1f1f1f);
-    /* padding: 18px 20px; */
-    font-size: 15px;
-    cursor: pointer;
+.stepBlock {
+    background: linear-gradient(180deg, #1f1f1f, #151515);
+    border: 1px solid rgba(198, 197, 175, 0.15);
+    border-radius: 8px;
+    overflow: hidden;
     transition: all 0.3s ease;
 }
 
-.tip p {
-    font-size: 14px;
+.stepBlock.open {
+    border-color: rgba(210, 161, 0, 0.4);
+    background: linear-gradient(180deg, #222222, #181818);
+}
+
+.stepTitle {
+    font-size: 18px;
+    font-weight: 500;
+    color: #f2f0e1;
+    padding: 22px 28px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+    transition: color 0.3s ease;
+}
+
+.stepTitle:hover {
+    color: var(--secondary-color, #d2a100);
+}
+
+.icon {
+    font-size: 20px;
+    font-weight: bold;
+    color: rgba(198, 197, 175, 0.6);
+}
+
+.stepBlock.open .icon {
+    color: var(--secondary-color, #d2a100);
+}
+
+.stepContent {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: all 0.4s ease;
+}
+
+.stepContent.show {
+    max-height: 2000px; /* high limit to fit all factors in Step 1 */
+    opacity: 1;
+}
+
+.stepInner {
+    padding: 0 28px 28px 28px;
+}
+
+.stepDescText {
+    font-size: 15px;
+    line-height: 1.7;
+    color: rgba(198, 197, 175, 0.9);
+    margin: 0;
+}
+
+/* Step 1 OLQ Content */
+.olqContent {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.olqText {
+    font-size: 15px;
+    line-height: 1.7;
+    color: rgba(198, 197, 175, 0.9);
+    margin: 0;
+}
+
+.factorsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    width: 100%;
     margin-top: 10px;
-    opacity: 0.85;
 }
 
-.tip:hover {
-    /*  */
+.factorCard {
+    border: 1px solid rgba(210, 161, 0, 0.15);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 24px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
 }
 
-/* ================= RESPONSIVE ================= */
+.factorCard:hover {
+    border-color: var(--secondary-color, #d2a100);
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.factorNumber {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--secondary-color, #d2a100);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.factorTitle {
+    font-size: 18px;
+    font-weight: 600;
+    color: #f2f0e1;
+    margin: 0 0 16px 0;
+    line-height: 1.3;
+}
+
+.factorList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+.factorList li {
+    font-size: 14px;
+    margin-bottom: 10px;
+    color: rgba(255, 255, 255, 0.8);
+    position: relative;
+    padding-left: 16px;
+    line-height: 1.4;
+}
+
+.factorList li::before {
+    content: "•";
+    color: var(--secondary-color, #d2a100);
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1200px) {
+    .factorsGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
 
 @media (max-width: 1024px) {
     .section {
         padding: 60px 40px;
-    }
-
-    .content {
-        grid-template-columns: 1fr;
-    }
-
-    .factors {
-        grid-template-columns: 1fr;
     }
 }
 
@@ -118,81 +200,21 @@
     .header h1 {
         font-size: 36px;
     }
-    .header h2 {
-        font-size: 26px;
-    }
 
     .section {
         padding: 40px 20px;
     }
-}
 
-
-/* RIGHT SIDE TIPS */
-.tips {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-/* CLOSED STATE */
-.tip {
-    /* padding: 18px 22px; */
-    /* background: linear-gradient(180deg, #2a2a2a, #1f1f1f); */
-    cursor: pointer;
-    transition: all 0.35s ease;
-}
-
-/* TITLE */
-.tipTitle {
-    font-size: 15px;
-    font-weight: 500;
-    background: linear-gradient(180deg, #3a3a3a, #222);
-    padding: 18px;
-}
-
-/* HOVER */
-.tip:hover {
-    /* background: linear-gradient(180deg, #353535, #222); */
-}
-
-/* OPEN STATE */
-.open {
-    background: transparent;
-    /* 👈 bg gone */
-    /* border-left: 2px solid #d2a100; */
-    /* padding-left: 20px; */
-}
-
-/* CONTENT */
-.tipContent {
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0;
-    transition: all 0.4s ease;
-}
-
-.tipContent p {
-    font-size: 14px;
-    margin-top: 10px;
-    line-height: 1.6;
-    color: #c6c5af;
-    padding: 0 18px;
-}
-
-/* SHOW CONTENT */
-.show {
-    max-height: 200px;
-    opacity: 1;
-}
-
-/* RESPONSIVE */
-@media (max-width: 768px) {
-    .tipTitle {
-        font-size: 14px;
+    .stepTitle {
+        font-size: 16px;
+        padding: 18px 20px;
     }
 
-    .tipContent p {
-        font-size: 13px;
+    .stepInner {
+        padding: 0 20px 20px 20px;
+    }
+
+    .factorsGrid {
+        grid-template-columns: 1fr;
     }
 }

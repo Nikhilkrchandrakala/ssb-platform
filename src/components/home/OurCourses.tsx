@@ -6,6 +6,7 @@ import styles from "@/style/OurCourses.module.css";
 import CustomButton from "@/components/site/CustomButton";
 import { coursesData } from "@/util/data";
 import HeadingTwo from "@/components/site/HeadingTwo";
+import { FaChevronUp, FaChevronDown } from "react-icons/fa";
 
 const OurCourses = () => {
   const [activeCard, setActiveCard] = useState(0);
@@ -100,6 +101,17 @@ const OurCourses = () => {
     handleCardClick(index);
   };
 
+  const scrollList = (direction: "up" | "down") => {
+    if (!courseListRef.current) return;
+    const container = courseListRef.current;
+    const scrollAmount = 220; // approximate card height + gap
+    if (direction === "up") {
+      container.scrollBy({ top: -scrollAmount, behavior: "smooth" });
+    } else {
+      container.scrollBy({ top: scrollAmount, behavior: "smooth" });
+    }
+  };
+
   const router = useRouter();
 
   return (
@@ -137,6 +149,18 @@ const OurCourses = () => {
 
       {/* Content */}
       <div className={styles.content}>
+        {/* Scroll Arrows for Desktop */}
+        {!isMobile && (
+          <>
+            <button className={`${styles.scrollArrow} ${styles.scrollArrowUp}`} onClick={() => scrollList("up")} title="Scroll Up">
+              <FaChevronUp />
+            </button>
+            <button className={`${styles.scrollArrow} ${styles.scrollArrowDown}`} onClick={() => scrollList("down")} title="Scroll Down">
+              <FaChevronDown />
+            </button>
+          </>
+        )}
+
         {/* LEFT LIST - Desktop / Horizontal Cards - Mobile */}
         <div
           className={`${styles.courseList} ${isMobile ? styles.mobileList : ""}`}
