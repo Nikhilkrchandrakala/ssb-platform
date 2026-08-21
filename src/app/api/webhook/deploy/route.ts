@@ -44,13 +44,22 @@ export async function POST(req: NextRequest) {
           console.log(`[Webhook] Admin UI pulled successfully:\n${stdoutAdmin}`);
         }
 
-        console.log("[Webhook] Restarting all processes with PM2...");
-        exec("pm2 restart all", (errPm2) => {
-          if (errPm2) {
-            console.error(`[Webhook] Error restarting PM2: ${errPm2.message}`);
+        console.log("[Webhook] Compiling application (npm run build)...");
+        exec("npm run build", { cwd: "/var/www/ssbwithisv/admin" }, (errBuild, stdoutBuild) => {
+          if (errBuild) {
+            console.error(`[Webhook] Error compiling Admin UI: ${errBuild.message}`);
           } else {
-            console.log("[Webhook] All PM2 processes restarted successfully.");
+            console.log(`[Webhook] Admin UI compiled successfully:\n${stdoutBuild}`);
           }
+
+          console.log("[Webhook] Restarting all processes with PM2...");
+          exec("pm2 restart all", (errPm2) => {
+            if (errPm2) {
+              console.error(`[Webhook] Error restarting PM2: ${errPm2.message}`);
+            } else {
+              console.log("[Webhook] All PM2 processes restarted successfully.");
+            }
+          });
         });
       });
     });
