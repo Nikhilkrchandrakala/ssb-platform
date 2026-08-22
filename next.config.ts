@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   // Route local-disk uploads through a route handler that reads fresh from
   // disk per-request (src/app/api/uploads/[...path]/route.ts) instead of
   // Next's own public-folder static serving, which snapshots public/'s file

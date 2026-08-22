@@ -27,37 +27,42 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized: Invalid secret token" }, { status: 401 });
   }
 
-  console.log("GitHub Webhook Triggered: Commencing VPS Auto-Deploy...");
+  console.log("GitHub Webhook Triggered: Commencing Next.js Platform Auto-Deploy...");
+
+  const repoCwd = "/var/www/ssbwithisv/ssb-platform";
 
   setTimeout(() => {
-    exec("git pull origin main", { cwd: "/var/www/ssbwithisv/Backend" }, (err, stdout) => {
+    // 1. Pull the unified repository
+    exec("git pull origin main", { cwd: repoCwd }, (err, stdout) => {
       if (err) {
-        console.error(`[Webhook] Error pulling Backend: ${err.message}`);
-      } else {
-        console.log(`[Webhook] Backend pulled successfully:\n${stdout}`);
+        console.error(`[Webhook] Error pulling codebase: ${err.message}`);
+        return;
       }
+      console.log(`[Webhook] Code pulled successfully:\n${stdout}`);
 
-      exec("git pull origin main", { cwd: "/var/www/ssbwithisv/admin" }, (errAdmin, stdoutAdmin) => {
-        if (errAdmin) {
-          console.error(`[Webhook] Error pulling Admin UI: ${errAdmin.message}`);
-        } else {
-          console.log(`[Webhook] Admin UI pulled successfully:\n${stdoutAdmin}`);
+      // 2. Install dependencies (required for schema or package updates)
+      exec("npm install", { cwd: repoCwd }, (errInstall, stdoutInstall) => {
+        if (errInstall) {
+          console.error(`[Webhook] Error installing dependencies: ${errInstall.message}`);
+          return;
         }
+        console.log(`[Webhook] Dependencies installed successfully.`);
 
-        console.log("[Webhook] Compiling application (npm run build)...");
-        exec("npm run build", { cwd: "/var/www/ssbwithisv/admin" }, (errBuild, stdoutBuild) => {
+        // 3. Compile the Next.js production build (requires sufficient VPS memory)
+        console.log("[Webhook] Building Next.js application...");
+        exec("npm run build", { cwd: repoCwd }, (errBuild, stdoutBuild) => {
           if (errBuild) {
-            console.error(`[Webhook] Error compiling Admin UI: ${errBuild.message}`);
-          } else {
-            console.log(`[Webhook] Admin UI compiled successfully:\n${stdoutBuild}`);
+            console.error(`[Webhook] Error building Next.js: ${errBuild.message}`);
+            return;
           }
+          console.log(`[Webhook] Build complete:\n${stdoutBuild}`);
 
-          console.log("[Webhook] Restarting all processes with PM2...");
-          exec("pm2 restart all", (errPm2) => {
+          // 4. Restart the Next.js PM2 process
+          exec("pm2 restart ssb-platform", (errPm2) => {
             if (errPm2) {
               console.error(`[Webhook] Error restarting PM2: ${errPm2.message}`);
             } else {
-              console.log("[Webhook] All PM2 processes restarted successfully.");
+              console.log("[Webhook] PM2 process 'ssb-platform' restarted successfully.");
             }
           });
         });
@@ -67,6 +72,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     status: "ok",
-    message: "Deployment triggered successfully. Processing updates on the VPS...",
+    message: "Deployment triggered. Rebuilding Next.js platform on VPS...",
   });
 }
