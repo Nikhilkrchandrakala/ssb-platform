@@ -523,24 +523,6 @@ export default function SsbCoachingLandingPage() {
           ))}
         </div>
       </div>
-
-      {/* Footer */}
-      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 24, padding: "40px clamp(20px,4vw,64px) 96px", borderTop: "1px solid var(--color-border-surface)" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`${IMG}/ssb-logo.png`} alt="SSB with ISV crest" style={{ width: 96, height: 96, objectFit: "contain", flex: "none" }} />
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
-          <span style={{ font: "500 16px/1.3 var(--font-display)", color: "var(--color-text-primary)" }}>SSB with ISV — Integrated SSB Virtuosos</span>
-          <span style={{ font: "400 14px/1.4 var(--font-body)", color: "var(--base-cream-500)" }}>Preparation should clarify, not interfere.</span>
-          <span style={{ font: "400 13px/1.4 var(--font-body)", color: "var(--base-cream-600)" }}>© A unit of CS Joint Services Academy · www.ssbwithisv.in · 2026–27</span>
-          <div style={{ display: "flex", gap: 16, marginTop: 6, flexWrap: "wrap" }}>
-            <a href="https://www.instagram.com/ssbwithisv/" target="_blank" rel="noreferrer" style={{ font: "500 13px/1.4 var(--font-body)", color: "var(--base-gold-source)" }}>Instagram</a>
-            <a href="https://www.linkedin.com/company/ssbwithisv/posts" target="_blank" rel="noreferrer" style={{ font: "500 13px/1.4 var(--font-body)", color: "var(--base-gold-source)" }}>LinkedIn</a>
-            <a href="https://www.facebook.com/ssbwithisv/" target="_blank" rel="noreferrer" style={{ font: "500 13px/1.4 var(--font-body)", color: "var(--base-gold-source)" }}>Facebook</a>
-            <a href="https://www.youtube.com/@ssbwithisv" target="_blank" rel="noreferrer" style={{ font: "500 13px/1.4 var(--font-body)", color: "var(--base-gold-source)" }}>YouTube</a>
-            <a href="https://ssbwithisv.in" target="_blank" rel="noreferrer" style={{ font: "500 13px/1.4 var(--font-body)", color: "var(--base-gold-source)" }}>ssbwithisv.in</a>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
