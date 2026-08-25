@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { IoMdArrowBack } from "react-icons/io";
 import { FaQuoteLeft } from "react-icons/fa";
 import styles from "@/style/OfficerLikeQualities.module.css";
+import CustomHeader from "@/components/site/CustomHeader";
 
 interface OLQComponent {
   name: string;
@@ -231,27 +231,18 @@ export default function OfficerLikeQualities() {
 
   return (
     <div className={styles.olqRoot}>
-      {/* FIXED BACK BUTTON */}
-      <div onClick={() => router.back()} className={styles.BackBtn} title="Go Back">
-        <IoMdArrowBack />
-      </div>
-
-      {/* FOLD 1: HEADER BANNER */}
-      <section className={styles.foldIntro}>
-        <div className={styles.container}>
-          <div className={styles.header}>
-            <span className={styles.subtitle}>SSB Evaluation Matrix</span>
-            <div className={styles.title}>
-              <h1>Officer Like Qualities (OLQs)</h1>
+      <CustomHeader
+        heading={
+          <>
+            <div style={{ fontSize: "20px", color: "rgba(255, 255, 255, 0.5)", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "8px", fontWeight: "500" }}>
+              SSB Evaluation Matrix
             </div>
-            <p className={styles.headerDesc}>
-              The selection process at the Services Selection Board evaluates candidates against 15 consolidated 
-              <strong> Officer Like Qualities (OLQs)</strong>, grouped into four core personality factors. 
-              Discover the correlation of these qualities with the human body and their detailed parameters below.
-            </p>
-          </div>
-        </div>
-      </section>
+            <div>Officer Like Qualities (OLQs)</div>
+          </>
+        }
+        text="The selection process at the Services Selection Board evaluates candidates against 15 consolidated Officer Like Qualities (OLQs), grouped into four core personality factors. Discover the correlation of these qualities with the human body and their detailed parameters below."
+        banner="/assets/website/Whatisssb_banner.webp"
+      />
 
       {/* FOLD 2: HISTORICAL EVOLUTION */}
       <section className={styles.foldHistory}>

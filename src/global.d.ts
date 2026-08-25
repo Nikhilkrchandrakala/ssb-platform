@@ -51,6 +51,27 @@ export interface SwalStatic {
 }
 
 declare global {
+  // node globals
+  interface Process {
+    env: { [key: string]: string | undefined };
+    cwd(): string;
+    exit(code?: number): never;
+  }
+
+  namespace NodeJS {
+    type Timeout = any;
+    interface Process {
+      env: { [key: string]: string | undefined };
+      cwd(): string;
+      exit(code?: number): never;
+    }
+    interface ProcessEnv {
+      [key: string]: string | undefined;
+    }
+  }
+
+  var Buffer: any;
+
   interface Window {
     dataLayer: unknown[];
     gtag?: (...args: unknown[]) => void;
@@ -75,4 +96,10 @@ declare global {
     Razorpay?: new (options: RazorpayOptions) => RazorpayInstance;
     Swal?: SwalStatic;
   }
+}
+
+declare module "razorpay";
+declare module "node:fs/promises" {
+  import * as fsPromises from "fs/promises";
+  export = fsPromises;
 }

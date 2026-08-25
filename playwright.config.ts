@@ -1,4 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
+import dotenv from "dotenv";
+import path from "path";
+
+dotenv.config({ path: path.resolve(__dirname, ".env") });
+dotenv.config({ path: path.resolve(__dirname, ".env.local") });
 
 // Fixed, uncommon port: this machine usually has other legacy dev servers
 // (CRA/Vite) already bound to 3000/3001, and Next.js silently falls back to
@@ -6,11 +11,11 @@ import { defineConfig, devices } from "@playwright/test";
 const PORT = 3100;
 
 export default defineConfig({
-  testDir: "./e2e",
+  testDir: "./tests",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  reporter: "list",
+  reporter: [['html', { open: 'never' }]],
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: "on-first-retry",
@@ -20,11 +25,19 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
+    },
   ],
   webServer: {
-    command: `npx next dev -p ${PORT}`,
+    command: `npm run build && npx next start -p ${PORT}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
-    timeout: 60_000,
+    timeout: 120_000,
   },
 });
