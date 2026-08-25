@@ -46,3 +46,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# deployment secrets (VPS SSH key + deploy script — keep off GitHub)
+ssb_deploy_key
+deploy.bat
