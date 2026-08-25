@@ -234,10 +234,10 @@ export default function OfficerLikeQualities() {
       <CustomHeader
         heading={
           <>
-            <div style={{ fontSize: "20px", color: "rgba(255, 255, 255, 0.5)", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "8px", fontWeight: "500" }}>
+            <span style={{ display: "block", fontSize: "20px", color: "rgba(255, 255, 255, 0.5)", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "8px", fontWeight: "500" }}>
               SSB Evaluation Matrix
-            </div>
-            <div>Officer Like Qualities (OLQs)</div>
+            </span>
+            <span style={{ display: "block" }}>Officer Like Qualities (OLQs)</span>
           </>
         }
         text="The selection process at the Services Selection Board evaluates candidates against 15 consolidated Officer Like Qualities (OLQs), grouped into four core personality factors. Discover the correlation of these qualities with the human body and their detailed parameters below."
