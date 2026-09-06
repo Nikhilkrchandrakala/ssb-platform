@@ -29,7 +29,12 @@ export async function POST(req: NextRequest) {
 
   console.log("GitHub Webhook Triggered: Commencing Next.js Platform Auto-Deploy...");
 
-  const repoCwd = "/var/www/ssbwithisv/ssb-platform";
+  // Confirmed via `pm2 describe ssb-platform` (2026-09-06): the live process's
+  // exec cwd is /var/www/ssb-platform, not /var/www/ssbwithisv/ssb-platform —
+  // this hardcoded path was stale (probably left over from an earlier layout)
+  // and would have pulled/built in a directory the running app never reads
+  // from, making this webhook a silent no-op.
+  const repoCwd = "/var/www/ssb-platform";
 
   setTimeout(() => {
     // 1. Pull the unified repository
