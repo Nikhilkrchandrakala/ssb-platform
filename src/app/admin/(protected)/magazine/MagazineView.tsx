@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BookOpen,
   PlusCircle,
-  Search,
   Filter,
   Eye,
   Pencil,
@@ -12,6 +11,8 @@ import {
   Upload,
   Plus,
 } from "lucide-react";
+import SearchCombobox from "@/components/admin/SearchCombobox";
+import { latestDistinctValues } from "@/lib/latestValues";
 import "@/app/admin/styles/legacy-magazine.css";
 import { resolveLegacyAssetUrl } from "@/lib/legacyAssets";
 
@@ -33,6 +34,10 @@ const COVER_PLACEHOLDER =
 
 export default function MagazineView() {
   const [magazines, setMagazines] = useState<MagazinePdf[]>([]);
+  const magazineTitleOptions = useMemo(
+    () => latestDistinctValues(magazines, (m) => m.pdfTitle, (m) => m.uploadDate),
+    [magazines]
+  );
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES);
 
@@ -340,20 +345,14 @@ export default function MagazineView() {
 
       {!loading && magazines.length > 0 && (
         <div className="d-flex flex-wrap gap-3 align-items-center mb-4">
-          <div style={{ position: "relative", maxWidth: 320, width: "100%" }}>
-            <Search
-              size={16}
-              style={{ position: "absolute", left: 15, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }}
-            />
-            <input
-              type="text"
-              className="admin-input"
-              placeholder="Search by title..."
-              style={{ paddingLeft: 45, borderRadius: 20 }}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+          <SearchCombobox
+            options={magazineTitleOptions}
+            maxWidth={320}
+            placeholder="Search by title..."
+            inputStyle={{ borderRadius: 20 }}
+            value={search}
+            onChange={setSearch}
+          />
           <select
             className="admin-input form-select"
             style={{ maxWidth: 220 }}

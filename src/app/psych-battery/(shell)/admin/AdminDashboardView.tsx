@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "../../lib/api";
 import { UserProfile, Assessment, AssessmentSubmission } from "../../types";
 import { assessorLabel } from "@/lib/assessorLabels";
+import { latestDistinctValues } from "@/lib/latestValues";
 import { Plus, Trash2, Edit2, Database, Play, Eye, X, CheckCircle, Send, Copy } from "lucide-react";
 import {
   PageHeader, Badge, Card, GlassCard, Button, IconButton, TableShell, Th, Td, Tr, EmptyState,
-  Reveal, Skeleton, staggerDelay, Dialog, DialogContent, DialogTitle, SearchInput,
+  Reveal, Skeleton, staggerDelay, Dialog, DialogContent, DialogTitle,
 } from "../../components/ui/Primitives";
+import SearchCombobox from "../../components/ui/SearchCombobox";
 import { useDocumentPip, PipContent, FileGallery, resolveFileUrl, isPdfPath } from "../../components/ui/DocumentPipViewer";
 import { cn } from "../../lib/utils";
 
@@ -227,6 +229,23 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
   const resolveStudent = (s: SubmissionWithAssessorFields) =>
     (s.student as UserProfile | undefined) || users.find((u) => u.uid === s.userId) || users.find((u) => u.id === s.userId);
 
+  const evaluationStudents = useMemo(
+    () => submissions.map((s) => (s.student as UserProfile | undefined) || users.find((u) => u.uid === s.userId) || users.find((u) => u.id === s.userId)),
+    [submissions, users]
+  );
+  const nameOptions = useMemo(
+    () => latestDistinctValues(evaluationStudents, (s) => s?.name, (s) => s?.createdAt as string | undefined),
+    [evaluationStudents]
+  );
+  const batchOptions = useMemo(
+    () => latestDistinctValues(evaluationStudents, (s) => s?.batch, (s) => s?.createdAt as string | undefined),
+    [evaluationStudents]
+  );
+  const chestNoOptions = useMemo(
+    () => latestDistinctValues(evaluationStudents, (s) => s?.chestNo, (s) => s?.createdAt as string | undefined),
+    [evaluationStudents]
+  );
+
   const filteredSubmissions = submissions.filter((s) => {
     const student = resolveStudent(s);
     if (nameFilter.trim() && !(student?.name || "").toLowerCase().includes(nameFilter.trim().toLowerCase())) return false;
@@ -316,9 +335,9 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
           ) : (
             <>
               <Reveal delay={0.1} className="flex flex-col sm:flex-row gap-3">
-                <SearchInput placeholder="Filter by name" value={nameFilter} onChange={(e) => setNameFilter(e.target.value)} />
-                <SearchInput placeholder="Filter by batch no" value={batchFilter} onChange={(e) => setBatchFilter(e.target.value)} containerClassName="sm:max-w-[220px]" />
-                <SearchInput placeholder="Filter by chest no" value={chestNoFilter} onChange={(e) => setChestNoFilter(e.target.value)} containerClassName="sm:max-w-[220px]" />
+                <SearchCombobox placeholder="Filter by name" value={nameFilter} onChange={setNameFilter} options={nameOptions} />
+                <SearchCombobox placeholder="Filter by batch no" value={batchFilter} onChange={setBatchFilter} options={batchOptions} containerClassName="sm:max-w-[220px]" />
+                <SearchCombobox placeholder="Filter by chest no" value={chestNoFilter} onChange={setChestNoFilter} options={chestNoOptions} containerClassName="sm:max-w-[220px]" />
               </Reveal>
 
               {filteredSubmissions.length === 0 ? (

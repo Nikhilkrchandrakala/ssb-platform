@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 
+// Self-hosted from npm instead of CDN — see legacy-bootstrap-admin-cdn.css.
+import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles/legacy-bootstrap-admin-cdn.css";
 import "./styles/legacy-admin-global.css";
 import "./styles/legacy-admin-header.css";

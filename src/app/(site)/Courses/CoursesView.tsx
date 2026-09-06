@@ -121,7 +121,7 @@ export default function CoursesView() {
             {activeTab === "c1" && (
               <div className="course-tab-card">
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-                  <h2 className="course-tab-card-title">10 days Services Selection Board Hackathon</h2>
+                  <h2 className="course-tab-card-title">12 days Services Selection Board Hackathon</h2>
 
                   <p className="title-gtx shimmerText_sec  course-tab-card-title">
                     Price - ₹{getPrice("full_course", 12499).toLocaleString("en-IN")} + 18% GST
@@ -257,7 +257,7 @@ export default function CoursesView() {
         </div>
 
         <div className="schedule-section">
-          <h2 className="schedule-title">10 days SSB Hackathon Schedule</h2>
+          <h2 className="schedule-title">12 days SSB Hackathon Schedule</h2>
 
           <div className="schedule-tabs">
             <button className={scheduleTab === "morning" ? "active" : ""} onClick={() => setScheduleTab("morning")}>

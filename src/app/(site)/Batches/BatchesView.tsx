@@ -64,7 +64,7 @@ const DEFAULT_MODULES: CourseModule[] = [
   { id: "psych", name: "Psychology Test Preparation Program", price: 3499 },
   { id: "interview", name: "Interview Theory Course and Mock Interview", price: 2499 },
   { id: "group_testing", name: "Group Testing Course on VTX", price: 7999 },
-  { id: "full_course", name: "10 days Services Selection Board Hackathon (Full Course)", price: 12499 },
+  { id: "full_course", name: "12 days Services Selection Board Hackathon (Full Course)", price: 12499 },
 ];
 
 // Razorpay's public key_id is not a secret (mirrors the server-side RAZORPAY_KEY_ID env var
@@ -559,16 +559,16 @@ export default function BatchesView() {
 
       <div className={styles.introContainer}>
         <p className={styles.introDescription}>
-          Our flagship SSB preparation program is a <span className={styles.introHighlight}>10-day online SSB Hackathon</span> (Intro
+          Our flagship SSB preparation program is a <span className={styles.introHighlight}>12-day online SSB Hackathon</span> (Intro
           to SSB & Stage 1+ Psych Test Prep + Mock Psych Test & feedback + Interview Prep + Mock Interview & feedback + GTO Course on
           VTX<sup>TM</sup> & feedback).
           <br />
-          You can sign up for the full 10-day online SSB Hackathon batch or individual modules in a particular batch.
+          You can sign up for the full 12-day online SSB Hackathon batch or individual modules in a particular batch.
         </p>
         <div className={styles.modulesGrid}>
           <div className={styles.moduleCard}>
             <div className={styles.moduleNumber}>1</div>
-            <div className={styles.moduleName}>Full 10-day SSB Hackathon</div>
+            <div className={styles.moduleName}>Full 12-day SSB Hackathon</div>
             <div className={styles.modulePrice}>
               <span>₹{fullCoursePrice.toLocaleString("en-IN")}</span>
               <span className={styles.gstText}>+ 18% GST</span>
@@ -963,6 +963,19 @@ export default function BatchesView() {
                     </span>
                   </div>
                 )}
+
+                <div className={styles.modalNote}>
+                  <span>
+                    By proceeding, you agree to our{" "}
+                    <span
+                      onClick={() => router.push("/RefundCancellation")}
+                      style={{ cursor: "pointer", textDecoration: "underline", color: "var(--secondary-color)" }}
+                    >
+                      Refund &amp; Cancellation Policy
+                    </span>
+                    .
+                  </span>
+                </div>
               </div>
                 </>
               )}

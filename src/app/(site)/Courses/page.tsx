@@ -22,7 +22,7 @@ const breadcrumbSchema = {
 const courseSchema = {
   "@context": "https://schema.org",
   "@type": "Course",
-  name: "10 days Services Selection Board Hackathon",
+  name: "12 days Services Selection Board Hackathon",
   description:
     "Complete SSB preparation course covering GTO tasks, psychology tests and personal interviews by DIPR certified ex-SSB assessors.",
   provider: {

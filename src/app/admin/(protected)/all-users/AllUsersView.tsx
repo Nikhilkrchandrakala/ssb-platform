@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Users,
   UserPlus,
-  Search,
   AlertTriangle,
   Database,
   Eye,
@@ -15,6 +14,8 @@ import {
   Save,
   Plus,
 } from "lucide-react";
+import SearchCombobox from "@/components/admin/SearchCombobox";
+import { latestDistinctValues } from "@/lib/latestValues";
 import "@/app/admin/styles/legacy-all-users.css";
 
 const ICON_STYLE = { verticalAlign: -2 };
@@ -79,7 +80,7 @@ const STAGE_TITLES: Record<string, string> = {
 };
 
 const MODULES: { value: string; label: string }[] = [
-  { value: "full_course", label: "Full 10-day SSB Hackathon" },
+  { value: "full_course", label: "Full 12-day SSB Hackathon" },
   { value: "ssb_ppdt", label: "Intro to SSB & PPDT (Screening)" },
   { value: "psych", label: "Psychology Prep Program" },
   { value: "interview", label: "Interview & Mock Course" },
@@ -190,6 +191,11 @@ export default function AllUsersView() {
       cancelled = true;
     };
   }, []);
+
+  const userNameOptions = useMemo(
+    () => latestDistinctValues(allUsers, (u) => u.name, (u) => u.createdAt),
+    [allUsers]
+  );
 
   const filteredUsers = useMemo(() => {
     const query = search.toLowerCase().trim();
@@ -478,20 +484,15 @@ export default function AllUsersView() {
 
       <div className="admin-card">
         <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-          <div style={{ position: "relative", maxWidth: 400, width: "100%" }}>
-            <Search size={16} style={{ position: "absolute", left: 15, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-            <input
-              type="text"
-              className="admin-input"
-              placeholder="Search candidates by name, email, phone..."
-              style={{ paddingLeft: 45 }}
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setCurrentPage(1);
-              }}
-            />
-          </div>
+          <SearchCombobox
+            options={userNameOptions}
+            placeholder="Search candidates by name, email, phone..."
+            value={search}
+            onChange={(v) => {
+              setSearch(v);
+              setCurrentPage(1);
+            }}
+          />
           <div className="d-flex gap-3 align-items-center flex-wrap">
             <div className="d-flex gap-2 align-items-center">
               <span className="text-muted small">ROLE FILTER:</span>
@@ -1010,7 +1011,7 @@ export default function AllUsersView() {
                     value={addForm.stage}
                     onChange={(e) => setAddForm((prev) => ({ ...prev, stage: e.target.value }))}
                   >
-                    <option value="full_course">Full 10-day SSB Hackathon</option>
+                    <option value="full_course">Full 12-day SSB Hackathon</option>
                     <option value="ssb_ppdt">Intro to SSB & PPDT</option>
                     <option value="psych">Psychology Prep Program</option>
                     <option value="interview">Interview & Mock Course</option>

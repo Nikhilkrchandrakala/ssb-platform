@@ -8,6 +8,13 @@ import { SiteUserProvider, type SiteUser } from "@/components/site/SiteUserProvi
 import Footer from "@/components/site/Footer";
 import CookieBanner from "@/components/site/CookieBanner";
 
+// Bootstrap self-hosted from the npm package (not the CDN) so it's bundled
+// directly into this page's own CSS chunk instead of a separate network
+// fetch — the CDN `@import` briefly showed unstyled/black text on cold-cache
+// first loads while it downloaded, and (in dev) was fragile to Next's CSS
+// chunk ordering. Font Awesome stays on the CDN below (no npm package
+// installed for it, and it doesn't have the same FOUC-on-text risk).
+import "bootstrap/dist/css/bootstrap.min.css";
 import "../legacy-bootstrap-cdn.css";
 import "../legacy-index.css";
 import "../legacy-app.css";

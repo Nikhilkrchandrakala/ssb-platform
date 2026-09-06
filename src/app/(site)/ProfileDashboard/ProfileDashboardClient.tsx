@@ -134,7 +134,7 @@ interface Submission {
 }
 
 const moduleNames: Record<string, React.ReactNode> = {
-  full_course: "10 Days SSB Hackathon (Full Course)",
+  full_course: "12 Days SSB Hackathon (Full Course)",
   ssb_ppdt: "Intro & PPDT (Stage 1 Process)",
   psych: "Psychology Test Preparation Program",
   interview: "Interview Theory Course and Mock Interview",
@@ -953,7 +953,7 @@ export default function ProfileDashboardClient({
                                       ))
                                     ) : (
                                       <span style={{ background: "rgba(210, 161, 0, 0.1)", color: "#d2a100", border: "1px solid rgba(210, 161, 0, 0.3)", padding: "4px 10px", borderRadius: 6, fontSize: "0.78rem", fontWeight: 600 }}>
-                                        {order.slotId?.isFullCourse ? "10 Days SSB Hackathon (Full Course)" : "General Batch Access"}
+                                        {order.slotId?.isFullCourse ? "12 Days SSB Hackathon (Full Course)" : "General Batch Access"}
                                       </span>
                                     )}
                                   </div>

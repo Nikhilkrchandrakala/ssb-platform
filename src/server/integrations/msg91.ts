@@ -95,6 +95,9 @@ const PSYCH_INTERVIEW_ASSESSOR_TEMPLATE_ID = process.env.MSG91_PSYCH_INTERVIEW_A
 const IO_INTERVIEW_TEMPLATE_ID = process.env.MSG91_IO_INTERVIEW_TEMPLATE_ID || "io_interview_template";
 const INTERVIEW_TEMPLATE_6_ID = process.env.MSG91_INTERVIEW_TEMPLATE_6_ID || "interview_template_6";
 const NEW_ENROLLMENT_ALERT_TEMPLATE_ID = process.env.MSG91_NEW_ENROLLMENT_ALERT_TEMPLATE_ID || "new_enrollment_alert";
+// Awaiting MSG91 dashboard approval (2026-09-06) — see scripts/msg91_contact_enquiry_template.html
+// for the submitted template. Fill this env var in once MSG91 assigns/approves the template id.
+const CONTACT_ENQUIRY_TEMPLATE_ID = process.env.MSG91_CONTACT_ENQUIRY_TEMPLATE_ID || "";
 
 async function postEmail(params: { to: string; name: string; templateId: string; variables: Record<string, string> }): Promise<boolean> {
   const { data } = await axios.post(
@@ -378,6 +381,31 @@ export async function sendSalesNotificationEmail(params: {
       amount_paid: String(params.amountPaid),
       booking_method: params.bookingMethod,
       order_id: params.orderId,
+    },
+  });
+}
+
+export async function sendContactEnquiryEmail(params: {
+  name?: string;
+  email?: string;
+  phone?: string;
+  subject?: string;
+  message?: string;
+}): Promise<{ delivered: boolean }> {
+  const toEmail = process.env.CONTACT_ENQUIRY_TO_EMAIL || "info@ssbwithisv.in";
+  const nameParts = (params.name || "").trim().split(/\s+/).filter(Boolean);
+  const dash = (v?: string) => (v && v.trim() ? v.trim() : "—");
+  return sendTemplateEmail({
+    to: toEmail,
+    name: "SSB with ISV Team",
+    templateId: CONTACT_ENQUIRY_TEMPLATE_ID,
+    variables: {
+      first_name: dash(nameParts[0]),
+      last_name: dash(nameParts.slice(1).join(" ")),
+      phone: dash(params.phone),
+      email: dash(params.email),
+      subject: dash(params.subject),
+      message: dash(params.message),
     },
   });
 }

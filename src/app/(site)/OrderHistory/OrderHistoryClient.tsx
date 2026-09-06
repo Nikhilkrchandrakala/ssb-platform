@@ -33,7 +33,7 @@ export interface OrderHistoryOrder {
 }
 
 const moduleNames: Record<string, string> = {
-  full_course: "10 Days SSB Hackathon (Full Course)",
+  full_course: "12 Days SSB Hackathon (Full Course)",
   ssb_ppdt: "Intro & PPDT (Stage 1 Process)",
   psych: "Psychology Test Preparation Program",
   interview: "Interview Theory Course and Mock Interview",

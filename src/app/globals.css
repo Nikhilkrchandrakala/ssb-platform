@@ -28,6 +28,19 @@
   }
 }
 
+/* Defensive, app-wide: several off-canvas drawers (e.g. Sidebar.module.css)
+   hide themselves via `position: fixed; transform: translateX(100%)`, which
+   is visually correct but some mobile browsers still count the transformed
+   box's painted bounds toward the page's scrollable width — the "closed"
+   drawer becomes a swipe-to-reveal empty gutter on the right. Clipping
+   horizontal overflow at the html/body level closes that off everywhere in
+   one place instead of chasing it page by page. Anything that genuinely
+   needs to scroll sideways (a wide table, a code block) should scroll inside
+   its own overflow-x:auto container, not the page body.*/
+html, body {
+  overflow-x: hidden;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

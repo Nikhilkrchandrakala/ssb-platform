@@ -62,7 +62,7 @@ const MODULES = [
 ];
 
 const MANUAL_MODULES = [
-  { id: "full_course", labelBase: "Full 10-day SSB Hackathon", defaultPrice: 14999 },
+  { id: "full_course", labelBase: "Full 12-day SSB Hackathon", defaultPrice: 14999 },
   ...MODULES,
 ];
 

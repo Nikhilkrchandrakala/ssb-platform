@@ -5,7 +5,6 @@ import { useAdminUser } from "@/components/admin/AdminUserProvider";
 import {
   ShieldCheck,
   UserPlus,
-  Search,
   AlertTriangle,
   UserX,
   UserLock,
@@ -18,6 +17,8 @@ import {
   Info,
   Save,
 } from "lucide-react";
+import SearchCombobox from "@/components/admin/SearchCombobox";
+import { latestDistinctValues } from "@/lib/latestValues";
 import { ASSESSOR_TYPE_VALUES, assessorLabel } from "@/lib/assessorLabels";
 import "@/app/admin/styles/legacy-roles.css";
 
@@ -162,6 +163,11 @@ export default function RolesManagementView() {
 
   const adminOptionDisabled = ROLE_LEVELS[loggedInLevel] <= ROLE_LEVELS["admin"];
   const superAdminCheckDisabled = ROLE_LEVELS[loggedInLevel] < ROLE_LEVELS["super_admin"];
+
+  const staffNameOptions = useMemo(
+    () => latestDistinctValues(allUsers, (u) => u.name || u.email, (u) => u.createdAt),
+    [allUsers]
+  );
 
   const filteredUsers = useMemo(() => {
     const query = search.toLowerCase().trim();
@@ -398,16 +404,14 @@ export default function RolesManagementView() {
 
       <div className="admin-card">
         <div className="roles-filter-bar">
-          <div className="search-wrapper">
-            <Search size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-            <input
-              type="text"
-              className="admin-input"
-              placeholder="Search staff by name, email, or phone..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+          <SearchCombobox
+            options={staffNameOptions}
+            wrapperClassName="search-wrapper"
+            maxWidth={380}
+            placeholder="Search staff by name, email, or phone..."
+            value={search}
+            onChange={setSearch}
+          />
           <div>
             <span className="text-muted me-2 small">FILTER BY ROLE:</span>
             <select className="filter-select" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>

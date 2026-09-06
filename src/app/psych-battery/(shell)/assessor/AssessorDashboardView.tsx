@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { api } from "@/app/psych-battery/lib/api";
 import { AssessmentSubmission, UserProfile } from "@/app/psych-battery/types";
 import { usePsychUser } from "@/components/psych/PsychUserProvider";
-import { Users, Filter, User as UserIcon, Bell, Check, Eye, FileCheck, GraduationCap, Clock3, CheckCircle2, ClipboardList } from "lucide-react";
+import { Users, User as UserIcon, Bell, Check, Eye, FileCheck, GraduationCap, Clock3, CheckCircle2, ClipboardList } from "lucide-react";
 import { cn } from "@/app/psych-battery/lib/utils";
 import { assessorLabel } from "@/lib/assessorLabels";
 import {
-  PageHeader, StatTile, Badge, Avatar, SearchInput, IconButton, SegmentedControl,
-  EmptyState, Card, GlassCard, Reveal, Skeleton, staggerDelay,
+  PageHeader, StatTile, Badge, Avatar, IconButton, SegmentedControl,
+  EmptyState, Card, GlassCard, Reveal, Skeleton, staggerDelay, TableShell, Th, Td, Tr,
 } from "@/app/psych-battery/components/ui/Primitives";
+import SearchCombobox from "@/app/psych-battery/components/ui/SearchCombobox";
+import { latestDistinctValues } from "@/lib/latestValues";
 
 interface NotificationItem {
   id: string;
@@ -64,6 +66,9 @@ export default function AssessorDashboardView() {
   const [activeAssessorType, setActiveAssessorType] = useState<"Psych" | "GTO" | "TO" | "IO">("Psych");
   const [showNotifications, setShowNotifications] = useState(false);
   const [search, setSearch] = useState("");
+  const [batchFilter, setBatchFilter] = useState("");
+  const [chestNoFilter, setChestNoFilter] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   useEffect(() => {
     if (user?.assessorType) {
@@ -124,16 +129,33 @@ export default function AssessorDashboardView() {
   const pendingCount = submissions.filter((s) => s.status !== "COMPLETED" && s.status !== "REPORT_RELEASED").length;
   const completedCount = submissions.filter((s) => s.status === "COMPLETED" || s.status === "REPORT_RELEASED").length;
 
-  const filteredSubmissions = search.trim()
-    ? submissions.filter((s) => {
-        const q = search.trim().toLowerCase();
-        return (
-          s.student?.name?.toLowerCase().includes(q) ||
-          s.student?.email?.toLowerCase().includes(q) ||
-          s.student?.chestNo?.toLowerCase?.().includes(q)
-        );
-      })
-    : submissions;
+  const filteredSubmissions = submissions.filter((s) => {
+    const q = search.trim().toLowerCase();
+    if (q) {
+      const matches =
+        s.student?.name?.toLowerCase().includes(q) ||
+        s.student?.email?.toLowerCase().includes(q) ||
+        s.student?.chestNo?.toLowerCase?.().includes(q);
+      if (!matches) return false;
+    }
+    if (batchFilter.trim() && !(s.student?.batch || "").toLowerCase().includes(batchFilter.trim().toLowerCase())) return false;
+    if (chestNoFilter.trim() && !(s.student?.chestNo || "").toLowerCase().includes(chestNoFilter.trim().toLowerCase())) return false;
+    return true;
+  });
+  const hasActiveFilter = Boolean(search.trim() || batchFilter.trim() || chestNoFilter.trim());
+
+  const candidateNameOptions = useMemo(
+    () => latestDistinctValues(submissions, (s) => s.student?.name, (s) => s.student?.createdAt as string | undefined),
+    [submissions]
+  );
+  const batchOptions = useMemo(
+    () => latestDistinctValues(submissions, (s) => s.student?.batch, (s) => s.student?.createdAt as string | undefined),
+    [submissions]
+  );
+  const chestNoOptions = useMemo(
+    () => latestDistinctValues(submissions, (s) => s.student?.chestNo, (s) => s.student?.createdAt as string | undefined),
+    [submissions]
+  );
 
   if (loading) return (
     <div className="space-y-8">
@@ -238,20 +260,135 @@ export default function AssessorDashboardView() {
       </Reveal>
 
       {/* Search & filter */}
-      <Reveal delay={0.1} className="flex gap-3 items-center">
-        <SearchInput placeholder="Search by name, email, or chest number" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <IconButton icon={Filter} title="Filters" />
+      <Reveal delay={0.1} className="flex flex-col sm:flex-row gap-3 sm:items-center">
+        <SearchCombobox placeholder="Search by name, email, or chest number" value={search} onChange={setSearch} options={candidateNameOptions} />
+        <SearchCombobox placeholder="Filter by batch no" value={batchFilter} onChange={setBatchFilter} options={batchOptions} containerClassName="sm:max-w-[220px] flex-none" />
+        <SearchCombobox placeholder="Filter by chest no" value={chestNoFilter} onChange={setChestNoFilter} options={chestNoOptions} containerClassName="sm:max-w-[220px] flex-none" />
+        <SegmentedControl
+          value={viewMode}
+          onChange={setViewMode}
+          options={[
+            { value: "grid", label: "Grid" },
+            { value: "list", label: "List" },
+          ]}
+        />
       </Reveal>
 
-      {/* Candidate grid */}
+      {/* Candidate grid / list */}
       {filteredSubmissions.length === 0 ? (
         <Card>
           <EmptyState
             icon={Users}
-            title={search ? "No matching candidates" : "No dossiers detected"}
-            description={search ? "Try a different name, email, or chest number." : "No candidates have been assigned to your evaluation queue yet."}
+            title={hasActiveFilter ? "No matching candidates" : "No dossiers detected"}
+            description={hasActiveFilter ? "Try a different name, email, batch, or chest number." : "No candidates have been assigned to your evaluation queue yet."}
           />
         </Card>
+      ) : viewMode === "list" ? (
+        <TableShell minWidth={900}>
+          <thead>
+            <tr>
+              <Th>Candidate</Th>
+              <Th>Batch No</Th>
+              <Th>Chest No</Th>
+              <Th>Course</Th>
+              <Th>Assessors</Th>
+              <Th align="center">Status</Th>
+              <Th align="right">Actions</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredSubmissions.map((sub) => {
+              const isAwaiting = sub.status === "PENDING" && activeAssessorType !== "GTO" && activeAssessorType !== "IO";
+              const courseLabel = (() => {
+                const stage = sub.student?.clinicalStage || "";
+                const parts = stage.split(",").map((s: string) => s.trim()).filter(Boolean);
+                if (parts.length === 0) return "Full Course";
+                return parts.map((part: string) => {
+                  switch (part) {
+                    case "full_course": return "Full Course";
+                    case "ssb_ppdt": return "Intro & PPDT";
+                    case "psych": return "Psychology";
+                    case "interview": return "Interview";
+                    case "group_testing": return "GTO Tasks";
+                    default: return part.toUpperCase();
+                  }
+                }).join(", ");
+              })();
+              const roles: { key: string; assigned: unknown; label: string }[] = [
+                { key: "Psych", assigned: sub.student?.assignedPsych, label: "Psych" },
+                { key: "GTO", assigned: sub.student?.assignedGTO, label: "GTO" },
+                { key: "IO", assigned: sub.student?.assignedIO, label: "IO" },
+                { key: "TO", assigned: sub.student?.assignedTO, label: "TO" },
+              ].filter((r) => r.assigned);
+
+              return (
+                <Tr key={sub.id}>
+                  <Td>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Avatar src={sub.student?.profileImage} alt={sub.student?.name || "Candidate"} fallbackIcon={UserIcon} size={32} />
+                      <div className="min-w-0">
+                        <div className="text-sm font-bold text-app-text-bright truncate">{sub.student?.name || "Unknown Candidate"}</div>
+                        <div className="text-[11px] text-app-text-muted truncate">{sub.student?.email || "N/A"}</div>
+                      </div>
+                    </div>
+                  </Td>
+                  <Td>
+                    <span className="px-1.5 py-0.5 rounded bg-app-card border border-app-border text-[10px] font-bold text-app-text-muted whitespace-nowrap">
+                      {sub.student?.batch || "--"}
+                    </span>
+                  </Td>
+                  <Td>
+                    <span className="px-1.5 py-0.5 rounded bg-app-card border border-app-border text-[10px] font-bold text-app-text-muted whitespace-nowrap">
+                      {sub.student?.chestNo || "--"}
+                    </span>
+                  </Td>
+                  <Td>
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-indigo-500/25 border border-indigo-400/40 text-[10px] font-bold text-indigo-200 whitespace-nowrap">
+                      <GraduationCap size={11} /> {courseLabel}
+                    </span>
+                  </Td>
+                  <Td>
+                    <div className="flex flex-wrap gap-1.5">
+                      {roles.length === 0 ? (
+                        <span className="text-[11px] text-app-text-muted">--</span>
+                      ) : (
+                        roles.map((r) => (
+                          <span key={r.key} className={cn("px-2 py-0.5 rounded-md border text-[9px] font-bold uppercase tracking-wider", ROLE_BADGE[r.key])}>
+                            {r.label}
+                          </span>
+                        ))
+                      )}
+                    </div>
+                  </Td>
+                  <Td align="center">
+                    <Badge tone={STATUS_TONE[sub.status] || "neutral"}>{sub.status.replace(/_/g, " ")}</Badge>
+                  </Td>
+                  <Td align="right">
+                    {isAwaiting ? (
+                      <span className="text-[11px] font-bold text-app-text-muted/70" title="Candidate has not started their assessment yet">
+                        Awaiting
+                      </span>
+                    ) : (
+                      <Link
+                        href={`/psych-battery/review/${sub.id}`}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all",
+                          sub.status === "REPORT_RELEASED"
+                            ? "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-app-on-accent"
+                            : "bg-app-accent/25 text-app-accent-light hover:bg-app-accent hover:text-app-on-accent"
+                        )}
+                        title={sub.status === "REPORT_RELEASED" ? "View Finalized Report" : "Initialize Review"}
+                      >
+                        {sub.status === "REPORT_RELEASED" ? <FileCheck size={13} /> : <Eye size={13} />}
+                        {sub.status === "REPORT_RELEASED" ? "View Report" : "Review"}
+                      </Link>
+                    )}
+                  </Td>
+                </Tr>
+              );
+            })}
+          </tbody>
+        </TableShell>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
           {filteredSubmissions.map((sub, index) => {

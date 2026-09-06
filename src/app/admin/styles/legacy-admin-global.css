@@ -405,4 +405,28 @@ select option {
     textarea.admin-input {
         font-size: 16px;
     }
+
+    /* A handful of admin pages put action buttons / filter inputs in a plain
+       Bootstrap `.d-flex` row (no wrap by default) sized for desktop —
+       on a phone that pushes the whole page into horizontal scroll instead
+       of just flowing to a second line. Wrapping is always the safer
+       fallback here: worst case something drops to its own line, instead of
+       being clipped or forcing the page to scroll sideways. Inline
+       `style={{ maxWidth: N }}` on individual inputs still wins for the
+       *value*, so this only caps what would otherwise overflow. */
+    .d-flex {
+        flex-wrap: wrap;
+    }
+
+    .admin-input {
+        max-width: 100% !important;
+    }
+
+    /* Bootstrap's own .pagination component (page-number lists on the
+       Candidate/Student Roster/Allotment tables) doesn't wrap by default
+       either — same fix, same reasoning. */
+    .pagination {
+        flex-wrap: wrap;
+        row-gap: 6px;
+    }
 }

@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Briefcase,
-  Search,
   UserPlus,
   ArrowLeft,
   CheckCircle2,
@@ -20,6 +19,8 @@ import {
 import { useAdminUser } from "@/components/admin/AdminUserProvider";
 import { isBookingClosed, formatTimeRemaining } from "@/lib/batchTiming";
 import { redistributeRemaining } from "@/lib/redistributeInstallments";
+import SearchCombobox from "@/components/admin/SearchCombobox";
+import { latestDistinctValues } from "@/lib/latestValues";
 import "@/app/admin/styles/legacy-sales-dashboard.css";
 
 const ICON_STYLE = { verticalAlign: -2 };
@@ -113,7 +114,7 @@ const MODULES = [
   { id: "interview", label: "Interview & Mock Course", defaultPrice: 2499 },
   { id: "group_testing", label: "GTO Course on VTX", defaultPrice: 7999 },
 ];
-const FULL_COURSE_MODULE = { id: "full_course", label: "Full 10-day SSB Hackathon", defaultPrice: 12499 };
+const FULL_COURSE_MODULE = { id: "full_course", label: "Full 12-day SSB Hackathon", defaultPrice: 12499 };
 
 interface AuditLogEntry {
   _id: string;
@@ -408,6 +409,8 @@ export default function SalesDashboardView() {
   const [batchTypeFilter, setBatchTypeFilter] = useState<"all" | "morning" | "evening">("all");
   const [batchDateFrom, setBatchDateFrom] = useState("");
   const [batchDateTo, setBatchDateTo] = useState("");
+
+  const batchTitleOptions = useMemo(() => latestDistinctValues(slots, (s) => s.title, (s) => s.startTime), [slots]);
 
   const filteredSlots = slots.filter((slot) => {
     if (batchSearch.trim()) {
@@ -1114,16 +1117,14 @@ export default function SalesDashboardView() {
       {section === "enroll" && (
         <div className="admin-card">
           <div className="sales-filter-bar">
-            <div className="search-wrapper">
-              <Search size={16} style={{ position: "absolute", left: 15, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-              <input
-                type="text"
-                className="admin-input"
-                placeholder="Search batches by name or #number..."
-                value={batchSearch}
-                onChange={(e) => setBatchSearch(e.target.value)}
-              />
-            </div>
+            <SearchCombobox
+              options={batchTitleOptions}
+              wrapperClassName="search-wrapper"
+              maxWidth={320}
+              placeholder="Search batches by name or #number..."
+              value={batchSearch}
+              onChange={setBatchSearch}
+            />
             <select className="filter-select" value={batchTypeFilter} onChange={(e) => setBatchTypeFilter(e.target.value as "all" | "morning" | "evening")}>
               <option value="all">All Types</option>
               <option value="morning">Morning Batch</option>

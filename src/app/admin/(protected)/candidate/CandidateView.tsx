@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   GraduationCap,
   PlusCircle,
-  Search,
   Pencil,
   Trash2,
   ChevronLeft,
@@ -12,6 +11,8 @@ import {
   UploadCloud,
   ImageIcon,
 } from "lucide-react";
+import SearchCombobox from "@/components/admin/SearchCombobox";
+import { latestDistinctValues } from "@/lib/latestValues";
 import "@/app/admin/styles/legacy-candidate.css";
 
 const ICON_STYLE = { verticalAlign: -2 };
@@ -124,6 +125,11 @@ export default function CandidateView() {
     const boards = new Set(candidates.map((c) => c.board).filter(Boolean));
     return Array.from(boards).sort();
   }, [candidates]);
+
+  const candidateNameOptions = useMemo(
+    () => latestDistinctValues(candidates, (c) => c.name, (c) => c.createdAt),
+    [candidates]
+  );
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -326,17 +332,14 @@ export default function CandidateView() {
               </option>
             ))}
           </select>
-          <div style={{ position: "relative", maxWidth: 320, width: "100%" }}>
-            <Search size={16} style={{ position: "absolute", left: 15, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-            <input
-              type="text"
-              className="admin-input"
-              placeholder="Search candidates..."
-              style={{ paddingLeft: 45, borderRadius: 20 }}
-              value={search}
-              onChange={(e) => handleSearchChange(e.target.value)}
-            />
-          </div>
+          <SearchCombobox
+            options={candidateNameOptions}
+            maxWidth={320}
+            placeholder="Search candidates..."
+            inputStyle={{ borderRadius: 20 }}
+            value={search}
+            onChange={handleSearchChange}
+          />
         </div>
 
         <div className="admin-table-container">
@@ -502,12 +505,12 @@ export default function CandidateView() {
                 </div>
                 <div className="col-md-6">
                   <label className="admin-form-label">Candidate Photo *</label>
-                  <label className="upload-zone" style={{ display: "block" }}>
-                    <div className="upload-icon">
+                  <label className="admin-candidate-upload-box" style={{ position: "relative" }}>
+                    <div className="admin-candidate-upload-icon">
                       <UploadCloud size={28} />
                     </div>
-                    <div className="upload-text">Click or Drag to Upload Photo</div>
-                    <div className="text-muted small">JPG, PNG (Max 5MB)</div>
+                    <div className="admin-candidate-upload-title">Click or Drag to Upload Photo</div>
+                    <div className="admin-candidate-upload-sub">JPG, PNG (Max 5MB)</div>
                     <input
                       type="file"
                       accept="image/*"
@@ -609,11 +612,11 @@ export default function CandidateView() {
                 </div>
                 <div className="col-md-6">
                   <label className="admin-form-label">Change Candidate Photo</label>
-                  <label className="upload-zone" style={{ display: "block" }}>
-                    <div className="upload-icon">
+                  <label className="admin-candidate-upload-box" style={{ position: "relative" }}>
+                    <div className="admin-candidate-upload-icon">
                       <ImageIcon size={28} />
                     </div>
-                    <div className="upload-text">Click to change photo</div>
+                    <div className="admin-candidate-upload-title">Click to change photo</div>
                     <input
                       type="file"
                       accept="image/*"

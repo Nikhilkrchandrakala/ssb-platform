@@ -15,12 +15,13 @@ import {
   Clock,
   Mail,
   Phone,
-  UserPlus,
   Trash2,
   ChevronLeft,
   ChevronRight,
   Download,
 } from "lucide-react";
+import SearchCombobox from "@/components/admin/SearchCombobox";
+import { latestDistinctValues } from "@/lib/latestValues";
 import "@/app/admin/styles/legacy-leads.css";
 import "@/app/admin/styles/legacy-leads-page.css";
 
@@ -122,6 +123,8 @@ export default function LeadsView() {
       cancelled = true;
     };
   }, []);
+
+  const leadNameOptions = useMemo(() => latestDistinctValues(allLeads, (l) => l.name, (l) => l.date), [allLeads]);
 
   const dateFiltered = useMemo(() => {
     if (!appliedFrom && !appliedTo) return allLeads;
@@ -234,64 +237,6 @@ export default function LeadsView() {
     }
   }
 
-  async function handleElevate(leadId: string, leadName?: string, leadEmail?: string) {
-    const result = await window.Swal?.fire({
-      title: "Elevate to Candidate?",
-      html: `
-        <p>This will create a registered user account for:</p>
-        <div style="background: rgba(46, 204, 113, 0.08); border: 1px solid rgba(46, 204, 113, 0.2); border-radius: 8px; padding: 12px; margin: 10px 0; text-align: left;">
-            <strong style="color: #2ecc71;">${escapeText(leadName) || "—"}</strong><br>
-            <small style="opacity: 0.7;">${escapeText(leadEmail) || "—"}</small>
-        </div>
-        <p style="font-size: 0.85rem; opacity: 0.7;">The user will be assigned a temporary password (<code>password123</code>) and can reset it via Forgot Password.</p>
-      `,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: "#2ecc71",
-      cancelButtonColor: "#555",
-      confirmButtonText: '<i class="fas fa-user-plus me-1"></i> Yes, Elevate',
-      cancelButtonText: "Cancel",
-      background: "#1a1a1a",
-      color: "#fff",
-    });
-    if (!result?.isConfirmed) return;
-
-    try {
-      const res = await fetch(`/api/leads/${leadId}/elevate`, { method: "POST" });
-      const data = await res.json();
-
-      if (res.ok) {
-        window.Swal?.fire({
-          icon: "success",
-          title: "Lead Elevated!",
-          html: `<strong>${escapeText(data.user?.name) || escapeText(leadName)}</strong> is now a registered candidate.<br><small>They can log in with temporary password <code>password123</code>.</small>`,
-          background: "#1a1a1a",
-          color: "#fff",
-          confirmButtonColor: "#e0c214",
-        });
-      } else if (res.status === 409) {
-        window.Swal?.fire({
-          icon: "info",
-          title: "Already Registered",
-          html: `This lead already has a registered account:<br><strong>${escapeText(data.user?.name)}</strong> (${escapeText(data.user?.email)})`,
-          background: "#1a1a1a",
-          color: "#fff",
-          confirmButtonColor: "#e0c214",
-        });
-      } else {
-        throw new Error(data.error || "Failed to elevate");
-      }
-    } catch (err) {
-      window.Swal?.fire({
-        icon: "error",
-        title: "Elevation Failed",
-        text: err instanceof Error ? err.message : "Failed to elevate",
-        background: "#1a1a1a",
-        color: "#fff",
-      });
-    }
-  }
-
   function exportToExcel(leadsArray: LeadItem[], fileName: string) {
     if (!window.XLSX) {
       window.Swal?.fire({ icon: "error", title: "Export Unavailable", text: "Excel export library is still loading, please try again.", background: "#1a1a1a", color: "#fff" });
@@ -387,19 +332,18 @@ export default function LeadsView() {
       </div>
 
       {/* Search Bar */}
-      <div className="search-bar">
-        <Search size={16} className="search-icon" />
-        <input
-          type="text"
-          placeholder="Search leads by name, email, or phone number..."
-          autoComplete="off"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setCurrentPage(1);
-          }}
-        />
-      </div>
+      <SearchCombobox
+        options={leadNameOptions}
+        wrapperClassName="search-bar"
+        className=""
+        maxWidth="none"
+        placeholder="Search leads by name, email, or phone number..."
+        value={search}
+        onChange={(v) => {
+          setSearch(v);
+          setCurrentPage(1);
+        }}
+      />
 
       {/* Leads Table Section */}
       <div className="admin-card">
@@ -505,15 +449,6 @@ export default function LeadsView() {
                         </td>
                         <td>
                           <div className="actions-cell">
-                            {!lead.isRegisteredLead && (
-                              <button
-                                className="action-btn elevate-btn"
-                                title="Elevate to Candidate"
-                                onClick={() => handleElevate(lead._id, lead.name, lead.email)}
-                              >
-                                <UserPlus size={14} />
-                              </button>
-                            )}
                             <button className="action-btn delete-btn" title="Delete Lead" onClick={() => handleDelete(lead._id, lead.name)}>
                               <Trash2 size={14} />
                             </button>

@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Newspaper,
   PlusCircle,
-  Search,
   FileText,
   Plus,
   Filter,
@@ -14,6 +13,8 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
+import SearchCombobox from "@/components/admin/SearchCombobox";
+import { latestDistinctValues } from "@/lib/latestValues";
 import "@/app/admin/styles/legacy-blog.css";
 
 const ICON_STYLE = { verticalAlign: -2 };
@@ -46,6 +47,7 @@ function formatDate(dateString?: string) {
 
 export default function BlogListView() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
+  const blogTitleOptions = useMemo(() => latestDistinctValues(blogs, (b) => b.title, (b) => b.createdAt), [blogs]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -161,20 +163,14 @@ export default function BlogListView() {
 
       {!loading && !error && blogs.length > 0 && (
         <div className="d-flex flex-wrap gap-3 align-items-center mb-4">
-          <div style={{ position: "relative", maxWidth: 320, width: "100%" }}>
-            <Search
-              size={16}
-              style={{ position: "absolute", left: 15, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }}
-            />
-            <input
-              type="text"
-              className="admin-input"
-              placeholder="Search by title or author..."
-              style={{ paddingLeft: 45, borderRadius: 20 }}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+          <SearchCombobox
+            options={blogTitleOptions}
+            maxWidth={320}
+            placeholder="Search by title or author..."
+            inputStyle={{ borderRadius: 20 }}
+            value={search}
+            onChange={setSearch}
+          />
           <select
             className="admin-input form-select"
             style={{ maxWidth: 180 }}

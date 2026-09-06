@@ -6,7 +6,6 @@ import {
   XCircle,
   GraduationCap,
   UserPlus,
-  Search,
   AlertTriangle,
   Database,
   FileText,
@@ -22,6 +21,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { assessorLabel } from "@/lib/assessorLabels";
+import SearchCombobox from "@/components/admin/SearchCombobox";
+import { latestDistinctValues } from "@/lib/latestValues";
 import "@/app/admin/styles/legacy-student-roster.css";
 
 const ICON_STYLE = { verticalAlign: -2 };
@@ -142,7 +143,7 @@ const STAGE_CLASS: Record<string, string> = {
 };
 
 const MODULE_LABELS: Record<string, string> = {
-  full_course: "Full 10-day SSB Hackathon",
+  full_course: "Full 12-day SSB Hackathon",
   ssb_ppdt: "Intro to SSB & PPDT (Screening)",
   psych: "Psychology Prep Program",
   interview: "Interview & Mock Course",
@@ -275,6 +276,11 @@ export default function StudentRosterView() {
   const batches = useMemo(() => {
     return [...new Set(students.map((s) => s.batch).filter(Boolean) as string[])].sort();
   }, [students]);
+
+  const studentNameOptions = useMemo(
+    () => latestDistinctValues(students, (s) => s.name, (s) => s.createdAt),
+    [students]
+  );
 
   const filteredStudents = useMemo(() => {
     const query = search.toLowerCase().trim();
@@ -619,20 +625,15 @@ export default function StudentRosterView() {
 
       <div className="admin-card">
         <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-          <div style={{ position: "relative", maxWidth: 400, width: "100%" }}>
-            <Search size={16} style={{ position: "absolute", left: 15, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-            <input
-              type="text"
-              className="admin-input"
-              placeholder="Search candidates by name, email, phone..."
-              style={{ paddingLeft: 45 }}
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                resetToPageOne();
-              }}
-            />
-          </div>
+          <SearchCombobox
+            options={studentNameOptions}
+            placeholder="Search candidates by name, email, phone..."
+            value={search}
+            onChange={(v) => {
+              setSearch(v);
+              resetToPageOne();
+            }}
+          />
           <div className="d-flex gap-3 align-items-center flex-wrap">
             <div className="d-flex gap-2 align-items-center">
               <span className="text-muted small">BATCH FILTER:</span>

@@ -6,7 +6,6 @@ import {
   GraduationCap,
   ClipboardCheck,
   Hourglass,
-  Search,
   AlertTriangle,
   ClipboardList,
   ChevronLeft,
@@ -19,6 +18,8 @@ import {
   UserCog,
   Save,
 } from "lucide-react";
+import SearchCombobox from "@/components/admin/SearchCombobox";
+import { latestDistinctValues } from "@/lib/latestValues";
 import { assessorLabel } from "@/lib/assessorLabels";
 import "@/app/admin/styles/legacy-allotment.css";
 
@@ -241,6 +242,9 @@ export default function AllotmentView() {
     () => students.filter((s) => s.assignedPsych && s.assignedGTO && s.assignedTO && s.assignedIO).length,
     [students]
   );
+
+  // No createdAt on Student here — falls back to the list's own (server) order.
+  const studentNameOptions = useMemo(() => latestDistinctValues(students, (s) => s.name, () => undefined), [students]);
 
   const renderAvatar = (id: string, profileImage: string | undefined, name: string) => {
     const initials = getInitials(name);
@@ -481,17 +485,12 @@ export default function AllotmentView() {
 
       <div className="admin-card">
         <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-          <div style={{ position: "relative", maxWidth: 400, width: "100%" }}>
-            <Search size={16} style={{ position: "absolute", left: 15, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-            <input
-              type="text"
-              className="admin-input"
-              placeholder="Search candidate name or contact..."
-              style={{ paddingLeft: 45 }}
-              value={search}
-              onChange={(e) => handleSearchChange(e.target.value)}
-            />
-          </div>
+          <SearchCombobox
+            options={studentNameOptions}
+            placeholder="Search candidate name or contact..."
+            value={search}
+            onChange={handleSearchChange}
+          />
           <div className="d-flex gap-3 align-items-center flex-wrap">
             <div className="d-flex gap-2 align-items-center">
               <span className="text-muted small">BATCH FILTER:</span>
@@ -508,7 +507,7 @@ export default function AllotmentView() {
               <span className="text-muted small">COURSE FILTER:</span>
               <select className="admin-input" style={{ width: 220, padding: "8px 15px" }} value={stageFilter} onChange={(e) => handleStageFilterChange(e.target.value)}>
                 <option value="all">All Courses</option>
-                <option value="full_course">Full 10-day SSB Hackathon</option>
+                <option value="full_course">Full 12-day SSB Hackathon</option>
                 <option value="ssb_ppdt">Intro to SSB & PPDT</option>
                 <option value="psych">Psychology Prep Program</option>
                 <option value="interview">Interview & Mock Course</option>
