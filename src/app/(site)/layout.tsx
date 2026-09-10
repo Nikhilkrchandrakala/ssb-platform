@@ -34,11 +34,10 @@ const SITE_DESCRIPTION =
 export const metadata: Metadata = {
   title: SITE_TITLE,
   description: SITE_DESCRIPTION,
-  icons: {
-    icon: "/assets/logo/ISV2.png",
-    apple: "/assets/logo/ISV2.png",
-  },
-  manifest: "/manifest.json",
+  // icons/manifest intentionally omitted — inherited from the root layout
+  // (src/app/layout.tsx), which now carries the full PWA icon set. Next.js
+  // metadata merging replaces `icons` wholesale rather than deep-merging it,
+  // so redeclaring even one field here would shadow the rest.
   openGraph: {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,

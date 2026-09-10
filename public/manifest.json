@@ -1,25 +1,22 @@
 {
-    "theme_color": "#8936FF",
-    "background_color": "#2EC6FE",
-    "icons": [
-        {
-            "purpose": "maskable",
-            "sizes": "512x512",
-            "src": "/assets/logo/logo.png",
-            "type": "image/png"
-        },
-        {
-            "purpose": "any",
-            "sizes": "512x512",
-            "src": "/assets/logo/logo.png",
-            "type": "image/png"
-        }
-    ],
-    "orientation": "any",
+    "id": "/",
+    "name": "SSB with ISV",
+    "short_name": "SSB with ISV",
+    "description": "India's trusted SSB coaching institute led by ex-SSB assessors — complete SSB preparation for Army, Navy & Air Force aspirants.",
+    "start_url": "/",
+    "scope": "/",
     "display": "standalone",
+    "display_override": ["window-controls-overlay", "standalone"],
+    "orientation": "any",
     "dir": "auto",
     "lang": "en-US",
-    "name": "SSVwithISV",
-    "short_name": "SSVwithISV",
-    "start_url": "/"
+    "theme_color": "#0b0b0b",
+    "background_color": "#0b0b0b",
+    "categories": ["education", "business"],
+    "icons": [
+        { "purpose": "any", "sizes": "192x192", "src": "/icons/icon-192.png", "type": "image/png" },
+        { "purpose": "any", "sizes": "512x512", "src": "/icons/icon-512.png", "type": "image/png" },
+        { "purpose": "maskable", "sizes": "192x192", "src": "/icons/icon-maskable-192.png", "type": "image/png" },
+        { "purpose": "maskable", "sizes": "512x512", "src": "/icons/icon-maskable-512.png", "type": "image/png" }
+    ]
 }

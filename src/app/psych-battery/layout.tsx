@@ -7,9 +7,10 @@ import { PsychUserProvider, type PsychUser } from "@/components/psych/PsychUserP
 // see the comment there for why (per-segment CSS chunk caused a real
 // unstyled flash on first client-side navigation into this route tree).
 
+// icons inherited from the root layout (src/app/layout.tsx) — see the
+// comment there on why a per-segment override would shadow it.
 export const metadata: Metadata = {
   title: "Candidate Evaluation | SSB with ISV",
-  icons: { icon: "/assets/logo/ISV2.png" },
 };
 
 // Outer shell for the entire /psych-battery segment (both the sidebar-shell

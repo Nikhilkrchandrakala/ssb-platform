@@ -8,9 +8,10 @@ import "./styles/legacy-admin-global.css";
 import "./styles/legacy-admin-header.css";
 import "./styles/legacy-gateway.css";
 
+// icons inherited from the root layout (src/app/layout.tsx) — see the
+// comment there on why a per-segment override would shadow it.
 export const metadata: Metadata = {
   title: "SSB Admin Portal",
-  icons: { icon: "/assets/logo/ISV2.png" },
 };
 
 // Shell for the entire /admin segment (both the public login/recovery pages
