@@ -15,6 +15,9 @@ const leadSchema = new Schema({
   // Mirrors User.enrollmentMode so this raw capture carries the same tag as
   // the `role: "lead"` User record it's paired with on the admin Leads page.
   enrollmentMode: { type: String, enum: ["online", "offline"], default: "online" },
+  // Where the capture came from (e.g. "google-ads-online"); empty for the
+  // generic site forms that predate this field.
+  source: { type: String, default: "" },
 });
 
 export const Lead = mongoose.models.Lead || mongoose.model("Lead", leadSchema);

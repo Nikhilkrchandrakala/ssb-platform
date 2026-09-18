@@ -46,6 +46,26 @@ export default function LeadForm() {
       alert("Please enter a valid email address.");
       return;
     }
+    // Also keep a copy in our own database (best-effort — never blocks or
+    // affects the Zoho submission below).
+    try {
+      const firstName = (form.elements.namedItem("First Name") as HTMLInputElement | null)?.value ?? "";
+      const lastName = (form.elements.namedItem("Last Name") as HTMLInputElement | null)?.value ?? "";
+      const mobile = (form.elements.namedItem("Mobile") as HTMLInputElement | null)?.value ?? "";
+      fetch("/api/addLead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: `${firstName} ${lastName}`.trim(),
+          email,
+          phoneNumber: mobile,
+          source: "google-ads-online",
+        }),
+      }).catch(() => {});
+    } catch {
+      // non-fatal
+    }
+
     // Reaching here means the browser's own required-field validation
     // already passed (it runs before "submit" fires), so this really is
     // going out — the iframe's next load event is the real submission

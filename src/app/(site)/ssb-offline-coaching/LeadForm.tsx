@@ -145,6 +145,7 @@ export default function LeadForm() {
           email,
           phoneNumber: mobile,
           enrollmentMode: "offline",
+          source: "google-ads-offline",
         }),
       }).catch(() => {});
     } catch {

@@ -55,6 +55,7 @@ interface LeadItem {
   // enrollStudent when this lead's email matches a new sales enrollment.
   convertedAt?: string | null;
   enrollmentMode?: string;
+  source?: string;
 }
 
 declare global {
@@ -69,6 +70,12 @@ declare global {
     };
   }
 }
+
+const SOURCE_LABELS: Record<string, string> = {
+  "google-ads-online": "Google Ads · Online",
+  "google-ads-offline": "Google Ads · Offline",
+};
+const sourceLabel = (source?: string) => (source ? SOURCE_LABELS[source] || source : "—");
 
 function escapeText(str: string | undefined | null): string {
   return str || "";
@@ -266,6 +273,7 @@ export default function LeadsView() {
         Email: lead.email || "—",
         Phone: lead.phoneNumber || "—",
         Type: resolveEnrollmentMode(lead.enrollmentMode) === "offline" ? "Offline" : "Online",
+        Source: sourceLabel(lead.source),
       };
     });
 
@@ -414,6 +422,7 @@ export default function LeadsView() {
                     <th>Email Address</th>
                     <th>Mobile Number</th>
                     <th>Type</th>
+                    <th>Source</th>
                     <th>Status</th>
                     <th>Actions</th>
                   </tr>
@@ -459,6 +468,7 @@ export default function LeadsView() {
                         <td>
                           <EnrollmentModeBadge mode={lead.enrollmentMode} />
                         </td>
+                        <td style={{ fontSize: "0.8rem" }}>{sourceLabel(lead.source)}</td>
                         <td>
                           {lead.convertedAt ? (
                             <span
