@@ -68,7 +68,6 @@ const SECURITY_HEADERS = [
 ];
 
 const nextConfig: NextConfig = {
-  output: "standalone",
   poweredByHeader: false,
   // Route local-disk uploads through a route handler that reads fresh from
   // disk per-request (src/app/api/uploads/[...path]/route.ts) instead of
