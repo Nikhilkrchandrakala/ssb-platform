@@ -48,3 +48,17 @@ export function requireAdmin(user: PsychUser): NextResponse | null {
 export function userId(user: PsychUser): string {
   return String((user as { _id?: unknown; id?: unknown })._id ?? (user as { id?: unknown }).id ?? "");
 }
+
+/** admin / owner / assessor — everyone who legitimately works on other people's submissions. */
+export function isStaff(user: PsychUser): boolean {
+  return user.role === "admin" || user.role === "owner" || user.role === "assessor";
+}
+
+export function requireStaff(user: PsychUser): NextResponse | null {
+  if (isStaff(user)) return null;
+  return NextResponse.json({ message: "Access Denied: staff access required" }, { status: 403 });
+}
+
+export function forbidden(): NextResponse {
+  return NextResponse.json({ message: "Access Denied" }, { status: 403 });
+}

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/server/db";
 import { Submission } from "@/server/models/Submission";
 import { User } from "@/server/models/User";
-import { requireUser, userId } from "../../_lib/auth";
+import { requireUser, userId, isStaff, requireStaff, forbidden } from "../../_lib/auth";
 import { resolvePendingSubmissionId } from "../../_lib/pendingSubmission";
 import { sendMeetingEmails, MeetingRole } from "../../_lib/meetingEmail";
 import { resolveAllotmentForOrder } from "@/server/psychAllotment";
@@ -16,6 +16,10 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const auth = await requireUser();
   if ("error" in auth) return auth.error;
   const { id: rawId } = await params;
+
+  // Candidates may only ever read their own submission; the pending-*
+  // pseudo-ids are an assessor/admin dashboard concept.
+  if (!isStaff(auth.user) && rawId.startsWith("pending-")) return forbidden();
 
   const resolved = await resolvePendingSubmissionId(rawId);
   if ("error" in resolved) {
@@ -32,6 +36,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     }
 
     const studentId = String((submission.userId as unknown as { _id?: unknown })?._id || submission.userId);
+    if (!isStaff(auth.user) && studentId !== userId(auth.user)) return forbidden();
     const allotment = await resolveAllotmentForOrder(submission.orderId ? String(submission.orderId) : null, studentId);
     const subJSON = submission.toJSON ? (submission.toJSON() as Record<string, unknown>) : (submission as unknown as Record<string, unknown>);
     const studentJSON = subJSON.userId as Record<string, unknown> | undefined;
@@ -62,6 +67,10 @@ export async function PUT(req: NextRequest, { params }: Params) {
   await connectDB();
   const auth = await requireUser();
   if ("error" in auth) return auth.error;
+  // Writes here (marks, status, meeting links) are assessor/admin actions —
+  // a candidate must never be able to edit any submission, including their own.
+  const notStaff = requireStaff(auth.user);
+  if (notStaff) return notStaff;
   const { id: rawId } = await params;
 
   const resolved = await resolvePendingSubmissionId(rawId);

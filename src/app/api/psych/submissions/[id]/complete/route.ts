@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/server/db";
 import { Submission } from "@/server/models/Submission";
 import { User } from "@/server/models/User";
-import { requireUser } from "../../../_lib/auth";
+import { requireUser, requireStaff } from "../../../_lib/auth";
 import { getEvaluationRecipientIds, notifyRecipients } from "../../../_lib/notify";
 import { resolveAllotmentForOrder } from "@/server/psychAllotment";
 
@@ -13,6 +13,8 @@ export async function POST(_req: NextRequest, { params }: Params) {
   await connectDB();
   const auth = await requireUser();
   if ("error" in auth) return auth.error;
+  const notStaff = requireStaff(auth.user);
+  if (notStaff) return notStaff;
   const { id } = await params;
 
   try {

@@ -18,7 +18,7 @@ export async function GET() {
 
     await connectDB();
 
-    const data = await Franchise.find().sort({ createdAt: -1 });
+    const data = await Franchise.find().select("-password").sort({ createdAt: -1 });
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json({ message: error instanceof Error ? error.message : "Failed to fetch franchises" }, { status: 500 });

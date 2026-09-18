@@ -21,7 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ code
 
     const { code } = await params;
 
-    const franchise = await Franchise.findOne({ referralCode: code });
+    const franchise = await Franchise.findOne({ referralCode: code }).select("-password");
 
     if (!franchise) {
       return NextResponse.json({ message: "Not found" }, { status: 404 });

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/server/db";
 import { Submission } from "@/server/models/Submission";
-import { requireUser } from "../../../../_lib/auth";
+import { requireUser, userId, isStaff, forbidden } from "../../../../_lib/auth";
 
 type Params = { params: Promise<{ id: string; index: string }> };
 
@@ -26,8 +26,12 @@ export async function GET(_req: NextRequest, { params }: Params) {
     const submission = await Submission.findById(id).select({
       piqFileData: { $slice: [index, 1] },
       piqFiles: 1,
+      userId: 1,
     });
     if (!submission) return NextResponse.json({ message: "Submission not found" }, { status: 404 });
+    if (!isStaff(auth.user) && String((submission as unknown as { userId?: unknown }).userId) !== userId(auth.user)) {
+      return forbidden();
+    }
 
     const submissionRecord = submission as unknown as {
       piqFileData?: { filename?: string; mimetype?: string; data?: string }[];

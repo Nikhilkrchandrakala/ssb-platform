@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { escapeRegExp } from "@/server/escapeRegExp";
 import { connectDB } from "@/server/db";
 import { getCurrentUser, hasRole } from "@/server/auth";
 import { User } from "@/server/models";
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
     const query: Record<string, unknown> = {};
 
     if (search) {
-      const regex = new RegExp(search.trim(), "i");
+      const regex = new RegExp(escapeRegExp(search.trim()), "i");
       query.$and = [{ $or: [{ name: regex }, { email: regex }, { phone: regex }] }];
     }
 

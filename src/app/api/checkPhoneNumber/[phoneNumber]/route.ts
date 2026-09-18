@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/server/rateLimit";
 import { connectDB } from "@/server/db";
 import { Lead } from "@/server/models";
 
@@ -8,6 +9,9 @@ import { Lead } from "@/server/models";
  * Ported from legacy Leads.js.
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ phoneNumber: string }> }) {
+  const limited = rateLimit(req, "checkPhoneNumber", { limit: 30, windowMs: 10 * 60 * 1000 });
+  if (limited) return limited;
+
   try {
     await connectDB();
 

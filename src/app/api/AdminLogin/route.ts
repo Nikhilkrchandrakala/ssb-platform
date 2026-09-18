@@ -15,11 +15,10 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await resolveLoginCredentials({ email, phone, password });
-    if (result.status === "not_found") {
-      return NextResponse.json({ error: "User not found" }, { status: 400 });
-    }
-    if (result.status === "invalid_password") {
-      return NextResponse.json({ error: "Invalid password" }, { status: 400 });
+    // Same message for both so the admin portal can't be used to discover
+    // which staff emails/phones exist.
+    if (result.status === "not_found" || result.status === "invalid_password") {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 400 });
     }
 
     const { user, role } = result;

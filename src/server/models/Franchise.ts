@@ -14,4 +14,13 @@ const franchiseSchema = new Schema(
   { timestamps: true }
 );
 
+// Never let the password hash reach a JSON response (admin franchise pages
+// serialise whole documents).
+franchiseSchema.set("toJSON", {
+  transform: (_doc, ret: Record<string, unknown>) => {
+    delete ret.password;
+    return ret;
+  },
+});
+
 export const Franchise = mongoose.models.Franchise || mongoose.model("Franchise", franchiseSchema);

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/server/rateLimit";
 import { sendContactEnquiryEmail } from "@/server/integrations/msg91";
 import { connectDB } from "@/server/db";
 import { Lead } from "@/server/models";
@@ -12,6 +13,9 @@ interface ContactBody {
 }
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, "send-email", { limit: 5, windowMs: 60 * 60 * 1000 });
+  if (limited) return limited;
+
   const body: ContactBody = await req.json();
   const { name, email, phone, subject, message } = body;
 
