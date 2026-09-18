@@ -40,6 +40,7 @@ export async function GET() {
       date: u.createdAt || new Date(),
       time: u.createdAt ? new Date(u.createdAt).toLocaleTimeString() : "N/A",
       isRegisteredLead: true,
+      enrollmentMode: u.enrollmentMode,
     }));
 
     const data: LeadLike[] = [...rawLeads, ...mappedUserLeads];

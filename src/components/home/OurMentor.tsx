@@ -43,14 +43,11 @@ const OurMentor = () => {
               <p className={styles.role}>{mentor.role}</p>
               <h2 className={styles.name}>{mentor.name}</h2>
 
-              <p className={styles.description}>
+              <ul className={styles.description}>
                 {mentor.description.map((line, i) => (
-                  <span key={i}>
-                    {line}
-                    <br />
-                  </span>
+                  <li key={i}>{line}</li>
                 ))}
-              </p>
+              </ul>
 
               <div className={styles.cardBottom}>
                 {mentor.fullBiodata && (

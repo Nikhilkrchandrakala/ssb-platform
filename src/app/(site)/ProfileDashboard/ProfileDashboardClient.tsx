@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { RAZORPAY_KEY_ID } from "@/lib/razorpayKey";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import {
@@ -34,7 +35,6 @@ import type { RazorpayOptions } from "@/global";
 
 // Razorpay's public key_id is not a secret (mirrors BatchesView.tsx's own
 // checkout.js integration and the server-side RAZORPAY_KEY_ID env var).
-const RAZORPAY_KEY_ID = "rzp_live_SdgMS7X9M3RZSi";
 
 export interface DashboardUser {
   _id: string;
@@ -49,6 +49,7 @@ export interface DashboardUser {
   assignedGTO?: unknown;
   assignedIO?: unknown;
   assignedTO?: unknown;
+  enrollmentMode?: string;
 }
 
 interface DashboardSlot {
@@ -59,6 +60,7 @@ interface DashboardSlot {
   endTime?: string;
   batchNo?: string;
   isFullCourse?: boolean;
+  mode?: string;
 }
 
 interface DashboardInstallment {
@@ -88,7 +90,23 @@ export interface DashboardOrder {
   selectedModules?: string[];
   createdAt?: string;
   installmentPlanId?: DashboardInstallmentPlan | null;
+  assignedGTO?: string | null;
+  assignedTO?: string | null;
+  assignedPsych?: string | null;
+  assignedIO?: string | null;
 }
+
+// Mirrors AllotmentView.tsx's stagesOfOrder(): a per-batch selectedModules
+// list, falling back to "full_course" for a full-course order booked before
+// selectedModules existed.
+function stagesOfOrder(order: Pick<DashboardOrder, "selectedModules" | "slotId"> | null): string[] {
+  if (!order) return [];
+  const modules = order.selectedModules || [];
+  if (modules.length === 0) return order.slotId?.isFullCourse ? ["full_course"] : [];
+  return modules;
+}
+
+const GENERAL_ENROLLMENT_ID = "general-enrollment";
 
 export interface DashboardMagazine {
   _id: string;
@@ -131,6 +149,7 @@ interface Submission {
   releasedGtoRemarks?: string;
   releasedIoRemarks?: string;
   releasedToRemarks?: string;
+  orderId?: string | null;
 }
 
 const moduleNames: Record<string, React.ReactNode> = {
@@ -203,6 +222,16 @@ export default function ProfileDashboardClient({
   // ---- Candidate Evaluation tab ----
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loadingPsych, setLoadingPsych] = useState(false);
+  // Which batch's evaluation is showing. Defaults to the most recent order
+  // (orders is already sorted createdAt desc), so an existing single-batch
+  // student sees no change. Set to GENERAL_ENROLLMENT_ID for the legacy
+  // "submission with no linked Order" case.
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(orders[0]?._id ?? null);
+  // Tracks the last batch evalActiveStep was synced to, so switching batches
+  // (which can have different eligible steps, e.g. IO-only vs full-course)
+  // resets it — done during render (React's documented pattern for
+  // adjusting state from a changed value) rather than in a useEffect.
+  const [lastSyncedOrderId, setLastSyncedOrderId] = useState<string | null>(orders[0]?._id ?? null);
   const [isPiqUploading, setIsPiqUploading] = useState(false);
   const [isDossierUploading, setIsDossierUploading] = useState(false);
   // IO-only candidates only ever get step 2 (PIQ Upload) in the tab bar —
@@ -234,11 +263,31 @@ export default function ProfileDashboardClient({
     .split(",")
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
-  const hasFullOrPsych = userStages.includes("full_course") || userStages.includes("psych") || userStages.includes("psychology");
-  const hasGTO = userStages.includes("group_testing") || userStages.includes("gto");
-  const hasInterview = userStages.includes("interview");
+
+  // Candidates with no real paid Order at all (manually created, no orders
+  // prop entries) can still have a legacy submission — default them to
+  // "General Enrollment" instead of leaving nothing selected. Derived at
+  // render time (not via an effect+setState) since it's a pure function of
+  // existing props/state.
+  const legacySubmissionExists = submissions.some((s) => !s.orderId);
+  const effectiveSelectedOrderId = selectedOrderId ?? (orders.length === 0 && legacySubmissionExists ? GENERAL_ENROLLMENT_ID : null);
+
+  // The batch currently selected for Candidate Evaluation. null covers both
+  // "not chosen yet" and the GENERAL_ENROLLMENT_ID pseudo-batch, both of
+  // which fall back to the legacy user-level fields below.
+  const selectedOrder =
+    effectiveSelectedOrderId && effectiveSelectedOrderId !== GENERAL_ENROLLMENT_ID ? orders.find((o) => o._id === effectiveSelectedOrderId) || null : null;
+  const activeStages = selectedOrder ? stagesOfOrder(selectedOrder) : userStages;
+  const hasFullOrPsych = activeStages.includes("full_course") || activeStages.includes("psych") || activeStages.includes("psychology");
+  const hasGTO = activeStages.includes("group_testing") || activeStages.includes("gto");
+  const hasInterview = activeStages.includes("interview");
   const isGTOOnly = hasGTO && !hasInterview && !hasFullOrPsych;
   const isIOOnly = hasInterview && !hasFullOrPsych;
+
+  if (effectiveSelectedOrderId !== lastSyncedOrderId) {
+    setLastSyncedOrderId(effectiveSelectedOrderId);
+    setEvalActiveStep(hasInterview && !hasFullOrPsych ? 2 : 1);
+  }
 
   useEffect(() => {
     if (activeTab === "psycheTest" && submissions.length === 0 && !loadingPsych) {
@@ -320,7 +369,14 @@ export default function ProfileDashboardClient({
     }
   }
 
-  const activeSub = submissions.length > 0 ? submissions[0] : null;
+  const activeSub =
+    effectiveSelectedOrderId === GENERAL_ENROLLMENT_ID
+      ? submissions.find((s) => !s.orderId) || null
+      : effectiveSelectedOrderId
+        ? submissions.find((s) => String(s.orderId) === effectiveSelectedOrderId) || null
+        : submissions.length > 0
+          ? submissions[0]
+          : null;
 
   const activeSubMeetings: { role: string; date?: string; link: string }[] = activeSub
     ? (
@@ -690,10 +746,17 @@ export default function ProfileDashboardClient({
     activeSub?.status === "PENDING_UPLOAD" ||
     activeSub?.workflowStage === "EVALUATION_COMPLETED";
   const hasDossier = !!(activeSub?.uploadedFiles && activeSub.uploadedFiles.length > 0);
-  const hasBatch = !!(userProfile?.batch && userProfile.batch.trim() !== "");
-  const hasAssessor = !!(userProfile?.assignedPsych || userProfile?.assignedGTO || userProfile?.assignedIO || userProfile?.assignedTO);
+  const hasBatch = selectedOrder ? !!selectedOrder.slotId?.batchNo : !!(userProfile?.batch && userProfile.batch.trim() !== "");
+  const hasAssessor = selectedOrder
+    ? !!(selectedOrder.assignedPsych || selectedOrder.assignedGTO || selectedOrder.assignedIO || selectedOrder.assignedTO)
+    : !!(userProfile?.assignedPsych || userProfile?.assignedGTO || userProfile?.assignedIO || userProfile?.assignedTO);
+  // Which specific assessor role is assigned on the *selected batch* — the
+  // feedback modal used to read this off userProfile (the student's stale
+  // global field), which broke the moment a student had more than one batch.
+  const hasAssessorField = (field: "assignedPsych" | "assignedGTO" | "assignedIO" | "assignedTO") =>
+    !!(selectedOrder ? selectedOrder[field] : userProfile?.[field]);
   const allowedStagesForEval = ["full_course", "psych", "psychology", "interview", "gto", "group_testing"];
-  const hasEligibleCourse = userStages.some((stage) => allowedStagesForEval.includes(stage));
+  const hasEligibleCourse = activeStages.some((stage) => allowedStagesForEval.includes(stage));
   const isEligibleToStart = !!(hasBatch && hasAssessor && hasEligibleCourse);
   const hasAnyFeedbackVisible =
     !!activeSub &&
@@ -702,6 +765,24 @@ export default function ProfileDashboardClient({
       !!activeSub.reportVisibility?.gto ||
       !!activeSub.reportVisibility?.io ||
       !!activeSub.reportVisibility?.to);
+
+  // Offline batches are evaluated in person — no PIQ form, timed test, or
+  // dossier upload applies, and offline registrations never get
+  // selectedModules/clinicalStage (they only paid the flat registration
+  // fee), so hasEligibleCourse would otherwise wrongly lock them out.
+  const isOfflineOrder = selectedOrder ? selectedOrder.slotId?.mode === "offline" : userProfile?.enrollmentMode === "offline";
+  const isOfflineEligible = hasBatch && hasAssessor;
+
+  // Batch switcher for the Candidate Evaluation tab — one option per paid
+  // order, plus "General Enrollment" for a legacy submission with no linked
+  // Order. Hidden entirely when there's nothing to switch between.
+  const evalBatchOptions = [
+    ...orders.map((o) => ({
+      id: o._id,
+      label: `${o.slotId?.title || "Batch"}${o.slotId?.batchNo ? ` (#${o.slotId.batchNo})` : ""}`,
+    })),
+    ...(legacySubmissionExists ? [{ id: GENERAL_ENROLLMENT_ID, label: "General Enrollment" }] : []),
+  ];
 
   const evalSteps = [
     { num: 1, label: "PIQ Form" },
@@ -1049,6 +1130,19 @@ export default function ProfileDashboardClient({
                                     <span className={styles.orderIdValue}>{order.referralCode}</span>
                                   </div>
                                 )}
+
+                                <button
+                                  type="button"
+                                  className={styles.browseCoursesBtn}
+                                  style={{ marginTop: 16 }}
+                                  onClick={() => {
+                                    setSelectedOrderId(order._id);
+                                    setActiveTab("psycheTest");
+                                  }}
+                                >
+                                  <BiBrain style={{ marginRight: 6 }} />
+                                  View Evaluation
+                                </button>
                               </div>
                             </div>
                           ))}
@@ -1081,13 +1175,13 @@ export default function ProfileDashboardClient({
                           onChange={(e) => handleTagChange(e.target.value)}
                           style={{ background: "rgba(255, 255, 255, 0.05)", color: "#fff", border: "1px solid rgba(210, 161, 0, 0.3)", borderRadius: 8, padding: 10 }}
                         >
-                          <option value="all">All Resources</option>
+                          <option value="all" style={{ background: "#1a1a1a", color: "#fff" }}>All Resources</option>
                           {uniqueCategories.map((cat) => {
                             let displayName = cat;
                             if (cat === "Magazine") displayName = "Current Affairs Magazine";
                             else if (cat === "SSBPrep") displayName = "SSB Prep Material";
                             return (
-                              <option key={cat} value={cat}>
+                              <option key={cat} value={cat} style={{ background: "#1a1a1a", color: "#fff" }}>
                                 {displayName}
                               </option>
                             );
@@ -1164,14 +1258,89 @@ export default function ProfileDashboardClient({
 
                 {activeTab === "psycheTest" && (
                   <div className={styles.tabContent}>
-                    <div className={styles.tabHeader}>
+                    <div className={styles.tabHeader} style={{ display: "flex", flexWrap: "wrap", gap: 15, justifyContent: "space-between", alignItems: "center" }}>
                       <h2>
                         <BiBrain className={styles.tabIcon} />
                         Candidate Evaluation
                       </h2>
+                      {evalBatchOptions.length > 1 && (
+                        <div className="form-group" style={{ margin: 0, minWidth: 220 }}>
+                          <select
+                            className="form-select w-100"
+                            value={effectiveSelectedOrderId || ""}
+                            onChange={(e) => setSelectedOrderId(e.target.value)}
+                            style={{ background: "rgba(255, 255, 255, 0.05)", color: "#fff", border: "1px solid rgba(210, 161, 0, 0.3)", borderRadius: 8, padding: 10 }}
+                          >
+                            {evalBatchOptions.map((opt) => (
+                              <option key={opt.id} value={opt.id} style={{ background: "#1a1a1a", color: "#fff" }}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                     </div>
 
                     <div className={styles.psycheTestPanel}>
+                      {isOfflineOrder ? (
+                        <div className={styles.psycheTimelineContainer}>
+                          <h4 className={styles.timelineHeader}>Evaluation Journey</h4>
+                          <div className={styles.evalLockedContainer}>
+                            <div className={styles.evalLockedHeader}>
+                              <div className={styles.evalLockedIconWrapper}>
+                                {activeSub?.status === "REPORT_RELEASED" ? (
+                                  <FaCheckCircle className={styles.evalLockedIcon} />
+                                ) : (
+                                  <FaLock className={styles.evalLockedIcon} />
+                                )}
+                              </div>
+                              <h3>In-Person Evaluation</h3>
+                              <p>
+                                This is an offline batch — your GTO tasks, interview, and psychological assessment are conducted in person during
+                                the batch itself. There&apos;s no PIQ form, timed test, or dossier to upload online; your assessor&apos;s remarks
+                                will appear here once released.
+                              </p>
+                            </div>
+
+                            <div className={styles.evalLockedStatusList}>
+                              <div className={`${styles.evalLockedStatusCard} ${hasBatch ? styles.statusSuccess : styles.statusPending}`}>
+                                <div className={styles.statusCardIcon}>{hasBatch ? <FaCheckCircle /> : <FaLock />}</div>
+                                <div className={styles.statusCardDetails}>
+                                  <h4>Batch Allocation</h4>
+                                  <p>{hasBatch ? `Assigned to Batch #${selectedOrder?.slotId?.batchNo || userProfile.batch}` : "Pending batch allocation by administrator"}</p>
+                                </div>
+                              </div>
+                              <div className={`${styles.evalLockedStatusCard} ${hasAssessor ? styles.statusSuccess : styles.statusPending}`}>
+                                <div className={styles.statusCardIcon}>{hasAssessor ? <FaCheckCircle /> : <FaLock />}</div>
+                                <div className={styles.statusCardDetails}>
+                                  <h4>Assessor Configuration</h4>
+                                  <p>{hasAssessor ? "Assessors configured for your batch" : "Pending assessor allocation"}</p>
+                                </div>
+                              </div>
+                              <div className={`${styles.evalLockedStatusCard} ${activeSub?.status === "REPORT_RELEASED" ? styles.statusSuccess : styles.statusPending}`}>
+                                <div className={styles.statusCardIcon}>{activeSub?.status === "REPORT_RELEASED" ? <FaCheckCircle /> : <FaLock />}</div>
+                                <div className={styles.statusCardDetails}>
+                                  <h4>Evaluation Report</h4>
+                                  <p>{activeSub?.status === "REPORT_RELEASED" ? "Released — see below" : !isOfflineEligible ? "Pending batch/assessor allocation" : "Pending assessor review"}</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className={styles.evalLockedFooter}>
+                              <span>For assistance, please contact SSB With ISV Support or your administrator.</span>
+                            </div>
+                          </div>
+
+                          {hasAnyFeedbackVisible && (
+                            <div style={{ marginTop: 35, textAlign: "center" }}>
+                              <button className={styles.finalRemarksBtn} type="button" onClick={() => setShowFeedbackModal(true)}>
+                                <BiBrain /> Final Assessment Remarks
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <>
                       {hasFullOrPsych && (
                         <>
                           <p className={styles.evalIntroText}>
@@ -1244,7 +1413,7 @@ export default function ProfileDashboardClient({
                                 <div className={styles.statusCardIcon}>{hasBatch ? <FaCheckCircle /> : <FaLock />}</div>
                                 <div className={styles.statusCardDetails}>
                                   <h4>Batch Allocation</h4>
-                                  <p>{hasBatch ? `Assigned to Batch #${userProfile.batch}` : "Pending batch allocation by administrator"}</p>
+                                  <p>{hasBatch ? `Assigned to Batch #${selectedOrder?.slotId?.batchNo || userProfile.batch}` : "Pending batch allocation by administrator"}</p>
                                 </div>
                               </div>
                               <div className={`${styles.evalLockedStatusCard} ${hasAssessor ? styles.statusSuccess : styles.statusPending}`}>
@@ -1600,6 +1769,8 @@ export default function ProfileDashboardClient({
                           </>
                         )}
                       </div>
+                        </>
+                      )}
 
                       {loadingPsych && (
                         <div className={styles.loadingState}>
@@ -1696,10 +1867,10 @@ export default function ProfileDashboardClient({
           const ioRemarks = sub?.releasedIoRemarks || sub?.ioRemarks || "";
           const toRemarks = sub?.releasedToRemarks || sub?.toRemarks || "";
 
-          const hasPsych = !!(userProfile?.assignedPsych && psychRemarks && (sub?.status === "REPORT_RELEASED" || sub?.reportVisibility?.psych));
-          const hasGto = !!(userProfile?.assignedGTO && gtoRemarks && (sub?.status === "REPORT_RELEASED" || sub?.reportVisibility?.gto));
-          const hasIo = !!(userProfile?.assignedIO && ioRemarks && (sub?.status === "REPORT_RELEASED" || sub?.reportVisibility?.io));
-          const hasTo = !!(userProfile?.assignedTO && toRemarks && (sub?.status === "REPORT_RELEASED" || sub?.reportVisibility?.to));
+          const hasPsych = !!(hasAssessorField("assignedPsych") && psychRemarks && (sub?.status === "REPORT_RELEASED" || sub?.reportVisibility?.psych));
+          const hasGto = !!(hasAssessorField("assignedGTO") && gtoRemarks && (sub?.status === "REPORT_RELEASED" || sub?.reportVisibility?.gto));
+          const hasIo = !!(hasAssessorField("assignedIO") && ioRemarks && (sub?.status === "REPORT_RELEASED" || sub?.reportVisibility?.io));
+          const hasTo = !!(hasAssessorField("assignedTO") && toRemarks && (sub?.status === "REPORT_RELEASED" || sub?.reportVisibility?.to));
           const anySection = hasPsych || hasGto || hasIo || hasTo;
 
           return (

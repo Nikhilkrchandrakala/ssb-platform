@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/server/db";
 import { getCurrentUser, hasRole } from "@/server/auth";
-import { User, Notification } from "@/server/models";
+import { Order, User, Notification } from "@/server/models";
 
 /**
  * PUT /api/admin/allotment/:id
- * Sets or updates GTO, TO, Psych, and IO assessor allotments for a specific student.
- * Ported from legacy studentRoutes.js.
+ * Sets or updates GTO, TO, Psych, and IO assessor allotments for a specific
+ * paid Order (batch enrollment) — moved from the student (User) so a
+ * student's second paid batch no longer overwrites the first batch's
+ * allotment. `:id` is now an Order id, not a User id.
  */
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -21,13 +23,23 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const { assignedGTO, assignedTO, assignedPsych, assignedIO, assignedAssessments } = await req.json();
 
-    const student = await User.findById(id);
+    const order = await Order.findById(id).populate("slotId", "isFullCourse").populate("userId", "name");
 
+    if (!order || order.status !== "paid") {
+      return NextResponse.json({ error: "Enrollment not found" }, { status: 404 });
+    }
+    const student = order.userId as unknown as { _id: unknown; name: string } | null;
     if (!student) {
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
-    const stages = (student.clinicalStage || "full_course").split(",").map((st: string) => st.trim()).filter(Boolean);
+    // Gating is derived from THIS order's own purchase, not the student's
+    // (now-legacy) global clinicalStage — an empty selectedModules array on
+    // a full-course Slot means the same as an explicit "full_course" entry
+    // (see createOrder's own fallback semantics).
+    const slot = order.slotId as unknown as { isFullCourse?: boolean } | null;
+    const modules: string[] = order.selectedModules || [];
+    const stages = modules.length === 0 && slot?.isFullCourse ? ["full_course"] : modules;
     const gtoAllowed = stages.includes("full_course") || stages.includes("group_testing");
     const ioAllowed = stages.includes("full_course") || stages.includes("interview");
     const psychOrToAllowed = stages.includes("full_course") || stages.includes("psych");
@@ -58,28 +70,38 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       );
     }
 
-    const oldGTO = student.assignedGTO ? student.assignedGTO.toString() : null;
-    const oldTO = student.assignedTO ? student.assignedTO.toString() : null;
-    const oldPsych = student.assignedPsych ? student.assignedPsych.toString() : null;
-    const oldIO = student.assignedIO ? student.assignedIO.toString() : null;
+    const oldGTO = order.assignedGTO ? order.assignedGTO.toString() : null;
+    const oldTO = order.assignedTO ? order.assignedTO.toString() : null;
+    const oldPsych = order.assignedPsych ? order.assignedPsych.toString() : null;
+    const oldIO = order.assignedIO ? order.assignedIO.toString() : null;
 
-    if (assignedGTO !== undefined) student.assignedGTO = assignedGTO || null;
-    if (assignedTO !== undefined) student.assignedTO = assignedTO || null;
-    if (assignedPsych !== undefined) student.assignedPsych = assignedPsych || null;
-    if (assignedIO !== undefined) student.assignedIO = assignedIO || null;
-    if (assignedAssessments !== undefined) student.assignedAssessments = assignedAssessments;
+    if (assignedGTO !== undefined) order.assignedGTO = assignedGTO || null;
+    if (assignedTO !== undefined) order.assignedTO = assignedTO || null;
+    if (assignedPsych !== undefined) order.assignedPsych = assignedPsych || null;
+    if (assignedIO !== undefined) order.assignedIO = assignedIO || null;
+    if (assignedAssessments !== undefined) order.assignedAssessments = assignedAssessments;
 
-    if (
-      !student.role ||
-      (student.role !== "student" &&
-        student.role !== "lead" &&
-        student.role !== "admin" &&
-        student.role !== "assessor" &&
-        student.role !== "franchise")
-    ) {
-      student.role = "student";
+    await order.save();
+
+    // Hotfix (2026-09-17): the psych-battery system (StudentEntryView's
+    // "can I start my test" gate, dashboards, notifications, meeting
+    // resolution) still reads assessor assignment off User in several
+    // places — a real rework of all of those is tracked separately. Until
+    // that's done, mirror this order's allotment onto the student's User
+    // record whenever it's their MOST RECENT paid order, so those consumers
+    // keep seeing the right (or at least the current-batch) assignment
+    // instead of a permanently-null/stale value. Never mirrors an older
+    // order's allotment over a newer one.
+    const mostRecentPaidOrder = await Order.findOne({ userId: order.userId, status: "paid" }).sort({ createdAt: -1 });
+    if (mostRecentPaidOrder && String(mostRecentPaidOrder._id) === String(order._id)) {
+      await User.findByIdAndUpdate(order.userId, {
+        assignedGTO: order.assignedGTO,
+        assignedTO: order.assignedTO,
+        assignedPsych: order.assignedPsych,
+        assignedIO: order.assignedIO,
+        assignedAssessments: order.assignedAssessments,
+      });
     }
-    await student.save();
 
     const notifications: Record<string, unknown>[] = [];
     const createNotif = (assessorId: string | undefined, role: string) => {
@@ -103,7 +125,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       await Notification.insertMany(notifications);
     }
 
-    return NextResponse.json({ status: "ok", message: "Assessor allotment configured successfully", student });
+    return NextResponse.json({ status: "ok", message: "Assessor allotment configured successfully", order });
   } catch (error) {
     console.error("PUT /api/admin/allotment/:id error:", error);
     return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to configure allotment" }, { status: 500 });

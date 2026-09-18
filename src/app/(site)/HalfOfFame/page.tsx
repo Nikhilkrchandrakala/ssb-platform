@@ -72,6 +72,11 @@ export default function HalfOfFamePage() {
             defence entry schemes, showing that dedication and authentic preparation can lead to success in the SSB
             interview.
           </p>
+
+          <p className="hall-intro-text">
+            These results reflect our 5 years of online mentoring. As our first Nagpur offline batch begins, we&rsquo;ll
+            be adding in-person success stories here as well.
+          </p>
         </div>
 
         <div className="container what-is-not-text-box px-0 mt-5">

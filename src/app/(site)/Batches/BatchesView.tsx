@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { RAZORPAY_KEY_ID } from "@/lib/razorpayKey";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import {
@@ -69,7 +70,6 @@ const DEFAULT_MODULES: CourseModule[] = [
 
 // Razorpay's public key_id is not a secret (mirrors the server-side RAZORPAY_KEY_ID env var
 // used by /api/createOrder) — kept as the same literal the legacy site used.
-const RAZORPAY_KEY_ID = "rzp_live_SdgMS7X9M3RZSi";
 
 export default function BatchesView() {
   const router = useRouter();
@@ -149,7 +149,7 @@ export default function BatchesView() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/allSlots")
+    fetch("/api/allSlots?mode=online")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load slots");
         return res.json();

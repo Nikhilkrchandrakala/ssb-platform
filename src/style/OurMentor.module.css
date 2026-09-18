@@ -146,11 +146,21 @@
 
 .description {
   margin-top: 12px;
-  text-align: center;
+  text-align: left;
   font-family: var(--font1);
   font-size: 14px;
   line-height: 20px;
   color: #c6c5af;
+  list-style: disc;
+  padding-left: 18px;
+}
+
+.description li {
+  margin-bottom: 4px;
+}
+
+.description li::marker {
+  color: var(--secondary-color);
 }
 
 .headingContainerImg {

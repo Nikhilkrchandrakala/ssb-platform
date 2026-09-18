@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/server/rateLimit";
 import { sendPhoneOtp, last10 } from "@/server/integrations/msg91";
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, "signup-send-phone-otp", { limit: 5, windowMs: 10 * 60 * 1000 });
+  if (limited) return limited;
+
   try {
     const { phone } = await req.json();
     if (!phone) return NextResponse.json({ success: false, message: "Phone number required" }, { status: 400 });

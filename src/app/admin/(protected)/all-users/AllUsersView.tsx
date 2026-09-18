@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import SearchCombobox from "@/components/admin/SearchCombobox";
 import { latestDistinctValues } from "@/lib/latestValues";
+import { ENROLLMENT_MODE_OPTIONS, resolveEnrollmentMode } from "@/lib/enrollmentMode";
+import EnrollmentModeBadge from "@/components/admin/EnrollmentModeBadge";
 import "@/app/admin/styles/legacy-all-users.css";
 
 const ICON_STYLE = { verticalAlign: -2 };
@@ -31,6 +33,7 @@ interface DirectoryUser {
   clinicalStage?: string;
   batch?: string;
   chestNo?: string;
+  enrollmentMode?: string;
 }
 
 interface AssessorRef {
@@ -61,6 +64,7 @@ function isTraineeRole(role?: string) {
 interface OrderSlot {
   title?: string;
   batchNo?: string;
+  mode?: string;
 }
 
 interface OrderRecord {
@@ -69,6 +73,10 @@ interface OrderRecord {
   price?: number;
   createdAt: string;
   slotId?: OrderSlot | null;
+  assignedGTO?: AssessorRef | null;
+  assignedTO?: AssessorRef | null;
+  assignedPsych?: AssessorRef | null;
+  assignedIO?: AssessorRef | null;
 }
 
 const STAGE_TITLES: Record<string, string> = {
@@ -123,9 +131,10 @@ interface EditFormState {
   batch: string;
   chestNo: string;
   modules: string[];
+  enrollmentMode: string;
 }
 
-const EMPTY_EDIT_FORM: EditFormState = { id: "", name: "", email: "", phone: "", batch: "", chestNo: "", modules: [] };
+const EMPTY_EDIT_FORM: EditFormState = { id: "", name: "", email: "", phone: "", batch: "", chestNo: "", modules: [], enrollmentMode: "online" };
 
 interface AddFormState {
   name: string;
@@ -135,9 +144,19 @@ interface AddFormState {
   batch: string;
   chestNo: string;
   stage: string;
+  enrollmentMode: string;
 }
 
-const EMPTY_ADD_FORM: AddFormState = { name: "", email: "", phone: "", password: "", batch: "", chestNo: "", stage: "full_course" };
+const EMPTY_ADD_FORM: AddFormState = {
+  name: "",
+  email: "",
+  phone: "",
+  password: "",
+  batch: "",
+  chestNo: "",
+  stage: "full_course",
+  enrollmentMode: "online",
+};
 
 export default function AllUsersView() {
   const [allUsers, setAllUsers] = useState<DirectoryUser[]>([]);
@@ -146,6 +165,7 @@ export default function AllUsersView() {
 
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const [modeFilter, setModeFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
 
   const [studentModalOpen, setStudentModalOpen] = useState(false);
@@ -208,9 +228,10 @@ export default function AllUsersView() {
         return matchesSearch && (u.role === "admin" || u.role === "superadmin");
       }
       const matchesRole = roleFilter === "all" || u.role === roleFilter;
-      return matchesSearch && matchesRole;
+      const matchesMode = modeFilter === "all" || resolveEnrollmentMode(u.enrollmentMode) === modeFilter;
+      return matchesSearch && matchesRole && matchesMode;
     });
-  }, [allUsers, search, roleFilter]);
+  }, [allUsers, search, roleFilter, modeFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
   const pageStart = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -280,6 +301,7 @@ export default function AllUsersView() {
         batch: student.batch || "",
         chestNo: student.chestNo || "",
         modules: activeStages,
+        enrollmentMode: resolveEnrollmentMode(student.enrollmentMode),
       });
       setStudentModalOpen(true);
     } catch (error) {
@@ -344,6 +366,7 @@ export default function AllUsersView() {
                 batch: editForm.batch.trim(),
                 clinicalStage: editForm.modules.length > 0 ? editForm.modules.join(",") : "full_course",
                 chestNo: editForm.chestNo.trim(),
+                enrollmentMode: editForm.enrollmentMode,
               }
             : trainee
               ? { clinicalStage: "" }
@@ -410,6 +433,7 @@ export default function AllUsersView() {
           batch: addForm.batch.trim(),
           clinicalStage: addForm.stage,
           chestNo: addForm.chestNo.trim(),
+          enrollmentMode: addForm.enrollmentMode,
         }),
       });
       const result = await res.json();
@@ -513,6 +537,25 @@ export default function AllUsersView() {
                 <option value="franchise">Franchise</option>
               </select>
             </div>
+            <div className="d-flex gap-2 align-items-center">
+              <span className="text-muted small">TYPE FILTER:</span>
+              <select
+                className="admin-input"
+                style={{ width: 160, padding: "8px 15px" }}
+                value={modeFilter}
+                onChange={(e) => {
+                  setModeFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+              >
+                <option value="all">All Types</option>
+                {ENROLLMENT_MODE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -523,6 +566,7 @@ export default function AllUsersView() {
                 <th>User / Email</th>
                 <th>Phone Contact</th>
                 <th>System Role</th>
+                <th>Type</th>
                 <th>Registration Date</th>
                 <th>Status / Badges</th>
                 <th style={{ width: 130, textAlign: "center" }}>View Details</th>
@@ -531,21 +575,21 @@ export default function AllUsersView() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="text-center p-5">
+                  <td colSpan={7} className="text-center p-5">
                     <div className="spinner-border text-warning" role="status"></div>
                     <p className="mt-3 mb-0 opacity-70">Fetching unified user accounts from database...</p>
                   </td>
                 </tr>
               ) : loadError ? (
                 <tr>
-                  <td colSpan={6} className="text-center p-5 text-danger">
+                  <td colSpan={7} className="text-center p-5 text-danger">
                     <AlertTriangle size={32} className="mb-3" />
                     <p className="mb-0">Error loading database: {loadError}</p>
                   </td>
                 </tr>
               ) : pageSlice.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center p-5 opacity-50">
+                  <td colSpan={7} className="text-center p-5 opacity-50">
                     <Database size={32} className="mb-3" />
                     <p className="mb-0">No candidate records found.</p>
                   </td>
@@ -580,6 +624,7 @@ export default function AllUsersView() {
                           {s.role || "unknown"}
                         </span>
                       </td>
+                      <td>{isTraineeRole(s.role) ? <EnrollmentModeBadge mode={s.enrollmentMode} /> : <span className="text-muted small">—</span>}</td>
                       <td>
                         <span style={{ fontSize: "0.85rem", opacity: 0.7 }}>{joinedDate}</span>
                       </td>
@@ -742,6 +787,23 @@ export default function AllUsersView() {
                       </div>
                     )}
 
+                    {studentDetail.role === "student" && (
+                      <div className="mb-3">
+                        <label className="admin-form-label">Type</label>
+                        <select
+                          className="admin-input"
+                          value={editForm.enrollmentMode}
+                          onChange={(e) => setEditForm((prev) => ({ ...prev, enrollmentMode: e.target.value }))}
+                        >
+                          {ENROLLMENT_MODE_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
                     {studentDetail.role === "lead" ? (
                       // A lead hasn't paid for anything yet, so there's
                       // nothing to "assign" here — course modules get set
@@ -814,13 +876,25 @@ export default function AllUsersView() {
                               });
                               const slotTitle = o.slotId?.title || "Purchased Course Registration";
                               const batchNo = o.slotId?.batchNo ? `Batch #${o.slotId.batchNo}` : "Course Module";
+                              const orderAssessorBadges = [
+                                o.assignedGTO && renderAssessorBadge(o.assignedGTO, "GTO"),
+                                o.assignedTO && renderAssessorBadge(o.assignedTO, "TO"),
+                                o.assignedPsych && renderAssessorBadge(o.assignedPsych, "Psych"),
+                                o.assignedIO && renderAssessorBadge(o.assignedIO, "IO"),
+                              ].filter(Boolean);
                               return (
                                 <div className="course-item-card" key={o._id}>
                                   <div className="course-item-left">
-                                    <h6>{slotTitle}</h6>
+                                    <h6 className="d-flex align-items-center gap-2 flex-wrap">
+                                      {slotTitle}
+                                      <EnrollmentModeBadge mode={o.slotId?.mode} />
+                                    </h6>
                                     <p>
                                       <code style={{ color: "var(--primary-gold)" }}>#{(o.orderId || o._id).substring(0, 10)}</code> &nbsp;|&nbsp; {batchNo}
                                     </p>
+                                    {orderAssessorBadges.length > 0 && (
+                                      <div className="w-100 mt-1">{orderAssessorBadges}</div>
+                                    )}
                                   </div>
                                   <div className="course-item-right">
                                     <div className="price">₹{price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
@@ -839,11 +913,9 @@ export default function AllUsersView() {
                         <h5 className="text-warning mb-3" style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>
                           Allotted Evaluators
                         </h5>
-                        <div className="assessor-badge-stack w-100 mb-4">
-                          {renderAssessorBadge(studentDetail.assignedPsych, "Psychology")}
-                          {renderAssessorBadge(studentDetail.assignedGTO, "Group Testing (GTO)")}
-                          {renderAssessorBadge(studentDetail.assignedTO, "Technical (TO)")}
-                          {renderAssessorBadge(studentDetail.assignedIO, "Interviewing (IO)")}
+                        <div className="text-muted small mb-4" style={{ lineHeight: 1.6 }}>
+                          Assessors are now allotted per batch — see each registered batch card on the left for its own
+                          GTO/TO/Psych/IO allotment, or use the Allotment page to change them.
                         </div>
                       </div>
                       <div>
@@ -1018,6 +1090,22 @@ export default function AllUsersView() {
                     <option value="group_testing">GTO Course on VTX</option>
                   </select>
                 </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="admin-form-label">Type</label>
+                <select
+                  className="admin-input"
+                  required
+                  value={addForm.enrollmentMode}
+                  onChange={(e) => setAddForm((prev) => ({ ...prev, enrollmentMode: e.target.value }))}
+                >
+                  {ENROLLMENT_MODE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top border-secondary">

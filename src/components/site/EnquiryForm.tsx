@@ -55,6 +55,7 @@ interface EnquiryFormData {
   youtube: string;
   podcast: string;
   experience: string;
+  courseType: string;
   nextSsb: string;
   boards: string[];
   ssbEntries: string[];
@@ -76,6 +77,7 @@ const EMPTY_FORM_DATA: EnquiryFormData = {
   youtube: "-None-",
   podcast: "-None-",
   experience: "-None-",
+  courseType: "-None-",
   nextSsb: "",
   boards: [],
   ssbEntries: [],
@@ -188,6 +190,10 @@ export default function EnquiryForm() {
       newErrors.serving = "Are you a serving candidate selection is required";
     }
 
+    if (!formData.courseType || formData.courseType === "-None-") {
+      newErrors.courseType = "SSB course type selection is required";
+    }
+
     return newErrors;
   };
 
@@ -222,6 +228,10 @@ export default function EnquiryForm() {
 
       if (!formData.aspirant || formData.aspirant === "-None-") {
         newErrors.aspirant = "Are you an SSB Aspirant selection is required";
+      }
+
+      if (!formData.courseType || formData.courseType === "-None-") {
+        newErrors.courseType = "SSB course type selection is required";
       }
     }
 
@@ -295,6 +305,7 @@ export default function EnquiryForm() {
         youtubeSubscribed: formData.youtube,
         podcastSubscribed: formData.podcast,
         ssbExperience: formData.experience,
+        courseType: formData.courseType,
         nextSsbDate: formData.nextSsb,
         ssbBoards: formData.boards,
         ssbEntries: formData.ssbEntries,
@@ -437,12 +448,12 @@ export default function EnquiryForm() {
           className="enquiry-form"
         >
           {/* Zoho Hidden Configurations */}
-          <input type="hidden" name="xnQsjsdp" value="59a079d57b7b3ba45f3e669634efd281e4b7a16ff519bffee62aee08c43304d7" readOnly />
+          <input type="hidden" name="xnQsjsdp" value="17c0c7e5ffbb359477bf66c14fe1a4352ecf64b98fbd005f1d9962b324219997" readOnly />
           <input type="hidden" name="zc_gad" id="zc_gad" value="" readOnly />
           <input
             type="hidden"
             name="xmIwtLD"
-            value="2ce07fb9bee45f4dedd9ca9cd83096ec7ef9430e0535ffabcb2432f607a3e441bd87a431265a78274c49b0c6bc60e73f"
+            value="65498424a8cd6e4039d8593cf80876cbd1a9a288e823677cff2faf2c6501cd2f1c8d34e07e26268c2b55cdabf2638dcd"
             readOnly
           />
           <input type="hidden" name="actionType" value="TGVhZHM=" readOnly />
@@ -727,6 +738,35 @@ export default function EnquiryForm() {
                       {hasError("aspirant") && (
                         <div className="error-message" style={{ color: "#ff4d4d", fontSize: "13px", marginTop: "5px" }}>
                           {errors.aspirant}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <div className="form-group">
+                      <label className="form-label-custom" htmlFor="LEADCF27">
+                        In which type of SSB course are you interested? <span style={{ color: "red" }}>*</span>
+                      </label>
+                      <select
+                        id="LEADCF27"
+                        name="LEADCF27"
+                        value={formData.courseType}
+                        onChange={(e) => {
+                          handleChange(e);
+                          setFormData((prev) => ({ ...prev, courseType: e.target.value }));
+                        }}
+                        onBlur={() => handleBlur("courseType")}
+                        className={hasError("courseType") ? "error" : ""}
+                        required
+                      >
+                        <option value="-None-">-None-</option>
+                        <option value="Online SSB Course">Online SSB Course</option>
+                        <option value="Offline SSB Course at Nagpur">Offline SSB Course at Nagpur</option>
+                      </select>
+                      {hasError("courseType") && (
+                        <div className="error-message" style={{ color: "#ff4d4d", fontSize: "13px", marginTop: "5px" }}>
+                          {errors.courseType}
                         </div>
                       )}
                     </div>

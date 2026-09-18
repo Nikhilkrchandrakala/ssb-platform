@@ -30,8 +30,8 @@ export async function GET() {
       referralCode: franchise.referralCode,
       status: "paid",
     })
-      .populate("userId", "name email")
-      .populate("slotId", "title price startTime endTime")
+      .populate("userId", "name email enrollmentMode")
+      .populate("slotId", "title price startTime endTime mode")
       .sort({ createdAt: -1 });
 
     const totalSales = orders.reduce((sum, o) => sum + (o.price || 0), 0);

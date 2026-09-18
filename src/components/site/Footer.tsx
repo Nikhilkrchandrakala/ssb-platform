@@ -1,8 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import styles from "@/style/Footer.module.css";
+
+// Pages where the visitor is already looking at/buying a course or batch —
+// showing a floating "Join SSB Batch" CTA there is redundant (they're
+// already in that flow) and just clutters the page.
+const BOOKING_FLOW_PATHS = ["/Batches", "/OfflineBatches", "/JoinSSB", "/Courses"];
 
 interface ContactSettings {
   whatsappNumber?: string;
@@ -16,6 +21,8 @@ function formatPhoneNumber(num?: string) {
 
 export default function Footer({ contactSettings }: { contactSettings: ContactSettings | null }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const isOnBookingFlow = BOOKING_FLOW_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
   const [hideJoinBtn, setHideJoinBtn] = useState(true);
   const [isFooterVisible, setIsFooterVisible] = useState(false);
   const footerRef = useRef<HTMLElement>(null);
@@ -73,9 +80,9 @@ export default function Footer({ contactSettings }: { contactSettings: ContactSe
           </div>
         </div>
 
-        {!hideJoinBtn && !isFooterVisible && (
+        {!hideJoinBtn && !isFooterVisible && !isOnBookingFlow && (
           <div className="modern-floating-dock-left">
-            <button className="dock-join-btn" onClick={() => router.push("/Batches")}>
+            <button className="dock-join-btn" onClick={() => router.push("/JoinSSB")}>
               <span>Join SSB Batch</span>
             </button>
           </div>

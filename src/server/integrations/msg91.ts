@@ -2,19 +2,20 @@ import axios from "axios";
 
 // Same MSG91 widget-based OTP flow the legacy backend used for both phone and
 // email OTP (MSG91 supports email as an "identifier" through the same widget
-// API). Credentials/widget IDs fall back to the legacy hardcoded defaults so
-// existing MSG91 widget configuration keeps working during cutover.
-const TOKEN_AUTH = process.env.MSG91_TOKEN_AUTH || "432663TzWGndK2N7sR6710de92P1";
-const PHONE_WIDGET_ID = process.env.MSG91_WIDGET_ID || "346a776c5749333834363239";
-const EMAIL_WIDGET_ID = process.env.MSG91_EMAIL_WIDGET_ID || "3666656b4157333035303235";
+// API). Credentials come from env only — no hardcoded fallbacks in source.
+const TOKEN_AUTH = process.env.MSG91_TOKEN_AUTH || "";
+const PHONE_WIDGET_ID = process.env.MSG91_WIDGET_ID || "";
+const EMAIL_WIDGET_ID = process.env.MSG91_EMAIL_WIDGET_ID || "";
 
 const MSG91_BASE = "https://api.msg91.com/api/v5/widget";
 
-// Bypass OTP for local dev, mirroring the legacy behavior — never active in production.
+// Bypass OTP for local dev only. Opt-in on an explicit "development" NODE_ENV
+// (not "anything but production") so an unset/misconfigured NODE_ENV on the
+// server can never enable it.
 const DEV_BYPASS_OTP = "123456";
 
 export function isDevOtpBypass(otp: string): boolean {
-  return process.env.NODE_ENV !== "production" && otp === DEV_BYPASS_OTP;
+  return process.env.NODE_ENV === "development" && otp === DEV_BYPASS_OTP;
 }
 
 export async function sendPhoneOtp(last10Phone: string): Promise<{ success: boolean; reqId?: string }> {

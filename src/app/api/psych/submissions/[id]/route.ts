@@ -5,6 +5,7 @@ import { User } from "@/server/models/User";
 import { requireUser, userId } from "../../_lib/auth";
 import { resolvePendingSubmissionId } from "../../_lib/pendingSubmission";
 import { sendMeetingEmails, MeetingRole } from "../../_lib/meetingEmail";
+import { resolveAllotmentForOrder } from "@/server/psychAllotment";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -24,9 +25,29 @@ export async function GET(_req: NextRequest, { params }: Params) {
   try {
     const submission = await Submission.findById(resolved.id)
       .select("-piqFileData")
-      .populate("userId", "name email assignedGTO assignedTO assignedPsych assignedIO clinicalStage profileImage chestNo batch")
+      .populate("userId", "name email clinicalStage profileImage chestNo batch")
       .populate("assessmentId", "title");
-    return NextResponse.json(submission);
+    if (!submission) {
+      return NextResponse.json({ message: "Submission not found" }, { status: 404 });
+    }
+
+    const studentId = String((submission.userId as unknown as { _id?: unknown })?._id || submission.userId);
+    const allotment = await resolveAllotmentForOrder(submission.orderId ? String(submission.orderId) : null, studentId);
+    const subJSON = submission.toJSON ? (submission.toJSON() as Record<string, unknown>) : (submission as unknown as Record<string, unknown>);
+    const studentJSON = subJSON.userId as Record<string, unknown> | undefined;
+    return NextResponse.json({
+      ...subJSON,
+      userId: studentJSON
+        ? {
+            ...studentJSON,
+            assignedGTO: allotment.assignedGTO,
+            assignedTO: allotment.assignedTO,
+            assignedPsych: allotment.assignedPsych,
+            assignedIO: allotment.assignedIO,
+          }
+        : subJSON.userId,
+      isOffline: allotment.isOffline,
+    });
   } catch {
     return NextResponse.json({ message: "Submission not found" }, { status: 404 });
   }
@@ -87,15 +108,13 @@ export async function PUT(req: NextRequest, { params }: Params) {
       let assessorEmail = "";
       let assessorName = "";
       try {
-        const studentId = studentPopulated?._id ?? submission.userId;
-        const student = await User.findById(studentId as string);
+        const studentId = String(studentPopulated?._id ?? submission.userId);
+        const allotment = await resolveAllotmentForOrder(submission.orderId ? String(submission.orderId) : null, studentId);
         let assessorId: unknown = null;
-        if (student) {
-          if (role === "psych" && student.assignedPsych) assessorId = student.assignedPsych;
-          else if (role === "to" && student.assignedTO) assessorId = student.assignedTO;
-          else if (role === "gto" && student.assignedGTO) assessorId = student.assignedGTO;
-          else if (role === "io" && student.assignedIO) assessorId = student.assignedIO;
-        }
+        if (role === "psych" && allotment.assignedPsych) assessorId = allotment.assignedPsych;
+        else if (role === "to" && allotment.assignedTO) assessorId = allotment.assignedTO;
+        else if (role === "gto" && allotment.assignedGTO) assessorId = allotment.assignedGTO;
+        else if (role === "io" && allotment.assignedIO) assessorId = allotment.assignedIO;
 
         if (assessorId) {
           const assignedAssessor = await User.findById(assessorId as string);

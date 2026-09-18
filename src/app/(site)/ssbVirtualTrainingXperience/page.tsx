@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import Navbar from "@/components/site/Navbar";
 import Faq from "@/components/site/Faq";
 import { vtxFaqData } from "@/util/data";
@@ -263,6 +264,29 @@ export default function GtoTrainPage() {
           <div className="row g-0">
             <div className="col-lg-12 img-gradient-wrapper">
               <VtxMuteVideo />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="GTO-what-is-not-section sectionspace80">
+        <div className="container what-is-not-text-box px-0">
+          <div className="row g-0">
+            <div className="col-lg-12 px-0">
+              <div style={{ padding: "32px" }} className="what-is-not-text text-center">
+                <div className="sct-title mb-3">
+                  <h2>VTX<sup>TM</sup> is now available on ground, too.</h2>
+                </div>
+                <p className="text-center" style={{ maxWidth: "760px", margin: "0 auto 20px" }}>
+                  &quot;The GTO ground, before the GTO ground&quot; now has a direct, physical payoff. Our Nagpur
+                  campus pairs the virtual simulation you just saw with a real GTO ground, so candidates who train
+                  on VTX<sup>TM</sup> can walk straight onto the actual obstacles in person, during our 12-day
+                  offline batch.
+                </p>
+                <Link href="/ssb-offline-coaching" className="thm-btn" style={{ margin: "0 auto" }}>
+                  Explore the Nagpur Offline Batch →
+                </Link>
+              </div>
             </div>
           </div>
         </div>

@@ -355,6 +355,152 @@
     font-size: 16px;
 }
 
+/* Courses hover/tap flyout — opens to the LEFT since the sidebar itself is
+   docked to the right edge (see .sidebar's `right: 0` above), so the
+   submenu opens toward the center of the screen instead of off-canvas. */
+.coursesMenuItem {
+    position: relative;
+}
+
+.coursesTrigger {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    font-size: 16px;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    width: 100%;
+}
+
+/* Rendered via a React portal into document.body (see Sidebar.tsx) — top/
+   right come from the trigger's live getBoundingClientRect() as inline
+   styles, so `position: fixed` here positions it relative to the viewport,
+   not the sidebar's own (overflow-x: hidden) box, which was clipping it.
+   Same warm gradient as .sidebar itself (rather than a flat dark fill) so
+   the flyout reads as part of the same surface, not a mismatched popup. */
+.coursesSubmenu {
+    position: fixed;
+    transform: translateY(-50%);
+    background: linear-gradient(150deg, #3b3930 0%, #2a291f 55%, #1f1f1a 100%);
+    border: 1px solid rgba(210, 161, 0, 0.35);
+    border-radius: 14px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 210px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(210, 161, 0, 0.06);
+    z-index: 10000000;
+    animation: fadeInSubmenu 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Small diamond "pointer" on the box's right edge, aimed at the trigger it
+   opened from — a standard flyout affordance so it doesn't read as a
+   disconnected floating card. */
+.coursesSubmenu::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: -6px;
+    width: 12px;
+    height: 12px;
+    background: #2a291f;
+    border-right: 1px solid rgba(210, 161, 0, 0.35);
+    border-top: 1px solid rgba(210, 161, 0, 0.35);
+    transform: translateY(-50%) rotate(45deg);
+}
+
+@keyframes fadeInSubmenu {
+    from {
+        opacity: 0;
+        transform: translateY(-50%) translateX(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
+    }
+}
+
+.coursesSubmenuLabel {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.4);
+    padding: 4px 10px 6px;
+}
+
+.coursesSubmenuItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 10px;
+    color: #fff;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.coursesSubmenuIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 9px;
+    background: rgba(210, 161, 0, 0.12);
+    color: #d2a100;
+    font-size: 17px;
+}
+
+.coursesSubmenuText {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.coursesSubmenuText strong {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.coursesSubmenuText small {
+    font-size: 11px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.coursesSubmenuArrow {
+    margin-left: auto;
+    color: rgba(255, 255, 255, 0.25);
+    font-size: 16px;
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.coursesSubmenuItem:hover {
+    background: rgba(210, 161, 0, 0.12);
+    transform: translateX(2px);
+}
+
+.coursesSubmenuItem:hover .coursesSubmenuIcon {
+    background: rgba(210, 161, 0, 0.22);
+}
+
+.coursesSubmenuItem:hover .coursesSubmenuText strong {
+    color: #d2a100;
+}
+
+.coursesSubmenuItem:hover .coursesSubmenuArrow {
+    color: #d2a100;
+    transform: translateX(2px);
+}
+
 /* 🔥 Active Link */
 .active {
     color: #d2a100;
@@ -410,6 +556,25 @@
     gap: 20px;
     flex-wrap: wrap;
     /* margin-bottom: 500px; */
+}
+
+/* Never had a rule of its own — fell back to the browser's default blue,
+   underlined link color instead of matching the rest of the drawer. */
+.contactItem {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #c6c5af;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.contactItem:hover {
+    color: #d2a100;
+}
+
+.contactItem i {
+    color: #d2a100;
 }
 
 /* .footerMarginBottom {

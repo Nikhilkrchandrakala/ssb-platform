@@ -1,0 +1,49 @@
+.strip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.text {
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--theme-white);
+    letter-spacing: 0.02em;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: var(--secondary-color);
+    text-decoration: underline;
+    white-space: nowrap;
+    transition: color 0.3s ease;
+}
+
+.btn:hover {
+    color: #ffffff;
+}
+
+@media (max-width: 576px) {
+    .strip {
+        gap: 10px;
+    }
+
+    .text {
+        font-size: 12px;
+    }
+
+    .btn {
+        font-size: 12px;
+    }
+}

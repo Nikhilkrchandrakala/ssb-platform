@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Copy, TrendingUp, ShoppingCart, Wallet, History } from "lucide-react";
+import { ENROLLMENT_MODE_OPTIONS, resolveEnrollmentMode } from "@/lib/enrollmentMode";
+import EnrollmentModeBadge from "@/components/admin/EnrollmentModeBadge";
 import "@/app/admin/styles/legacy-franchise-dashboard.css";
 
 const ICON_STYLE = { verticalAlign: -2 };
@@ -19,12 +21,12 @@ const ICON_STYLE = { verticalAlign: -2 };
 
 interface DashboardOrder {
   _id: string;
-  userId?: { name?: string; email?: string };
+  userId?: { name?: string; email?: string; enrollmentMode?: string };
   // Purchase-time snapshot — falls back to this when userId is a dangling
   // reference (the candidate's account was later deleted).
   buyerName?: string | null;
   buyerEmail?: string | null;
-  slotId?: { title?: string };
+  slotId?: { title?: string; mode?: string };
   originalAmount?: number;
   discount?: number;
   price?: number;
@@ -45,6 +47,7 @@ export default function FranchiseDashboardView() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [modeFilter, setModeFilter] = useState("all");
 
   // Initial load — inline .then() chain (no delegated async function) so the
   // mount effect doesn't trip react-hooks/set-state-in-effect.
@@ -156,10 +159,28 @@ export default function FranchiseDashboardView() {
 
           {/* Recent Activity Table */}
           <div className="admin-card">
-            <div className="card-header border-0 bg-transparent px-0 pb-3">
+            <div className="card-header border-0 bg-transparent px-0 pb-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
               <h4 className="mb-0 text-white">
                 <History size={18} className="me-2 text-warning" style={ICON_STYLE} /> Recent Referral Activity
               </h4>
+              {data.orders && data.orders.length > 0 && (
+                <div className="d-flex gap-2 align-items-center">
+                  <span className="text-muted small">TYPE FILTER:</span>
+                  <select
+                    className="admin-input"
+                    style={{ width: 160, padding: "8px 15px" }}
+                    value={modeFilter}
+                    onChange={(e) => setModeFilter(e.target.value)}
+                  >
+                    <option value="all">All Types</option>
+                    {ENROLLMENT_MODE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
             <div className="admin-table-container">
               <table className="admin-table">
@@ -167,6 +188,7 @@ export default function FranchiseDashboardView() {
                   <tr>
                     <th>Order ID</th>
                     <th>Customer Details</th>
+                    <th>Type</th>
                     <th>Course/Slot</th>
                     <th>Original Amount</th>
                     <th>Discount</th>
@@ -177,14 +199,20 @@ export default function FranchiseDashboardView() {
                   </tr>
                 </thead>
                 <tbody>
-                  {!data.orders || data.orders.length === 0 ? (
-                    <tr>
-                      <td colSpan={9} className="text-center text-muted py-5">
-                        No referral orders found yet
-                      </td>
-                    </tr>
-                  ) : (
-                    data.orders.map((order) => {
+                  {(() => {
+                    const orders = (data.orders || []).filter(
+                      (order) => modeFilter === "all" || resolveEnrollmentMode(order.slotId?.mode || order.userId?.enrollmentMode) === modeFilter
+                    );
+                    if (orders.length === 0) {
+                      return (
+                        <tr>
+                          <td colSpan={10} className="text-center text-muted py-5">
+                            {data.orders && data.orders.length > 0 ? "No referral orders match this filter" : "No referral orders found yet"}
+                          </td>
+                        </tr>
+                      );
+                    }
+                    return orders.map((order) => {
                       const date = new Date(order.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
                       const userName = order.userId?.name || order.buyerName || "Unknown";
                       const userEmail = order.userId?.email || order.buyerEmail || "-";
@@ -203,6 +231,9 @@ export default function FranchiseDashboardView() {
                           <td>
                             <div style={{ fontWeight: 600 }}>{userName}</div>
                             <div className="small opacity-50">{userEmail}</div>
+                          </td>
+                          <td>
+                            <EnrollmentModeBadge mode={order.slotId?.mode || order.userId?.enrollmentMode} />
                           </td>
                           <td>{slotTitle}</td>
                           <td>₹{original.toFixed(2)}</td>
@@ -231,8 +262,8 @@ export default function FranchiseDashboardView() {
                           </td>
                         </tr>
                       );
-                    })
-                  )}
+                    });
+                  })()}
                 </tbody>
               </table>
             </div>

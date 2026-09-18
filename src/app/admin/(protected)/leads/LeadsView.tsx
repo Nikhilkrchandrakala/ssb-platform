@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import SearchCombobox from "@/components/admin/SearchCombobox";
 import { latestDistinctValues } from "@/lib/latestValues";
+import { ENROLLMENT_MODE_OPTIONS, resolveEnrollmentMode } from "@/lib/enrollmentMode";
+import EnrollmentModeBadge from "@/components/admin/EnrollmentModeBadge";
 import "@/app/admin/styles/legacy-leads.css";
 import "@/app/admin/styles/legacy-leads-page.css";
 
@@ -52,6 +54,7 @@ interface LeadItem {
   // Sales module (salesimplementation.md Phase 6, stretch) — set by
   // enrollStudent when this lead's email matches a new sales enrollment.
   convertedAt?: string | null;
+  enrollmentMode?: string;
 }
 
 declare global {
@@ -89,6 +92,7 @@ export default function LeadsView() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
+  const [modeFilter, setModeFilter] = useState("all");
   const [fromDateInput, setFromDateInput] = useState("");
   const [toDateInput, setToDateInput] = useState("");
   const [appliedFrom, setAppliedFrom] = useState("");
@@ -137,16 +141,21 @@ export default function LeadsView() {
     });
   }, [allLeads, appliedFrom, appliedTo]);
 
+  const modeFiltered = useMemo(() => {
+    if (modeFilter === "all") return dateFiltered;
+    return dateFiltered.filter((lead) => resolveEnrollmentMode(lead.enrollmentMode) === modeFilter);
+  }, [dateFiltered, modeFilter]);
+
   const searchFiltered = useMemo(() => {
     const query = search.toLowerCase().trim();
-    if (!query) return dateFiltered;
-    return dateFiltered.filter((lead) => {
+    if (!query) return modeFiltered;
+    return modeFiltered.filter((lead) => {
       const name = (lead.name || "").toLowerCase();
       const email = (lead.email || "").toLowerCase();
       const phone = (lead.phoneNumber || "").toLowerCase();
       return name.includes(query) || email.includes(query) || phone.includes(query);
     });
-  }, [dateFiltered, search]);
+  }, [modeFiltered, search]);
 
   const totalPages = Math.max(1, Math.ceil(searchFiltered.length / perPage));
   const safePage = Math.min(Math.max(currentPage, 1), totalPages);
@@ -193,6 +202,7 @@ export default function LeadsView() {
     setAppliedFrom("");
     setAppliedTo("");
     setSearch("");
+    setModeFilter("all");
     setCurrentPage(1);
   }
 
@@ -255,6 +265,7 @@ export default function LeadsView() {
         Name: lead.name || "—",
         Email: lead.email || "—",
         Phone: lead.phoneNumber || "—",
+        Type: resolveEnrollmentMode(lead.enrollmentMode) === "offline" ? "Offline" : "Online",
       };
     });
 
@@ -314,6 +325,24 @@ export default function LeadsView() {
           </label>
           <input type="date" className="admin-input" value={toDateInput} onChange={(e) => setToDateInput(e.target.value)} />
         </div>
+        <div className="filter-item">
+          <label className="admin-form-label">TYPE FILTER</label>
+          <select
+            className="admin-input"
+            value={modeFilter}
+            onChange={(e) => {
+              setModeFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="all">All Types</option>
+            {ENROLLMENT_MODE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="filter-actions">
           <button className="thm-btn" style={{ minWidth: 130 }} onClick={applyFilters}>
             <Search size={14} className="me-2" style={ICON_STYLE} /> Apply Filter
@@ -357,7 +386,7 @@ export default function LeadsView() {
             <table className="admin-table">
               <tbody>
                 <tr>
-                  <td colSpan={7} className="text-center text-danger p-4">
+                  <td colSpan={8} className="text-center text-danger p-4">
                     <AlertTriangle size={16} className="me-2" style={ICON_STYLE} /> Failed to load leads: {loadError}
                   </td>
                 </tr>
@@ -384,6 +413,7 @@ export default function LeadsView() {
                     <th>Student Name</th>
                     <th>Email Address</th>
                     <th>Mobile Number</th>
+                    <th>Type</th>
                     <th>Status</th>
                     <th>Actions</th>
                   </tr>
@@ -425,6 +455,9 @@ export default function LeadsView() {
                           <span className="lead-contact">
                             <Phone size={12} className="me-1" style={ICON_STYLE} /> {lead.phoneNumber || "—"}
                           </span>
+                        </td>
+                        <td>
+                          <EnrollmentModeBadge mode={lead.enrollmentMode} />
                         </td>
                         <td>
                           {lead.convertedAt ? (

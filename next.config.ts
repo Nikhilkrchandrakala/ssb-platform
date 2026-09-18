@@ -56,8 +56,20 @@ if (fs.promises && fs.promises.readlink) {
   } as any;
 }
 
+const SECURITY_HEADERS = [
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Strict-Transport-Security", value: "max-age=31536000" },
+  // Deliberately not a full script/style CSP: the site loads Zoho, Razorpay,
+  // GA, Turnstile and SalesIQ scripts and posts forms to crm.zoho.in — a
+  // strict policy needs its own testing pass. These three are safe as-is.
+  { key: "Content-Security-Policy", value: "frame-ancestors 'self'; object-src 'none'; base-uri 'self'" },
+];
+
 const nextConfig: NextConfig = {
   output: "standalone",
+  poweredByHeader: false,
   // Route local-disk uploads through a route handler that reads fresh from
   // disk per-request (src/app/api/uploads/[...path]/route.ts) instead of
   // Next's own public-folder static serving, which snapshots public/'s file
@@ -79,6 +91,7 @@ const nextConfig: NextConfig = {
   // before offering the install prompt.
   async headers() {
     return [
+      { source: "/:path*", headers: SECURITY_HEADERS },
       {
         source: "/sw.js",
         headers: [

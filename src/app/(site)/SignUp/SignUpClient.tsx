@@ -127,6 +127,7 @@ export default function SignUpClient({ initialDisplaySettings }: { initialDispla
   const [youtubeSubscribed, setYoutubeSubscribed] = useState("-None-");
   const [podcastSubscribed, setPodcastSubscribed] = useState("-None-");
   const [ssbExperience, setSsbExperience] = useState("-None-");
+  const [courseType, setCourseType] = useState("-None-");
   const [nextSsbDate, setNextSsbDate] = useState("");
   const [ssbBoards, setSsbBoards] = useState<string[]>([]);
   const [ssbEntries, setSsbEntries] = useState<string[]>([]);
@@ -422,6 +423,7 @@ export default function SignUpClient({ initialDisplaySettings }: { initialDispla
         youtubeSubscribed,
         podcastSubscribed,
         ssbExperience,
+        courseType,
         nextSsbDate,
         ssbBoards,
         ssbEntries,
@@ -849,6 +851,15 @@ export default function SignUpClient({ initialDisplaySettings }: { initialDispla
                   <option value="Fresher">Fresher</option>
                   <option value="Screen Out">Screen Out</option>
                   <option value="Conference Out">Conference Out</option>
+                </select>
+              </div>
+
+              <div className="col-lg-6 mgf-field">
+                <label className="mgf-label">In which type of SSB course are you interested?</label>
+                <select className="mgf-select" value={courseType} onChange={(e) => setCourseType(e.target.value)}>
+                  <option value="-None-">Select…</option>
+                  <option value="Online SSB Course">Online SSB Course</option>
+                  <option value="Offline SSB Course at Nagpur">Offline SSB Course at Nagpur</option>
                 </select>
               </div>
 

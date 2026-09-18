@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { exec } from "node:child_process";
+import { timingSafeEqual } from "node:crypto";
 
 // Force the Node.js runtime (not Edge) — this handler shells out via
 // child_process, same as the legacy Express receiver.
@@ -20,10 +21,14 @@ export const runtime = "nodejs";
  * Ported from legacy webhookRoutes.js.
  */
 export async function POST(req: NextRequest) {
-  const secret = req.nextUrl.searchParams.get("secret");
-  const expectedSecret = process.env.DEPLOY_WEBHOOK_SECRET || "Joint3servicesDeploySecret2026";
+  const secret = req.nextUrl.searchParams.get("secret") || "";
+  // No hardcoded fallback: if DEPLOY_WEBHOOK_SECRET isn't configured on the
+  // server the webhook is disabled rather than guessable from the source.
+  const expectedSecret = process.env.DEPLOY_WEBHOOK_SECRET || "";
 
-  if (secret !== expectedSecret) {
+  const a = Buffer.from(secret);
+  const b = Buffer.from(expectedSecret);
+  if (!expectedSecret || a.length !== b.length || !timingSafeEqual(a, b)) {
     return NextResponse.json({ error: "Unauthorized: Invalid secret token" }, { status: 401 });
   }
 

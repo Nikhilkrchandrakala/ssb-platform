@@ -1,17 +1,11 @@
 /*
- * Font Awesome, loaded via CDN exactly as the legacy site did. Bootstrap used
- * to be a second @import here too (both from CDN) — moved to a direct
- * `import "bootstrap/dist/css/bootstrap.min.css"` in (site)/layout.tsx
- * instead (self-hosted from the npm package already in package.json), since
- * a remote-CDN `@import` for something as cascade-critical as Bootstrap's
- * Reboot caused a real FOUC on cold cache and was fragile to Next's CSS
- * chunk ordering in dev. This file still needs to be the first CSS import in
- * `(site)/layout.tsx` (before legacy-index/app/custom.css and
- * custom-theme.css): an `@import` must be the first rule(s) in a stylesheet,
- * and Next bundles a layout's CSS imports into one chunk in import order.
- * Using a plain <link> in JSX instead does NOT work here: a bare
- * <link rel="stylesheet"> is hoisted to <head> only after every
- * precedence-managed stylesheet (including this layout's own CSS-module
- * imports), so Font Awesome would load last.
+ * Font Awesome, self-hosted from the npm package (font-awesome@4.7.0 — same
+ * version, same `fa fa-*` class names as the CDN link this replaced).
+ * Previously a remote `@import url("https://cdnjs...")`: same fragility
+ * Bootstrap's own CDN `@import` had before it moved to a direct npm import in
+ * (site)/layout.tsx (see that migration's own comment) — unreliable on a
+ * cold cache and fragile to Next's CSS chunk ordering in dev, which is what
+ * caused the footer's chat/WhatsApp dock icons to intermittently render as
+ * empty circles.
  */
-@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css");
+@import url("font-awesome/css/font-awesome.min.css");

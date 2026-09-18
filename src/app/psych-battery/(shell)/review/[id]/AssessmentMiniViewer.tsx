@@ -1,5 +1,6 @@
 "use client";
 
+import { sanitizeRichHtml } from "@/lib/sanitizeHtml";
 import { useMemo } from "react";
 import { useAssessmentData } from "@/app/psych-battery/hooks/useAssessmentData";
 import { AssessmentSlide, ModuleId } from "@/app/psych-battery/types";
@@ -198,14 +199,14 @@ export function AssessmentMiniViewer({ assessmentId }: AssessmentMiniViewerProps
                     <div
                       className="text-xl font-black text-app-text-bright tracking-tight text-center py-6 bg-black/20 rounded-xl font-mono uppercase border border-app-border/20"
                       style={{ filter: slide.inverted ? "invert(1)" : "none" }}
-                      dangerouslySetInnerHTML={{ __html: slide.content }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(slide.content) }}
                     />
                   )}
 
                   {slide.slideType === "TEXT" && slide.content && (
                     <div
                       className="text-xs text-app-text-bright leading-relaxed bg-black/20 border border-app-border/20 rounded-xl p-4 font-serif italic"
-                      dangerouslySetInnerHTML={{ __html: cleanHTML(slide.content) }}
+                      dangerouslySetInnerHTML={{ __html: cleanHTML(sanitizeRichHtml(slide.content)) }}
                     />
                   )}
                 </div>

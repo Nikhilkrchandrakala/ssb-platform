@@ -3,6 +3,7 @@ import { connectDB } from "@/server/db";
 import { Submission } from "@/server/models/Submission";
 import { User } from "@/server/models/User";
 import { requireUser, userId } from "../_lib/auth";
+import { resolveAllotmentForOrder } from "@/server/psychAllotment";
 
 type MeetingRole = "psych" | "to" | "gto" | "io";
 
@@ -63,16 +64,7 @@ export async function GET(req: NextRequest) {
 
     const rawSubmissions = await Submission.find(query)
       .select("-piqFileData")
-      .populate({
-        path: "userId",
-        select: "name email assignedGTO assignedTO assignedPsych assignedIO clinicalStage profileImage chestNo batch",
-        populate: [
-          { path: "assignedPsych", select: "name email" },
-          { path: "assignedTO", select: "name email" },
-          { path: "assignedGTO", select: "name email" },
-          { path: "assignedIO", select: "name email" },
-        ],
-      })
+      .populate("userId", "name email clinicalStage profileImage chestNo batch")
       .populate("assessmentId", "title type");
 
     // If the logged-in user is an assessor, restrict them to their assigned
@@ -83,6 +75,23 @@ export async function GET(req: NextRequest) {
       assessorTypeFilter = (loggedInUser as unknown as { assessorType?: string } | null)?.assessorType || "";
     }
 
+    // Resolve each submission's own batch allotment (not the student's
+    // now-possibly-stale global User fields) up front, then batch-fetch the
+    // assessor name/email for every distinct assessor id referenced.
+    const allotmentBySubId = new Map<string, Awaited<ReturnType<typeof resolveAllotmentForOrder>>>();
+    for (const sub of rawSubmissions) {
+      const subId = String(sub._id);
+      const studentId = String((sub.userId as unknown as { _id?: unknown })?._id || sub.userId);
+      allotmentBySubId.set(subId, await resolveAllotmentForOrder(sub.orderId ? String(sub.orderId) : null, studentId));
+    }
+    const allAssessorIds = [
+      ...new Set(
+        Array.from(allotmentBySubId.values()).flatMap((a) => [a.assignedPsych, a.assignedTO, a.assignedGTO, a.assignedIO].filter(Boolean) as string[])
+      ),
+    ];
+    const assessorDocs = await User.find({ _id: { $in: allAssessorIds } }).select("name email");
+    const assessorById = new Map(assessorDocs.map((a) => [String(a._id), { _id: String(a._id), name: a.name, email: a.email }]));
+
     const allMeetings: FlatMeeting[] = [];
     const roles: MeetingRole[] = ["psych", "to", "gto", "io"];
 
@@ -90,6 +99,7 @@ export async function GET(req: NextRequest) {
       const subJSON = (sub.toJSON ? sub.toJSON() : sub) as Record<string, unknown>;
       const student = (subJSON.userId as Record<string, unknown>) || { name: "Candidate", email: "" };
       if (!student) continue;
+      const allotment = allotmentBySubId.get(String(sub._id))!;
 
       for (const role of roles) {
         let dateVal = subJSON[`${role}MeetingDate`] as string | null | undefined;
@@ -103,10 +113,10 @@ export async function GET(req: NextRequest) {
         }
 
         let assessor: Record<string, unknown> | null = null;
-        if (role === "psych") assessor = student.assignedPsych as Record<string, unknown> | null;
-        else if (role === "to") assessor = student.assignedTO as Record<string, unknown> | null;
-        else if (role === "gto") assessor = student.assignedGTO as Record<string, unknown> | null;
-        else if (role === "io") assessor = student.assignedIO as Record<string, unknown> | null;
+        if (role === "psych") assessor = allotment.assignedPsych ? assessorById.get(allotment.assignedPsych) || null : null;
+        else if (role === "to") assessor = allotment.assignedTO ? assessorById.get(allotment.assignedTO) || null : null;
+        else if (role === "gto") assessor = allotment.assignedGTO ? assessorById.get(allotment.assignedGTO) || null : null;
+        else if (role === "io") assessor = allotment.assignedIO ? assessorById.get(allotment.assignedIO) || null : null;
 
         // If the logged-in user is an assessor, include the meeting if either the role matches
         // their assessorType OR if they are specifically assigned as the assessor for this role.

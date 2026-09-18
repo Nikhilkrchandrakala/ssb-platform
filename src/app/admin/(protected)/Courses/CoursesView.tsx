@@ -23,6 +23,8 @@ import {
   Trash2,
   BookOpen,
   CheckCircle2,
+  MapPin,
+  Building2,
 } from "lucide-react";
 import { isBookingClosed, formatTimeRemaining } from "@/lib/batchTiming";
 import "@/app/admin/styles/legacy-courses.css";
@@ -40,7 +42,11 @@ interface Slot {
   bookedStudents?: string[];
   price?: number;
   isFullCourse?: boolean;
+  mode?: string;
+  location?: string;
 }
+
+const OFFLINE_REGISTRATION_FEE = 5000;
 
 interface Course {
   _id: string;
@@ -120,6 +126,22 @@ export default function CoursesView() {
     ssb_ppdt: false, psych: false, interview: false, group_testing: false,
   });
   const [savingSlot, setSavingSlot] = useState(false);
+
+  // Add/Edit OFFLINE slot modal — separate from the online one above since
+  // offline batches have no batchType/morning-evening or module concept, but
+  // do have a Location field the online form doesn't.
+  const [offlineModalOpen, setOfflineModalOpen] = useState(false);
+  const [editOfflineSlotId, setEditOfflineSlotId] = useState<string | null>(null);
+  const [offlineTitle, setOfflineTitle] = useState("");
+  const [offlineBatchNo, setOfflineBatchNo] = useState("");
+  const [offlineStartDate, setOfflineStartDate] = useState("");
+  const [offlineLocation, setOfflineLocation] = useState("");
+  const [offlineMaxStudents, setOfflineMaxStudents] = useState(20);
+  // Editable for testing (2026-09-17 request) — was a fixed, non-editable
+  // ₹5,000 constant everywhere. Defaults to that same figure but admin can
+  // now set a different registration fee per batch.
+  const [offlinePrice, setOfflinePrice] = useState(OFFLINE_REGISTRATION_FEE);
+  const [savingOfflineSlot, setSavingOfflineSlot] = useState(false);
 
   // Manual booking modal
   const [bookModalOpen, setBookModalOpen] = useState(false);
@@ -242,12 +264,17 @@ export default function CoursesView() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const monthBatches = allBatches.filter((b) => {
+    if (b.mode === "offline") return false;
     if (!b.startTime) return false;
     const d = new Date(b.startTime);
     return d.getFullYear() === year && d.getMonth() === month;
   });
   const totalCapacity = monthBatches.reduce((sum, b) => sum + (b.maxStudents || 0), 0);
   const totalBooked = monthBatches.reduce((sum, b) => sum + (b.bookedStudents ? b.bookedStudents.length : 0), 0);
+
+  const offlineBatches = allBatches
+    .filter((b) => b.mode === "offline")
+    .sort((a, b) => new Date(a.startTime || 0).getTime() - new Date(b.startTime || 0).getTime());
 
   // --- Add/Edit slot modal ---
   const toggleFullCourseUI = (nextIsFull: boolean, initialPopulate = false) => {
@@ -362,6 +389,100 @@ export default function CoursesView() {
       });
     } finally {
       setSavingSlot(false);
+    }
+  };
+
+  const openAddOfflineModal = () => {
+    setEditOfflineSlotId(null);
+    setOfflineTitle("");
+    setOfflineBatchNo("");
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    setOfflineStartDate(toDateInputValue(tomorrow));
+    setOfflineLocation("");
+    setOfflineMaxStudents(20);
+    setOfflinePrice(OFFLINE_REGISTRATION_FEE);
+    setOfflineModalOpen(true);
+  };
+
+  const openEditOfflineModal = async (id: string) => {
+    try {
+      const resp = await fetch(`/api/slotDetail/${id}`);
+      if (!resp.ok) throw new Error("Batch not found");
+      const slot: Slot = await resp.json();
+
+      setEditOfflineSlotId(id);
+      setOfflineTitle(slot.title || "");
+      setOfflineBatchNo(slot.batchNo || "");
+      if (slot.startTime) setOfflineStartDate(toDateInputValue(new Date(slot.startTime)));
+      setOfflineLocation(slot.location || "");
+      setOfflineMaxStudents(slot.maxStudents || 20);
+      setOfflinePrice(slot.price || OFFLINE_REGISTRATION_FEE);
+      setOfflineModalOpen(true);
+    } catch (err) {
+      window.Swal?.fire({
+        icon: "error",
+        title: "Error",
+        text: err instanceof Error ? err.message : "Error",
+        background: "#1a1a1a",
+        color: "#fff",
+      });
+    }
+  };
+
+  const saveOfflineSlot = async () => {
+    if (!offlineTitle.trim() || !offlineStartDate || !offlineLocation.trim()) {
+      window.Swal?.fire({
+        icon: "warning",
+        text: "Title, Start Date, and Location are required.",
+        background: "#1a1a1a",
+        color: "#fff",
+      });
+      return;
+    }
+
+    const payload = {
+      title: offlineTitle.trim(),
+      batchNo: offlineBatchNo,
+      startTime: new Date(offlineStartDate).toISOString(),
+      endTime: new Date(new Date(offlineStartDate).getTime() + 86400000).toISOString(),
+      maxStudents: Number(offlineMaxStudents) || 0,
+      price: Number(offlinePrice) || OFFLINE_REGISTRATION_FEE,
+      isFullCourse: false,
+      mode: "offline",
+      location: offlineLocation.trim(),
+    };
+
+    try {
+      setSavingOfflineSlot(true);
+      const url = editOfflineSlotId ? `/api/updateSlot/${editOfflineSlotId}` : "/api/addSlot";
+      const method = editOfflineSlotId ? "PUT" : "POST";
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error("Failed to save offline batch");
+
+      window.Swal?.fire({
+        icon: "success",
+        title: "Success",
+        text: "Offline batch has been saved.",
+        background: "#1a1a1a",
+        color: "#fff",
+      });
+      setOfflineModalOpen(false);
+      reloadBatches();
+    } catch (err) {
+      window.Swal?.fire({
+        icon: "error",
+        title: "Save Failed",
+        text: err instanceof Error ? err.message : "Error",
+        background: "#1a1a1a",
+        color: "#fff",
+      });
+    } finally {
+      setSavingOfflineSlot(false);
     }
   };
 
@@ -597,9 +718,14 @@ export default function CoursesView() {
           </h1>
           <p className="text-muted mb-0">Schedule courses, manage batches, and handle manual seat bookings</p>
         </div>
-        <button className="thm-btn" onClick={openAddModal}>
-          <PlusCircle size={16} style={ICON_STYLE} /> Create New Batch
-        </button>
+        <div className="d-flex gap-2">
+          <button className="thm-btn" onClick={openAddModal}>
+            <PlusCircle size={16} style={ICON_STYLE} /> Create New Batch
+          </button>
+          <button className="thm-btn secondary" onClick={openAddOfflineModal}>
+            <Building2 size={16} style={ICON_STYLE} /> Create Offline Batch
+          </button>
+        </div>
       </div>
 
       {/* Global Course Pricing Card */}
@@ -837,6 +963,219 @@ export default function CoursesView() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Offline Batches */}
+      <div className="admin-page-header" style={{ marginTop: 40 }}>
+        <div className="header-left">
+          <h1 className="admin-page-title">
+            <Building2 size={20} className="me-2" style={ICON_STYLE} /> Offline Batches
+          </h1>
+          <p className="text-muted mb-0">In-person batches — students pay a ₹{OFFLINE_REGISTRATION_FEE.toLocaleString("en-IN")} registration fee online, balance at the center</p>
+        </div>
+      </div>
+
+      {!loading && offlineBatches.length === 0 && (
+        <div className="empty-state text-center" style={{ padding: "60px 20px" }}>
+          <div className="empty-icon mb-4" style={{ color: "var(--primary-gold)", opacity: 0.3 }}>
+            <Building2 size={56} />
+          </div>
+          <h3>No offline batches yet</h3>
+          <p className="text-muted">Create one to start accepting in-person registrations.</p>
+          <button className="thm-btn mt-3" onClick={openAddOfflineModal}>
+            <Plus size={16} style={ICON_STYLE} /> Create Offline Batch
+          </button>
+        </div>
+      )}
+
+      {!loading && offlineBatches.length > 0 && (
+        <div className="row g-4">
+          {offlineBatches.map((slot) => {
+            const startDateStr = slot.startTime
+              ? new Date(slot.startTime).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+              : "N/A";
+            const max = slot.maxStudents || 0;
+            const booked = slot.bookedStudents ? slot.bookedStudents.length : 0;
+            const available = max - booked;
+            const isFull = max > 0 && booked >= max;
+
+            return (
+              <div className="col-lg-4 col-md-6" key={slot._id}>
+                <div className="batch-card">
+                  <div className="batch-header">
+                    <span className="type-badge evening-type">
+                      <Building2 size={14} className="me-2" style={ICON_STYLE} />
+                      {slot.title}
+                    </span>
+                    <span style={{ fontSize: "0.75rem", opacity: 0.5 }}>ID: {slot.batchNo || "—"}</span>
+                  </div>
+                  <div className="batch-body">
+                    <div className="stat-item">
+                      <span className="stat-label">
+                        <CalendarDays size={14} className="me-2" style={ICON_STYLE} />Start Date
+                      </span>
+                      <span className="stat-value">{startDateStr}</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">
+                        <MapPin size={14} className="me-2" style={ICON_STYLE} />Location
+                      </span>
+                      <span className="stat-value">{slot.location || "—"}</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">
+                        <Users size={14} className="me-2" style={ICON_STYLE} />Capacity
+                      </span>
+                      <span className="stat-value">{max} Seats</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">
+                        <UserCheck size={14} className="me-2" style={ICON_STYLE} />Booked
+                      </span>
+                      <span className="stat-value">{booked} Students</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">
+                        <Tag size={14} className="me-2" style={ICON_STYLE} />Registration Fee
+                      </span>
+                      <span className="price-badge">₹{(slot.price ?? OFFLINE_REGISTRATION_FEE).toLocaleString("en-IN")}</span>
+                    </div>
+                    <div className="mt-3 text-center">
+                      {isFull ? (
+                        <span className="badge bg-danger w-100 p-2" style={{ borderRadius: 8 }}>
+                          <Ban size={14} className="me-2" style={ICON_STYLE} />BATCH FULL
+                        </span>
+                      ) : (
+                        <span
+                          className="badge bg-success w-100 p-2"
+                          style={{
+                            background: "rgba(46, 204, 113, 0.1)",
+                            color: "#2ecc71",
+                            border: "1px solid rgba(46, 204, 113, 0.3)",
+                            borderRadius: 8,
+                          }}
+                        >
+                          <Check size={14} className="me-2" style={ICON_STYLE} />{available} SPOTS AVAILABLE
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="batch-footer">
+                    <button className="action-btn edit-btn" style={{ flex: 1 }} title="Edit" onClick={() => openEditOfflineModal(slot._id)}>
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      className="action-btn manual-btn"
+                      style={{ flex: 2, background: "rgba(39, 174, 96, 0.1)", borderColor: "rgba(39, 174, 96, 0.3)", color: "#2ecc71" }}
+                      disabled={isFull}
+                      onClick={() => openManualBookingModal(slot._id)}
+                    >
+                      <UserPlus size={14} className="me-1" style={ICON_STYLE} /> Book
+                    </button>
+                    <button
+                      className="action-btn delete-btn"
+                      style={{ flex: 1, color: "#ff6b6b" }}
+                      onClick={() => showDeleteConfirm(slot._id)}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Add/Edit Offline Batch Modal */}
+      {offlineModalOpen && (
+        <div className="admin-modal-overlay" style={{ display: "flex" }}>
+          <div className="admin-modal" style={{ maxWidth: 600, width: "95%", margin: "20px auto" }}>
+            <div className="admin-modal-header">
+              <h3 className="admin-modal-title">
+                <Building2 size={18} className="me-2" style={ICON_STYLE} />
+                {editOfflineSlotId ? "Edit Offline Batch" : "Create Offline Batch"}
+              </h3>
+              <button type="button" className="btn-close btn-close-white" onClick={() => setOfflineModalOpen(false)}></button>
+            </div>
+
+            <div className="mb-3">
+              <label className="admin-form-label">Batch Title*</label>
+              <input
+                type="text"
+                className="admin-input"
+                placeholder="e.g. Offline Batch — Delhi Center"
+                value={offlineTitle}
+                onChange={(e) => setOfflineTitle(e.target.value)}
+              />
+            </div>
+
+            <div className="row mb-3">
+              <div className="col-6">
+                <label className="admin-form-label">Batch ID / Number</label>
+                <input
+                  type="text"
+                  className="admin-input"
+                  placeholder="e.g. OFF-2026-01"
+                  value={offlineBatchNo}
+                  onChange={(e) => setOfflineBatchNo(e.target.value)}
+                />
+              </div>
+              <div className="col-6">
+                <label className="admin-form-label">Start Date*</label>
+                <input type="date" className="admin-input" value={offlineStartDate} onChange={(e) => setOfflineStartDate(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <label className="admin-form-label">
+                <MapPin size={14} className="me-1" style={ICON_STYLE} /> Location / Venue*
+              </label>
+              <input
+                type="text"
+                className="admin-input"
+                placeholder="e.g. ISV Training Center, Sector 21, Delhi"
+                value={offlineLocation}
+                onChange={(e) => setOfflineLocation(e.target.value)}
+              />
+            </div>
+
+            <div className="row mb-3">
+              <div className="col-6">
+                <label className="admin-form-label">Max Capacity</label>
+                <input
+                  type="number"
+                  className="admin-input"
+                  min={1}
+                  value={offlineMaxStudents}
+                  onChange={(e) => setOfflineMaxStudents(Number(e.target.value))}
+                />
+              </div>
+              <div className="col-6">
+                <label className="admin-form-label">Registration Fee (₹)</label>
+                <input
+                  type="number"
+                  className="admin-input"
+                  min={0}
+                  value={offlinePrice}
+                  onChange={(e) => setOfflinePrice(Number(e.target.value))}
+                />
+                <small className="text-muted" style={{ fontSize: "0.72rem" }}>
+                  Editable for testing — normally kept at ₹{OFFLINE_REGISTRATION_FEE.toLocaleString("en-IN")}.
+                </small>
+              </div>
+            </div>
+
+            <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top border-secondary">
+              <button type="button" className="thm-btn cancel-btn" onClick={() => setOfflineModalOpen(false)}>
+                Cancel
+              </button>
+              <button type="button" className="thm-btn" onClick={saveOfflineSlot} disabled={savingOfflineSlot}>
+                <Save size={14} className="me-1" style={ICON_STYLE} /> {savingOfflineSlot ? "Saving..." : "Save Batch"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

@@ -12,6 +12,9 @@ const leadSchema = new Schema({
   // instead of the lead sitting there looking permanently unconverted.
   convertedAt: { type: Date, default: null },
   convertedOrderId: { type: Schema.Types.ObjectId, ref: "Order", default: null },
+  // Mirrors User.enrollmentMode so this raw capture carries the same tag as
+  // the `role: "lead"` User record it's paired with on the admin Leads page.
+  enrollmentMode: { type: String, enum: ["online", "offline"], default: "online" },
 });
 
 export const Lead = mongoose.models.Lead || mongoose.model("Lead", leadSchema);

@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/server/rateLimit";
 import { connectDB } from "@/server/db";
 import { User } from "@/server/models/User";
 import { last10 } from "@/server/integrations/msg91";
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, "check-user-exists", { limit: 30, windowMs: 10 * 60 * 1000 });
+  if (limited) return limited;
+
   try {
     const { email, phone } = await req.json();
 

@@ -60,7 +60,7 @@ const DEFAULT_ACCENT = { bar: "bg-app-border", ring: "ring-app-border" };
 
 export default function AssessorDashboardView() {
   const { user } = usePsychUser();
-  const [submissions, setSubmissions] = useState<(AssessmentSubmission & { student?: UserProfile })[]>([]);
+  const [submissions, setSubmissions] = useState<(AssessmentSubmission & { student?: UserProfile; isOffline?: boolean })[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeAssessorType, setActiveAssessorType] = useState<"Psych" | "GTO" | "TO" | "IO">("Psych");
@@ -298,7 +298,10 @@ export default function AssessorDashboardView() {
           </thead>
           <tbody>
             {filteredSubmissions.map((sub) => {
-              const isAwaiting = sub.status === "PENDING" && activeAssessorType !== "GTO" && activeAssessorType !== "IO";
+              // Offline candidates never "start" a test — there's no PIQ/timed-test
+              // step to wait on — so a PENDING offline submission is still
+              // reviewable immediately, unlike an online one.
+              const isAwaiting = sub.status === "PENDING" && activeAssessorType !== "GTO" && activeAssessorType !== "IO" && !sub.isOffline;
               const courseLabel = (() => {
                 const stage = sub.student?.clinicalStage || "";
                 const parts = stage.split(",").map((s: string) => s.trim()).filter(Boolean);
@@ -343,9 +346,19 @@ export default function AssessorDashboardView() {
                     </span>
                   </Td>
                   <Td>
-                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-indigo-500/25 border border-indigo-400/40 text-[10px] font-bold text-indigo-200 whitespace-nowrap">
-                      <GraduationCap size={11} /> {courseLabel}
-                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-indigo-500/25 border border-indigo-400/40 text-[10px] font-bold text-indigo-200 whitespace-nowrap">
+                        <GraduationCap size={11} /> {courseLabel}
+                      </span>
+                      {sub.isOffline && (
+                        <span
+                          className="inline-flex items-center px-2 py-1 rounded-md bg-orange-500/20 border border-orange-400/40 text-[10px] font-bold text-orange-200 whitespace-nowrap uppercase tracking-wider"
+                          title="In-person batch — only the Assessment tab applies, no PIQ/dossier"
+                        >
+                          Offline
+                        </span>
+                      )}
+                    </div>
                   </Td>
                   <Td>
                     <div className="flex flex-wrap gap-1.5">
@@ -392,7 +405,7 @@ export default function AssessorDashboardView() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
           {filteredSubmissions.map((sub, index) => {
-            const isAwaiting = sub.status === "PENDING" && activeAssessorType !== "GTO" && activeAssessorType !== "IO";
+            const isAwaiting = sub.status === "PENDING" && activeAssessorType !== "GTO" && activeAssessorType !== "IO" && !sub.isOffline;
             const accent = STATUS_ACCENT[sub.status] || DEFAULT_ACCENT;
             const courseLabel = (() => {
               const stage = sub.student?.clinicalStage || "";
@@ -449,6 +462,14 @@ export default function AssessorDashboardView() {
                     <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-indigo-500/25 border border-indigo-400/40 text-[10px] font-bold text-indigo-200">
                       <GraduationCap size={11} /> {courseLabel}
                     </span>
+                    {sub.isOffline && (
+                      <span
+                        className="inline-flex items-center px-2 py-1 rounded-md bg-orange-500/20 border border-orange-400/40 text-[10px] font-bold text-orange-200 uppercase tracking-wider"
+                        title="In-person batch — only the Assessment tab applies, no PIQ/dossier"
+                      >
+                        Offline
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex flex-wrap gap-1.5">

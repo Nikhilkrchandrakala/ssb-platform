@@ -12,6 +12,7 @@ import RogerThat from "@/components/home/RogerThat";
 import AllYouNeed from "@/components/home/AllYouNeed";
 import From from "@/components/home/From";
 import ReferralCapture from "@/components/home/ReferralCapture";
+import AnnouncementStrip from "@/components/home/AnnouncementStrip";
 
 const TITLE = "Best SSB Coaching in India | Online SSB Training by Ex-GTO | SSB with ISV";
 const DESCRIPTION =
@@ -130,6 +131,22 @@ const homeJsonLd = {
             text: "Yes, virtual training can be effective when it includes structured mentoring, psychology test practice, interview guidance and group task simulations that help candidates understand the SSB assessment process.",
           },
         },
+        {
+          "@type": "Question",
+          name: "Does SSB with ISV offer offline coaching?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Yes. SSB with ISV now offers a 12-day offline batch at our Nagpur campus, in addition to our online programmes - both mentored by the same faculty, including Lt Cdr Nikhil Kumar Chandrakala and Commodore Pankaj Singh.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Should I choose online or offline SSB coaching?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Offline training offers full immersion with in-person feedback and live GTO tasks, ideal if you can commit 12 days on campus. Online offers flexibility with the same mentors and full VTX access. Both follow the identical 12-day structure and standard.",
+          },
+        },
       ],
     },
   ],
@@ -145,7 +162,7 @@ const navbarData = {
   title: "Indian Military",
   title1: "Leadership",
   subtitleTwo: "Integrated SSB Virtuosos",
-  text: "Online SSB mentoring by DIPR certified ex-SSB assessors",
+  text: "Now offline in Nagpur. DIPR certified ex-SSB assessors - online and in person.",
 };
 
 export default function HomePage() {
@@ -162,6 +179,7 @@ export default function HomePage() {
         title1={navbarData.title1}
         subtitleTwo={navbarData.subtitleTwo}
         text={navbarData.text}
+        announcement={<AnnouncementStrip />}
       />
       <CircleBox />
 

@@ -55,22 +55,32 @@ export async function GET(req: NextRequest) {
           modified = true;
         }
 
-        if (!student.batch) {
-          const latestOrder = await Order.findOne({ userId: student._id, status: "paid" })
-            .populate("slotId")
-            .sort({ createdAt: -1 });
+        // One query serves both the batch-backfill below AND the per-batch
+        // rows the roster table renders — a student with N paid batches now
+        // shows as N rows (repeating the candidate), same presentation as
+        // the Allotment page, instead of collapsing to a single row whose
+        // batch/type/course/assessor columns only ever reflected one batch.
+        const paidOrders = await Order.find({ userId: student._id, status: "paid" })
+          .populate("slotId", "title batchNo mode isFullCourse")
+          .populate("assignedGTO", "name")
+          .populate("assignedTO", "name")
+          .populate("assignedPsych", "name")
+          .populate("assignedIO", "name")
+          .select("slotId selectedModules assignedGTO assignedTO assignedPsych assignedIO assignedAssessments createdAt")
+          .sort({ createdAt: -1 });
 
-          if (latestOrder && latestOrder.slotId && latestOrder.slotId.batchNo) {
-            student.batch = latestOrder.slotId.batchNo.trim();
-            modified = true;
-          }
+        if (!student.batch && paidOrders.length > 0 && paidOrders[0].slotId?.batchNo) {
+          student.batch = paidOrders[0].slotId.batchNo.trim();
+          modified = true;
         }
 
         if (modified) {
           await student.save();
         }
 
-        return student;
+        const plain = student.toObject();
+        plain.orders = paidOrders.map((o) => (o.toObject ? o.toObject() : o));
+        return plain;
       })
     );
 
@@ -96,10 +106,14 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const { name, email, phone, password, batch, clinicalStage, chestNo } = await req.json();
+    const { name, email, phone, password, batch, clinicalStage, chestNo, enrollmentMode } = await req.json();
 
     if (!name || !email || !phone || !password) {
       return NextResponse.json({ error: "Name, email, phone, and password are required" }, { status: 400 });
+    }
+
+    if (enrollmentMode !== "online" && enrollmentMode !== "offline") {
+      return NextResponse.json({ error: "enrollmentMode must be 'online' or 'offline'" }, { status: 400 });
     }
 
     const emailLower = email.toLowerCase().trim();
@@ -120,6 +134,7 @@ export async function POST(req: NextRequest) {
       batch: (batch || "").trim(),
       chestNo: (chestNo || "").trim(),
       clinicalStage: clinicalStage || "full_course",
+      enrollmentMode,
       role: "student",
       isManuallyCreated: true,
     });

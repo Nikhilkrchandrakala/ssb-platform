@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/server/rateLimit";
 import { signSessionToken, setSessionCookie } from "@/server/auth";
 import { resolveLoginCredentials } from "@/server/resolveLogin";
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, "AdminLogin", { limit: 10, windowMs: 15 * 60 * 1000 });
+  if (limited) return limited;
+
   try {
     const { phone, email, password } = await req.json();
 

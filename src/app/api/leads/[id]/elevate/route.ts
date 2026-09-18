@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/server/db";
 import { getCurrentUser, hasRole } from "@/server/auth";
+import crypto from "node:crypto";
 import { Lead, User } from "@/server/models";
+import { escapeRegExp } from "@/server/escapeRegExp";
+import { sendCredentialsEmail } from "@/server/integrations/msg91";
 
 /**
  * POST /api/leads/:id/elevate
@@ -32,7 +35,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const existingUser = await User.findOne({
       $or: [
-        { email: { $regex: new RegExp("^" + emailLower + "$", "i") } },
+        { email: { $regex: new RegExp("^" + escapeRegExp(emailLower) + "$", "i") } },
         ...(last10 ? [{ phone: { $regex: new RegExp(last10 + "$") } }] : []),
       ],
     });
@@ -47,7 +50,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       );
     }
 
-    const tempPassword = "password123";
+    // Random per-account password — never a shared, guessable constant.
+    const tempPassword = crypto.randomBytes(9).toString("base64url");
     const newUser = new User({
       name: (lead.name || "").trim(),
       email: emailLower,
@@ -60,10 +64,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     await newUser.save();
 
+    const mail = await sendCredentialsEmail({
+      to: emailLower,
+      name: newUser.name || "Candidate",
+      username: emailLower,
+      password: tempPassword,
+    }).catch(() => ({ delivered: false }));
+
     return NextResponse.json(
       {
         message: "Lead elevated to registered candidate successfully",
         user: { _id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role },
+        credentialsEmailed: mail.delivered,
+        // Only surfaced when the email didn't go out, so the admin can hand it over directly.
+        ...(mail.delivered ? {} : { tempPassword }),
       },
       { status: 201 }
     );

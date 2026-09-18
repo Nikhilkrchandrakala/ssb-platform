@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/server/rateLimit";
 import { connectDB } from "@/server/db";
 import { User } from "@/server/models/User";
 import { AdminUser, Franchise } from "@/server/models";
@@ -7,12 +8,15 @@ import { submitSignupLead } from "@/server/integrations/zoho";
 import { cleanPhone, last10 } from "@/server/integrations/msg91";
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, "register", { limit: 10, windowMs: 60 * 60 * 1000 });
+  if (limited) return limited;
+
   try {
     const body = await req.json();
     const {
       name, email, phone, password, emailVerifyToken, phoneVerifyToken,
       dob, ssbAspirant, servingCandidate, vtxHeard,
-      youtubeSubscribed, podcastSubscribed, ssbExperience,
+      youtubeSubscribed, podcastSubscribed, ssbExperience, courseType,
       nextSsbDate, ssbBoards, ssbEntries, city, state,
     } = body;
 
@@ -95,6 +99,7 @@ export async function POST(req: NextRequest) {
       youtubeSubscribed: youtubeSubscribed || "",
       podcastSubscribed: podcastSubscribed || "",
       ssbExperience: ssbExperience || "",
+      courseType: courseType || "",
       nextSsbDate: nextSsbDate || "",
       ssbBoards: Array.isArray(ssbBoards) ? ssbBoards : [],
       ssbEntries: Array.isArray(ssbEntries) ? ssbEntries : [],

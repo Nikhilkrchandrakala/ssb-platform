@@ -26,6 +26,10 @@ const userSchema = new Schema(
 
     assessorType: { type: String, enum: ["GTO", "TO", "Psych", "IO", null], default: null },
     clinicalStage: { type: String, default: null },
+    // Whether this student trains online or attends an in-person/offline
+    // batch. Defaults to "online" since every student before this field
+    // existed was, in fact, online.
+    enrollmentMode: { type: String, enum: ["online", "offline"], default: "online" },
     batch: { type: String, default: "" },
     chestNo: { type: String, default: "" },
     isManuallyCreated: { type: Boolean, default: false },
@@ -60,6 +64,7 @@ const userSchema = new Schema(
     youtubeSubscribed: { type: String, default: "" },
     podcastSubscribed: { type: String, default: "" },
     ssbExperience: { type: String, default: "" },
+    courseType: { type: String, default: "" },
     nextSsbDate: { type: String, default: "" },
     ssbBoards: { type: [String], default: [] },
     ssbEntries: { type: [String], default: [] },

@@ -6,6 +6,7 @@ import { requireUser, userId } from "../../../_lib/auth";
 import { getEvaluationRecipientIds, notifyRecipients } from "../../../_lib/notify";
 import { uploadToR2 } from "@/server/storage/r2";
 import { sendPiqUploadedEmail, sendPiqUploadedSms } from "@/server/integrations/msg91";
+import { resolveAllotmentForOrder } from "@/server/psychAllotment";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -87,7 +88,13 @@ export async function POST(req: NextRequest, { params }: Params) {
     // non-AI side effect — no actual OCR/parsing runs).
     try {
       const student = await User.findById(submission.userId);
-      const recipientIds = await getEvaluationRecipientIds(student);
+      const allotment = await resolveAllotmentForOrder(submission.orderId ? String(submission.orderId) : null, String(submission.userId));
+      const recipientIds = await getEvaluationRecipientIds({
+        _id: submission.userId,
+        assignedIO: allotment.assignedIO,
+        assignedTO: allotment.assignedTO,
+        assignedPsych: allotment.assignedPsych,
+      });
       const candidateName = student ? student.name : "Candidate";
       await notifyRecipients(recipientIds, {
         studentId: submission.userId,
@@ -103,8 +110,8 @@ export async function POST(req: NextRequest, { params }: Params) {
       if (candidateUser) {
         const assessorIds =
           piqType === "piq2"
-            ? [candidateUser.assignedIO].filter(Boolean)
-            : [candidateUser.assignedTO, candidateUser.assignedPsych].filter(Boolean);
+            ? [allotment.assignedIO].filter(Boolean)
+            : [allotment.assignedTO, allotment.assignedPsych].filter(Boolean);
         const uniqueAssessorIds = Array.from(new Set(assessorIds.map((id) => String(id))));
         if (uniqueAssessorIds.length > 0) {
           const assessors = await User.find({ _id: { $in: uniqueAssessorIds } }).select("name email phone");

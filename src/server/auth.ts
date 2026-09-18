@@ -6,12 +6,17 @@ import { User } from "./models/User";
 import { AdminUser } from "./models/AdminUser";
 import { Franchise } from "./models/Franchise";
 
-const JWT_SECRET = process.env.JWT_SECRET || "hdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi78272jbkj2[]pou89ywe";
-// Legacy psych_battery fallback secret — kept only so tokens issued before this
-// migration (signed with the old hardcoded default) still verify during cutover.
-const JWT_FALLBACK_SECRET =
-  process.env.JWT_FALLBACK_SECRET ||
-  "hvdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi78272jbkj?[]]pou89ywe";
+// No hardcoded default: a secret that lives in source control is a secret
+// anyone can forge sessions with. Resolved lazily (not at import) so
+// `next build` can still collect page data without the env var present.
+function getJwtSecret(): string {
+  const secret = (process.env.JWT_SECRET || "").trim();
+  if (secret) return secret;
+  if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
+    return "dev-only-jwt-secret-not-for-production";
+  }
+  throw new Error("JWT_SECRET is not set");
+}
 
 export const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || "ssb_session";
 const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 days
@@ -43,18 +48,18 @@ export interface SessionPayload {
 }
 
 export function signSessionToken(payload: SessionPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: SESSION_MAX_AGE_SECONDS });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: SESSION_MAX_AGE_SECONDS });
 }
 
 function verifyToken(token: string): SessionPayload | null {
   try {
-    return jwt.verify(token.trim(), JWT_SECRET) as SessionPayload;
+    const decoded = jwt.verify(token.trim(), getJwtSecret(), { algorithms: ["HS256"] }) as SessionPayload & { needsPhone?: boolean };
+    // The OAuth "attach phone" temp token is signed with the same secret —
+    // it must never be usable as a full session.
+    if (decoded.needsPhone) return null;
+    return decoded;
   } catch {
-    try {
-      return jwt.verify(token.trim(), JWT_FALLBACK_SECRET) as SessionPayload;
-    } catch {
-      return null;
-    }
+    return null;
   }
 }
 

@@ -28,10 +28,6 @@ import { Card, Badge, GlassCard, Reveal, Button, staggerDelay } from "@/app/psyc
 interface StudentUser extends PsychUser {
   batch?: string;
   clinicalStage?: string;
-  assignedGTO?: unknown;
-  assignedTO?: unknown;
-  assignedPsych?: unknown;
-  assignedIO?: unknown;
 }
 
 // Legacy's AssessmentSubmission type never declared piq1Status/piq2Status
@@ -57,7 +53,11 @@ export default function StudentEntryView() {
   const [allSubmissions, setAllSubmissions] = useState<SubmissionWithPiqStatus[]>([]);
 
   const hasBatch = !!(user?.batch && user.batch.trim() !== "");
-  const hasAssessor = !!(user?.assignedPsych || user?.assignedGTO || user?.assignedIO || user?.assignedTO);
+  // Fetched from /api/psych/my-allotment rather than read off `user` — the
+  // session's own assignedGTO/TO/Psych/IO come from a User-level populate
+  // that goes stale the moment an admin re-allots on the (now per-batch)
+  // Allotment page, which writes to the student's Order instead.
+  const [hasAssessor, setHasAssessor] = useState(false);
   // Check PIQ across ALL submissions for the user — not just the matched one.
   // This handles the case where PIQs were uploaded to one submission (assessment A)
   // but the current active assessment is B (or assessmentId lookup returns a different sub).
@@ -97,6 +97,21 @@ export default function StudentEntryView() {
       router.push("/ProfileDashboard?tab=psycheTest");
       return;
     }
+
+    fetch("/api/psych/my-allotment")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { hasAssessor?: boolean; isOffline?: boolean } | null) => {
+        if (cancelled || !data) return;
+        // Offline candidates are evaluated in person during their batch —
+        // there's no PIQ/timed-test/dossier journey for them at all, so this
+        // page (the timed-test entry screen) isn't for them either.
+        if (data.isOffline) {
+          router.push("/ProfileDashboard?tab=psycheTest");
+          return;
+        }
+        setHasAssessor(!!data.hasAssessor);
+      })
+      .catch((err) => console.error("Failed to fetch allotment eligibility:", err));
 
     Promise.all([api.assessments.list(), api.submissions.list()])
       .then(([assessmentsList, submissionsList]: [Assessment[], SubmissionWithPiqStatus[]]) => {

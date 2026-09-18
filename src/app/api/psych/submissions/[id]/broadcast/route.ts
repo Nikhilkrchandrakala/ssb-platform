@@ -6,6 +6,7 @@ import { requireUser } from "../../../_lib/auth";
 import { resolvePendingSubmissionId } from "../../../_lib/pendingSubmission";
 import { notifyRecipients } from "../../../_lib/notify";
 import { sendResultsBroadcastEmail } from "@/server/integrations/msg91";
+import { resolveAllotmentForOrder } from "@/server/psychAllotment";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -72,11 +73,12 @@ export async function POST(req: NextRequest, { params }: Params) {
 
     const student = await User.findById(submission.userId);
     if (student) {
+      const allotment = await resolveAllotmentForOrder(submission.orderId ? String(submission.orderId) : null, String(submission.userId));
       const recipientIds = [String(student._id)];
-      if (student.assignedPsych) recipientIds.push(String(student.assignedPsych));
-      if (student.assignedGTO) recipientIds.push(String(student.assignedGTO));
-      if (student.assignedIO) recipientIds.push(String(student.assignedIO));
-      if (student.assignedTO) recipientIds.push(String(student.assignedTO));
+      if (allotment.assignedPsych) recipientIds.push(allotment.assignedPsych);
+      if (allotment.assignedGTO) recipientIds.push(allotment.assignedGTO);
+      if (allotment.assignedIO) recipientIds.push(allotment.assignedIO);
+      if (allotment.assignedTO) recipientIds.push(allotment.assignedTO);
 
       const candidateName = student.name || "Candidate";
       const notifTitle = isIndividual ? `${assessorType!.toUpperCase()} Report Released` : "Results Broadcasted";

@@ -19,6 +19,8 @@ import {
   Book,
   Save,
 } from "lucide-react";
+import { ENROLLMENT_MODE_OPTIONS, resolveEnrollmentMode } from "@/lib/enrollmentMode";
+import EnrollmentModeBadge from "@/components/admin/EnrollmentModeBadge";
 import "@/app/admin/styles/legacy-total-sales.css";
 
 const ICON_STYLE = { verticalAlign: -2 };
@@ -34,6 +36,7 @@ const ICON_STYLE = { verticalAlign: -2 };
 interface PopulatedUser {
   name?: string;
   email?: string;
+  enrollmentMode?: string;
 }
 
 interface PopulatedSlot {
@@ -163,6 +166,7 @@ export default function TotalSalesView() {
 
   const [search, setSearch] = useState("");
   const [franchiseFilterVal, setFranchiseFilterVal] = useState("all");
+  const [modeFilterVal, setModeFilterVal] = useState("all");
   const [batchNoFilter, setBatchNoFilter] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -274,6 +278,13 @@ export default function TotalSalesView() {
       result = result.filter((o) => (o.slotId?.batchNo || "").toLowerCase().includes(bVal));
     }
 
+    if (modeFilterVal !== "all") {
+      result = result.filter((o) => {
+        const u = typeof o.userId === "object" ? o.userId : undefined;
+        return resolveEnrollmentMode(u?.enrollmentMode) === modeFilterVal;
+      });
+    }
+
     if (startDate) {
       const start = new Date(startDate);
       start.setHours(0, 0, 0, 0);
@@ -286,13 +297,14 @@ export default function TotalSalesView() {
     }
 
     return result;
-  }, [allOrders, search, franchiseFilterVal, batchNoFilter, startDate, endDate]);
+  }, [allOrders, search, franchiseFilterVal, modeFilterVal, batchNoFilter, startDate, endDate]);
 
-  const hasActiveFilters = !!(search || franchiseFilterVal !== "all" || batchNoFilter || startDate || endDate);
+  const hasActiveFilters = !!(search || franchiseFilterVal !== "all" || modeFilterVal !== "all" || batchNoFilter || startDate || endDate);
 
   function clearFilters() {
     setSearch("");
     setFranchiseFilterVal("all");
+    setModeFilterVal("all");
     setBatchNoFilter("");
     setStartDate("");
     setEndDate("");
@@ -451,6 +463,17 @@ export default function TotalSalesView() {
               onChange={(e) => setBatchNoFilter(e.target.value)}
             />
           </div>
+          <div className="col-lg-2 col-md-6">
+            <label className="admin-form-label">Student Type</label>
+            <select className="admin-input" value={modeFilterVal} onChange={(e) => setModeFilterVal(e.target.value)}>
+              <option value="all">All Types</option>
+              {ENROLLMENT_MODE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="col-lg-4 col-md-6">
             <label className="admin-form-label">Date Range</label>
             <div className="d-flex gap-2">
@@ -492,6 +515,7 @@ export default function TotalSalesView() {
                 <tr>
                   <th>Order ID</th>
                   <th>Customer</th>
+                  <th>Type</th>
                   <th>Product/Service</th>
                   <th>Final Amount</th>
                   <th>Booking Method</th>
@@ -517,6 +541,9 @@ export default function TotalSalesView() {
                       <td>
                         <div style={{ fontWeight: 600 }}>{u?.name || o.customerName || "Guest"}</div>
                         <div className="small opacity-50">{u?.email || o.email || "-"}</div>
+                      </td>
+                      <td>
+                        <EnrollmentModeBadge mode={u?.enrollmentMode} />
                       </td>
                       <td>
                         <span className={`product-badge ${isBatch ? "badge-batch" : "badge-course"}`}>

@@ -30,6 +30,15 @@ const orderSchema = new Schema(
     installmentPlanId: { type: Schema.Types.ObjectId, ref: "InstallmentPlan", default: null },
     // The real access-control flag checked at /api/checkPurchase/[courseId] (see Phase 5).
     accessRevoked: { type: Boolean, default: false },
+    // Per-batch assessor allotment — moved here from User (which only had
+    // room for one GTO/TO/Psych/IO globally, so a second paid batch for the
+    // same student silently overwrote the first batch's allotment). See
+    // src/app/admin/(protected)/Allotment/AllotmentView.tsx.
+    assignedGTO: { type: Schema.Types.ObjectId, ref: "User", default: null },
+    assignedTO: { type: Schema.Types.ObjectId, ref: "User", default: null },
+    assignedPsych: { type: Schema.Types.ObjectId, ref: "User", default: null },
+    assignedIO: { type: Schema.Types.ObjectId, ref: "User", default: null },
+    assignedAssessments: { type: [{ type: Schema.Types.ObjectId, ref: "Assessment" }], default: [] },
   },
   { timestamps: true }
 );

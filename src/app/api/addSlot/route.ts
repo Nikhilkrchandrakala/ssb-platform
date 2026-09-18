@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   if (!hasRole(user, ["admin", "owner"])) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   try {
-    const { title, batchNo, startTime, endTime, maxStudents, price, isFullCourse } = await req.json();
+    const { title, batchNo, startTime, endTime, maxStudents, price, isFullCourse, mode, location } = await req.json();
 
     await connectDB();
 
@@ -21,6 +21,8 @@ export async function POST(req: NextRequest) {
       maxStudents,
       price,
       isFullCourse: isFullCourse || false,
+      mode: mode === "offline" ? "offline" : "online",
+      location: location || "",
       createdBy: String(user._id),
     });
 

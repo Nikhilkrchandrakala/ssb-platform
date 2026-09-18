@@ -21,6 +21,8 @@ import { isBookingClosed, formatTimeRemaining } from "@/lib/batchTiming";
 import { redistributeRemaining } from "@/lib/redistributeInstallments";
 import SearchCombobox from "@/components/admin/SearchCombobox";
 import { latestDistinctValues } from "@/lib/latestValues";
+import { ENROLLMENT_MODE_OPTIONS, resolveEnrollmentMode } from "@/lib/enrollmentMode";
+import EnrollmentModeBadge from "@/components/admin/EnrollmentModeBadge";
 import "@/app/admin/styles/legacy-sales-dashboard.css";
 
 const ICON_STYLE = { verticalAlign: -2 };
@@ -35,6 +37,7 @@ interface SlotItem {
   isFullCourse?: boolean;
   maxStudents?: number;
   bookedStudents?: string[];
+  mode?: string;
 }
 
 interface Installment {
@@ -67,12 +70,12 @@ interface SalesOrderItem {
   status?: string;
   accessRevoked?: boolean;
   createdAt?: string;
-  userId?: { name?: string; email?: string } | null;
+  userId?: { name?: string; email?: string; enrollmentMode?: string } | null;
   // Snapshot taken at purchase time — falls back to this when userId is a
   // dangling reference (the candidate's account was later deleted).
   buyerName?: string | null;
   buyerEmail?: string | null;
-  slotId?: { title?: string; batchNo?: string; startTime?: string; isFullCourse?: boolean } | null;
+  slotId?: { title?: string; batchNo?: string; startTime?: string; isFullCourse?: boolean; mode?: string } | null;
   salesPersonId?: { name?: string; email?: string } | null;
   installmentPlanId?: InstallmentPlanPopulated | null;
 }
@@ -115,6 +118,11 @@ const MODULES = [
   { id: "group_testing", label: "GTO Course on VTX", defaultPrice: 7999 },
 ];
 const FULL_COURSE_MODULE = { id: "full_course", label: "Full 12-day SSB Hackathon", defaultPrice: 12499 };
+
+// Mirrors /api/createOfflineOrder and /api/sales/enrollStudent's own
+// fallback — an offline batch is a flat one-time registration deposit, no
+// GST, no installment plan.
+const OFFLINE_REGISTRATION_FEE = 5000;
 
 interface AuditLogEntry {
   _id: string;
@@ -407,6 +415,7 @@ export default function SalesDashboardView() {
   // Search/type/date-range filters over the already-live-only `slots` list.
   const [batchSearch, setBatchSearch] = useState("");
   const [batchTypeFilter, setBatchTypeFilter] = useState<"all" | "morning" | "evening">("all");
+  const [batchModeFilter, setBatchModeFilter] = useState("all");
   const [batchDateFrom, setBatchDateFrom] = useState("");
   const [batchDateTo, setBatchDateTo] = useState("");
 
@@ -423,6 +432,7 @@ export default function SalesDashboardView() {
       if (batchTypeFilter === "morning" && !isMorning) return false;
       if (batchTypeFilter === "evening" && isMorning) return false;
     }
+    if (batchModeFilter !== "all" && resolveEnrollmentMode(slot.mode) !== batchModeFilter) return false;
     const starts = slot.startTime ? new Date(slot.startTime) : null;
     if (batchDateFrom && (!starts || starts < new Date(batchDateFrom))) return false;
     if (batchDateTo) {
@@ -436,6 +446,7 @@ export default function SalesDashboardView() {
   const clearBatchFilters = () => {
     setBatchSearch("");
     setBatchTypeFilter("all");
+    setBatchModeFilter("all");
     setBatchDateFrom("");
     setBatchDateTo("");
   };
@@ -448,9 +459,14 @@ export default function SalesDashboardView() {
   // --- My Students tab ---
   const [myOrders, setMyOrders] = useState<SalesOrderItem[]>([]);
   const [myOrdersLoading, setMyOrdersLoading] = useState(true);
+  const [myModeFilter, setMyModeFilter] = useState("all");
   const [myPage, setMyPage] = useState(1);
   const [myPerPage, setMyPerPage] = useState(25);
-  const myPagination = paginatedSlice(myOrders, myPage, myPerPage);
+  const myOrdersFiltered = useMemo(
+    () => (myModeFilter === "all" ? myOrders : myOrders.filter((o) => resolveEnrollmentMode(o.slotId?.mode || o.userId?.enrollmentMode) === myModeFilter)),
+    [myOrders, myModeFilter]
+  );
+  const myPagination = paginatedSlice(myOrdersFiltered, myPage, myPerPage);
 
   const fetchMyOrders = () => {
     fetch("/api/sales/myStudents")
@@ -477,10 +493,18 @@ export default function SalesDashboardView() {
   const [teamReports, setTeamReports] = useState<ReportAccount[] | null>(null);
   const [teamOrders, setTeamOrders] = useState<SalesOrderItem[] | null>(null);
   const [teamExecutiveFilter, setTeamExecutiveFilter] = useState("");
+  const [teamModeFilter, setTeamModeFilter] = useState("all");
   const teamLoading = teamOrders === null;
   const [teamPage, setTeamPage] = useState(1);
   const [teamPerPage, setTeamPerPage] = useState(25);
-  const teamPagination = paginatedSlice(teamOrders || [], teamPage, teamPerPage);
+  const teamOrdersFiltered = useMemo(
+    () =>
+      teamModeFilter === "all"
+        ? teamOrders || []
+        : (teamOrders || []).filter((o) => resolveEnrollmentMode(o.slotId?.mode || o.userId?.enrollmentMode) === teamModeFilter),
+    [teamOrders, teamModeFilter]
+  );
+  const teamPagination = paginatedSlice(teamOrdersFiltered, teamPage, teamPerPage);
 
   const fetchTeam = (executiveId?: string) => {
     if (!canSeeTeam) return;
@@ -567,18 +591,28 @@ export default function SalesDashboardView() {
     setSelectedSlot(slot);
     setStudentName("");
     setStudentEmail("");
-    setInitialAmount(3000);
     setNumberOfInstallments(1);
     const defaultFinal = new Date();
     defaultFinal.setDate(defaultFinal.getDate() + 30);
     setFinalDueDate(defaultFinal.toISOString().slice(0, 10));
-    setFinalPriceInclGST(null);
-    setInstallmentRows([]);
     setEnrollResult(null);
     setModuleChecks(EMPTY_MODULE_CHECKS);
     setCouponCode("");
     setAppliedDiscount(0);
     setAppliedCoupon(null);
+
+    if (resolveEnrollmentMode(slot.mode) === "offline") {
+      // Flat registration-fee deposit — nothing to preview, no installments,
+      // no type to choose. Ready to submit as soon as name/email are filled.
+      const fee = slot.price || OFFLINE_REGISTRATION_FEE;
+      setInitialAmount(fee);
+      setFinalPriceInclGST(fee);
+      setInstallmentRows([]);
+    } else {
+      setInitialAmount(3000);
+      setFinalPriceInclGST(null);
+      setInstallmentRows([]);
+    }
     setEnrollModalOpen(true);
   };
 
@@ -1130,12 +1164,20 @@ export default function SalesDashboardView() {
               <option value="morning">Morning Batch</option>
               <option value="evening">Evening Batch</option>
             </select>
+            <select className="filter-select" value={batchModeFilter} onChange={(e) => setBatchModeFilter(e.target.value)}>
+              <option value="all">Online + Offline</option>
+              {ENROLLMENT_MODE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label} only
+                </option>
+              ))}
+            </select>
             <div className="sales-date-range">
               <input type="date" className="admin-input" value={batchDateFrom} onChange={(e) => setBatchDateFrom(e.target.value)} title="Starts on/after" />
               <span className="text-muted">to</span>
               <input type="date" className="admin-input" value={batchDateTo} onChange={(e) => setBatchDateTo(e.target.value)} title="Starts on/before" />
             </div>
-            {(batchSearch || batchTypeFilter !== "all" || batchDateFrom || batchDateTo) && (
+            {(batchSearch || batchTypeFilter !== "all" || batchModeFilter !== "all" || batchDateFrom || batchDateTo) && (
               <button className="thm-btn secondary" style={{ padding: "8px 16px" }} onClick={clearBatchFilters}>
                 Clear
               </button>
@@ -1152,8 +1194,11 @@ export default function SalesDashboardView() {
             <div className="sales-slot-grid">
               {filteredSlots.map((slot) => (
                 <div key={slot._id} className="sales-slot-card">
-                  <div style={{ fontWeight: 700, color: "#fff" }}>
-                    {slot.title || "Batch"} {slot.batchNo ? `(#${slot.batchNo})` : ""}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                    <div style={{ fontWeight: 700, color: "#fff" }}>
+                      {slot.title || "Batch"} {slot.batchNo ? `(#${slot.batchNo})` : ""}
+                    </div>
+                    <EnrollmentModeBadge mode={slot.mode} />
                   </div>
                   <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
                     Starts {formatDate(slot.startTime)}
@@ -1177,6 +1222,27 @@ export default function SalesDashboardView() {
       {section === "myStudents" && (
         <>
         <div className="admin-card">
+          {myOrders.length > 0 && (
+            <div className="d-flex gap-2 align-items-center mb-3">
+              <span className="text-muted small">TYPE FILTER:</span>
+              <select
+                className="admin-input"
+                style={{ width: 160, padding: "8px 15px" }}
+                value={myModeFilter}
+                onChange={(e) => {
+                  setMyModeFilter(e.target.value);
+                  setMyPage(1);
+                }}
+              >
+                <option value="all">All Types</option>
+                {ENROLLMENT_MODE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {myOrdersLoading ? (
             <p className="text-muted">Loading…</p>
           ) : myOrders.length === 0 ? (
@@ -1187,6 +1253,7 @@ export default function SalesDashboardView() {
                 <thead>
                   <tr>
                     <th>Student</th>
+                    <th>Type</th>
                     <th>Course / Batch</th>
                     <th>Initial Amount</th>
                     <th>Installments Left</th>
@@ -1204,6 +1271,11 @@ export default function SalesDashboardView() {
                         <td>
                           <div style={{ fontWeight: 600 }}>{order.userId?.name || order.buyerName || "—"}</div>
                           <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{order.userId?.email || order.buyerEmail}</div>
+                        </td>
+                        <td>
+                          {/* This order's own slot, not the buyer's global enrollmentMode —
+                              a student can have both an online and offline batch. */}
+                          <EnrollmentModeBadge mode={order.slotId?.mode || order.userId?.enrollmentMode} />
                         </td>
                         <td>
                           {order.slotId?.title} {order.slotId?.batchNo ? `(#${order.slotId.batchNo})` : ""}
@@ -1233,7 +1305,7 @@ export default function SalesDashboardView() {
             setPage={setMyPage}
             perPage={myPerPage}
             setPerPage={setMyPerPage}
-            totalItems={myOrders.length}
+            totalItems={myOrdersFiltered.length}
             totalPages={myPagination.totalPages}
             safePage={myPagination.safePage}
             label="students"
@@ -1390,6 +1462,27 @@ export default function SalesDashboardView() {
                   {selectedTeamMember?.name || selectedTeamMember?.email || "Sales person"}&apos;s students
                 </span>
               </div>
+              {teamOrders && teamOrders.length > 0 && (
+                <div className="d-flex gap-2 align-items-center mb-3">
+                  <span className="text-muted small">TYPE FILTER:</span>
+                  <select
+                    className="admin-input"
+                    style={{ width: 160, padding: "8px 15px" }}
+                    value={teamModeFilter}
+                    onChange={(e) => {
+                      setTeamModeFilter(e.target.value);
+                      setTeamPage(1);
+                    }}
+                  >
+                    <option value="all">All Types</option>
+                    {ENROLLMENT_MODE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               {teamLoading || !teamOrders ? (
                 <p className="text-muted">Loading…</p>
               ) : teamOrders.length === 0 ? (
@@ -1400,6 +1493,7 @@ export default function SalesDashboardView() {
                     <thead>
                       <tr>
                         <th>Student</th>
+                        <th>Type</th>
                         <th>Course / Batch</th>
                         <th>Initial Amount</th>
                         <th>Status</th>
@@ -1412,6 +1506,9 @@ export default function SalesDashboardView() {
                           <td>
                             <div style={{ fontWeight: 600 }}>{order.userId?.name || order.buyerName || "—"}</div>
                             <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{order.userId?.email || order.buyerEmail}</div>
+                          </td>
+                          <td>
+                            <EnrollmentModeBadge mode={order.slotId?.mode || order.userId?.enrollmentMode} />
                           </td>
                           <td>
                             {order.slotId?.title} {order.slotId?.batchNo ? `(#${order.slotId.batchNo})` : ""}
@@ -1437,7 +1534,7 @@ export default function SalesDashboardView() {
                 setPage={setTeamPage}
                 perPage={teamPerPage}
                 setPerPage={setTeamPerPage}
-                totalItems={teamOrders?.length || 0}
+                totalItems={teamOrdersFiltered.length}
                 totalPages={teamPagination.totalPages}
                 safePage={teamPagination.safePage}
                 label="students"
@@ -1580,6 +1677,9 @@ export default function SalesDashboardView() {
                 </div>
               ) : (
                 <>
+                  {(() => {
+                    const isOfflineSlot = resolveEnrollmentMode(selectedSlot.mode) === "offline";
+                    return (
                   <div className="row">
                     <div className="col-md-6">
                       <div className="admin-form-group">
@@ -1596,47 +1696,70 @@ export default function SalesDashboardView() {
                           placeholder="student@example.com"
                         />
                       </div>
+                      <div className="admin-form-group">
+                        <label className="admin-form-label">Type</label>
+                        <div style={{ padding: "10px 0" }}>
+                          <EnrollmentModeBadge mode={selectedSlot.mode} />
+                          <span style={{ marginLeft: 8, fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                            (set by the batch — not editable here)
+                          </span>
+                        </div>
+                      </div>
                     </div>
                     <div className="col-md-6">
-                      <div className="admin-form-group">
-                        <label className="admin-form-label">Initial Amount (₹)</label>
-                        <input
-                          type="number"
-                          className="admin-input"
-                          min={1}
-                          value={initialAmount}
-                          onChange={(e) => setInitialAmount(Number(e.target.value))}
-                        />
-                      </div>
-                      <div className="row">
-                        <div className="col-6">
+                      {isOfflineSlot ? (
+                        <div className="admin-form-group">
+                          <label className="admin-form-label">Registration Fee (₹)</label>
+                          <input type="number" className="admin-input" value={initialAmount} disabled style={{ opacity: 0.7 }} />
+                          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: 4 }}>
+                            Paid in full now as a one-time deposit. No installments — the remaining course fee is collected in person.
+                          </div>
+                        </div>
+                      ) : (
+                        <>
                           <div className="admin-form-group">
-                            <label className="admin-form-label">Number of Installments</label>
+                            <label className="admin-form-label">Initial Amount (₹)</label>
                             <input
                               type="number"
                               className="admin-input"
                               min={1}
-                              value={numberOfInstallments}
-                              onChange={(e) => setNumberOfInstallments(Number(e.target.value))}
+                              value={initialAmount}
+                              onChange={(e) => setInitialAmount(Number(e.target.value))}
                             />
                           </div>
-                        </div>
-                        <div className="col-6">
-                          <div className="admin-form-group">
-                            <label className="admin-form-label">Final Due Date</label>
-                            <input
-                              type="date"
-                              className="admin-input"
-                              value={finalDueDate}
-                              onChange={(e) => setFinalDueDate(e.target.value)}
-                            />
+                          <div className="row">
+                            <div className="col-6">
+                              <div className="admin-form-group">
+                                <label className="admin-form-label">Number of Installments</label>
+                                <input
+                                  type="number"
+                                  className="admin-input"
+                                  min={1}
+                                  value={numberOfInstallments}
+                                  onChange={(e) => setNumberOfInstallments(Number(e.target.value))}
+                                />
+                              </div>
+                            </div>
+                            <div className="col-6">
+                              <div className="admin-form-group">
+                                <label className="admin-form-label">Final Due Date</label>
+                                <input
+                                  type="date"
+                                  className="admin-input"
+                                  value={finalDueDate}
+                                  onChange={(e) => setFinalDueDate(e.target.value)}
+                                />
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
+                        </>
+                      )}
                     </div>
                   </div>
+                    );
+                  })()}
 
-                  {selectedSlot.isFullCourse && (
+                  {selectedSlot.isFullCourse && resolveEnrollmentMode(selectedSlot.mode) !== "offline" && (
                     <div style={{ borderLeft: "3px solid var(--primary-gold)", paddingLeft: 15, marginBottom: 16 }}>
                       <label className="admin-form-label mb-2">
                         <BookOpen size={14} className="me-1" style={{ ...ICON_STYLE, color: "var(--primary-gold)" }} /> Choose Course / Modules
@@ -1659,7 +1782,7 @@ export default function SalesDashboardView() {
                     </div>
                   )}
 
-                  {selectedSlot.isFullCourse && (
+                  {selectedSlot.isFullCourse && resolveEnrollmentMode(selectedSlot.mode) !== "offline" && (
                     <div className="admin-form-group">
                       <label className="admin-form-label">Coupon Code (optional, Full Course only)</label>
                       <input
@@ -1672,13 +1795,24 @@ export default function SalesDashboardView() {
                     </div>
                   )}
 
-                  <div className="d-flex justify-content-end mb-3">
-                    <button className="thm-btn secondary" onClick={previewSchedule} disabled={isPreviewing}>
-                      {isPreviewing ? "Calculating…" : "Preview Schedule"}
-                    </button>
-                  </div>
+                  {resolveEnrollmentMode(selectedSlot.mode) !== "offline" && (
+                    <div className="d-flex justify-content-end mb-3">
+                      <button className="thm-btn secondary" onClick={previewSchedule} disabled={isPreviewing}>
+                        {isPreviewing ? "Calculating…" : "Preview Schedule"}
+                      </button>
+                    </div>
+                  )}
 
-                  {finalPriceInclGST !== null && (
+                  {finalPriceInclGST !== null && resolveEnrollmentMode(selectedSlot.mode) === "offline" && (
+                    <div style={{ background: "rgba(255,255,255,0.03)", padding: 14, borderRadius: 6, marginBottom: 16 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
+                        <span className="text-muted">Registration Fee (paid now — link generated on Enroll)</span>
+                        <strong style={{ color: "var(--primary-gold)" }}>₹{finalPriceInclGST.toFixed(2)}</strong>
+                      </div>
+                    </div>
+                  )}
+
+                  {finalPriceInclGST !== null && resolveEnrollmentMode(selectedSlot.mode) !== "offline" && (
                     <div style={{ background: "rgba(255,255,255,0.03)", padding: 14, borderRadius: 6, marginBottom: 16 }}>
                       {appliedDiscount > 0 && (
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: "0.85rem" }}>

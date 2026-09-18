@@ -23,6 +23,7 @@ export default function AdminAccountRecoveryPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [resetToken, setResetToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [timer, setTimer] = useState(0);
@@ -116,7 +117,8 @@ export default function AdminAccountRecoveryPage() {
     });
 
     try {
-      await postJSON("/api/verify-otp", { email: email.trim().toLowerCase(), otp: otp.trim() });
+      const verified = await postJSON<{ resetToken: string }>("/api/verify-otp", { email: email.trim().toLowerCase(), otp: otp.trim() });
+      setResetToken(verified.resetToken);
       window.Swal?.fire({
         icon: "success",
         title: "OTP Verified",
@@ -163,7 +165,7 @@ export default function AdminAccountRecoveryPage() {
     });
 
     try {
-      await postJSON("/api/forgot-password", { email: email.trim().toLowerCase(), newPassword });
+      await postJSON("/api/forgot-password", { email: email.trim().toLowerCase(), newPassword, resetToken });
       await window.Swal?.fire({
         icon: "success",
         title: "Password Reset Successful",

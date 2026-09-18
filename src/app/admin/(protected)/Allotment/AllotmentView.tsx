@@ -21,6 +21,8 @@ import {
 import SearchCombobox from "@/components/admin/SearchCombobox";
 import { latestDistinctValues } from "@/lib/latestValues";
 import { assessorLabel } from "@/lib/assessorLabels";
+import { ENROLLMENT_MODE_OPTIONS } from "@/lib/enrollmentMode";
+import EnrollmentModeBadge from "@/components/admin/EnrollmentModeBadge";
 import "@/app/admin/styles/legacy-allotment.css";
 
 const ICON_STYLE = { verticalAlign: -2 };
@@ -57,15 +59,32 @@ interface Assessor extends AssessorRef {
   activeLoad?: number;
 }
 
-interface Student {
+interface StudentRef {
   _id: string;
   name: string;
   email: string;
   phone?: string;
-  batch?: string;
   chestNo?: string;
-  clinicalStage?: string;
+  enrollmentMode?: string;
   profileImage?: string;
+}
+
+interface SlotRef {
+  _id: string;
+  title?: string;
+  batchNo?: string;
+  isFullCourse?: boolean;
+  mode?: string;
+}
+
+// One row = one paid batch enrollment (Order), not one student — assessor
+// allotment lives here now so a student's second batch no longer overwrites
+// the first batch's allotment (see AllotmentView's own comment below).
+interface AllotmentOrder {
+  _id: string;
+  userId: StudentRef | null;
+  slotId: SlotRef | null;
+  selectedModules?: string[];
   assignedGTO?: AssessorRef | null;
   assignedTO?: AssessorRef | null;
   assignedPsych?: AssessorRef | null;
@@ -106,23 +125,28 @@ function getInitials(name?: string) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-function stagesOf(clinicalStage?: string) {
-  return (clinicalStage || "full_course")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+// Derives the same "stages" concept the old clinicalStage string used to
+// carry, but from THIS order's own purchase — an empty selectedModules
+// array on a full-course Slot means the same as an explicit "full_course"
+// entry (see createOrder's own fallback semantics).
+function stagesOfOrder(order: Pick<AllotmentOrder, "selectedModules" | "slotId"> | null): string[] {
+  if (!order) return [];
+  const modules = order.selectedModules || [];
+  if (modules.length === 0) return order.slotId?.isFullCourse ? ["full_course"] : [];
+  return modules;
 }
 
-function buildParams(page: number, searchVal: string, stageVal: string, batchVal: string) {
+function buildParams(page: number, searchVal: string, stageVal: string, batchVal: string, modeVal: string) {
   const params = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) });
   if (searchVal.trim()) params.set("search", searchVal.trim());
   if (stageVal !== "all") params.set("clinicalStage", stageVal);
   if (batchVal !== "all") params.set("batch", batchVal);
+  if (modeVal !== "all") params.set("mode", modeVal);
   return params;
 }
 
 export default function AllotmentView() {
-  const [students, setStudents] = useState<Student[]>([]);
+  const [orders, setOrders] = useState<AllotmentOrder[]>([]);
   const [assessors, setAssessors] = useState<Assessor[]>([]);
   const [assessments, setAssessments] = useState<AssessmentItem[]>([]);
   const [batches, setBatches] = useState<string[]>([]);
@@ -137,13 +161,14 @@ export default function AllotmentView() {
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState("all");
   const [batchFilter, setBatchFilter] = useState("all");
+  const [modeFilter, setModeFilter] = useState("all");
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [brokenAvatars, setBrokenAvatars] = useState<Set<string>>(new Set());
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalStudent, setModalStudent] = useState<Student | null>(null);
+  const [modalOrder, setModalOrder] = useState<AllotmentOrder | null>(null);
   const [selectPsych, setSelectPsych] = useState("");
   const [selectGTO, setSelectGTO] = useState("");
   const [selectTO, setSelectTO] = useState("");
@@ -151,21 +176,21 @@ export default function AllotmentView() {
   const [assignedAssessmentIds, setAssignedAssessmentIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
-  const loadData = (page: number, searchVal: string, stageVal: string, batchVal: string) => {
+  const loadData = (page: number, searchVal: string, stageVal: string, batchVal: string, modeVal: string) => {
     setLoading(true);
     setLoadError(null);
-    const params = buildParams(page, searchVal, stageVal, batchVal);
-    Promise.all([fetch(`/api/admin/allotment-students?${params.toString()}`), fetch("/api/admin/assessors")])
-      .then(async ([studentsRes, assessorsRes]) => {
-        if (!studentsRes.ok || !assessorsRes.ok) throw new Error("Failed to load records from server");
-        const studentsData = await studentsRes.json();
+    const params = buildParams(page, searchVal, stageVal, batchVal, modeVal);
+    Promise.all([fetch(`/api/admin/allotment-orders?${params.toString()}`), fetch("/api/admin/assessors")])
+      .then(async ([ordersRes, assessorsRes]) => {
+        if (!ordersRes.ok || !assessorsRes.ok) throw new Error("Failed to load records from server");
+        const ordersData = await ordersRes.json();
         const assessorsData = await assessorsRes.json();
-        setStudents(studentsData.students || []);
+        setOrders(ordersData.orders || []);
         setAssessors(assessorsData.assessors || []);
-        setTotalCount(studentsData.totalCount || 0);
-        setTotalPages(studentsData.totalPages || 1);
-        setCurrentPage(studentsData.page || 1);
-        setBatches(studentsData.batches || []);
+        setTotalCount(ordersData.totalCount || 0);
+        setTotalPages(ordersData.totalPages || 1);
+        setCurrentPage(ordersData.page || 1);
+        setBatches(ordersData.batches || []);
       })
       .catch((error) => {
         console.error("Load Data Error:", error);
@@ -174,7 +199,7 @@ export default function AllotmentView() {
       .finally(() => setLoading(false));
   };
 
-  // Initial mount load: assessments, then paginated students + assessors.
+  // Initial mount load: assessments, then paginated orders + assessors.
   useEffect(() => {
     let cancelled = false;
     fetch("/api/admin/assessments")
@@ -182,22 +207,22 @@ export default function AllotmentView() {
       .then((data) => {
         if (cancelled) return null;
         if (data?.assessments) setAssessments(data.assessments);
-        const params = buildParams(1, "", "all", "all");
-        return Promise.all([fetch(`/api/admin/allotment-students?${params.toString()}`), fetch("/api/admin/assessors")]);
+        const params = buildParams(1, "", "all", "all", "all");
+        return Promise.all([fetch(`/api/admin/allotment-orders?${params.toString()}`), fetch("/api/admin/assessors")]);
       })
       .then(async (results) => {
         if (cancelled || !results) return;
-        const [studentsRes, assessorsRes] = results;
-        if (!studentsRes.ok || !assessorsRes.ok) throw new Error("Failed to load records from server");
-        const studentsData = await studentsRes.json();
+        const [ordersRes, assessorsRes] = results;
+        if (!ordersRes.ok || !assessorsRes.ok) throw new Error("Failed to load records from server");
+        const ordersData = await ordersRes.json();
         const assessorsData = await assessorsRes.json();
         if (cancelled) return;
-        setStudents(studentsData.students || []);
+        setOrders(ordersData.orders || []);
         setAssessors(assessorsData.assessors || []);
-        setTotalCount(studentsData.totalCount || 0);
-        setTotalPages(studentsData.totalPages || 1);
-        setCurrentPage(studentsData.page || 1);
-        setBatches(studentsData.batches || []);
+        setTotalCount(ordersData.totalCount || 0);
+        setTotalPages(ordersData.totalPages || 1);
+        setCurrentPage(ordersData.page || 1);
+        setBatches(ordersData.batches || []);
       })
       .catch((error) => {
         if (cancelled) return;
@@ -216,35 +241,43 @@ export default function AllotmentView() {
     setSearch(value);
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
     searchDebounceRef.current = setTimeout(() => {
-      loadData(1, value, stageFilter, batchFilter);
+      loadData(1, value, stageFilter, batchFilter, modeFilter);
     }, SEARCH_DEBOUNCE_MS);
   };
 
   const handleStageFilterChange = (value: string) => {
     setStageFilter(value);
-    loadData(1, search, value, batchFilter);
+    loadData(1, search, value, batchFilter, modeFilter);
   };
 
   const handleBatchFilterChange = (value: string) => {
     setBatchFilter(value);
-    loadData(1, search, stageFilter, value);
+    loadData(1, search, stageFilter, value, modeFilter);
+  };
+
+  const handleModeFilterChange = (value: string) => {
+    setModeFilter(value);
+    loadData(1, search, stageFilter, batchFilter, value);
   };
 
   const goToPage = (page: number) => {
     if (page < 1 || page > totalPages || page === currentPage) return;
-    loadData(page, search, stageFilter, batchFilter);
+    loadData(page, search, stageFilter, batchFilter, modeFilter);
   };
 
   // Dashboard-level allotment stats (page-level, mirroring legacy — the
   // "Fully Allotted"/"Pending" counters only reflect the current page's 25
   // rows, while "Enrolled Candidates" reflects the true server-side total).
   const pageAllottedCount = useMemo(
-    () => students.filter((s) => s.assignedPsych && s.assignedGTO && s.assignedTO && s.assignedIO).length,
-    [students]
+    () => orders.filter((o) => o.assignedPsych && o.assignedGTO && o.assignedTO && o.assignedIO).length,
+    [orders]
   );
 
-  // No createdAt on Student here — falls back to the list's own (server) order.
-  const studentNameOptions = useMemo(() => latestDistinctValues(students, (s) => s.name, () => undefined), [students]);
+  // No createdAt on this shape here — falls back to the list's own (server) order.
+  const studentNameOptions = useMemo(
+    () => latestDistinctValues(orders, (o) => o.userId?.name || "", () => undefined),
+    [orders]
+  );
 
   const renderAvatar = (id: string, profileImage: string | undefined, name: string) => {
     const initials = getInitials(name);
@@ -262,27 +295,27 @@ export default function AllotmentView() {
     return <span className="assessor-pill not-allotted">Unassigned</span>;
   };
 
-  const openAllotmentModal = (student: Student) => {
-    setModalStudent(student);
-    const stages = stagesOf(student.clinicalStage);
-    const gtoAllowed = stages.includes("full_course") || stages.includes("group_testing");
-    const ioAllowed = stages.includes("full_course") || stages.includes("interview");
-    const psychOrToAllowed = stages.includes("full_course") || stages.includes("psych");
+  const openAllotmentModal = (order: AllotmentOrder) => {
+    setModalOrder(order);
+    const orderStages = stagesOfOrder(order);
+    const gtoAllowed = orderStages.includes("full_course") || orderStages.includes("group_testing");
+    const ioAllowed = orderStages.includes("full_course") || orderStages.includes("interview");
+    const psychOrToAllowed = orderStages.includes("full_course") || orderStages.includes("psych");
 
-    setSelectPsych(psychOrToAllowed ? student.assignedPsych?._id || "" : "");
-    setSelectGTO(gtoAllowed ? student.assignedGTO?._id || "" : "");
-    setSelectTO(psychOrToAllowed ? student.assignedTO?._id || "" : "");
-    setSelectIO(ioAllowed ? student.assignedIO?._id || "" : "");
-    setAssignedAssessmentIds((student.assignedAssessments || []).map((id) => id.toString()));
+    setSelectPsych(psychOrToAllowed ? order.assignedPsych?._id || "" : "");
+    setSelectGTO(gtoAllowed ? order.assignedGTO?._id || "" : "");
+    setSelectTO(psychOrToAllowed ? order.assignedTO?._id || "" : "");
+    setSelectIO(ioAllowed ? order.assignedIO?._id || "" : "");
+    setAssignedAssessmentIds((order.assignedAssessments || []).map((id) => id.toString()));
     setIsModalOpen(true);
   };
 
   const closeAllotmentModal = () => {
     setIsModalOpen(false);
-    setModalStudent(null);
+    setModalOrder(null);
   };
 
-  const stages = modalStudent ? stagesOf(modalStudent.clinicalStage) : [];
+  const stages = stagesOfOrder(modalOrder);
   const gtoAllowed = stages.includes("full_course") || stages.includes("group_testing");
   const ioAllowed = stages.includes("full_course") || stages.includes("interview");
   const psychOrToAllowed = stages.includes("full_course") || stages.includes("psych");
@@ -326,7 +359,7 @@ export default function AllotmentView() {
 
   const handleAllotmentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!modalStudent || submitting) return;
+    if (!modalOrder || submitting) return;
 
     if (!isGtoOnly && !isIoOnly && assignedAssessmentIds.length === 0 && assessments.length > 0) {
       window.Swal?.fire({
@@ -395,7 +428,7 @@ export default function AllotmentView() {
 
     setSubmitting(true);
     try {
-      const response = await fetch(`/api/admin/allotment/${modalStudent._id}`, {
+      const response = await fetch(`/api/admin/allotment/${modalOrder._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -419,7 +452,7 @@ export default function AllotmentView() {
       });
 
       closeAllotmentModal();
-      loadData(currentPage, search, stageFilter, batchFilter);
+      loadData(currentPage, search, stageFilter, batchFilter, modeFilter);
     } catch (error) {
       window.Swal?.fire({
         icon: "error",
@@ -460,7 +493,7 @@ export default function AllotmentView() {
           </div>
           <div className="stat-info">
             <h3>{totalCount || "—"}</h3>
-            <p>Enrolled Candidates</p>
+            <p>Batch Enrollments</p>
           </div>
         </div>
         <div className="stat-card">
@@ -477,7 +510,7 @@ export default function AllotmentView() {
             <Hourglass size={28} />
           </div>
           <div className="stat-info">
-            <h3>{students.length - pageAllottedCount}</h3>
+            <h3>{orders.length - pageAllottedCount}</h3>
             <p>Allotment Pending</p>
           </div>
         </div>
@@ -514,6 +547,17 @@ export default function AllotmentView() {
                 <option value="group_testing">GTO Course on VTX</option>
               </select>
             </div>
+            <div className="d-flex gap-2 align-items-center">
+              <span className="text-muted small">TYPE FILTER:</span>
+              <select className="admin-input" style={{ width: 160, padding: "8px 15px" }} value={modeFilter} onChange={(e) => handleModeFilterChange(e.target.value)}>
+                <option value="all">All Types</option>
+                {ENROLLMENT_MODE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -524,6 +568,7 @@ export default function AllotmentView() {
                 <th>Candidate</th>
                 <th>Batch</th>
                 <th>Chest</th>
+                <th>Type</th>
                 <th>Course</th>
                 <th>Psych</th>
                 <th>GTO</th>
@@ -535,30 +580,32 @@ export default function AllotmentView() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="text-center p-5">
+                  <td colSpan={10} className="text-center p-5">
                     <div className="spinner-border text-warning" role="status"></div>
                     <p className="mt-3 mb-0 opacity-70">Fetching active assessor allotment profiles...</p>
                   </td>
                 </tr>
               ) : loadError ? (
                 <tr>
-                  <td colSpan={9} className="text-center p-5 text-danger">
+                  <td colSpan={10} className="text-center p-5 text-danger">
                     <AlertTriangle size={32} className="mb-3" />
                     <p className="mb-0">Error loading data: {loadError}</p>
                   </td>
                 </tr>
-              ) : students.length === 0 ? (
+              ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center p-5 opacity-50">
+                  <td colSpan={10} className="text-center p-5 opacity-50">
                     <Hourglass size={32} className="mb-3" />
                     <p className="mb-0">No enrolled candidates found matching your filters.</p>
                   </td>
                 </tr>
               ) : (
-                students.map((s) => {
-                  const rowStages = stagesOf(s.clinicalStage);
+                orders.map((o) => {
+                  const s = o.userId;
+                  if (!s) return null;
+                  const rowStages = stagesOfOrder(o);
                   return (
-                    <tr key={s._id}>
+                    <tr key={o._id}>
                       <td>
                         <div className="d-flex align-items-center gap-3">
                           {renderAvatar(s._id, s.profileImage, s.name)}
@@ -571,7 +618,7 @@ export default function AllotmentView() {
                       </td>
                       <td>
                         <span className="badge bg-dark border border-secondary text-light px-2 py-1 small" style={{ fontFamily: "monospace" }}>
-                          {s.batch || "—"}
+                          {o.slotId?.batchNo || "—"}
                         </span>
                       </td>
                       <td>
@@ -580,18 +627,24 @@ export default function AllotmentView() {
                         </span>
                       </td>
                       <td>
+                        {/* This order's own slot, not the student's global enrollmentMode —
+                            a student who has both an online and offline batch would otherwise
+                            show every row as whichever mode they most recently booked. */}
+                        <EnrollmentModeBadge mode={o.slotId?.mode || s.enrollmentMode} />
+                      </td>
+                      <td>
                         {rowStages.map((st) => (
                           <span key={st} className={`stage-badge ${STAGE_CLASS[st] || "stage-full_course"}`} style={{ marginRight: 4, marginBottom: 4, display: "inline-block" }}>
                             {STAGE_TITLES[st] || st}
                           </span>
                         ))}
                       </td>
-                      <td>{renderAssessorCell(s.assignedPsych)}</td>
-                      <td>{renderAssessorCell(s.assignedGTO)}</td>
-                      <td>{renderAssessorCell(s.assignedTO)}</td>
-                      <td>{renderAssessorCell(s.assignedIO)}</td>
+                      <td>{renderAssessorCell(o.assignedPsych)}</td>
+                      <td>{renderAssessorCell(o.assignedGTO)}</td>
+                      <td>{renderAssessorCell(o.assignedTO)}</td>
+                      <td>{renderAssessorCell(o.assignedIO)}</td>
                       <td style={{ textAlign: "center", borderLeft: "1px solid var(--border-color)" }}>
-                        <button className="action-btn" title="Allot Assessors" onClick={() => openAllotmentModal(s)}>
+                        <button className="action-btn" title="Allot Assessors" onClick={() => openAllotmentModal(o)}>
                           <ClipboardList size={14} />
                         </button>
                       </td>
@@ -648,7 +701,7 @@ export default function AllotmentView() {
       </div>
 
       {/* Allotment Editing Modal */}
-      {isModalOpen && modalStudent && (
+      {isModalOpen && modalOrder && modalOrder.userId && (
         <div className="admin-modal-overlay" style={{ display: "flex" }}>
           <div className="admin-modal" style={{ maxWidth: 900, width: "95%", margin: "20px auto" }}>
             <div className="admin-modal-header">
@@ -666,10 +719,10 @@ export default function AllotmentView() {
                   </h5>
 
                   <div className="d-flex align-items-center gap-3 mb-4">
-                    {renderAvatar(modalStudent._id, modalStudent.profileImage, modalStudent.name)}
+                    {renderAvatar(modalOrder.userId._id, modalOrder.userId.profileImage, modalOrder.userId.name)}
                     <div>
                       <h4 className="mb-1" style={{ fontSize: "1.15rem", fontWeight: 700 }}>
-                        {modalStudent.name}
+                        {modalOrder.userId.name}
                       </h4>
                       <div>
                         {stages.map((st) => (
@@ -678,11 +731,11 @@ export default function AllotmentView() {
                           </span>
                         ))}
                         <span className="badge bg-dark border border-secondary text-light ms-1" style={{ fontFamily: "monospace" }}>
-                          {modalStudent.batch || "—"}
+                          {modalOrder.slotId?.batchNo || "—"}
                         </span>
-                        {modalStudent.chestNo && (
+                        {modalOrder.userId.chestNo && (
                           <span className="badge bg-warning border border-warning text-dark ms-1" style={{ fontFamily: "monospace", fontWeight: 700 }}>
-                            Chest {modalStudent.chestNo}
+                            Chest {modalOrder.userId.chestNo}
                           </span>
                         )}
                       </div>
@@ -696,7 +749,7 @@ export default function AllotmentView() {
                       className="admin-input"
                       readOnly
                       style={{ background: "rgba(255,255,255,0.03)", borderColor: "#444", opacity: 0.7 }}
-                      value={modalStudent.email}
+                      value={modalOrder.userId.email}
                     />
                   </div>
 
@@ -707,7 +760,7 @@ export default function AllotmentView() {
                       className="admin-input"
                       readOnly
                       style={{ background: "rgba(255,255,255,0.03)", borderColor: "#444", opacity: 0.7 }}
-                      value={modalStudent.phone || "N/A"}
+                      value={modalOrder.userId.phone || "N/A"}
                     />
                   </div>
 

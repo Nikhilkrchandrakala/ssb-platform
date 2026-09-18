@@ -34,7 +34,7 @@ const breadcrumbSchema = {
 };
 
 const headerData = {
-  text: "CS Joint Services Academy operates under the brand name Integrated SSB Virtuosos. SSB with ISV is an online SSB mentoring platform dedicated to help defence aspirants understand and prepare for the Services Selection Board/ Airforce Selection Board through authentic guidance, leadership development, and behavioural insights. What makes SSB with ISV different from conventional coaching institutes is that the mentoring is delivered by DIPR certified ex-SSB assessors who have had direct experience with the SSB selection system itself. Candidates receive SSB coaching by an Ex Group Testing Officer (GTO), an Ex Interviewing Officer (IO) and Ex Psychologist (Psych) along with guidance from former regular armed forces officers (veterans), providing insights that go far beyond the theoretical preparation. This unique perspective helps aspirants understand how candidates are evaluated during the SSB interview and how officer-like-qualities are observed in real situations.",
+  text: "CS Joint Services Academy operates under the brand name Integrated SSB Virtuosos. SSB with ISV is an SSB mentoring platform - online since 2021, and now offline as well at our new Nagpur campus - dedicated to help defence aspirants understand and prepare for the Services Selection Board/ Airforce Selection Board through authentic guidance, leadership development, and behavioural insights. What makes SSB with ISV different from conventional coaching institutes is that the mentoring is delivered by DIPR certified ex-SSB assessors who have had direct experience with the SSB selection system itself. Candidates receive SSB coaching by an Ex Group Testing Officer (GTO), an Ex Interviewing Officer (IO) and Ex Psychologist (Psych) along with guidance from former regular armed forces officers (veterans), providing insights that go far beyond the theoretical preparation. This unique perspective helps aspirants understand how candidates are evaluated during the SSB interview and how officer-like-qualities are observed in real situations.",
   banner: "/assets/website/about_us_banner.webp",
   heading: "Integrated SSB Virtuosos",
 };
@@ -101,6 +101,17 @@ export default function AboutPage() {
             <p className={styles.aboutIntroText}>
               This innovative platform helps candidates gain exposure to the GTO task environment even before
               appearing for the actual SSB interview, making it a powerful tool for SSB preparation.
+            </p>
+          </div>
+
+          <div className="mvk-benefits">
+            <h3>A New Chapter: Training On Ground</h3>
+
+            <p className={styles.aboutIntroText}>
+              For 5 years, SSB with ISV mentored candidates entirely online. In October 2026, that changed - our
+              first physical campus opened in Nagpur, offering the same assessor-led curriculum in a fully
+              immersive, in-person, 12-day format. Candidates can now choose the format that fits them: online,
+              from anywhere in India, or offline, at Nagpur.
             </p>
           </div>
 

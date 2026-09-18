@@ -4,6 +4,7 @@ import { Submission } from "@/server/models/Submission";
 import { User } from "@/server/models/User";
 import { requireUser } from "../../../_lib/auth";
 import { getEvaluationRecipientIds, notifyRecipients } from "../../../_lib/notify";
+import { resolveAllotmentForOrder } from "@/server/psychAllotment";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -23,7 +24,13 @@ export async function POST(_req: NextRequest, { params }: Params) {
     await submission.save();
 
     const student = await User.findById(submission.userId);
-    const recipientIds = await getEvaluationRecipientIds(student);
+    const allotment = await resolveAllotmentForOrder(submission.orderId ? String(submission.orderId) : null, String(submission.userId));
+    const recipientIds = await getEvaluationRecipientIds({
+      _id: submission.userId,
+      assignedIO: allotment.assignedIO,
+      assignedTO: allotment.assignedTO,
+      assignedPsych: allotment.assignedPsych,
+    });
     const candidateName = student ? student.name : "Candidate";
 
     await notifyRecipients(recipientIds, {

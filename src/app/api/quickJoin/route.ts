@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/server/rateLimit";
 import { connectDB } from "@/server/db";
 import { User, Lead } from "@/server/models";
 import { signSessionToken, setSessionCookie } from "@/server/auth";
@@ -27,6 +28,9 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * earlier pick up where they left off.
  */
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, "quickJoin", { limit: 20, windowMs: 60 * 60 * 1000 });
+  if (limited) return limited;
+
   try {
     const body = await req.json();
     const name = String(body.name || "").trim();

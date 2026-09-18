@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { FaQuoteLeft } from "react-icons/fa";
 import styles from "@/style/OfficerLikeQualities.module.css";
 import CustomHeader from "@/components/site/CustomHeader";
@@ -463,6 +464,16 @@ export default function OfficerLikeQualities() {
             </div>
           </div>
         </div>
+      </section>
+
+      <section className={styles.container} style={{ padding: "20px 20px 60px", textAlign: "center" }}>
+        <p style={{ fontSize: "14.5px", color: "rgba(198, 197, 175, 0.75)", maxWidth: "620px", margin: "0 auto 12px" }}>
+          Ready to be assessed on these qualities in person? SSB with ISV now runs a fully immersive offline batch
+          at our Nagpur campus, alongside our online mentoring.
+        </p>
+        <Link href="/ssb-offline-coaching" className="thm-btn" style={{ margin: "0 auto" }}>
+          Explore the Nagpur Offline Batch →
+        </Link>
       </section>
     </div>
   );

@@ -6,6 +6,7 @@ import { requireUser, userId } from "../../../_lib/auth";
 import { getEvaluationRecipientIds, notifyRecipients } from "../../../_lib/notify";
 import { uploadToR2 } from "@/server/storage/r2";
 import { sendDossierUploadedEmail, sendDossierUploadedSms } from "@/server/integrations/msg91";
+import { resolveAllotmentForOrder } from "@/server/psychAllotment";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -63,7 +64,13 @@ export async function POST(req: NextRequest, { params }: Params) {
 
     try {
       const student = await User.findById(submission.userId);
-      const recipientIds = await getEvaluationRecipientIds(student);
+      const allotment = await resolveAllotmentForOrder(submission.orderId ? String(submission.orderId) : null, String(submission.userId));
+      const recipientIds = await getEvaluationRecipientIds({
+        _id: submission.userId,
+        assignedIO: allotment.assignedIO,
+        assignedTO: allotment.assignedTO,
+        assignedPsych: allotment.assignedPsych,
+      });
       const candidateName = student ? student.name : "Candidate";
       await notifyRecipients(recipientIds, {
         studentId: submission.userId,
@@ -77,7 +84,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       // reaches admins/owner). Skips silently if neither is assigned yet; no
       // fallback recipient, per explicit product decision (2026-08-05).
       if (student) {
-        const assessorIds = [student.assignedTO, student.assignedPsych].filter(Boolean).map((id) => String(id));
+        const assessorIds = [allotment.assignedTO, allotment.assignedPsych].filter(Boolean).map((id) => String(id));
         const uniqueAssessorIds = Array.from(new Set(assessorIds));
         if (uniqueAssessorIds.length > 0) {
           const assessors = await User.find({ _id: { $in: uniqueAssessorIds } }).select("name email phone");

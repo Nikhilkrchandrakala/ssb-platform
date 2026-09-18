@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/server/rateLimit";
 import { connectDB } from "@/server/db";
 import { User } from "@/server/models/User";
 import { sendEmailOtp, sendPhoneOtp, last10 } from "@/server/integrations/msg91";
 import { studentRecoveryEmailReqIds } from "@/server/otpStore";
+import { escapeRegExp } from "@/server/escapeRegExp";
 
 // Self-service password recovery for student/lead accounts — the gap Phase 3
 // surfaced: /api/send-otp + /api/forgot-password only cover admin/franchise/assessor.
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, "student-forgot-password-send-otp", { limit: 5, windowMs: 10 * 60 * 1000 });
+  if (limited) return limited;
+
   try {
     const { email, phone } = await req.json();
     if (!email && !phone) {
@@ -16,8 +21,8 @@ export async function POST(req: NextRequest) {
     await connectDB();
 
     if (email) {
-      const emailLower = email.toLowerCase().trim();
-      const user = await User.findOne({ email: { $regex: new RegExp(`^${emailLower}$`, "i") } });
+      const emailLower = String(email).toLowerCase().trim();
+      const user = await User.findOne({ email: { $regex: new RegExp(`^${escapeRegExp(emailLower)}$`, "i") } });
       if (!user || !["student", "lead"].includes(user.role)) {
         return NextResponse.json({ success: false, message: "Account not found" }, { status: 404 });
       }

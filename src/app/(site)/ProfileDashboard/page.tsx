@@ -23,7 +23,7 @@ export default async function ProfileDashboardPage() {
     userId: String(user._id),
     status: "paid",
   })
-    .populate("slotId", "title price startTime endTime batchNo isFullCourse")
+    .populate("slotId", "title price startTime endTime batchNo isFullCourse mode")
     // Sales Phase 3: lets the dashboard render a "Pay Now" button for any
     // still-pending installment on a sales-enrolled order (see below).
     .populate("installmentPlanId", "status installments")

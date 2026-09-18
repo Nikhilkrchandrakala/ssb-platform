@@ -1,3 +1,4 @@
+import { sanitizeRichHtml } from "@/lib/sanitizeHtml";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connectDB } from "@/server/db";
@@ -109,7 +110,7 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
 
           {blog.images.length > 0 && <BlogImageSlider images={blog.images} title={blog.title} />}
 
-          <div className={styles.content} dangerouslySetInnerHTML={{ __html: blog.content }} />
+          <div className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(blog.content) }} />
 
           {blog.authorQuote && (
             <blockquote className={styles.quote}>

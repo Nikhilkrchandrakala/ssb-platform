@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/server/rateLimit";
 import crypto from "node:crypto";
 import { isDevOtpBypass, verifyOtp } from "@/server/integrations/msg91";
 import { signupEmailReqIds, verificationTokens } from "@/server/otpStore";
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, "signup-verify-email-otp", { limit: 10, windowMs: 10 * 60 * 1000 });
+  if (limited) return limited;
+
   try {
     const { email, otp } = await req.json();
     if (!email || !otp) {

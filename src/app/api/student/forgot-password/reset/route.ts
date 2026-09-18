@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/server/rateLimit";
 import { connectDB } from "@/server/db";
 import { User } from "@/server/models/User";
 import { last10 } from "@/server/integrations/msg91";
 import { verificationTokens } from "@/server/otpStore";
+import { escapeRegExp } from "@/server/escapeRegExp";
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, "student-forgot-password-reset", { limit: 5, windowMs: 15 * 60 * 1000 });
+  if (limited) return limited;
+
   try {
     const { email, phone, resetToken, newPassword } = await req.json();
     if ((!email && !phone) || !resetToken || !newPassword) {
@@ -20,7 +25,7 @@ export async function POST(req: NextRequest) {
     await connectDB();
 
     const query = email
-      ? { email: { $regex: new RegExp(`^${email.toLowerCase().trim()}$`, "i") } }
+      ? { email: { $regex: new RegExp(`^${escapeRegExp(String(email).toLowerCase().trim())}$`, "i") } }
       : { phone: { $regex: new RegExp(`${last10(phone)}$`) } };
     const user = await User.findOne(query);
     if (!user || !["student", "lead"].includes(user.role)) {

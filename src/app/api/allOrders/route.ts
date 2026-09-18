@@ -12,7 +12,7 @@ export async function GET() {
     await connectDB();
 
     const orders = await Order.find({ status: "paid" })
-      .populate("userId", "name email")
+      .populate("userId", "name email enrollmentMode")
       .populate("slotId", "title batchNo price startTime endTime maxStudents")
       .populate("salesPersonId", "name email")
       .populate("installmentPlanId", "status installments")

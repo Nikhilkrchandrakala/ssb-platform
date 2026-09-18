@@ -52,7 +52,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       }
     }
 
-    const orders = await Order.find({ userId: id, status: "paid" }).populate("slotId").sort({ createdAt: -1 });
+    const orders = await Order.find({ userId: id, status: "paid" })
+      .populate("slotId")
+      .populate("assignedGTO", "name email phone")
+      .populate("assignedTO", "name email phone")
+      .populate("assignedPsych", "name email phone")
+      .populate("assignedIO", "name email phone")
+      .sort({ createdAt: -1 });
 
     let submissions: unknown[] = [];
     try {
@@ -84,7 +90,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     await connectDB();
 
     const { id } = await params;
-    const { name, email, phone, batch, clinicalStage, chestNo } = await req.json();
+    const { name, email, phone, batch, clinicalStage, chestNo, enrollmentMode } = await req.json();
+
+    if (enrollmentMode !== undefined && enrollmentMode !== "online" && enrollmentMode !== "offline") {
+      return NextResponse.json({ error: "enrollmentMode must be 'online' or 'offline'" }, { status: 400 });
+    }
 
     const student = await User.findById(id);
 
@@ -97,6 +107,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (phone) student.phone = phone.trim();
     if (batch !== undefined) student.batch = (batch || "").trim();
     if (chestNo !== undefined) student.chestNo = (chestNo || "").trim();
+    if (enrollmentMode !== undefined) student.enrollmentMode = enrollmentMode;
     // `!== undefined` (not truthy) so the frontend can send "" to explicitly
     // clear a lead's clinicalStage — a falsy-check here would silently
     // no-op that intentional clear and leave a previously-set value in place.

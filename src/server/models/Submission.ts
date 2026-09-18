@@ -4,6 +4,11 @@ const submissionSchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     assessmentId: { type: Schema.Types.ObjectId, ref: "Assessment", required: true },
+    // Which paid batch (Order) this evaluation belongs to. Nullable/inert
+    // for now — backfilled by scripts/migrate-allotment-to-orders.ts, but
+    // not yet read by any Submission creation/lookup logic (that's a
+    // separate follow-up once the per-batch student/assessor UI is built).
+    orderId: { type: Schema.Types.ObjectId, ref: "Order", default: null },
     status: { type: String, default: "NOT_STARTED" },
     startedAt: Date,
     completedAt: Date,

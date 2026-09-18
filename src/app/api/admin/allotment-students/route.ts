@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
     const search = sp.get("search");
     const clinicalStage = sp.get("clinicalStage");
     const batch = sp.get("batch");
+    const mode = sp.get("mode");
 
     const pageNum = Math.max(1, parseInt(page));
     const limitNum = Math.max(1, Math.min(100, parseInt(limit)));
@@ -55,6 +56,19 @@ export async function GET(req: NextRequest) {
 
     if (batch && batch !== "all") {
       query.batch = batch;
+    }
+
+    if (mode === "online" || mode === "offline") {
+      // A raw Mongo query filter is checked against the stored document, not
+      // the Mongoose-hydrated one — so it never sees the schema-level
+      // "online" default that legacy documents (written before this field
+      // existed) pick up only once Mongoose loads them. Treat "no value
+      // stored" as an implicit "online" here too, or the Online filter would
+      // silently drop every student who predates this field.
+      query.$and = [
+        ...((query.$and as Record<string, unknown>[]) || []),
+        mode === "online" ? { $or: [{ enrollmentMode: "online" }, { enrollmentMode: { $exists: false } }] } : { enrollmentMode: "offline" },
+      ];
     }
 
     const totalCount = await User.countDocuments(query);

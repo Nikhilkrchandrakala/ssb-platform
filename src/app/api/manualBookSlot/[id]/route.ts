@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/server/db";
 import { getCurrentUser, hasRole } from "@/server/auth";
 import { Slot, Order, Course, User } from "@/server/models";
+import { syncEnrollmentModeForUser } from "@/server/enrollmentModeSync";
 
 // Offline-safe baseline defaults, mirrors legacy slotRoutes.js
 const DEFAULT_PRICES: Record<string, number> = {
@@ -163,6 +164,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // (matches legacy: markModified + save runs unconditionally).
     targetUser.markModified("updatedAt");
     await targetUser.save();
+    // manualBookSlot never used to touch this at all — a student manually
+    // booked into an online batch after an earlier offline purchase (or vice
+    // versa) kept showing the wrong enrollment-mode badge everywhere forever.
+    await syncEnrollmentModeForUser(String(targetUser._id));
 
     return NextResponse.json({
       message: "Slot booked manually successfully",

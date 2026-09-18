@@ -48,6 +48,7 @@ export const mentorsData = [
             "Commissioning crew, SSB (Kolkata)",
             "Ex 12 SSB & NSB (Coimbatore)",
             "13000+ candidates assessed",
+            "Founding Faculty & Mentor, SSB with ISV - Nagpur Offline Campus (opens 26th October)",
         ],
         fullBiodata: {
             type: "structured",
@@ -121,10 +122,40 @@ export const mentorsData = [
 ];
 
 
-export const coursesData = [
+interface CourseCard {
+    id: number;
+    number: string;
+    title: string;
+    white: string;
+    gray: string;
+    white2: string;
+    sessions?: string;
+    hours?: string;
+    subtitle?: string;
+    description: string;
+    image: string;
+    price: string;
+    isOffline?: boolean;
+}
+
+export const coursesData: CourseCard[] = [
+    {
+        id: 0,
+        number: "01",
+        title: "Offline SSB Program - Nagpur Campus",
+        white: "Offline SSB ",
+        gray: "Program - Nagpur",
+        white2: "Campus",
+        subtitle: "12-Day Residential Program",
+        description: "SSB with ISV's first physical campus - Nagpur, opens 26th October",
+        image: "/uploads/nagpur-offline/main-building.jpeg",
+        price: " 21000 (All Inclusive)",
+        isOffline: true,
+    },
+
     {
         id: 1,
-        number: "01",
+        number: "02",
         title: "12 days Services Selection Board Hackathon",
         white: "12 days ",
         gray: "Services Selection Board",
@@ -138,7 +169,7 @@ export const coursesData = [
 
     {
         id: 2,
-        number: "02",
+        number: "03",
         title: "Introduction to SSB & PPDT, Stage 1 Process",
         white: "Introduction",
         gray: "to SSB & PPDT, Stage",
@@ -153,7 +184,7 @@ export const coursesData = [
 
     {
         id: 3,
-        number: "03",
+        number: "04",
         title: "Psychology Test Preparation Program",
         white: "Psychology",
         gray: "Test Preparation",
@@ -170,7 +201,7 @@ export const coursesData = [
 
     {
         id: 4,
-        number: "04",
+        number: "05",
         title: "Interview Theory Course and Mock Interview",
         white: "Interview Theory ",
         gray: "Course and Mock",
@@ -184,7 +215,7 @@ export const coursesData = [
 
     {
         id: 5,
-        number: "05",
+        number: "06",
         title: "Group Testing Course",
         white: "Group ",
         gray: "Testing",
@@ -292,6 +323,12 @@ export const journeyData = [
         title: "Virtual GTO ground rolled out",
         desc: "Launch of India’s first Virtual Training Xperience for remote SSB preparation.",
         image: "/assets/website/virtual.webp",
+    },
+    {
+        date: "26 October 2026",
+        title: "SSB with ISV Goes Offline",
+        desc: "First physical campus opens in Nagpur - the same assessor-led mentoring, now fully in person.",
+        image: "/uploads/nagpur-offline/main-building.jpeg",
     },
 
 ];
@@ -1031,6 +1068,18 @@ export const faqDataHome = [
         id: "faq6",
         question: "Is virtual training sufficient for cracking SSB?",
         answer: "Yes, virtual training can be effective when it includes structured mentoring, psychology test practice, interview guidance and group task simulations that help candidates understand the SSB assessment process.",
+        isOpen: false
+    },
+    {
+        id: "faq7",
+        question: "Does SSB with ISV offer offline coaching?",
+        answer: "Yes. SSB with ISV now offers a 12-day offline batch at our Nagpur campus, in addition to our online programmes - both mentored by the same faculty, including Lt Cdr Nikhil Kumar Chandrakala and Commodore Pankaj Singh.",
+        isOpen: false
+    },
+    {
+        id: "faq8",
+        question: "Should I choose online or offline SSB coaching?",
+        answer: "Offline training offers full immersion with in-person feedback and live GTO tasks, ideal if you can commit 12 days on campus. Online offers flexibility with the same mentors and full VTX access. Both follow the identical 12-day structure and standard.",
         isOpen: false
     }
 ];

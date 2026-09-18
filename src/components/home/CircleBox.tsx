@@ -76,12 +76,25 @@ function CircleBox() {
           </div>
 
           <p className={styles.titleOfSecondSection}>
-            India&rsquo;s first online SSB mentoring platform with a proprietary virtual training experience (VTX™).
-            At SSB with ISV, we provide structured SSB coaching and interview preparation designed to help aspirants
-            understand the assessment process and develop authentic leadership behaviour. Our mentoring programs
-            cover psychology tests such as TAT, WAT, SRT, GTO tasks, PIQ analysis, and personal interview training.
-            Led by DIPR certified ex-SSB assessors of the Indian Armed Forces, SSB with ISV comes with a promise to
-            guide and prepare aspiring officers for success in the Services Selection Board.
+            SSB with ISV (Integrated SSB Virtuosos) is India&rsquo;s best SSB mentoring institute &mdash; built and
+            led by people who used to sit on the other side of the board.
+          </p>
+
+          <p className={styles.titleOfSecondSection}>
+            For 5 years, we&rsquo;ve mentored candidates online: 700+ students coached, 200+ recommended into the
+            Indian Armed Forces. Our mentors, Lt Cdr Nikhil Kumar Chandrakala, India&rsquo;s youngest Group Testing
+            Officer since 1947, and Commodore Pankaj Singh, Ex Board President of 12 SSB, have personally assessed
+            over 30,000 candidates between them.
+          </p>
+
+          <p className={styles.titleOfSecondSection}>
+            We built VTX™, India&rsquo;s first patented Virtual GTO ground, because no candidate should walk onto a
+            real GTO ground having never experienced one before.
+          </p>
+
+          <p className={styles.titleOfSecondSection}>
+            And now, we&rsquo;re offline. SSB with ISV&rsquo;s first physical campus opens in Nagpur, 26th October
+            &mdash; the same mentors, the same standard, in person.
           </p>
 
           <p className={styles.titleOfThirdSection}>

@@ -1,16 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/server/db";
 import { Submission } from "@/server/models/Submission";
+import { Order } from "@/server/models/Order";
 import { User } from "@/server/models/User";
 import { requireUser, userId } from "../_lib/auth";
+import { resolveAllotmentForOrder, resolveCurrentAllotmentForUser } from "@/server/psychAllotment";
 
 type AssessorType = "GTO" | "TO" | "Psych" | "IO";
+type AssignedField = "assignedGTO" | "assignedTO" | "assignedPsych" | "assignedIO";
 
-function candidateQueryForAssessorType(type: AssessorType, assessorId: string): Record<string, unknown> {
-  if (type === "GTO") return { assignedGTO: assessorId };
-  if (type === "TO") return { assignedTO: assessorId };
-  if (type === "Psych") return { assignedPsych: assessorId };
-  return { assignedIO: assessorId };
+function fieldForAssessorType(type: AssessorType): AssignedField {
+  if (type === "GTO") return "assignedGTO";
+  if (type === "TO") return "assignedTO";
+  if (type === "Psych") return "assignedPsych";
+  return "assignedIO";
+}
+
+interface CandidatePair {
+  orderId: string | null; // null only for a candidate with no real paid Order at all
+  userId: string;
+}
+
+// One (candidate, batch) pair per allotment — the same candidate can appear
+// twice if they're allotted on two different paid batches. Reads Order as
+// the source of truth, and additionally includes any manually-created
+// candidate whose allotment only ever existed on User because they have no
+// real purchase (orderId: null in that case — mirrors psychAllotment.ts's
+// same fallback rule).
+async function findAssignedCandidatePairs(matchOrderQuery: Record<string, unknown>, matchUserQuery: Record<string, unknown>): Promise<CandidatePair[]> {
+  const orders = await Order.find({ ...matchOrderQuery, status: "paid" }).select("_id userId");
+  const pairs: CandidatePair[] = orders.map((o) => ({ orderId: String(o._id), userId: String(o.userId) }));
+
+  const usersMatched = await User.find(matchUserQuery).select("_id");
+  const paidOrderUserIds = new Set((await Order.distinct("userId", { status: "paid" })).map(String));
+  for (const u of usersMatched) {
+    if (!paidOrderUserIds.has(String(u._id))) {
+      pairs.push({ orderId: null, userId: String(u._id) });
+    }
+  }
+  return pairs;
 }
 
 // GET /api/psych/submissions
@@ -22,105 +50,122 @@ export async function GET() {
   const uid = userId(user);
 
   try {
-    let query: Record<string, unknown> = {};
     if (user.role === "student") {
-      query.userId = uid;
-    } else if (user.role === "assessor") {
-      const assessor = await User.findById(uid);
-      const assessorType = (assessor as unknown as { assessorType?: AssessorType } | null)?.assessorType;
-      if (assessor && assessorType) {
-        const candidateQuery = candidateQueryForAssessorType(assessorType, uid);
-        const candidates = await User.find(candidateQuery).select("_id");
-        const candidateIds = candidates.map((c) => c._id);
-        query = { $or: [{ assessorId: uid }, { userId: { $in: candidateIds } }] };
-      } else {
-        query.assessorId = uid;
-      }
-    }
-
-    const submissions = await Submission.find(query)
-      .select("-piqFileData")
-      .populate("userId", "name email assignedGTO assignedTO assignedPsych assignedIO clinicalStage profileImage chestNo batch")
-      .populate("assessmentId", "title type")
-      .sort({ updatedAt: -1 });
-
-    // Students see ALL of their own submissions, undeduplicated — dedup below
-    // is only meaningful for the assessor/admin "one row per candidate" view.
-    if (user.role === "student") {
-      const studentSubmissions = submissions.map((sub) => {
-        const subJSON = sub.toJSON ? sub.toJSON() : sub;
-        return { ...subJSON, student: (subJSON as Record<string, unknown>).userId };
-      });
+      // Students see ALL of their own submissions, undeduplicated — one per
+      // batch is exactly what the per-batch dashboard UI needs.
+      const submissions = await Submission.find({ userId: uid })
+        .select("-piqFileData")
+        .populate("userId", "name email profileImage chestNo batch")
+        .populate("assessmentId", "title type")
+        .sort({ updatedAt: -1 });
+      const studentSubmissions = await Promise.all(
+        submissions.map(async (sub) => {
+          const subJSON = sub.toJSON ? sub.toJSON() : sub;
+          const orderId = (subJSON as Record<string, unknown>).orderId as string | null | undefined;
+          const allotment = await resolveAllotmentForOrder(orderId, uid);
+          return { ...subJSON, student: (subJSON as Record<string, unknown>).userId, isOffline: allotment.isOffline };
+        })
+      );
       return NextResponse.json(studentSubmissions);
     }
 
-    const uniqueSubmissionsMap = new Map<string, Record<string, unknown>>();
-    submissions.forEach((sub) => {
-      const subJSON = sub.toJSON ? (sub.toJSON() as Record<string, unknown>) : (sub as unknown as Record<string, unknown>);
-      const subUserId = subJSON.userId as { id?: unknown; _id?: unknown } | string | undefined;
-      if (!subUserId) return;
-
-      const uid2 =
-        typeof subUserId === "object" ? subUserId.id ?? subUserId._id : subUserId;
-      const studentId = String(uid2);
-
-      if (!uniqueSubmissionsMap.has(studentId)) {
-        uniqueSubmissionsMap.set(studentId, { ...subJSON, student: subJSON.userId });
-      }
-    });
-
-    let mappedSubmissions = Array.from(uniqueSubmissionsMap.values());
-
-    // Append pending submissions for allotted candidates who haven't uploaded anything yet.
-    if (user.role === "assessor" || user.role === "admin" || user.role === "owner") {
-      let candidateQuery: Record<string, unknown> | null = {};
-
-      if (user.role === "assessor") {
-        const assessor = await User.findById(uid);
-        const assessorType = (assessor as unknown as { assessorType?: AssessorType } | null)?.assessorType;
-        if (assessor && assessorType) {
-          candidateQuery = candidateQueryForAssessorType(assessorType, uid);
-        } else {
-          candidateQuery = null;
-        }
+    // Assessor/admin/owner: resolve which (candidate, batch) pairs are in
+    // scope first, since assessor allotment lives per-Order now.
+    let pairs: CandidatePair[];
+    if (user.role === "assessor") {
+      const assessor = await User.findById(uid);
+      const assessorType = (assessor as unknown as { assessorType?: AssessorType } | null)?.assessorType;
+      if (!assessor || !assessorType) {
+        pairs = [];
       } else {
-        // Admins/owners see every candidate with at least one assigned assessor.
-        candidateQuery = {
-          $or: [
-            { assignedPsych: { $exists: true, $ne: null } },
-            { assignedGTO: { $exists: true, $ne: null } },
-            { assignedIO: { $exists: true, $ne: null } },
-            { assignedTO: { $exists: true, $ne: null } },
-          ],
-        };
+        const field = fieldForAssessorType(assessorType);
+        pairs = await findAssignedCandidatePairs({ [field]: uid }, { [field]: uid });
       }
-
-      if (candidateQuery) {
-        const candidates = await User.find(candidateQuery).select(
-          "_id name email assignedGTO assignedTO assignedPsych assignedIO clinicalStage profileImage chestNo batch"
-        );
-        const usersWithSubmissions = new Set(
-          submissions.map((s) => {
-            const su = s.userId as unknown as { _id?: unknown } | undefined;
-            return su && su._id ? String(su._id) : "";
-          })
-        );
-
-        for (const candidate of candidates) {
-          if (!usersWithSubmissions.has(String(candidate._id))) {
-            mappedSubmissions.push({
-              id: `pending-${candidate._id}`,
-              _id: `pending-${candidate._id}`,
-              userId: candidate._id,
-              status: "PENDING",
-              student: candidate.toObject ? candidate.toObject() : candidate,
-              assessmentId: null,
-              startedAt: null,
-            });
-          }
-        }
-      }
+    } else {
+      // Admins/owners see every (candidate, batch) pair with at least one assigned assessor.
+      const anyAssignedCondition = {
+        $or: [
+          { assignedPsych: { $exists: true, $ne: null } },
+          { assignedGTO: { $exists: true, $ne: null } },
+          { assignedIO: { $exists: true, $ne: null } },
+          { assignedTO: { $exists: true, $ne: null } },
+        ],
+      };
+      pairs = await findAssignedCandidatePairs(anyAssignedCondition, anyAssignedCondition);
     }
+
+    const candidateUserIds = [...new Set(pairs.map((p) => p.userId))];
+    const candidateUsers = await User.find({ _id: { $in: candidateUserIds } }).select(
+      "_id name email clinicalStage profileImage chestNo batch"
+    );
+    const candidateUserById = new Map(candidateUsers.map((u) => [String(u._id), u]));
+
+    const submissions = await Submission.find({
+      $or: [{ assessorId: uid }, { userId: { $in: candidateUserIds } }],
+    })
+      .select("-piqFileData")
+      .populate("assessmentId", "title type")
+      .sort({ updatedAt: -1 });
+
+    // One row per (candidate, batch) pair — a candidate allotted on two
+    // batches now legitimately gets two rows instead of being collapsed to
+    // whichever submission was updated most recently.
+    const pairKey = (userId: string, orderId: string | null) => `${userId}:${orderId ?? "none"}`;
+    const mappedByPair = new Map<string, Record<string, unknown>>();
+
+    for (const sub of submissions) {
+      const subUserId = String(sub.userId);
+      const subOrderId = sub.orderId ? String(sub.orderId) : null;
+      const key = pairKey(subUserId, subOrderId);
+      if (mappedByPair.has(key)) continue; // already-seen pair, keep the most-recently-updated (sorted above)
+
+      const candidateUser = candidateUserById.get(subUserId);
+      const allotment = await resolveAllotmentForOrder(subOrderId, subUserId);
+      const subJSON = sub.toJSON ? (sub.toJSON() as Record<string, unknown>) : (sub as unknown as Record<string, unknown>);
+      mappedByPair.set(key, {
+        ...subJSON,
+        student: candidateUser
+          ? {
+              ...(candidateUser.toJSON ? candidateUser.toJSON() : candidateUser),
+              assignedGTO: allotment.assignedGTO,
+              assignedTO: allotment.assignedTO,
+              assignedPsych: allotment.assignedPsych,
+              assignedIO: allotment.assignedIO,
+            }
+          : null,
+        isOffline: allotment.isOffline,
+      });
+    }
+
+    // Append pending rows for allotted (candidate, batch) pairs with no submission yet.
+    for (const pair of pairs) {
+      const key = pairKey(pair.userId, pair.orderId);
+      if (mappedByPair.has(key)) continue;
+
+      const candidateUser = candidateUserById.get(pair.userId);
+      if (!candidateUser) continue;
+      const allotment = await resolveAllotmentForOrder(pair.orderId, pair.userId);
+      const pseudoId = pair.orderId ? `pending-order-${pair.orderId}` : `pending-user-${pair.userId}`;
+      mappedByPair.set(key, {
+        id: pseudoId,
+        _id: pseudoId,
+        userId: pair.userId,
+        orderId: pair.orderId,
+        status: "PENDING",
+        student: {
+          ...(candidateUser.toObject ? candidateUser.toObject() : candidateUser),
+          assignedGTO: allotment.assignedGTO,
+          assignedTO: allotment.assignedTO,
+          assignedPsych: allotment.assignedPsych,
+          assignedIO: allotment.assignedIO,
+        },
+        isOffline: allotment.isOffline,
+        assessmentId: null,
+        startedAt: null,
+      });
+    }
+
+    let mappedSubmissions = Array.from(mappedByPair.values());
 
     // Admins/owners only ever see students with at least one assigned assessor.
     if (user.role === "admin" || user.role === "owner") {
@@ -175,21 +220,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(submission, { status: 200 });
     }
 
-    const candidateUser = await User.findById(uid);
+    // Resolves the student's current batch (most recent paid Order) so this
+    // new Submission is tied to it — see src/server/psychAllotment.ts.
+    const allotment = await resolveCurrentAllotmentForUser(uid);
     let gtoStatus = "NOT_REQUIRED";
     let ioStatus = "NOT_REQUIRED";
     let toStatus = "NOT_REQUIRED";
     let psychStatus = "PENDING"; // Always required once a battery is assigned.
-    if (candidateUser) {
-      if (candidateUser.assignedGTO) gtoStatus = "PENDING";
-      if (candidateUser.assignedIO) ioStatus = "PENDING";
-      if (candidateUser.assignedTO) toStatus = "PENDING";
-      if (candidateUser.assignedPsych) psychStatus = "PENDING";
-    }
+    if (allotment.assignedGTO) gtoStatus = "PENDING";
+    if (allotment.assignedIO) ioStatus = "PENDING";
+    if (allotment.assignedTO) toStatus = "PENDING";
+    if (allotment.assignedPsych) psychStatus = "PENDING";
 
     submission = new Submission({
       ...body,
       userId: uid,
+      orderId: allotment.orderId,
       startedAt: new Date(),
       psychStatus,
       gtoStatus,

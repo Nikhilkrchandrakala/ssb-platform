@@ -1,4 +1,4 @@
-import { User } from "@/server/models";
+import { User, Order, Slot } from "@/server/models";
 
 export interface AssessorAllotmentCount {
   id: string;
@@ -15,18 +15,24 @@ export interface AssessorAllotmentCount {
  * assessor under two roles still counts once, via the Set). Shared by the
  * summary GET route (preview) and the notify POST route (recompute fresh
  * right before sending, never trust a client-submitted count).
+ *
+ * Reads allotment off paid Orders now, not User — assignedGTO/TO/Psych/IO
+ * moved there so a student's second batch no longer overwrites the first
+ * (see AllotmentView.tsx). "Batch" here is the Slot's batchNo the order was
+ * paid for.
  */
 export async function computeBatchAllotmentSummary(batch: string): Promise<AssessorAllotmentCount[]> {
-  const students = await User.find({ role: "student", batch }).select(
-    "assignedGTO assignedTO assignedPsych assignedIO"
+  const slotIds = await Slot.distinct("_id", { batchNo: batch });
+  const orders = await Order.find({ status: "paid", slotId: { $in: slotIds } }).select(
+    "userId assignedGTO assignedTO assignedPsych assignedIO"
   );
 
   const candidatesByAssessor = new Map<string, Set<string>>();
-  for (const s of students) {
-    const assessorIds = [s.assignedGTO, s.assignedTO, s.assignedPsych, s.assignedIO].filter(Boolean).map(String);
+  for (const o of orders) {
+    const assessorIds = [o.assignedGTO, o.assignedTO, o.assignedPsych, o.assignedIO].filter(Boolean).map(String);
     for (const assessorId of assessorIds) {
       if (!candidatesByAssessor.has(assessorId)) candidatesByAssessor.set(assessorId, new Set());
-      candidatesByAssessor.get(assessorId)!.add(String(s._id));
+      candidatesByAssessor.get(assessorId)!.add(String(o.userId));
     }
   }
 

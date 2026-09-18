@@ -13,6 +13,11 @@ interface SubmittedInstallment {
   dueDate: string;
 }
 
+// Mirrors /api/createOfflineOrder's flat fee exactly (the slot's own price,
+// no GST, no installment plan) — an offline batch is a one-time registration
+// deposit collected up front, not a full-course purchase billed over time.
+const OFFLINE_REGISTRATION_FEE = 5000;
+
 // Creates a not-yet-a-student User + Order + InstallmentPlan, then a real
 // Razorpay Payment Link for just the initial amount (salesimplementation.md
 // Phase 2). No webhook/auto-unlock yet — that's Phase 3; checkInstallmentStatus
@@ -40,17 +45,49 @@ export async function POST(req: NextRequest) {
     const slot = await Slot.findById(slotId);
     if (!slot) return NextResponse.json({ message: "Slot not found" }, { status: 404 });
 
-    // Re-look-up the true price and re-validate — never trust a client-submitted total.
-    const baseAmount = await getSlotBasePrice(slot, selectedModules);
-    const priced = await applySalesCoupon({ slot, baseAmount, couponCode, studentEmail });
-    if (!priced.ok) return NextResponse.json({ message: priced.error }, { status: 400 });
-    const { finalPriceInclGST, discount, couponCode: appliedCouponCode } = priced;
+    // The batch's own mode is authoritative — never trust the client's
+    // enrollmentMode over what the selected slot actually is.
+    const isOfflineSlot = slot.mode === "offline";
+    const enrollmentMode = isOfflineSlot ? "offline" : "online";
 
-    if (typeof initialAmount !== "number" || initialAmount < MIN_INITIAL_AMOUNT || initialAmount > finalPriceInclGST) {
-      return NextResponse.json(
-        { message: `initialAmount must be between ₹${MIN_INITIAL_AMOUNT} and ₹${finalPriceInclGST}` },
-        { status: 400 }
-      );
+    // Offline batches are a flat one-time registration deposit — no GST, no
+    // installment plan, no coupons, no module selection. Ignore anything the
+    // client sent for those and charge exactly the slot's own price (or the
+    // fallback), matching /api/createOfflineOrder's public self-serve flow.
+    let finalPriceInclGST: number;
+    let originalAmount: number;
+    let discount = 0;
+    let appliedCouponCode: string | null = null;
+    let effectiveInstallments: SubmittedInstallment[] = submittedInstallments;
+    let effectiveSelectedModules: string[] = selectedModules;
+
+    if (isOfflineSlot) {
+      finalPriceInclGST = slot.price || OFFLINE_REGISTRATION_FEE;
+      originalAmount = finalPriceInclGST;
+      effectiveInstallments = [];
+      effectiveSelectedModules = [];
+      if (typeof initialAmount !== "number" || Math.abs(initialAmount - finalPriceInclGST) > 0.01) {
+        return NextResponse.json(
+          { message: `initialAmount must equal the registration fee (₹${finalPriceInclGST}) for an offline batch` },
+          { status: 400 }
+        );
+      }
+    } else {
+      // Re-look-up the true price and re-validate — never trust a client-submitted total.
+      const baseAmount = await getSlotBasePrice(slot, selectedModules);
+      const priced = await applySalesCoupon({ slot, baseAmount, couponCode, studentEmail });
+      if (!priced.ok) return NextResponse.json({ message: priced.error }, { status: 400 });
+      finalPriceInclGST = priced.finalPriceInclGST;
+      originalAmount = Math.round(baseAmount * 1.18 * 100) / 100;
+      discount = priced.discount;
+      appliedCouponCode = priced.couponCode;
+
+      if (typeof initialAmount !== "number" || initialAmount < MIN_INITIAL_AMOUNT || initialAmount > finalPriceInclGST) {
+        return NextResponse.json(
+          { message: `initialAmount must be between ₹${MIN_INITIAL_AMOUNT} and ₹${finalPriceInclGST}` },
+          { status: 400 }
+        );
+      }
     }
 
     const remaining = Math.round((finalPriceInclGST - initialAmount) * 100) / 100;
@@ -58,7 +95,7 @@ export async function POST(req: NextRequest) {
     // Re-validate the (possibly sales-person-edited) schedule regardless of edits.
     let sum = 0;
     let lastDate: Date | null = null;
-    for (const inst of submittedInstallments) {
+    for (const inst of effectiveInstallments) {
       if (typeof inst.amount !== "number" || inst.amount <= 0) {
         return NextResponse.json({ message: "Every installment amount must be a positive number" }, { status: 400 });
       }
@@ -88,6 +125,7 @@ export async function POST(req: NextRequest) {
         email: studentEmail,
         role: "lead",
         isManuallyCreated: true,
+        enrollmentMode,
       });
     }
 
@@ -148,10 +186,10 @@ export async function POST(req: NextRequest) {
       buyerEmail: studentEmail,
       slotId: slot._id,
       price: finalPriceInclGST,
-      originalAmount: Math.round(baseAmount * 1.18 * 100) / 100,
+      originalAmount,
       discount,
       couponCode: appliedCouponCode,
-      selectedModules: resolveOrderSelectedModules(slot, selectedModules),
+      selectedModules: resolveOrderSelectedModules(slot, effectiveSelectedModules),
       status: "pending",
       bookingMethod: "sales",
       salesPersonId: user!._id,
@@ -160,7 +198,7 @@ export async function POST(req: NextRequest) {
     const now = new Date();
     const planInstallments = [
       { seq: 1, amount: initialAmount, dueDate: now, status: "pending" as const },
-      ...submittedInstallments.map((inst, idx) => ({
+      ...effectiveInstallments.map((inst, idx) => ({
         seq: idx + 2,
         amount: inst.amount,
         dueDate: new Date(inst.dueDate),

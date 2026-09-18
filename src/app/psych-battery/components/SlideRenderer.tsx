@@ -1,5 +1,6 @@
 "use client";
 
+import { sanitizeRichHtml } from "@/lib/sanitizeHtml";
 import React from "react";
 import { AssessmentSlide } from "../types";
 import { Clock } from "lucide-react";
@@ -77,7 +78,7 @@ export const SlideRenderer: React.FC<SlideRendererProps> = ({ slide, invertConte
           <div className="absolute inset-0 bg-app-accent/10 rounded-full blur-[150px]" />
           <div
             className="flex-1 font-sans text-app-text-bright uppercase tracking-tighter w-full p-[4cqi] text-center font-black flex items-center justify-center whitespace-pre-wrap break-words relative z-10 min-h-0 overflow-hidden [&_*]:!text-[1em] [&_font]:!text-[1em] [&_*]:!font-black"
-            dangerouslySetInnerHTML={{ __html: slide.content }}
+            dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(slide.content) }}
             style={{
               fontSize: `calc(clamp(0.5rem, 6cqi, 10rem) * ${slide.typographyScale || 1})`,
               lineHeight: slide.lineHeight || 1.2,
@@ -110,7 +111,7 @@ export const SlideRenderer: React.FC<SlideRendererProps> = ({ slide, invertConte
               lineHeight: slide.lineHeight || 1.6,
             }}
             className="w-full font-sans font-normal text-app-text-bright tracking-tight break-words text-left [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:list-inside [&_ol]:list-inside [&_ul]:pl-[4cqi] [&_ol]:pl-[4cqi] [&_li]:my-[1cqi]"
-            dangerouslySetInnerHTML={{ __html: cleanHTML(slide.content || "") }}
+            dangerouslySetInnerHTML={{ __html: cleanHTML(sanitizeRichHtml(slide.content)) }}
           />
         </div>
       )}

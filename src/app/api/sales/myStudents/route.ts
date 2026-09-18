@@ -21,8 +21,8 @@ export async function GET() {
 
   const query = { bookingMethod: "sales", salesPersonId: user!._id };
   const orders = await Order.find(query)
-    .populate("userId", "name email")
-    .populate("slotId", "title batchNo startTime isFullCourse")
+    .populate("userId", "name email enrollmentMode")
+    .populate("slotId", "title batchNo startTime isFullCourse mode")
     .populate("installmentPlanId")
     .sort({ createdAt: -1 })
     .lean();
@@ -31,8 +31,8 @@ export async function GET() {
   if (reconciled === 0) return NextResponse.json({ orders });
 
   const freshOrders = await Order.find(query)
-    .populate("userId", "name email")
-    .populate("slotId", "title batchNo startTime isFullCourse")
+    .populate("userId", "name email enrollmentMode")
+    .populate("slotId", "title batchNo startTime isFullCourse mode")
     .populate("installmentPlanId")
     .sort({ createdAt: -1 })
     .lean();

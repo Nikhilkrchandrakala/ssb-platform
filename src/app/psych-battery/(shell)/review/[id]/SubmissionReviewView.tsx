@@ -824,6 +824,17 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
   const piqFiles: string[] = submission.piqFiles || [];
   const answerFiles: string[] = submission.uploadedFiles || [];
   const isDossierUploaded = answerFiles.length > 0;
+  // Offline candidates are evaluated in person during their batch — no PIQ
+  // form, timed test, or dossier applies to them, so the Document Viewer and
+  // Feedback Scheduler tabs (and the dossier-upload gating below) don't
+  // apply either. See src/server/psychAllotment.ts's ResolvedAllotment.
+  const isOffline = !!(submission as unknown as Record<string, unknown>).isOffline;
+  // Derived at render time rather than via an effect+setState: an offline
+  // submission's activeTab can still default to "dossier"/"meeting" (the
+  // role-based effect above sets it before this component knows isOffline),
+  // but those tabs are hidden from the tab bar for offline candidates, so
+  // every render decision below should use this instead of raw activeTab.
+  const effectiveTab = isOffline && (activeTab === "dossier" || activeTab === "meeting") ? "evaluation" : activeTab;
 
   // Graceful fallbacks if population was incomplete
   const studentName = student?.name || "Candidate";
@@ -879,7 +890,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
             ) : (
                 <button
                   onClick={() => handleUpdate("COMPLETED")}
-                  disabled={saving || ((activeAssessorType === "Psych" || activeAssessorType === "TO") && !isDossierUploaded)}
+                  disabled={saving || (!isOffline && (activeAssessorType === "Psych" || activeAssessorType === "TO") && !isDossierUploaded)}
                   className="px-6 py-3 bg-app-accent text-app-on-accent rounded-2xl text-xs font-black hover:opacity-90 transition-all shadow-lg shadow-app-accent/30 active:scale-95 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
@@ -913,6 +924,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
             { id: "evaluation", label: "Assessment", icon: MessageSquare },
             ...(submission.status === "REPORT_RELEASED" ? [{ id: "feedback", label: "All Assessor Feedback", icon: Users }] : []),
           ].filter((tab) => {
+            if (isOffline && (tab.id === "dossier" || tab.id === "meeting")) return false;
             if (activeAssessorType === "GTO" && tab.id === "dossier") return false;
             if (tab.id === "meeting" && !["Psych", "TO", "IO"].includes(activeAssessorType)) return false;
             return true;
@@ -923,7 +935,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
               onClick={() => setActiveTab(tab.id as "dossier" | "evaluation" | "meeting" | "feedback")}
               className={cn(
                 "px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all flex items-center gap-2",
-                activeTab === tab.id ? "bg-app-accent text-app-on-accent shadow-xl" : "text-app-text-muted hover:text-app-text-bright"
+                effectiveTab === tab.id ? "bg-app-accent text-app-on-accent shadow-xl" : "text-app-text-muted hover:text-app-text-bright"
               )}
             >
               <tab.icon size={16} />
@@ -932,7 +944,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
           ))}
         </div>
 
-        {activeTab === "dossier" && viewerMode === "dossier" && (activeAssessorType === "Psych" || activeAssessorType === "TO") && assessment && (
+        {effectiveTab === "dossier" && viewerMode === "dossier" && (activeAssessorType === "Psych" || activeAssessorType === "TO") && assessment && (
           <button
             type="button"
             onClick={() => setShowSidebar(!showSidebar)}
@@ -947,7 +959,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
       {/* Main Content Area: 2-Column Layout */}
       <div className={cn(
         "grid gap-8 items-start",
-        (activeTab === "dossier" && viewerMode === "dossier" && (activeAssessorType === "Psych" || activeAssessorType === "TO") && assessment && showSidebar)
+        (effectiveTab === "dossier" && viewerMode === "dossier" && (activeAssessorType === "Psych" || activeAssessorType === "TO") && assessment && showSidebar)
           ? "grid-cols-1 lg:grid-cols-2"
           : "grid-cols-1"
       )}>
@@ -955,7 +967,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
         {/* LEFT COLUMN: Tabs Content */}
         <div className="space-y-8 min-w-0">
           {/* Awaiting Dossier Warning Banner */}
-          {((activeAssessorType === "Psych" || activeAssessorType === "TO") && !isDossierUploaded) && (
+          {!isOffline && ((activeAssessorType === "Psych" || activeAssessorType === "TO") && !isDossierUploaded) && (
             <div className="p-4 bg-amber-500/20 border border-amber-400/40 rounded-2xl text-amber-300 text-xs font-bold flex items-center gap-2">
               <AlertCircle size={16} />
               Awaiting Candidate Dossier Upload: Meeting scheduling and assessment uploads are disabled until the candidate uploads their dossier.
@@ -963,7 +975,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
           )}
 
           {/* DOSSIER VIEWER TAB */}
-          {activeTab === "dossier" && (
+          {effectiveTab === "dossier" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               {/* Selector Tabs at the Top */}
               {activeAssessorType !== "IO" && (
@@ -1159,7 +1171,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
           )}
 
           {/* CLINICAL REMARKS TAB */}
-          {activeTab === "evaluation" && (() => {
+          {effectiveTab === "evaluation" && (() => {
             const gridConfig = ASSESSOR_GRID_CONFIG[activeAssessorType] || ASSESSOR_GRID_CONFIG.Psych;
             return (
               <div className="w-full flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -1225,7 +1237,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
                           type="button"
                           variant="secondary"
                           onClick={handleUploadRemarks}
-                          disabled={saving || isAssessorCompleted || ((activeAssessorType === "Psych" || activeAssessorType === "TO") && !isDossierUploaded)}
+                          disabled={saving || isAssessorCompleted || (!isOffline && (activeAssessorType === "Psych" || activeAssessorType === "TO") && !isDossierUploaded)}
                         >
                           Upload Remarks
                         </Button>
@@ -1361,7 +1373,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
                               type="button"
                               variant="secondary"
                               onClick={handleUploadMarks}
-                              disabled={saving || isAssessorCompleted || ((activeAssessorType === "Psych" || activeAssessorType === "TO") && !isDossierUploaded)}
+                              disabled={saving || isAssessorCompleted || (!isOffline && (activeAssessorType === "Psych" || activeAssessorType === "TO") && !isDossierUploaded)}
                             >
                               Upload Marks
                             </Button>
@@ -1375,7 +1387,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
           })()}
 
           {/* INTERVENTION PLAN TAB */}
-          {activeTab === "meeting" && (
+          {effectiveTab === "meeting" && (
             <div className="max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="glass-card rounded-3xl p-12 shadow-glow space-y-10">
                 <div className="space-y-4">
@@ -1418,7 +1430,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
 
                   <button
                     onClick={() => handleUpdate("MEETING_SCHEDULED")}
-                    disabled={saving || isAssessorCompleted || ((activeAssessorType === "Psych" || activeAssessorType === "TO") && !isDossierUploaded)}
+                    disabled={saving || isAssessorCompleted || (!isOffline && (activeAssessorType === "Psych" || activeAssessorType === "TO") && !isDossierUploaded)}
                     className="w-full py-4 bg-app-card border border-app-border hover:border-app-accent text-app-text-bright rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shadow-lg shadow-black/40 hover:bg-app-accent hover:text-app-on-accent disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     Confirm &amp; Transmit Invite
@@ -1429,7 +1441,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
           )}
 
           {/* ALL ASSESSOR FEEDBACK TAB */}
-          {activeTab === "feedback" && (() => {
+          {effectiveTab === "feedback" && (() => {
             const subWithRemarks = submission as SubmissionWithAssessorFields;
             return (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -1468,7 +1480,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
         </div>
 
         {/* RIGHT COLUMN: Presenter Sticky Panel */}
-        {activeTab === "dossier" && viewerMode === "dossier" && (activeAssessorType === "Psych" || activeAssessorType === "TO") && assessment && showSidebar && (
+        {effectiveTab === "dossier" && viewerMode === "dossier" && (activeAssessorType === "Psych" || activeAssessorType === "TO") && assessment && showSidebar && (
           <div className="flex flex-col w-full space-y-4">
             <div className="flex items-center gap-3 border-b border-app-border pb-3">
               <Sparkles className="text-app-accent animate-pulse" size={20} />

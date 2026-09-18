@@ -14,9 +14,10 @@ interface NavbarProps {
   subtitleTwo?: React.ReactNode;
   banner?: string;
   text?: React.ReactNode;
+  announcement?: React.ReactNode;
 }
 
-export default function Navbar({ video, subtitle, title, title1, subtitleTwo, banner, text }: NavbarProps) {
+export default function Navbar({ video, subtitle, title, title1, subtitleTwo, banner, text, announcement }: NavbarProps) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
@@ -49,6 +50,8 @@ export default function Navbar({ video, subtitle, title, title1, subtitleTwo, ba
             <div className={styles.subtitleTwo}>{subtitleTwo}</div>
 
             {text && <div className={styles.text}>{text}</div>}
+
+            {announcement}
           </header>
         </section>
 

@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/server/auth";
 import { Order, Slot, Coupon, User } from "@/server/models";
 import { verifyRazorpaySignature } from "@/server/integrations/razorpay";
 import { sendSalesNotificationEmail, sendCredentialsEmail } from "@/server/integrations/msg91";
+import { syncEnrollmentModeForUser } from "@/server/enrollmentModeSync";
 
 export async function POST(req: NextRequest) {
   try {
@@ -51,13 +52,26 @@ export async function POST(req: NextRequest) {
     if (slot && slot.batchNo) {
       updateFields.batch = slot.batchNo.trim();
     }
-    const bookedModules: string[] = order.selectedModules || [];
-    if (bookedModules.length === 1 && bookedModules[0] !== "full_course") {
-      updateFields.clinicalStage = bookedModules[0];
-    } else if (bookedModules.includes("full_course") || bookedModules.length > 1 || bookedModules.length === 0) {
-      updateFields.clinicalStage = "full_course";
+    const isOfflineBatch = slot?.mode === "offline";
+    if (isOfflineBatch) {
+      // No clinicalStage assignment for an offline registration — they've
+      // only paid the flat registration fee, not for any course modules, so
+      // granting the "full_course" fallback (the online-flow default below)
+      // would be a fabricated course-access grant.
+    } else {
+      const bookedModules: string[] = order.selectedModules || [];
+      if (bookedModules.length === 1 && bookedModules[0] !== "full_course") {
+        updateFields.clinicalStage = bookedModules[0];
+      } else if (bookedModules.includes("full_course") || bookedModules.length > 1 || bookedModules.length === 0) {
+        updateFields.clinicalStage = "full_course";
+      }
     }
     await User.findByIdAndUpdate(order.userId, updateFields);
+    // Re-derives enrollmentMode from this student's most recent paid Order
+    // (this one) rather than a one-way "set to offline" flag — otherwise a
+    // student who buys an offline batch and later an online one keeps
+    // showing as offline everywhere forever.
+    await syncEnrollmentModeForUser(String(order.userId));
 
     // mark coupon used
     if (order.couponCode) {

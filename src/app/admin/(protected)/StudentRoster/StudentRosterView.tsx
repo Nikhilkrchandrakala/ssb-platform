@@ -2,8 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  ShieldCheck,
-  XCircle,
   GraduationCap,
   UserPlus,
   AlertTriangle,
@@ -20,9 +18,10 @@ import {
   Trash2,
   type LucideIcon,
 } from "lucide-react";
-import { assessorLabel } from "@/lib/assessorLabels";
 import SearchCombobox from "@/components/admin/SearchCombobox";
 import { latestDistinctValues } from "@/lib/latestValues";
+import { ENROLLMENT_MODE_OPTIONS, resolveEnrollmentMode } from "@/lib/enrollmentMode";
+import EnrollmentModeBadge from "@/components/admin/EnrollmentModeBadge";
 import "@/app/admin/styles/legacy-student-roster.css";
 
 const ICON_STYLE = { verticalAlign: -2 };
@@ -69,6 +68,7 @@ interface Student {
   batch?: string;
   chestNo?: string;
   clinicalStage?: string;
+  enrollmentMode?: string;
   createdAt: string;
   profileImage?: string;
   isManuallyCreated?: boolean;
@@ -77,6 +77,7 @@ interface Student {
   assignedPsych?: AssessorRef | null;
   assignedIO?: AssessorRef | null;
   assignedAssessments?: string[];
+  orders?: OrderItem[];
 }
 
 interface OrderItem {
@@ -86,7 +87,36 @@ interface OrderItem {
   price?: number;
   createdAt: string;
   referralCode?: string;
-  slotId?: { title?: string; batchNo?: string } | null;
+  selectedModules?: string[];
+  slotId?: { title?: string; batchNo?: string; mode?: string; isFullCourse?: boolean } | null;
+  assignedGTO?: AssessorRef | null;
+  assignedTO?: AssessorRef | null;
+  assignedPsych?: AssessorRef | null;
+  assignedIO?: AssessorRef | null;
+  assignedAssessments?: string[];
+}
+
+// One row = one paid batch enrollment when the student has any, matching
+// the Allotment page's presentation — repeats the candidate once per batch
+// instead of collapsing to a single row whose columns only ever reflected
+// their most recent purchase.
+interface RosterRow {
+  student: Student;
+  order: OrderItem | null;
+}
+
+function stagesOfRow(order: OrderItem | null, clinicalStage?: string): string[] {
+  if (order) {
+    // Never fall back to the student's global clinicalStage here — that
+    // field belongs to whichever order most recently set it, and would leak
+    // one batch's course onto a DIFFERENT batch's row (e.g. an offline
+    // registration, which never gets a course/module, showing whatever
+    // course the student's other, online batch happens to be for).
+    const modules = order.selectedModules || [];
+    if (modules.length > 0) return modules;
+    return order.slotId?.isFullCourse ? ["full_course"] : [];
+  }
+  return stagesOf(clinicalStage);
 }
 
 interface SubmissionItem {
@@ -122,6 +152,7 @@ interface AddFormState {
   batch: string;
   chestNo: string;
   clinicalStage: string;
+  enrollmentMode: string;
 }
 
 const ALL_MODULES = ["full_course", "ssb_ppdt", "psych", "interview", "group_testing"];
@@ -158,6 +189,7 @@ const EMPTY_ADD_FORM: AddFormState = {
   batch: "",
   chestNo: "",
   clinicalStage: "full_course",
+  enrollmentMode: "online",
 };
 
 const ITEMS_PER_PAGE = 10;
@@ -189,6 +221,7 @@ export default function StudentRosterView() {
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState("all");
   const [batchFilter, setBatchFilter] = useState("all");
+  const [modeFilter, setModeFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
 
   const [brokenAvatars, setBrokenAvatars] = useState<Set<string>>(new Set());
@@ -205,6 +238,7 @@ export default function StudentRosterView() {
   const [editBatch, setEditBatch] = useState("");
   const [editChestNo, setEditChestNo] = useState("");
   const [editModules, setEditModules] = useState<string[]>([]);
+  const [editEnrollmentMode, setEditEnrollmentMode] = useState("online");
   const [savingProfile, setSavingProfile] = useState(false);
 
   // Add modal state
@@ -274,8 +308,24 @@ export default function StudentRosterView() {
   }, []);
 
   const batches = useMemo(() => {
-    return [...new Set(students.map((s) => s.batch).filter(Boolean) as string[])].sort();
+    const vals = new Set<string>();
+    for (const s of students) {
+      if (s.orders && s.orders.length > 0) {
+        for (const o of s.orders) if (o.slotId?.batchNo) vals.add(o.slotId.batchNo);
+      } else if (s.batch) {
+        vals.add(s.batch);
+      }
+    }
+    return [...vals].sort();
   }, [students]);
+
+  const rosterRows = useMemo<RosterRow[]>(
+    () =>
+      students.flatMap((s): RosterRow[] =>
+        s.orders && s.orders.length > 0 ? s.orders.map((o) => ({ student: s, order: o })) : [{ student: s, order: null }]
+      ),
+    [students]
+  );
 
   const studentNameOptions = useMemo(
     () => latestDistinctValues(students, (s) => s.name, (s) => s.createdAt),
@@ -284,17 +334,18 @@ export default function StudentRosterView() {
 
   const filteredStudents = useMemo(() => {
     const query = search.toLowerCase().trim();
-    return students.filter((s) => {
+    return rosterRows.filter(({ student: s, order: o }) => {
       const matchesSearch =
         !query ||
         s.name?.toLowerCase().includes(query) ||
         s.email?.toLowerCase().includes(query) ||
         (s.phone && s.phone.toLowerCase().includes(query));
       const matchesStage = stageFilter === "all" || s.clinicalStage === stageFilter;
-      const matchesBatch = batchFilter === "all" || s.batch === batchFilter;
-      return matchesSearch && matchesStage && matchesBatch;
+      const matchesBatch = batchFilter === "all" || (o?.slotId?.batchNo || s.batch) === batchFilter;
+      const matchesMode = modeFilter === "all" || resolveEnrollmentMode(o?.slotId?.mode || s.enrollmentMode) === modeFilter;
+      return matchesSearch && matchesStage && matchesBatch && matchesMode;
     });
-  }, [students, search, stageFilter, batchFilter]);
+  }, [rosterRows, search, stageFilter, batchFilter, modeFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredStudents.length / ITEMS_PER_PAGE));
   const pageSafe = Math.min(currentPage, totalPages);
@@ -329,6 +380,7 @@ export default function StudentRosterView() {
       setEditBatch(student.batch || "");
       setEditChestNo(student.chestNo || "");
       setEditModules(stagesOf(student.clinicalStage));
+      setEditEnrollmentMode(resolveEnrollmentMode(student.enrollmentMode));
       setIsDetailOpen(true);
     } catch (error) {
       window.Swal?.fire({
@@ -389,6 +441,7 @@ export default function StudentRosterView() {
           batch: editBatch.trim(),
           clinicalStage,
           chestNo: editChestNo.trim(),
+          enrollmentMode: editEnrollmentMode,
         }),
       });
       const result = await response.json();
@@ -476,6 +529,7 @@ export default function StudentRosterView() {
           batch: addForm.batch.trim(),
           clinicalStage: addForm.clinicalStage,
           chestNo: addForm.chestNo.trim(),
+          enrollmentMode: addForm.enrollmentMode,
         }),
       });
       const result = await response.json();
@@ -534,31 +588,6 @@ export default function StudentRosterView() {
       <span className="mini-badge" style={{ fontSize: "0.7rem", marginRight: 4 }} key={label}>
         <span>{label}:</span> {assessor.name.split(" ")[0]}
       </span>
-    );
-  };
-
-  const renderDetailAssessor = (assessor: AssessorRef | null | undefined, label: string) => {
-    if (assessor) {
-      return (
-        <div className="mini-badge w-100 p-2 d-flex justify-content-between align-items-center mb-1" key={label}>
-          <span>
-            <ShieldCheck size={14} className="me-1" style={ICON_STYLE} /> {label}
-          </span>
-          <strong style={{ color: "#fff" }}>{assessor.name}</strong>
-        </div>
-      );
-    }
-    return (
-      <div
-        className="mini-badge w-100 p-2 d-flex justify-content-between align-items-center mb-1"
-        style={{ background: "rgba(231, 76, 60, 0.04)", borderColor: "rgba(231, 76, 60, 0.15)" }}
-        key={label}
-      >
-        <span style={{ color: "#ff6b6b" }}>
-          <XCircle size={14} className="me-1" style={ICON_STYLE} /> {label}
-        </span>
-        <strong style={{ color: "#ff6b6b", fontWeight: 500 }}>Unassigned</strong>
-      </div>
     );
   };
 
@@ -673,6 +702,25 @@ export default function StudentRosterView() {
                 ))}
               </select>
             </div>
+            <div className="d-flex gap-2 align-items-center">
+              <span className="text-muted small">TYPE FILTER:</span>
+              <select
+                className="admin-input"
+                style={{ width: 160, padding: "8px 15px" }}
+                value={modeFilter}
+                onChange={(e) => {
+                  setModeFilter(e.target.value);
+                  resetToPageOne();
+                }}
+              >
+                <option value="all">All Types</option>
+                {ENROLLMENT_MODE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -684,6 +732,7 @@ export default function StudentRosterView() {
                 <th>Phone Contact</th>
                 <th>Batch</th>
                 <th>Chest No</th>
+                <th>Type</th>
                 <th>Registration Date</th>
                 <th style={{ width: 220 }}>Course</th>
                 <th>Assigned Assessments</th>
@@ -694,38 +743,42 @@ export default function StudentRosterView() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="text-center p-5">
+                  <td colSpan={10} className="text-center p-5">
                     <div className="spinner-border text-warning" role="status"></div>
                     <p className="mt-3 mb-0 opacity-70">Fetching unified candidate records from database...</p>
                   </td>
                 </tr>
               ) : loadError ? (
                 <tr>
-                  <td colSpan={9} className="text-center p-5 text-danger">
+                  <td colSpan={10} className="text-center p-5 text-danger">
                     <AlertTriangle size={32} className="mb-3" />
                     <p className="mb-0">Error loading database: {loadError}</p>
                   </td>
                 </tr>
               ) : pageSlice.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center p-5 opacity-50">
+                  <td colSpan={10} className="text-center p-5 opacity-50">
                     <Database size={32} className="mb-3" />
                     <p className="mb-0">No candidate records found.</p>
                   </td>
                 </tr>
               ) : (
-                pageSlice.map((s) => {
-                  const stages = stagesOf(s.clinicalStage);
+                pageSlice.map(({ student: s, order: o }) => {
+                  const stages = stagesOfRow(o, s.clinicalStage);
+                  const rowGTO = o ? o.assignedGTO : s.assignedGTO;
+                  const rowTO = o ? o.assignedTO : s.assignedTO;
+                  const rowPsych = o ? o.assignedPsych : s.assignedPsych;
+                  const rowIO = o ? o.assignedIO : s.assignedIO;
                   const assessorBadges = [
-                    renderAssessorMiniLabel(s.assignedGTO, "GTO"),
-                    renderAssessorMiniLabel(s.assignedTO, "TO"),
-                    renderAssessorMiniLabel(s.assignedPsych, "Psych"),
-                    renderAssessorMiniLabel(s.assignedIO, "IO"),
+                    renderAssessorMiniLabel(rowGTO, "GTO"),
+                    renderAssessorMiniLabel(rowTO, "TO"),
+                    renderAssessorMiniLabel(rowPsych, "Psych"),
+                    renderAssessorMiniLabel(rowIO, "IO"),
                   ].filter(Boolean);
-                  const assignedAssessmentsCount = s.assignedAssessments?.length || 0;
+                  const assignedAssessmentsCount = (o ? o.assignedAssessments : s.assignedAssessments)?.length || 0;
 
                   return (
-                    <tr key={s._id}>
+                    <tr key={o ? o._id : s._id}>
                       <td>
                         <div className="d-flex align-items-center gap-3">
                           {renderAvatar(s._id, s.profileImage, s.name)}
@@ -741,7 +794,7 @@ export default function StudentRosterView() {
                       </td>
                       <td>
                         <span className="badge bg-dark border border-secondary text-light px-2 py-1 small" style={{ fontFamily: "monospace" }}>
-                          {s.batch || "—"}
+                          {o?.slotId?.batchNo || s.batch || "—"}
                         </span>
                       </td>
                       <td>
@@ -750,7 +803,10 @@ export default function StudentRosterView() {
                         </span>
                       </td>
                       <td>
-                        <span style={{ fontSize: "0.85rem", opacity: 0.7 }}>{formatDate(s.createdAt)}</span>
+                        <EnrollmentModeBadge mode={o?.slotId?.mode || s.enrollmentMode} />
+                      </td>
+                      <td>
+                        <span style={{ fontSize: "0.85rem", opacity: 0.7 }}>{formatDate(o?.createdAt || s.createdAt)}</span>
                       </td>
                       <td>
                         {stages.map((st) => (
@@ -915,6 +971,17 @@ export default function StudentRosterView() {
                   </div>
 
                   <div className="mb-3">
+                    <label className="admin-form-label">Type</label>
+                    <select className="admin-input" value={editEnrollmentMode} onChange={(e) => setEditEnrollmentMode(e.target.value)}>
+                      {ENROLLMENT_MODE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="mb-3">
                     <label className="admin-form-label d-block mb-2">Assigned Course Modules</label>
                     <div
                       className="d-flex flex-column gap-2"
@@ -955,21 +1022,37 @@ export default function StudentRosterView() {
                         </div>
                       ) : (
                         <div className="course-card-list">
-                          {detailOrders.map((o) => (
+                          {detailOrders.map((o) => {
+                            const orderAssessorBadges = [
+                              renderAssessorMiniLabel(o.assignedGTO, "GTO"),
+                              renderAssessorMiniLabel(o.assignedTO, "TO"),
+                              renderAssessorMiniLabel(o.assignedPsych, "Psych"),
+                              renderAssessorMiniLabel(o.assignedIO, "IO"),
+                            ].filter(Boolean);
+                            return (
                             <div className="course-item-card" key={o._id}>
                               <div className="course-item-left">
-                                <h6>{o.slotId?.title || "Purchased Course Registration"}</h6>
+                                <h6 className="d-flex align-items-center gap-2 flex-wrap">
+                                  {o.slotId?.title || "Purchased Course Registration"}
+                                  <EnrollmentModeBadge mode={o.slotId?.mode} />
+                                </h6>
                                 <p>
                                   <code style={{ color: "var(--primary-gold)" }}>#{(o.orderId || o._id).substring(0, 10)}</code> &nbsp;|&nbsp;{" "}
                                   {o.slotId?.batchNo ? `Batch #${o.slotId.batchNo}` : "Course Module"}
                                 </p>
+                                {orderAssessorBadges.length > 0 ? (
+                                  <div className="d-flex flex-wrap gap-1 mt-1">{orderAssessorBadges}</div>
+                                ) : (
+                                  <span className="text-muted small">No allotments configured for this batch</span>
+                                )}
                               </div>
                               <div className="course-item-right">
                                 <div className="price">₹{(o.price || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
                                 <div className="date">{formatDate(o.createdAt)}</div>
                               </div>
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -1072,11 +1155,10 @@ export default function StudentRosterView() {
                       <h5 className="text-warning mb-3" style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>
                         Allotted Evaluators
                       </h5>
-                      <div className="assessor-badge-stack w-100 mb-4">
-                        {renderDetailAssessor(detailStudent.assignedPsych, assessorLabel("Psych"))}
-                        {renderDetailAssessor(detailStudent.assignedGTO, assessorLabel("GTO"))}
-                        {renderDetailAssessor(detailStudent.assignedTO, assessorLabel("TO"))}
-                        {renderDetailAssessor(detailStudent.assignedIO, assessorLabel("IO"))}
+                      <div className="text-muted small" style={{ lineHeight: 1.6 }}>
+                        <Info size={14} className="me-1" style={ICON_STYLE} /> Assessors are now allotted per batch — see each
+                        registered batch card on the left for its own GTO/TO/Psych/IO allotment, or use the Allotment page to
+                        change them.
                       </div>
                     </div>
                     <div>
@@ -1183,6 +1265,22 @@ export default function StudentRosterView() {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="admin-form-label">Type</label>
+                <select
+                  className="admin-input"
+                  required
+                  value={addForm.enrollmentMode}
+                  onChange={(e) => setAddForm((f) => ({ ...f, enrollmentMode: e.target.value }))}
+                >
+                  {ENROLLMENT_MODE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top border-secondary">

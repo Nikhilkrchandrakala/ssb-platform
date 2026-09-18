@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/server/rateLimit";
 import { verifyAccessToken } from "@/server/integrations/msg91";
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, "verifyOtpWithAccessToken", { limit: 10, windowMs: 10 * 60 * 1000 });
+  if (limited) return limited;
+
   const { accessToken } = await req.json();
 
   if (!accessToken) {

@@ -53,6 +53,7 @@ github_deploy_key
 github_deploy_key.pub
 deploy.bat
 deploy_next.bat
+deploy2.bat
 env.download
 
 /src/generated/prisma

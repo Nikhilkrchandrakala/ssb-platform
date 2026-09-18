@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/server/rateLimit";
 import { sendEmailOtp } from "@/server/integrations/msg91";
 import { signupEmailReqIds } from "@/server/otpStore";
 import { verifyTurnstileToken } from "@/server/turnstile";
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, "signup-send-email-otp", { limit: 5, windowMs: 10 * 60 * 1000 });
+  if (limited) return limited;
+
   try {
     const { email, turnstileToken } = await req.json();
     if (!email) return NextResponse.json({ success: false, message: "Email required" }, { status: 400 });

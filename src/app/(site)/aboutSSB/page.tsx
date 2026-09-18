@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import CustomHeader from "@/components/site/CustomHeader";
 import Faq from "@/components/site/Faq";
 import { faqData } from "@/util/data";
@@ -153,6 +154,14 @@ export default function SsbPage() {
       <OfficerEntriesChart />
       <TipsToExcel />
       <SelectionMap />
+
+      <section className="container sectionspace60">
+        <p className="ssb-philosophy-text text-center">
+          Prepare for this process online or in person - SSB with ISV now offers both, including a fully
+          immersive offline batch at our Nagpur campus.{" "}
+          <Link href="/ssb-offline-coaching">Learn more →</Link>
+        </p>
+      </section>
 
       <Faq data={faqData} />
     </>
