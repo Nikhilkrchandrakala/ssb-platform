@@ -128,6 +128,7 @@ interface Submission {
   piqStatus?: string;
   uploadedFiles?: string[];
   workflowStage?: string;
+  completedAt?: string | null;
   reportVisibility?: { psych?: boolean; gto?: boolean; io?: boolean; to?: boolean };
   assessmentId?: { title?: string } | string;
   meetingDate?: string;
@@ -739,13 +740,17 @@ export default function ProfileDashboardClient({
   const isPiq2Uploaded = piq2Status === "VERIFIED" || piq2Status === "PROCESSING";
   const isPiq1Verified = piq1Status === "VERIFIED";
   const isPiq2Verified = piq2Status === "VERIFIED";
-  const isTestCompleted =
-    activeSub?.status === "COMPLETED" ||
-    activeSub?.status === "REVIEW_PENDING" ||
-    activeSub?.status === "TEST_COMPLETED" ||
-    activeSub?.status === "PENDING_UPLOAD" ||
-    activeSub?.workflowStage === "EVALUATION_COMPLETED";
   const hasDossier = !!(activeSub?.uploadedFiles && activeSub.uploadedFiles.length > 0);
+  // `status` is shared by the whole submission: an assessor saving GTO/IO/TO/Psych
+  // marks flips it to REVIEW_PENDING/COMPLETED even if the candidate never took
+  // the timed test. So those two values must NOT count as "test taken" — only
+  // signals that come from the candidate's own test/dossier flow do.
+  const isTestCompleted =
+    activeSub?.workflowStage === "EVALUATION_COMPLETED" ||
+    activeSub?.status === "PENDING_UPLOAD" ||
+    activeSub?.status === "TEST_COMPLETED" ||
+    !!activeSub?.completedAt ||
+    hasDossier;
   const hasBatch = selectedOrder ? !!selectedOrder.slotId?.batchNo : !!(userProfile?.batch && userProfile.batch.trim() !== "");
   const hasAssessor = selectedOrder
     ? !!(selectedOrder.assignedPsych || selectedOrder.assignedGTO || selectedOrder.assignedIO || selectedOrder.assignedTO)

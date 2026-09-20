@@ -144,12 +144,14 @@ export default function AssessmentEngineView({ id }: { id: string }) {
       return;
     }
 
+    // Mark the evaluation complete the moment the timer/last slide ends — not
+    // only when the candidate later clicks "Continue to Profile" — so closing the
+    // tab on the "Test Complete" screen can't leave a finished test unrecorded.
+    // (The old PUT here is staff-only since the 2026-09-19 hardening, so it
+    // always 403'd for candidates; /complete is idempotent for them.)
     if (submissionId) {
       try {
-        await api.submissions.update(submissionId, {
-          status: "PENDING_UPLOAD",
-          completedAt: new Date().toISOString(),
-        });
+        await api.submissions.complete(submissionId);
       } catch (error) {
         console.error("Failed to complete submission:", error);
       }
