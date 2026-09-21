@@ -2527,23 +2527,41 @@ p {
 .schedule-table-wrapper {
     width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .schedule-table {
     width: 100%;
-    min-width: 700px;
+    min-width: 960px;
     border-collapse: collapse;
+}
+
+.schedule-table th,
+.schedule-table td {
+    white-space: nowrap;
+    padding: 14px 16px;
+    vertical-align: middle;
 }
 
 .schedule-table th {
     background: #d2a100;
     color: #000;
-    padding: 12px 6px;
+    font-weight: 600;
 }
 
 .schedule-table td {
-    padding: 12px 6px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.schedule-table th:first-child,
+.schedule-table td:first-child {
+    width: 60px;
+    text-align: center;
+}
+
+.schedule-table th:nth-child(2),
+.schedule-table td:nth-child(2) {
+    width: 160px;
 }
 
 

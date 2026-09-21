@@ -1305,11 +1305,11 @@ export const scheduleData = {
         { day: 5, time: "8:00 - 9:00 PM", topic: "Psych Theory Session - 2", by: "Psychologist" },
         { day: 6, time: "7:30 - 11:00 AM", topic: "Introduction to Group Testing, Group Discussion, Mock GDs", by: "GTO" },
         { day: 7, time: "7:30 - 11:00 AM", topic: "Group Planning Exercise, Mock GPE practice", by: "GTO" },
-        { day: 8, time: "7:30 - 11:00 AM", topic: "Candilevers & Progressive Group Task on VTX™", by: "GTO" },
+        { day: 8, time: "7:30 - 11:00 AM", topic: "Cantilevers & Progressive Group Task on VTX™", by: "GTO" },
         { day: 9, time: "7:30 - 11:00 AM", topic: "PGT Theory, Group Obstacle Race, HGT, Lecturette, IO, CT on VTX™", by: "GTO" },
         { day: 10, time: "7:30 - 11:00 AM", topic: "FGT on VTX™, Group Testing Theory, Inter Technique Correlation, Board Conference, Feedbacks", by: "GTO" },
-        { day: 11, time: "7:30 - 9.30 AM", topic: "Current Affairs, An Officer and A Gentleman - Session 1", by: "Mentor-in-Residence & Principal Insights Officer" },
-        { day: 12, time: "7:30 - 9.30 AM", topic: "Current Affairs, An Officer and A Gentleman - Session 2", by: "Mentor-in-Residence & Principal Insights Officer" }
+        { day: 11, time: "7:30 - 9:30 AM", topic: "Current Affairs, An Officer and A Gentleman - Session 1", by: "Mentor-in-Residence & Principal Insights Officer" },
+        { day: 12, time: "7:30 - 9:30 AM", topic: "Current Affairs, An Officer and A Gentleman - Session 2", by: "Mentor-in-Residence & Principal Insights Officer" }
     ],
 
     // 🌙 EVENING SCHEDULE
@@ -1321,11 +1321,11 @@ export const scheduleData = {
         { day: 5, time: "8:00 - 9:00 PM", topic: "Psych Theory Session - 2", by: "Psychologist" },
         { day: 6, time: "7:30 - 11:00 PM", topic: "Introduction to Group Testing, Group Discussion, Mock GDs", by: "GTO" },
         { day: 7, time: "7:30 - 11:00 PM", topic: "Group Planning Exercise, Mock GPE practice", by: "GTO" },
-        { day: 8, time: "7:30 - 11:00 PM", topic: "Candilevers & Progressive Group Task on VTX™", by: "GTO" },
+        { day: 8, time: "7:30 - 11:00 PM", topic: "Cantilevers & Progressive Group Task on VTX™", by: "GTO" },
         { day: 9, time: "7:30 - 11:00 PM", topic: "PGT Theory, Group Obstacle Race, HGT, Lecturette, IO, CT on VTX™", by: "GTO" },
         { day: 10, time: "7:30 - 11:00 PM", topic: "FGT on VTX™, Group Testing Theory, Inter Technique Correlation, Board Conference, Feedbacks", by: "GTO" },
-        { day: 11, time: "7:30 - 9.30 PM", topic: "Current Affairs, An Officer and A Gentleman - Session 1", by: "Mentor-in-Residence & Principal Insights Officer" },
-        { day: 12, time: "7:30 - 9.30 PM", topic: "Current Affairs, An Officer and A Gentleman - Session 2", by: "Mentor-in-Residence & Principal Insights Officer" }
+        { day: 11, time: "7:30 - 9:30 PM", topic: "Current Affairs, An Officer and A Gentleman - Session 1", by: "Mentor-in-Residence & Principal Insights Officer" },
+        { day: 12, time: "7:30 - 9:30 PM", topic: "Current Affairs, An Officer and A Gentleman - Session 2", by: "Mentor-in-Residence & Principal Insights Officer" }
     ],
     notes: [
         "Story writing practice and evaluation will be done daily.",

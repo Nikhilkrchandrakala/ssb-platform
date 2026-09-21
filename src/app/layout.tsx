@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import ClientDomGuard from "@/components/ClientDomGuard";
 import ImageRetryOnError from "@/components/ImageRetryOnError";
 import ServiceWorkerRegister from "@/components/pwa/ServiceWorkerRegister";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
@@ -50,13 +51,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased" data-scroll-behavior="smooth">
+    <html lang="en" className="h-full antialiased" data-scroll-behavior="smooth" suppressHydrationWarning translate="no">
       {/* apple-touch-startup-image has no equivalent in the Metadata API (it
           only supports `apple.startupImage` with a single flat size list,
           not per-device `media` queries), so these are rendered as raw
           <link> tags — Next.js App Router merges a layout's own <head>
           content with what it generates from `metadata` above. */}
       <head>
+        <meta name="google" content="notranslate" />
         {APPLE_SPLASH_SCREENS.map((screen) => (
           <link
             key={`${screen.pixelWidth}x${screen.pixelHeight}`}
@@ -67,6 +69,7 @@ export default function RootLayout({
         ))}
       </head>
       <body className="min-h-full flex flex-col">
+        <ClientDomGuard />
         <ImageRetryOnError />
         <ServiceWorkerRegister />
         <InstallPrompt />

@@ -87,14 +87,20 @@ const OurMentor = () => {
               <span className={styles.closeIcon}>&times;</span>
             </button>
             
-            <div className={styles.modalHeader}>
-              <div className={styles.modalHeaderImageWrapper}>
-                <img src={selectedMentor.modalImage || selectedMentor.image} alt={selectedMentor.name} className={styles.modalHeaderImage} />
-              </div>
-              <div className={styles.modalHeaderInfo}>
-                <span className={styles.modalHeaderRole}>{selectedMentor.role}</span>
-                <h3 className={styles.modalHeaderName}>{selectedMentor.name}</h3>
-              </div>
+            {/* Full-Size Photo Showcase */}
+            <div className={styles.modalPhotoBanner}>
+              <img
+                src={selectedMentor.modalImage || selectedMentor.image}
+                alt={`${selectedMentor.name} - ${selectedMentor.role}`}
+                className={styles.modalFullPhoto}
+              />
+            </div>
+
+            {/* Role & Name Displayed Below the Photo */}
+            <div className={styles.modalMentorHeader}>
+              <span className={styles.modalHeaderRole}>{selectedMentor.role}</span>
+              <h3 className={styles.modalHeaderName}>{selectedMentor.name}</h3>
+              <div className={styles.modalHeaderDivider} />
             </div>
 
             <div className={styles.modalBody}>

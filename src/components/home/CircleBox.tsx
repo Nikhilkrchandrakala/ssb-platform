@@ -54,10 +54,6 @@ function CircleBox() {
     router.push("/SignIn");
   };
 
-  if (loading) {
-    return <div style={{ textAlign: "center", padding: "40px" }}>Loading...</div>;
-  }
-
   return (
     <section className={styles.circleSection}>
       <div className={styles.circleSectionCenterCon}>
@@ -81,10 +77,9 @@ function CircleBox() {
           </p>
 
           <p className={styles.titleOfSecondSection}>
-            For 5 years, we&rsquo;ve mentored candidates online: 700+ students coached, 200+ recommended into the
-            Indian Armed Forces. Our mentors, Lt Cdr Nikhil Kumar Chandrakala, India&rsquo;s youngest Group Testing
-            Officer since 1947, and Commodore Pankaj Singh, Ex Board President of 12 SSB, have personally assessed
-            over 30,000 candidates between them.
+            For 5 years, we have mentored candidates online: 800+ students coached, 200+ recommended into the
+            Indian Armed Forces. Our mentors, Lt Cdr Nikhil Kumar Chandrakala (Retd.), India&rsquo;s youngest Group Testing
+            Officer since 1947, and and team of DIPR certififed ex-SSB assessors, have personally assessed over 50000 candidates between them.
           </p>
 
           <p className={styles.titleOfSecondSection}>
@@ -93,7 +88,7 @@ function CircleBox() {
           </p>
 
           <p className={styles.titleOfSecondSection}>
-            And now, we&rsquo;re offline. SSB with ISV&rsquo;s first physical campus opens in Nagpur, 26th October
+            And now, we&rsquo;re offline. SSB with ISV&rsquo;s first physical campus opens in Nagpur, 26th October 2026
             &mdash; the same mentors, the same standard, in person.
           </p>
 

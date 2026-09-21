@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import styles from "@/style/Sidebar.module.css";
-import { BiX, BiLogOut, BiWorld, BiBuilding, BiChevronRight } from "react-icons/bi";
+import { BiX, BiLogOut, BiWorld, BiBuilding, BiChevronRight, BiChevronDown } from "react-icons/bi";
 import ContactUs from "./ContactUs";
 import { useSiteUser } from "./SiteUserProvider";
 
@@ -33,33 +32,9 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
   const { user, logout } = useSiteUser();
   const [openContact, setOpenContact] = useState(false);
   const [coursesSubOpen, setCoursesSubOpen] = useState(false);
-  // The submenu is rendered into a portal (see below) so the sidebar's own
-  // `overflow-x: hidden` can't clip it — position is computed from the
-  // trigger's live location instead of plain CSS `right: 100%`, which was
-  // being measured against the trigger's full-width wrapper and landing the
-  // submenu entirely outside (and therefore clipped by) the sidebar.
-  const [submenuPos, setSubmenuPos] = useState<{ top: number; right: number } | null>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const cancelClose = () => {
-    if (closeTimer.current) {
-      clearTimeout(closeTimer.current);
-      closeTimer.current = null;
-    }
-  };
-  // A short delay (rather than closing immediately on mouseleave) so moving
-  // the pointer from the trigger to the submenu across the gap between them
-  // doesn't unmount it before the user gets there.
-  const scheduleClose = () => {
-    cancelClose();
-    closeTimer.current = setTimeout(() => setCoursesSubOpen(false), 200);
-  };
-  const openSubmenu = () => {
-    cancelClose();
-    const rect = triggerRef.current?.getBoundingClientRect();
-    if (rect) setSubmenuPos({ top: rect.top + rect.height / 2, right: window.innerWidth - rect.left + 14 });
-    setCoursesSubOpen(true);
+  const toggleCourses = () => {
+    setCoursesSubOpen((prev) => !prev);
   };
 
   // Resets the submenu when the drawer closes — adjusted during render
@@ -146,27 +121,22 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
               Home
             </Link>
 
-            <div className={styles.coursesMenuItem} onMouseEnter={openSubmenu} onMouseLeave={scheduleClose}>
+            <div className={styles.coursesMenuItem}>
               <button
-                ref={triggerRef}
                 type="button"
                 className={`${styles.coursesTrigger} ${pathname === "/Courses" || pathname === "/CoursesOffline" ? styles.active : ""}`}
-                onClick={() => (coursesSubOpen ? setCoursesSubOpen(false) : openSubmenu())}
+                onClick={toggleCourses}
+                aria-expanded={coursesSubOpen}
               >
-                SSB Courses
+                <span className={styles.coursesTriggerLabel}>
+                  <span>SSB Courses</span>
+                  <span className={styles.newBadge}>NEW</span>
+                </span>
+                <BiChevronDown className={`${styles.coursesChevron} ${coursesSubOpen ? styles.coursesChevronOpen : ""}`} />
               </button>
-            </div>
 
-            {coursesSubOpen &&
-              submenuPos &&
-              typeof document !== "undefined" &&
-              createPortal(
-                <div
-                  className={styles.coursesSubmenu}
-                  style={{ top: submenuPos.top, right: submenuPos.right }}
-                  onMouseEnter={cancelClose}
-                  onMouseLeave={scheduleClose}
-                >
+              {coursesSubOpen && (
+                <div className={styles.inlineCoursesSubmenu}>
                   <span className={styles.coursesSubmenuLabel}>Choose a format</span>
                   <Link
                     href="/Courses"
@@ -197,14 +167,17 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
                       <BiBuilding />
                     </span>
                     <span className={styles.coursesSubmenuText}>
-                      <strong>Offline</strong>
+                      <span className={styles.coursesSubmenuTitleRow}>
+                        <strong>Offline</strong>
+                        <span className={styles.newBadgeMini}>NEW</span>
+                      </span>
                       <small>In-person batches</small>
                     </span>
                     <BiChevronRight className={styles.coursesSubmenuArrow} />
                   </Link>
-                </div>,
-                document.body
+                </div>
               )}
+            </div>
 
             {NAV_LINKS.map((link) => (
               <Link key={link.href} href={link.href} onClick={onClose} className={pathname === link.href ? styles.active : ""}>

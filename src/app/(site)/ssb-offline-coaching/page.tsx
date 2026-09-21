@@ -265,17 +265,30 @@ export default function SsbOfflineCoachingLandingPage() {
         <h2 style={{ ...sectionHeadingStyle, marginBottom: 40 }}>Founder & Chief Mentor</h2>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(260px, 100%), 1fr))", gap: 40, alignItems: "start" }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
-            <div style={{ position: "relative", width: 220, height: 220 }}>
-              <div style={{ position: "absolute", inset: 0, borderRadius: "50%", overflow: "hidden", background: "var(--base-cream-300)" }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`${STATIC_IMG}/mentor-nikhil-founder.jpg`}
-                  alt="Lt. Cdr. Nikhil Kumar Chandrakala (Retd.)"
-                  style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 20%", filter: "brightness(0.9)" }}
-                />
-              </div>
-              <div style={{ position: "absolute", inset: 0, borderRadius: "50%", boxShadow: "var(--shadow-ring)" }} />
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, minWidth: 0 }}>
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                maxWidth: 420,
+                borderRadius: 8,
+                overflow: "hidden",
+                background: "rgb(0, 0, 0)",
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`${CAMPUS_IMG}/mentor-nikhil-ssb-kolkata.jpeg`}
+                alt="Lt. Cdr. Nikhil Kumar Chandrakala (Retd.) at SSB Kolkata"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  aspectRatio: "4 / 3",
+                  display: "block",
+                  objectFit: "cover",
+                }}
+              />
+              <div style={{ position: "absolute", inset: 0, borderRadius: 8, pointerEvents: "none", boxShadow: "inset 0 0 0 1.5px rgb(75, 75, 77)" }} />
             </div>
             <div style={{ display: "flex", gap: 14 }}>
               <a href="https://www.instagram.com/ltcdr_nikhil_the_gto" target="_blank" rel="noreferrer" style={{ font: "500 13px/1.4 var(--font-body)", color: "var(--base-gold-source)" }}>
@@ -431,12 +444,8 @@ export default function SsbOfflineCoachingLandingPage() {
             Course Fees - ₹21,000/- (All incl.)<br />
             Registration Fee - ₹5,000/- (to secure your seat)
           </h2>
-          <p style={{ margin: "0 auto 28px", font: "400 16px/1.6 var(--font-body)", color: "var(--base-cream-300)", maxWidth: "60ch" }}>
-            Every SSB attempt is different, and so is every candidate&apos;s preparation plan. Share your details,
-            and our team will be in touch shortly with the next Nagpur batch start date.
-          </p>
-          <Button as="a" href="#apply">
-            <span style={{ fontFamily: "'Monoform', ui-monospace, 'SF Mono', Menlo, Consolas, monospace", letterSpacing: "0.05em" }}>ENQUIRE WITH US →</span>
+          <Button as="a" href="/OfflineBatches">
+            <span style={{ fontFamily: "'Monoform', ui-monospace, 'SF Mono', Menlo, Consolas, monospace", letterSpacing: "0.05em" }}>BOOK YOUR SEAT →</span>
           </Button>
         </div>
       </div>

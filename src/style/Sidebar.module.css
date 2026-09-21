@@ -373,6 +373,104 @@
     text-align: left;
     cursor: pointer;
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.coursesTriggerLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.newBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    line-height: 1.2;
+    text-transform: uppercase;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
+    animation: blinkRed 1.2s infinite ease-in-out;
+}
+
+.coursesSubmenuTitleRow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.newBadgeMini {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #ffffff;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    padding: 1px 5px;
+    border-radius: 999px;
+    line-height: 1.2;
+    text-transform: uppercase;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+    animation: blinkRed 1.2s infinite ease-in-out;
+}
+
+@keyframes blinkRed {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+        box-shadow: 0 0 12px rgba(239, 68, 68, 0.9), 0 0 4px rgba(239, 68, 68, 0.9);
+    }
+    50% {
+        opacity: 0.3;
+        transform: scale(0.95);
+        box-shadow: 0 0 2px rgba(239, 68, 68, 0.2);
+    }
+}
+
+.coursesChevron {
+    font-size: 18px;
+    color: rgba(198, 197, 175, 0.6);
+    transition: transform 0.25s ease, color 0.2s ease;
+}
+
+.coursesChevronOpen {
+    transform: rotate(180deg);
+    color: #d2a100;
+}
+
+/* Inline mobile container */
+.inlineCoursesSubmenu {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+    margin-bottom: 4px;
+    padding: 10px 12px;
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(210, 161, 0, 0.3);
+    border-radius: 12px;
+    animation: fadeInInlineSubmenu 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInInlineSubmenu {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Rendered via a React portal into document.body (see Sidebar.tsx) — top/
@@ -593,6 +691,10 @@
 
 /* Tablets */
 @media (max-width: 768px) {
+    .coursesSubmenu {
+        display: none !important;
+    }
+
     .sidebar {
         /* width: 100%; */
         padding: 30px 20px 20px; /* Compact mobile padding */

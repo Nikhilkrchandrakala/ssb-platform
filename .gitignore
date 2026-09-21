@@ -24,7 +24,8 @@
 
 # user-uploaded files (local-disk storage — see src/server/storage/r2.ts).
 # Lives on the VPS's persistent disk; don't check runtime uploads into git.
-/public/uploads
+/public/uploads/*
+!/public/uploads/nagpur-offline/
 
 # misc
 .DS_Store

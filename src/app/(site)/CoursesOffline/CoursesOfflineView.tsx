@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BiCamera, BiMenu } from "react-icons/bi";
+import { useRouter } from "next/navigation";
+import { BiCamera } from "react-icons/bi";
+import { IoMenu } from "react-icons/io5";
 import Sidebar from "@/components/site/Sidebar";
 import EnquiryForm from "@/components/site/EnquiryForm";
+import navStyles from "@/style/Navbar.module.css";
 import styles from "@/style/CoursesOffline.module.css";
 
 // Fades + slides a section in the first time it scrolls into view — the
@@ -201,6 +204,7 @@ const FAQS = [
 ];
 
 export default function CoursesOfflineView() {
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const { ref: whoForRef, className: whoForClass } = useReveal<HTMLElement>();
   const { ref: scheduleRef, className: scheduleClass } = useReveal<HTMLElement>();
@@ -220,18 +224,17 @@ export default function CoursesOfflineView() {
         </div>
         <div className={styles.heroGlow} />
 
+        <div className={navStyles.topBar}>
+          <img
+            src="/assets/logo/ISV.webp"
+            alt="Logo"
+            className={navStyles.logo}
+            onClick={() => router.push("/")}
+          />
+          <IoMenu className={navStyles.menuIcon} onClick={() => setMenuOpen(true)} />
+        </div>
+
         <div className={styles.heroContent}>
-          <div className={styles.brandRow}>
-            <img src="/assets/logo/ISV.webp" alt="SSB with ISV" />
-            <div className={styles.brandName}>
-              <strong>SSB with ISV</strong>
-              <span>Integrated SSB Virtuosos</span>
-            </div>
-            <span className={styles.brandTagline}>Nagpur Campus · On Real Ground, In Person</span>
-            <button type="button" className={styles.menuBtn} onClick={() => setMenuOpen(true)} aria-label="Open menu">
-              <BiMenu />
-            </button>
-          </div>
 
           <span className={styles.chip}>Nagpur Campus · Fully Residential · Batches Filling Fast</span>
 

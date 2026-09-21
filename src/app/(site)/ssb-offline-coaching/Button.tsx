@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, CSSProperties, ReactNode } from "react";
 
 const variants: Record<string, CSSProperties> = {
@@ -39,8 +40,16 @@ type ButtonProps = {
 export default function Button({ children, variant = "solid", style, as, ...rest }: ButtonProps) {
   const combinedStyle: CSSProperties = { ...variants[variant], ...style };
   if (as === "a") {
+    const { href, ...anchorRest } = rest as AnchorHTMLAttributes<HTMLAnchorElement>;
+    if (href && href.startsWith("/")) {
+      return (
+        <Link href={href} className="btn" style={combinedStyle} {...anchorRest}>
+          {children}
+        </Link>
+      );
+    }
     return (
-      <a className="btn" style={combinedStyle} {...(rest as AnchorHTMLAttributes<HTMLAnchorElement>)}>
+      <a className="btn" style={combinedStyle} href={href} {...anchorRest}>
         {children}
       </a>
     );

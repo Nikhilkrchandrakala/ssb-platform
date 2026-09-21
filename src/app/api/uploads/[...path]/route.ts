@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFile, stat } from "node:fs/promises";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export const runtime = "nodejs";
@@ -29,22 +29,18 @@ const MIME_BY_EXT: Record<string, string> = {
  * writes straight to public/uploads/<folder>/ at runtime (local-disk
  * storage, see r2.ts's own header comment on why) — any file written after
  * that startup snapshot is invisible (404) through Next's normal static
- * path until the process is restarted. Confirmed 2026-08-14: two PIQ
- * uploads for a real student 404'd for ~6 minutes until an unrelated
- * `pm2 restart` happened to fix it by re-scanning the folder.
+ * path until the process is restarted.
  *
- * Reading straight off the filesystem per-request here sidesteps that stale
- * cache entirely — the cost (one fs.stat/fs.readFile per request instead of
- * Next's optimized static path) is an acceptable trade for user-uploaded
- * content that must be visible immediately, not just after the next deploy.
+ * In development, if a requested upload file does not exist locally (e.g.
+ * in a fresh repo clone or when assets exist on production VPS), this route
+ * seamlessly falls back to fetching and caching the asset from the live site
+ * (https://ssbwithisv.in/uploads/...) so images never appear broken locally.
  */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const { path: segments } = await params;
   if (!segments || segments.length === 0) return new NextResponse(null, { status: 404 });
 
-  // Defense in depth against path traversal — path.join below already
-  // normalizes ".." sequences and the startsWith check below is the real
-  // guard, but reject the obvious case outright too.
+  // Defense in depth against path traversal
   if (segments.some((s) => s === "..")) {
     return new NextResponse(null, { status: 400 });
   }
@@ -68,17 +64,45 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pat
         "Content-Type": contentType,
         "Content-Length": String(stats.size),
         "Cache-Control": "public, max-age=86400",
-        // The site is reachable on both www and bare-domain hosts, so a page
-        // served from one can request an /uploads/ URL that resolves to the
-        // other — a cross-origin fetch from the browser's point of view.
-        // pdf.js fetches PDFs directly (not via <img>/<a>), so without this
-        // header Chromium browsers block the response outright with a CORS
-        // error. Confirmed 2026-08-16: PdfViewer failed in Edge because the
-        // page was on www.ssbwithisv.in and the PDF on ssbwithisv.in.
         "Access-Control-Allow-Origin": "*",
       },
     });
   } catch {
+    // In dev, fallback-fetch from production if file isn't on local disk yet
+    if (process.env.NODE_ENV !== "production" || process.env.FALLBACK_UPLOADS_URL) {
+      const prodBase = process.env.FALLBACK_UPLOADS_URL || "https://ssbwithisv.in/uploads";
+      const remoteUrl = `${prodBase}/${segments.map(encodeURIComponent).join("/")}`;
+      try {
+        const prodRes = await fetch(remoteUrl);
+        if (prodRes.ok) {
+          const arrayBuffer = await prodRes.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+
+          // Best-effort local cache on disk
+          try {
+            await mkdir(path.dirname(filePath), { recursive: true });
+            await writeFile(filePath, buffer);
+          } catch {
+            // Non-fatal if local write fails
+          }
+
+          const ext = filePath.split(".").pop()?.toLowerCase() || "";
+          const contentType = prodRes.headers.get("content-type") || MIME_BY_EXT[ext] || "application/octet-stream";
+
+          return new NextResponse(buffer, {
+            status: 200,
+            headers: {
+              "Content-Type": contentType,
+              "Content-Length": String(buffer.length),
+              "Cache-Control": "public, max-age=86400",
+              "Access-Control-Allow-Origin": "*",
+            },
+          });
+        }
+      } catch {
+        // Fall through to 404 below
+      }
+    }
     return new NextResponse(null, { status: 404 });
   }
 }
