@@ -174,22 +174,29 @@ export default function TotalSalesView() {
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
   const [batchInputValue, setBatchInputValue] = useState("");
   const [savingBatch, setSavingBatch] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState<any[]>([]);
 
   // Initial load — inline .then() chain (no delegated async function) so the
   // mount effect doesn't trip react-hooks/set-state-in-effect.
   useEffect(() => {
     let cancelled = false;
-    Promise.all([fetch("/api/allOrders"), fetch("/api/allFranchise")])
-      .then(async ([ordersRes, franchiseRes]) => {
+    Promise.all([fetch("/api/allOrders"), fetch("/api/allFranchise"), fetch("/api/allSlots")])
+      .then(async ([ordersRes, franchiseRes, slotsRes]) => {
         if (!ordersRes.ok) throw new Error("Failed to fetch sales data");
         const ordersData = await ordersRes.json();
         const franchiseData = franchiseRes.ok ? await franchiseRes.json() : [];
-        return { orders: ordersData.orders || ordersData, franchises: franchiseData };
+        const slotsData = slotsRes.ok ? await slotsRes.json() : [];
+        return {
+          orders: ordersData.orders || ordersData,
+          franchises: franchiseData,
+          slots: Array.isArray(slotsData) ? slotsData : [],
+        };
       })
-      .then(({ orders, franchises: fr }) => {
+      .then(({ orders, franchises: fr, slots }) => {
         if (cancelled) return;
         setAllOrders(Array.isArray(orders) ? orders : []);
         setFranchises(Array.isArray(fr) ? fr : []);
+        setAvailableSlots(slots);
       })
       .catch((err: unknown) => {
         if (cancelled) return;
@@ -312,7 +319,7 @@ export default function TotalSalesView() {
 
   function showOrderDetail(order: OrderItem) {
     setSelectedOrder(order);
-    setBatchInputValue(order.slotId?.batchNo || "");
+    setBatchInputValue(order.slotId?._id || "");
   }
 
   function closeOrderDetail() {
@@ -322,16 +329,16 @@ export default function TotalSalesView() {
 
   async function saveOrderBatch() {
     if (!selectedOrder) return;
-    const newBatch = batchInputValue.trim();
-    if (!newBatch) {
-      window.Swal?.fire({ icon: "warning", text: "Please enter a batch number.", background: "#1a1a1a", color: "#fff" });
+    const targetSlotId = batchInputValue.trim();
+    if (!targetSlotId) {
+      window.Swal?.fire({ icon: "warning", text: "Please select a batch slot.", background: "#1a1a1a", color: "#fff" });
       return;
     }
 
     setSavingBatch(true);
     window.Swal?.fire({
       title: "Saving Batch Info...",
-      text: "Updating batch schedule details.",
+      text: "Updating batch schedule and syncing enrollments.",
       allowOutsideClick: false,
       background: "#1a1a1a",
       color: "#fff",
@@ -339,18 +346,31 @@ export default function TotalSalesView() {
     });
 
     try {
-      const res = await fetch(`/api/admin/orders/${selectedOrder._id}/batch`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ batchNo: newBatch }),
-      });
+      const isSlotId = availableSlots.some((s) => s._id === targetSlotId);
+      let res: Response;
+      if (isSlotId) {
+        res = await fetch(`/api/admin/orders/${selectedOrder._id}/shift-batch`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ targetSlotId, notifyStudent: true, allowOvercapacity: true }),
+        });
+      } else {
+        res = await fetch(`/api/admin/orders/${selectedOrder._id}/batch`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ batchNo: targetSlotId }),
+        });
+      }
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Failed to update transaction batch");
+
+      const matchedSlot = availableSlots.find((s) => s._id === targetSlotId);
+      const displayBatchNo = matchedSlot?.batchNo || result.order?.slotId?.batchNo || targetSlotId;
 
       window.Swal?.fire({
         icon: "success",
         title: "Batch Saved!",
-        text: "The batch number has been updated successfully.",
+        text: result.message || "The candidate's batch has been updated successfully.",
         background: "#1a1a1a",
         color: "#fff",
         timer: 1500,
@@ -358,7 +378,16 @@ export default function TotalSalesView() {
       });
 
       setAllOrders((prev) =>
-        prev.map((o) => (o._id === selectedOrder._id ? { ...o, slotId: { ...(o.slotId || {}), batchNo: newBatch } } : o))
+        prev.map((o) =>
+          o._id === selectedOrder._id
+            ? {
+                ...o,
+                slotId: matchedSlot
+                  ? { _id: matchedSlot._id, title: matchedSlot.title, batchNo: matchedSlot.batchNo }
+                  : { ...(o.slotId || {}), batchNo: displayBatchNo },
+              }
+            : o
+        )
       );
       closeOrderDetail();
     } catch (err) {
@@ -637,26 +666,54 @@ export default function TotalSalesView() {
                       <span className="fw-bold">{o.slotId?.title || o.courseTitle || "Product"}</span>
                     </div>
                     <div className="order-detail-row" style={{ alignItems: "center" }}>
-                      <span>Batch Number</span>
-                      <div className="d-flex gap-2 align-items-center">
-                        <input
-                          type="text"
-                          className="admin-input py-1 px-2"
-                          style={{
-                            maxWidth: 140,
-                            fontSize: "0.85rem",
-                            background: "var(--surface-light)",
-                            border: "1px solid rgba(224, 194, 20, 0.25)",
-                            color: "#fff",
-                            borderRadius: 4,
-                          }}
-                          placeholder="e.g. B45"
-                          value={batchInputValue}
-                          onChange={(e) => setBatchInputValue(e.target.value)}
-                        />
+                      <span>Batch / Slot</span>
+                      <div className="d-flex gap-2 align-items-center flex-grow-1 justify-content-end" style={{ maxWidth: "65%" }}>
+                        {availableSlots.length > 0 ? (
+                          <select
+                            className="admin-input py-1 px-2"
+                            style={{
+                              fontSize: "0.85rem",
+                              background: "var(--surface-light)",
+                              border: "1px solid rgba(224, 194, 20, 0.25)",
+                              color: "#fff",
+                              borderRadius: 4,
+                              maxWidth: 260,
+                            }}
+                            value={batchInputValue}
+                            onChange={(e) => setBatchInputValue(e.target.value)}
+                          >
+                            <option value="">-- Choose Batch Slot --</option>
+                            {availableSlots
+                              .filter((s) => !s.isCancelled)
+                              .map((s) => {
+                                const start = s.startDate ? new Date(s.startDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "";
+                                return (
+                                  <option key={s._id} value={s._id}>
+                                    {s.batchNo ? `Batch #${s.batchNo}` : s.title} {s.mode ? `[${s.mode.toUpperCase()}]` : ""} {start ? `(${start})` : ""}
+                                  </option>
+                                );
+                              })}
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            className="admin-input py-1 px-2"
+                            style={{
+                              maxWidth: 140,
+                              fontSize: "0.85rem",
+                              background: "var(--surface-light)",
+                              border: "1px solid rgba(224, 194, 20, 0.25)",
+                              color: "#fff",
+                              borderRadius: 4,
+                            }}
+                            placeholder="e.g. B45"
+                            value={batchInputValue}
+                            onChange={(e) => setBatchInputValue(e.target.value)}
+                          />
+                        )}
                         <button
                           className="thm-btn py-1 px-3"
-                          style={{ fontSize: "0.78rem", padding: "4px 10px", borderRadius: 4 }}
+                          style={{ fontSize: "0.78rem", padding: "4px 10px", borderRadius: 4, whiteSpace: "nowrap" }}
                           disabled={savingBatch}
                           onClick={saveOrderBatch}
                         >

@@ -16,6 +16,7 @@ import {
   Plus,
   User,
   Trash2,
+  ArrowRightLeft,
   type LucideIcon,
 } from "lucide-react";
 import SearchCombobox from "@/components/admin/SearchCombobox";
@@ -88,7 +89,7 @@ interface OrderItem {
   createdAt: string;
   referralCode?: string;
   selectedModules?: string[];
-  slotId?: { title?: string; batchNo?: string; mode?: string; isFullCourse?: boolean } | null;
+  slotId?: { _id?: string; title?: string; batchNo?: string; mode?: string; isFullCourse?: boolean } | null;
   assignedGTO?: AssessorRef | null;
   assignedTO?: AssessorRef | null;
   assignedPsych?: AssessorRef | null;
@@ -240,6 +241,18 @@ export default function StudentRosterView() {
   const [editModules, setEditModules] = useState<string[]>([]);
   const [editEnrollmentMode, setEditEnrollmentMode] = useState("online");
   const [savingProfile, setSavingProfile] = useState(false);
+
+  // Shift Batch Modal State
+  const [shiftModalOpen, setShiftModalOpen] = useState(false);
+  const [shiftOrderId, setShiftOrderId] = useState("");
+  const [shiftCandidateName, setShiftCandidateName] = useState("");
+  const [shiftCurrentBatch, setShiftCurrentBatch] = useState("");
+  const [shiftCurrentSlotId, setShiftCurrentSlotId] = useState("");
+  const [shiftSelectedSlotId, setShiftSelectedSlotId] = useState("");
+  const [shiftAllowOvercapacity, setShiftAllowOvercapacity] = useState(false);
+  const [shiftNotify, setShiftNotify] = useState(true);
+  const [availableSlots, setAvailableSlots] = useState<any[]>([]);
+  const [savingShift, setSavingShift] = useState(false);
 
   // Add modal state
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -561,6 +574,85 @@ export default function StudentRosterView() {
     }
   };
 
+  const openShiftModal = (order: OrderItem, candidateName: string) => {
+    setShiftOrderId(order._id);
+    setShiftCandidateName(candidateName);
+    const batchLabel = order.slotId?.batchNo ? `Batch #${order.slotId.batchNo}` : order.slotId?.title || "Unknown";
+    setShiftCurrentBatch(batchLabel);
+    setShiftCurrentSlotId(order.slotId?._id || "");
+    setShiftSelectedSlotId("");
+    setShiftAllowOvercapacity(false);
+    setShiftNotify(true);
+
+    fetch("/api/allSlots")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setAvailableSlots(data);
+          const currentSlotIdStr = order.slotId?._id || "";
+          const firstOther = data.find((s) => s._id !== currentSlotIdStr);
+          if (firstOther) setShiftSelectedSlotId(firstOther._id);
+        }
+      })
+      .catch(() => {});
+
+    setShiftModalOpen(true);
+  };
+
+  const submitShiftBatch = async () => {
+    if (!shiftOrderId || !shiftSelectedSlotId) {
+      window.Swal?.fire({ icon: "warning", text: "Please select a destination batch.", background: "#1a1a1a", color: "#fff" });
+      return;
+    }
+
+    setSavingShift(true);
+    window.Swal?.fire({
+      title: "Shifting Batch...",
+      text: "Transferring candidate and synchronizing schedule.",
+      allowOutsideClick: false,
+      background: "#1a1a1a",
+      color: "#fff",
+      didOpen: () => window.Swal?.showLoading(),
+    });
+
+    try {
+      const res = await fetch(`/api/admin/orders/${shiftOrderId}/shift-batch`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetSlotId: shiftSelectedSlotId,
+          allowOvercapacity: shiftAllowOvercapacity,
+          notifyStudent: shiftNotify,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to shift student");
+
+      window.Swal?.fire({
+        icon: "success",
+        title: "Batch Shifted!",
+        text: data.message,
+        background: "#1a1a1a",
+        color: "#fff",
+      });
+      setShiftModalOpen(false);
+      loadStudents();
+      if (detailStudent) {
+        openDetailModal(detailStudent._id);
+      }
+    } catch (err) {
+      window.Swal?.fire({
+        icon: "error",
+        title: "Shift Failed",
+        text: err instanceof Error ? err.message : "Error",
+        background: "#1a1a1a",
+        color: "#fff",
+      });
+    } finally {
+      setSavingShift(false);
+    }
+  };
+
   const renderAvatar = (id: string, profileImage: string | undefined, name: string, size = 40) => {
     const initials = getInitials(name);
     if (profileImage && !brokenAvatars.has(id)) {
@@ -860,6 +952,16 @@ export default function StudentRosterView() {
                       </td>
                       <td style={{ textAlign: "center" }}>
                         <div className="d-flex gap-2 justify-content-center">
+                          {o && (
+                            <button
+                              className="action-btn"
+                              style={{ color: "#e67e22", borderColor: "rgba(230, 126, 34, 0.3)" }}
+                              title="Shift Batch"
+                              onClick={() => openShiftModal(o, s.name)}
+                            >
+                              <ArrowRightLeft size={14} />
+                            </button>
+                          )}
                           <button className="action-btn" title="View Full Profile" onClick={() => openDetailModal(s._id)} disabled={detailLoading}>
                             <Eye size={14} />
                           </button>
@@ -1046,9 +1148,19 @@ export default function StudentRosterView() {
                                   <span className="text-muted small">No allotments configured for this batch</span>
                                 )}
                               </div>
-                              <div className="course-item-right">
+                              <div className="course-item-right d-flex flex-column align-items-end">
                                 <div className="price">₹{(o.price || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
                                 <div className="date">{formatDate(o.createdAt)}</div>
+                                {o.slotId && (
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-warning mt-2 d-inline-flex align-items-center gap-1"
+                                    style={{ fontSize: "0.75rem", padding: "3px 8px" }}
+                                    onClick={() => openShiftModal(o, detailStudent?.name || "Candidate")}
+                                  >
+                                    <ArrowRightLeft size={12} /> Shift Batch
+                                  </button>
+                                )}
                               </div>
                             </div>
                             );
@@ -1376,6 +1488,110 @@ export default function StudentRosterView() {
                 </table>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Shift Candidate Batch Modal */}
+      {shiftModalOpen && (
+        <div className="admin-modal-overlay" style={{ display: "flex", zIndex: 9999 }}>
+          <div className="admin-modal" style={{ maxWidth: 540, width: "95%", margin: "40px auto" }}>
+            <div className="admin-modal-header d-flex justify-content-between align-items-center mb-3">
+              <h4 className="admin-modal-title mb-0 d-flex align-items-center gap-2" style={{ color: "var(--primary-gold)", fontSize: "1.1rem" }}>
+                <ArrowRightLeft size={18} /> Shift Candidate Batch
+              </h4>
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                onClick={() => setShiftModalOpen(false)}
+                disabled={savingShift}
+              ></button>
+            </div>
+
+            <div className="p-3 mb-3 rounded" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <div className="d-flex justify-content-between mb-2">
+                <span className="text-muted small">Candidate:</span>
+                <span className="fw-bold text-light">{shiftCandidateName}</span>
+              </div>
+              <div className="d-flex justify-content-between">
+                <span className="text-muted small">Current Batch / Slot:</span>
+                <span className="badge bg-secondary">{shiftCurrentBatch}</span>
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label text-muted small fw-semibold">Destination Batch / Slot</label>
+              <select
+                className="admin-input form-select"
+                value={shiftSelectedSlotId}
+                onChange={(e) => setShiftSelectedSlotId(e.target.value)}
+                disabled={savingShift}
+              >
+                <option value="">-- Select Target Batch --</option>
+                {availableSlots
+                  .filter((s) => s._id !== shiftCurrentSlotId && !s.isCancelled)
+                  .map((s) => {
+                    const booked = s.bookedStudents?.length || 0;
+                    const max = s.maxStudents || 0;
+                    const isFull = max > 0 && booked >= max;
+                    const startStr = s.startDate ? new Date(s.startDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "";
+                    const modeLabel = s.mode ? `[${s.mode.toUpperCase()}]` : "";
+                    const batchLabel = s.batchNo ? `Batch #${s.batchNo}` : s.title;
+                    return (
+                      <option key={s._id} value={s._id}>
+                        {batchLabel} {modeLabel} — Starts {startStr} ({booked}/{max} enrolled{isFull ? " - FULL" : ""})
+                      </option>
+                    );
+                  })}
+              </select>
+            </div>
+
+            <div className="form-check mb-3">
+              <input
+                type="checkbox"
+                className="form-check-input"
+                id="overcapacityCheck"
+                checked={shiftAllowOvercapacity}
+                onChange={(e) => setShiftAllowOvercapacity(e.target.checked)}
+                disabled={savingShift}
+              />
+              <label className="form-check-label small text-muted" htmlFor="overcapacityCheck">
+                Allow enrollment even if target batch is at full capacity
+              </label>
+            </div>
+
+            <div className="form-check mb-4">
+              <input
+                type="checkbox"
+                className="form-check-input"
+                id="notifyStudentCheck"
+                checked={shiftNotify}
+                onChange={(e) => setShiftNotify(e.target.checked)}
+                disabled={savingShift}
+              />
+              <label className="form-check-label small text-muted" htmlFor="notifyStudentCheck">
+                Notify candidate on their dashboard about this batch transfer
+              </label>
+            </div>
+
+            <div className="d-flex justify-content-end gap-2">
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setShiftModalOpen(false)}
+                disabled={savingShift}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-warning d-inline-flex align-items-center gap-1"
+                onClick={submitShiftBatch}
+                disabled={savingShift || !shiftSelectedSlotId}
+              >
+                <ArrowRightLeft size={14} /> {savingShift ? "Transferring..." : "Confirm Shift"}
+              </button>
+            </div>
           </div>
         </div>
       )}

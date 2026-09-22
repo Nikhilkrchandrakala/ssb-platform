@@ -15,6 +15,9 @@ const slotSchema = new Schema(
     mode: { type: String, enum: ["online", "offline"], default: "online" },
     location: { type: String, default: "" },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+    isCancelled: { type: Boolean, default: false },
+    cancelledAt: { type: Date, default: null },
+    mergedInto: { type: Schema.Types.ObjectId, ref: "Slot", default: null },
   },
   { timestamps: true }
 );

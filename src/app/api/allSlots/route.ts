@@ -10,9 +10,20 @@ export async function GET(req: NextRequest) {
   // default that every batch created before this field existed only picks
   // up once Mongoose loads it. Treat "no value stored" as an implicit
   // "online" here too, or ?mode=online would drop every pre-existing batch.
-  let query = {};
-  if (mode === "online") query = { $or: [{ mode: "online" }, { mode: { $exists: false } }] };
-  else if (mode === "offline") query = { mode: "offline" };
+  const includeCancelled = req.nextUrl.searchParams.get("includeCancelled") === "true";
+  let query: Record<string, unknown> = {};
+  if (!includeCancelled) {
+    query.isCancelled = { $ne: true };
+  }
+  if (mode === "online") {
+    query.$and = [
+      ...(query.isCancelled !== undefined ? [{ isCancelled: { $ne: true } }] : []),
+      { $or: [{ mode: "online" }, { mode: { $exists: false } }] },
+    ];
+    delete query.isCancelled;
+  } else if (mode === "offline") {
+    query.mode = "offline";
+  }
   const slots = await Slot.find(query).sort({ createdAt: -1 });
   return NextResponse.json(slots);
 }

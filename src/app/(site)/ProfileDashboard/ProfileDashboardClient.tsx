@@ -21,6 +21,7 @@ import {
   BiCalendar,
   BiTime,
   BiX,
+  BiBell,
 } from "react-icons/bi";
 import { FaCamera, FaCheckCircle, FaLock } from "react-icons/fa";
 import "@/style/custom-theme.css";
@@ -107,6 +108,15 @@ function stagesOfOrder(order: Pick<DashboardOrder, "selectedModules" | "slotId">
 }
 
 const GENERAL_ENROLLMENT_ID = "general-enrollment";
+
+export interface CandidateNotification {
+  _id: string;
+  title: string;
+  message: string;
+  type: string;
+  isRead: boolean;
+  createdAt: string;
+}
 
 export interface DashboardMagazine {
   _id: string;
@@ -258,6 +268,37 @@ export default function ProfileDashboardClient({
   // Sales Phase 3 — tracks which installment's "Pay Now" button is mid-flow
   // (keyed `${installmentPlanId}:${seq}`), so only that one button spinners.
   const [payingInstallmentKey, setPayingInstallmentKey] = useState<string | null>(null);
+
+  // In-app notifications state (batch reschedule / transfer alerts)
+  const [notifications, setNotifications] = useState<CandidateNotification[]>([]);
+  const [dismissedNotifIds, setDismissedNotifIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch("/api/notifications")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setNotifications(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const markNotifRead = async (id: string) => {
+    setDismissedNotifIds((prev) => [...prev, id]);
+    try {
+      await fetch(`/api/notifications/${id}/read`, { method: "PUT" });
+    } catch {}
+  };
+
+  const activeBatchNotifs = useMemo(() => {
+    return notifications.filter(
+      (n) =>
+        !dismissedNotifIds.includes(n._id) &&
+        !n.isRead &&
+        (n.title?.toLowerCase().includes("batch") || n.message?.toLowerCase().includes("batch"))
+    );
+  }, [notifications, dismissedNotifIds]);
 
   const userProfile = previewData;
   const userStages = (userProfile?.clinicalStage || "")
@@ -881,6 +922,115 @@ export default function ProfileDashboardClient({
 
             <div className={styles.dashboardContainer}>
               <div className={styles.mainContent}>
+                {/* Batch reschedule or merge notifications banner */}
+                {activeBatchNotifs.length > 0 && (
+                  <div
+                    style={{
+                      background: "linear-gradient(135deg, rgba(210, 161, 0, 0.15), rgba(210, 161, 0, 0.05))",
+                      border: "1px solid rgba(210, 161, 0, 0.45)",
+                      borderRadius: 12,
+                      padding: "16px 20px",
+                      marginBottom: 24,
+                      boxShadow: "0 4px 20px rgba(0, 0, 0, 0.25)",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                        <div
+                          style={{
+                            background: "rgba(210, 161, 0, 0.2)",
+                            borderRadius: "50%",
+                            padding: 8,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "var(--primary-gold)",
+                            fontSize: "1.25rem",
+                            marginTop: 2,
+                            flexShrink: 0,
+                          }}
+                        >
+                          <BiBell />
+                        </div>
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                            <h4 style={{ color: "#fff", margin: 0, fontSize: "1.05rem", fontWeight: 700 }}>
+                              {activeBatchNotifs[0].title}
+                            </h4>
+                            <span
+                              style={{
+                                background: "rgba(210, 161, 0, 0.25)",
+                                color: "var(--primary-gold)",
+                                fontSize: "0.72rem",
+                                fontWeight: 700,
+                                textTransform: "uppercase",
+                                padding: "2px 8px",
+                                borderRadius: 4,
+                                letterSpacing: 0.5,
+                              }}
+                            >
+                              Batch Update
+                            </span>
+                          </div>
+                          <p style={{ color: "rgba(255, 255, 255, 0.88)", fontSize: "0.9rem", margin: "6px 0 12px 0", lineHeight: 1.5 }}>
+                            {activeBatchNotifs[0].message}
+                          </p>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                            {activeTab !== "batches" && (
+                              <button
+                                type="button"
+                                onClick={() => setActiveTab("batches")}
+                                style={{
+                                  background: "var(--primary-gold)",
+                                  color: "#000",
+                                  border: "none",
+                                  borderRadius: 6,
+                                  padding: "6px 14px",
+                                  fontSize: "0.8rem",
+                                  fontWeight: 700,
+                                  cursor: "pointer",
+                                }}
+                              >
+                                View My Batches
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => markNotifRead(activeBatchNotifs[0]._id)}
+                              style={{
+                                background: "transparent",
+                                color: "rgba(255, 255, 255, 0.75)",
+                                border: "1px solid rgba(255, 255, 255, 0.25)",
+                                borderRadius: 6,
+                                padding: "6px 12px",
+                                fontSize: "0.8rem",
+                                cursor: "pointer",
+                              }}
+                            >
+                              Dismiss Alert
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => markNotifRead(activeBatchNotifs[0]._id)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "rgba(255, 255, 255, 0.5)",
+                          fontSize: "1.3rem",
+                          cursor: "pointer",
+                          padding: 4,
+                          lineHeight: 1,
+                        }}
+                        title="Dismiss"
+                      >
+                        <BiX />
+                      </button>
+                    </div>
+                  </div>
+                )}
                 {activeTab === "profile" && (
                   <div className={styles.tabContent}>
                     <div className={styles.tabHeader}>
@@ -996,6 +1146,49 @@ export default function ProfileDashboardClient({
                     </div>
 
                     <div className={styles.coursesContent}>
+                      {activeBatchNotifs.length > 0 && (
+                        <div
+                          style={{
+                            background: "rgba(210, 161, 0, 0.08)",
+                            border: "1px solid rgba(210, 161, 0, 0.35)",
+                            borderRadius: 8,
+                            padding: "12px 16px",
+                            marginBottom: 16,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: 12,
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <BiBell style={{ color: "var(--primary-gold)", fontSize: "1.2rem", flexShrink: 0 }} />
+                            <div>
+                              <span style={{ color: "var(--primary-gold)", fontWeight: 700, fontSize: "0.9rem", marginRight: 8 }}>
+                                {activeBatchNotifs[0].title}:
+                              </span>
+                              <span style={{ color: "rgba(255,255,255,0.85)", fontSize: "0.85rem" }}>
+                                {activeBatchNotifs[0].message}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => markNotifRead(activeBatchNotifs[0]._id)}
+                            style={{
+                              background: "transparent",
+                              border: "1px solid rgba(255, 255, 255, 0.2)",
+                              color: "#fff",
+                              borderRadius: 4,
+                              padding: "3px 8px",
+                              fontSize: "0.75rem",
+                              cursor: "pointer",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            Mark as Read
+                          </button>
+                        </div>
+                      )}
                       {orders.length > 0 ? (
                         <div className={styles.coursesGrid}>
                           {orders.map((order) => (

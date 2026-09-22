@@ -19,10 +19,12 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     await connectDB();
 
     const { id } = await params;
-    const { batchNo } = await req.json();
+    const body = await req.json();
+    const batchNo = (body.batchNo || "").trim();
+    const targetSlotId = body.targetSlotId;
 
-    if (batchNo === undefined) {
-      return NextResponse.json({ error: "Batch number is required" }, { status: 400 });
+    if (!batchNo && !targetSlotId) {
+      return NextResponse.json({ error: "Batch number or targetSlotId is required" }, { status: 400 });
     }
 
     const order = await Order.findById(id);
@@ -30,14 +32,45 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: "Order transaction not found" }, { status: 404 });
     }
 
-    if (!order.slotId) {
-      return NextResponse.json({ error: "No slot linked to this transaction" }, { status: 400 });
+    // Find destination slot
+    let targetSlot = null;
+    if (targetSlotId) {
+      targetSlot = await Slot.findById(targetSlotId);
+    } else if (batchNo) {
+      targetSlot = await Slot.findOne({ batchNo, isCancelled: { $ne: true } });
     }
 
-    await Slot.findByIdAndUpdate(order.slotId, { batchNo: (batchNo || "").trim() });
+    const oldSlotId = order.slotId ? order.slotId.toString() : null;
 
-    if (order.userId) {
-      await User.findByIdAndUpdate(order.userId, { batch: (batchNo || "").trim() });
+    if (targetSlot && targetSlot._id.toString() !== oldSlotId) {
+      // Safely transfer student to the target slot
+      if (oldSlotId) {
+        await Slot.findByIdAndUpdate(oldSlotId, { $pull: { bookedStudents: order.userId } });
+      }
+      await Slot.findByIdAndUpdate(targetSlot._id, { $addToSet: { bookedStudents: order.userId } });
+      order.slotId = targetSlot._id;
+      await order.save();
+
+      if (order.userId) {
+        await User.findByIdAndUpdate(order.userId, {
+          batch: (targetSlot.batchNo || "").trim(),
+          enrollmentMode: targetSlot.mode || "online",
+        });
+      }
+    } else if (order.slotId) {
+      // Only mutate the slot directly if no other students are booked in it, or fallback
+      const oldSlot = await Slot.findById(order.slotId);
+      const otherStudents = (oldSlot?.bookedStudents || []).filter(
+        (bid: { toString(): string }) => bid.toString() !== (order.userId ? order.userId.toString() : "")
+      );
+
+      if (otherStudents.length === 0) {
+        await Slot.findByIdAndUpdate(order.slotId, { batchNo });
+      }
+
+      if (order.userId) {
+        await User.findByIdAndUpdate(order.userId, { batch: batchNo });
+      }
     }
 
     return NextResponse.json({ status: "ok", message: "Order batch details updated successfully" });

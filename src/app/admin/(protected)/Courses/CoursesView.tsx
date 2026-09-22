@@ -25,6 +25,7 @@ import {
   CheckCircle2,
   MapPin,
   Building2,
+  GitMerge,
 } from "lucide-react";
 import { isBookingClosed, formatTimeRemaining } from "@/lib/batchTiming";
 import "@/app/admin/styles/legacy-courses.css";
@@ -44,6 +45,9 @@ interface Slot {
   isFullCourse?: boolean;
   mode?: string;
   location?: string;
+  isCancelled?: boolean;
+  cancelledAt?: string | null;
+  mergedInto?: string | null;
 }
 
 const OFFLINE_REGISTRATION_FEE = 5000;
@@ -153,6 +157,16 @@ export default function CoursesView() {
   const [confirmingBooking, setConfirmingBooking] = useState(false);
   const [manualDiscountType, setManualDiscountType] = useState<"flat" | "percent">("flat");
   const [manualDiscountValue, setManualDiscountValue] = useState<number>(0);
+
+  // Consolidate Modal State
+  const [consolidateModalOpen, setConsolidateModalOpen] = useState(false);
+  const [consolidateTargetId, setConsolidateTargetId] = useState("");
+  const [consolidateNewDate, setConsolidateNewDate] = useState("");
+  const [consolidateSourceIds, setConsolidateSourceIds] = useState<string[]>([]);
+  const [consolidateCapacity, setConsolidateCapacity] = useState(50);
+  const [consolidateNotify, setConsolidateNotify] = useState(true);
+  const [savingConsolidate, setSavingConsolidate] = useState(false);
+  const [consolidateBatches, setConsolidateBatches] = useState<Slot[]>([]);
 
   const getCoursePrice = (courseId: string, defaultPrice: number) => {
     const course = dbCourses.find((c) => c.courseId === courseId);
@@ -502,8 +516,15 @@ export default function CoursesView() {
 
     try {
       const resp = await fetch(`/api/deleteSlot/${id}`, { method: "DELETE" });
-      if (!resp.ok) throw new Error("Delete failed");
-      window.Swal?.fire({ icon: "success", title: "Deleted", background: "#1a1a1a", color: "#fff" });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.message || "Delete failed");
+      window.Swal?.fire({
+        icon: "success",
+        title: data.softDeleted ? "Batch Cancelled & Preserved" : "Deleted",
+        text: data.message || "Batch processed successfully.",
+        background: "#1a1a1a",
+        color: "#fff",
+      });
       reloadBatches();
     } catch (err) {
       window.Swal?.fire({
@@ -709,6 +730,138 @@ export default function CoursesView() {
     }
   };
 
+  // --- Consolidate & Reschedule Handlers ---
+  const openConsolidateModal = (preselectedTargetId?: string) => {
+    const target = allBatches.find((b) => b._id === preselectedTargetId && !b.isCancelled) || allBatches.find((b) => !b.isCancelled);
+    if (!target) {
+      window.Swal?.fire({ icon: "info", text: "No active batches available to consolidate.", background: "#1a1a1a", color: "#fff" });
+      return;
+    }
+    setConsolidateTargetId(target._id);
+    if (target.startTime) {
+      setConsolidateNewDate(toDateInputValue(new Date(target.startTime)));
+    } else {
+      setConsolidateNewDate("");
+    }
+    setConsolidateSourceIds([]);
+    setConsolidateCapacity(target.maxStudents || 50);
+    setConsolidateNotify(true);
+
+    // Fetch all slots including cancelled/soft-deleted ones so they can be merged!
+    fetch("/api/allSlots?includeCancelled=true")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setConsolidateBatches(data);
+      })
+      .catch(() => {});
+
+    setConsolidateModalOpen(true);
+  };
+
+  const onTargetBatchChange = (newTargetId: string) => {
+    setConsolidateTargetId(newTargetId);
+    const target = (consolidateBatches.length > 0 ? consolidateBatches : allBatches).find((b) => b._id === newTargetId);
+    if (target) {
+      if (target.startTime) {
+        setConsolidateNewDate(toDateInputValue(new Date(target.startTime)));
+      }
+      setConsolidateSourceIds((prev) => prev.filter((id) => id !== newTargetId));
+      setConsolidateCapacity(target.maxStudents || 50);
+    }
+  };
+
+  const toggleSourceBatch = (sourceId: string) => {
+    setConsolidateSourceIds((prev) =>
+      prev.includes(sourceId) ? prev.filter((id) => id !== sourceId) : [...prev, sourceId]
+    );
+  };
+
+  const consolidateTargetBatch = (consolidateBatches.length > 0 ? consolidateBatches : allBatches).find((b) => b._id === consolidateTargetId);
+  const consolidateTargetBooked = consolidateTargetBatch?.bookedStudents ? consolidateTargetBatch.bookedStudents.length : 0;
+  const consolidateSourceBatches = (consolidateBatches.length > 0 ? consolidateBatches : allBatches).filter((b) => consolidateSourceIds.includes(b._id));
+  const consolidateCombinedTotal =
+    consolidateTargetBooked +
+    consolidateSourceBatches.reduce((acc, b) => acc + (b.bookedStudents?.length || 0), 0);
+
+  const submitConsolidation = async () => {
+    if (!consolidateTargetId) {
+      window.Swal?.fire({ icon: "warning", text: "Please choose a target batch.", background: "#1a1a1a", color: "#fff" });
+      return;
+    }
+    if (consolidateSourceIds.length === 0 && !consolidateNewDate) {
+      window.Swal?.fire({ icon: "warning", text: "Please select source batches to absorb or choose a revised start date.", background: "#1a1a1a", color: "#fff" });
+      return;
+    }
+
+    const confirmRes = await window.Swal?.fire({
+      title: "Confirm Consolidation?",
+      html: `
+        <div style="text-align: left; font-size: 0.9rem; line-height: 1.5;">
+          <p><strong>Target Batch:</strong> Batch #${consolidateTargetBatch?.batchNo || consolidateTargetBatch?.title}</p>
+          ${consolidateNewDate ? `<p><strong>Revised Start Date:</strong> ${consolidateNewDate}</p>` : ""}
+          ${consolidateSourceIds.length > 0 ? `<p><strong>Batches to Cancel &amp; Absorb:</strong> ${consolidateSourceBatches.map((b) => '#' + (b.batchNo || b.title)).join(", ")} (${consolidateSourceBatches.reduce((sum, b) => sum + (b.bookedStudents ? b.bookedStudents.length : 0), 0)} students)</p>` : ""}
+          <p><strong>Total Enrolled Students:</strong> ${consolidateCombinedTotal}</p>
+          <p class="text-warning small mt-2">Absorbed batches will be soft-deleted. Students will receive in-app dashboard alerts.</p>
+        </div>
+      `,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Execute Consolidation",
+      confirmButtonColor: "var(--primary-gold)",
+      cancelButtonColor: "rgba(255,255,255,0.1)",
+      background: "#1a1a1a",
+      color: "#fff",
+    });
+
+    if (!confirmRes?.isConfirmed) return;
+
+    setSavingConsolidate(true);
+    window.Swal?.fire({
+      title: "Consolidating...",
+      text: "Synchronizing student orders, schedules, and notifications.",
+      allowOutsideClick: false,
+      background: "#1a1a1a",
+      color: "#fff",
+      didOpen: () => window.Swal?.showLoading(),
+    });
+
+    try {
+      const res = await fetch("/api/admin/batches/consolidate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetSlotId: consolidateTargetId,
+          newStartDate: consolidateNewDate,
+          sourceSlotIds: consolidateSourceIds,
+          updatedCapacity: Number(consolidateCapacity) || undefined,
+          notifyStudents: consolidateNotify,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Consolidation failed");
+
+      window.Swal?.fire({
+        icon: "success",
+        title: "Consolidation Complete!",
+        text: data.message,
+        background: "#1a1a1a",
+        color: "#fff",
+      });
+      setConsolidateModalOpen(false);
+      reloadBatches();
+    } catch (err) {
+      window.Swal?.fire({
+        icon: "error",
+        title: "Operation Failed",
+        text: err instanceof Error ? err.message : "Error",
+        background: "#1a1a1a",
+        color: "#fff",
+      });
+    } finally {
+      setSavingConsolidate(false);
+    }
+  };
+
   return (
     <div className="container" style={{ maxWidth: 1400, margin: "40px auto", padding: "0 20px" }}>
       <div className="admin-page-header">
@@ -718,7 +871,14 @@ export default function CoursesView() {
           </h1>
           <p className="text-muted mb-0">Schedule courses, manage batches, and handle manual seat bookings</p>
         </div>
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 flex-wrap">
+          <button
+            className="thm-btn"
+            style={{ background: "linear-gradient(135deg, #e67e22, #d35400)", borderColor: "#e67e22" }}
+            onClick={() => openConsolidateModal()}
+          >
+            <GitMerge size={16} style={ICON_STYLE} /> Consolidate / Reschedule
+          </button>
           <button className="thm-btn" onClick={openAddModal}>
             <PlusCircle size={16} style={ICON_STYLE} /> Create New Batch
           </button>
@@ -944,6 +1104,14 @@ export default function CoursesView() {
                       <Pencil size={14} />
                     </button>
                     <button
+                      className="action-btn"
+                      style={{ flex: 1, color: "#e67e22", borderColor: "rgba(230, 126, 34, 0.3)" }}
+                      title="Consolidate / Reschedule Batch"
+                      onClick={() => openConsolidateModal(slot._id)}
+                    >
+                      <GitMerge size={14} />
+                    </button>
+                    <button
                       className="action-btn manual-btn"
                       style={{ flex: 2, background: "rgba(39, 174, 96, 0.1)", borderColor: "rgba(39, 174, 96, 0.3)", color: "#2ecc71" }}
                       disabled={isFull}
@@ -1064,6 +1232,14 @@ export default function CoursesView() {
                   <div className="batch-footer">
                     <button className="action-btn edit-btn" style={{ flex: 1 }} title="Edit" onClick={() => openEditOfflineModal(slot._id)}>
                       <Pencil size={14} />
+                    </button>
+                    <button
+                      className="action-btn"
+                      style={{ flex: 1, color: "#e67e22", borderColor: "rgba(230, 126, 34, 0.3)" }}
+                      title="Consolidate / Reschedule Batch"
+                      onClick={() => openConsolidateModal(slot._id)}
+                    >
+                      <GitMerge size={14} />
                     </button>
                     <button
                       className="action-btn manual-btn"
@@ -1430,6 +1606,192 @@ export default function CoursesView() {
                   <CheckCircle2 size={14} className="me-1" style={ICON_STYLE} /> {confirmingBooking ? "Processing..." : "Confirm Booking"}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Consolidate & Reschedule Modal */}
+      {consolidateModalOpen && (
+        <div className="admin-modal-overlay" style={{ display: "flex" }}>
+          <div className="admin-modal" style={{ maxWidth: 680, width: "95%", margin: "20px auto" }}>
+            <div className="admin-modal-header">
+              <h3 className="admin-modal-title">
+                <GitMerge size={18} className="me-2" style={ICON_STYLE} /> Consolidate &amp; Reschedule Batches
+              </h3>
+              <button type="button" className="btn-close btn-close-white" onClick={() => setConsolidateModalOpen(false)}></button>
+            </div>
+
+            <div className="admin-modal-body" style={{ maxHeight: "75vh", overflowY: "auto", padding: "20px 24px" }}>
+              <p className="text-muted small mb-3">
+                Cancel source batches, merge their enrolled candidates into a destination batch, and optionally shift commencement dates. All changes propagate atomically to candidate dashboards with zero data loss.
+              </p>
+
+              {/* 1. Target Destination Batch */}
+              <div className="mb-3">
+                <label className="admin-form-label d-block mb-1" style={{ fontWeight: 600 }}>
+                  1. Target Batch to Keep (Destination)
+                </label>
+                <select
+                  className="admin-select w-100 p-2"
+                  style={{ background: "var(--surface-light)", border: "1px solid rgba(224, 194, 20, 0.4)", borderRadius: 6, color: "#fff" }}
+                  value={consolidateTargetId}
+                  onChange={(e) => onTargetBatchChange(e.target.value)}
+                >
+                  {(consolidateBatches.length > 0 ? consolidateBatches : allBatches)
+                    .filter((b) => !b.isCancelled)
+                    .map((b) => (
+                      <option key={b._id} value={b._id}>
+                        Batch #{b.batchNo || b.title} ({b.mode === "offline" ? "Offline" : "Online"}) · {b.startTime ? new Date(b.startTime).toLocaleDateString("en-IN") : "No date"} ({b.bookedStudents?.length || 0}/{b.maxStudents || 50} enrolled)
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* 2. Reschedule Start Date */}
+              <div className="mb-3">
+                <label className="admin-form-label d-block mb-1" style={{ fontWeight: 600 }}>
+                  2. Revised Commencement Date (Optional)
+                </label>
+                <input
+                  type="date"
+                  className="admin-input w-100 p-2"
+                  style={{ background: "var(--surface-light)", border: "1px solid rgba(255, 255, 255, 0.15)", borderRadius: 6, color: "#fff" }}
+                  value={consolidateNewDate}
+                  onChange={(e) => setConsolidateNewDate(e.target.value)}
+                />
+                <small className="text-muted">
+                  Update the start date for Batch #{consolidateTargetBatch?.batchNo || consolidateTargetBatch?.title}. Both existing students and absorbed students will see this date on their dashboard.
+                </small>
+              </div>
+
+              {/* 3. Source Batches to Cancel & Merge */}
+              <div className="mb-3">
+                <label className="admin-form-label d-block mb-1" style={{ fontWeight: 600 }}>
+                  3. Source Batches to Cancel &amp; Absorb
+                </label>
+                <div
+                  style={{
+                    background: "rgba(255, 255, 255, 0.02)",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    borderRadius: 8,
+                    padding: 12,
+                    maxHeight: 180,
+                    overflowY: "auto",
+                  }}
+                >
+                  {(consolidateBatches.length > 0 ? consolidateBatches : allBatches)
+                    .filter((b) => b._id !== consolidateTargetId && (b.mode || "online") === (consolidateTargetBatch?.mode || "online"))
+                    .map((b) => (
+                      <label
+                        key={b._id}
+                        className="d-flex align-items-center justify-content-between p-2 rounded mb-2"
+                        style={{
+                          background: consolidateSourceIds.includes(b._id) ? "rgba(230, 126, 34, 0.12)" : "rgba(255, 255, 255, 0.03)",
+                          border: consolidateSourceIds.includes(b._id) ? "1px solid rgba(230, 126, 34, 0.4)" : "1px solid rgba(255, 255, 255, 0.05)",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <div className="d-flex align-items-center gap-2">
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            checked={consolidateSourceIds.includes(b._id)}
+                            onChange={() => toggleSourceBatch(b._id)}
+                          />
+                          <span style={{ fontSize: "0.85rem" }}>
+                            Batch #{b.batchNo || b.title}
+                            {b.isCancelled && (
+                              <span className="badge bg-danger ms-2" style={{ fontSize: "0.68rem" }}>
+                                Cancelled
+                              </span>
+                            )}
+                            <span className="text-muted ms-2">
+                              · {b.startTime ? new Date(b.startTime).toLocaleDateString("en-IN") : "No date"}
+                            </span>
+                          </span>
+                        </div>
+                        <span className="badge bg-secondary" style={{ fontSize: "0.75rem" }}>
+                          {b.bookedStudents?.length || 0} students
+                        </span>
+                      </label>
+                    ))}
+                  {(consolidateBatches.length > 0 ? consolidateBatches : allBatches).filter((b) => b._id !== consolidateTargetId && (b.mode || "online") === (consolidateTargetBatch?.mode || "online")).length === 0 && (
+                    <p className="text-muted small mb-0 p-2">No other compatible batches available to absorb.</p>
+                  )}
+                </div>
+                <small className="text-muted">Checked batches will be cancelled (soft-deleted) and their paid orders transferred to Batch #{consolidateTargetBatch?.batchNo || consolidateTargetBatch?.title}.</small>
+              </div>
+
+              {/* 4. Target Capacity */}
+              <div className="mb-3">
+                <label className="admin-form-label d-block mb-1" style={{ fontWeight: 600 }}>
+                  4. Destination Batch Seat Capacity
+                </label>
+                <input
+                  type="number"
+                  min={consolidateCombinedTotal}
+                  className="admin-input w-100 p-2"
+                  style={{ background: "var(--surface-light)", border: "1px solid rgba(255, 255, 255, 0.15)", borderRadius: 6, color: "#fff" }}
+                  value={consolidateCapacity}
+                  onChange={(e) => setConsolidateCapacity(Number(e.target.value))}
+                />
+                <small className="text-muted">Must be at least {consolidateCombinedTotal} to fit all consolidated students.</small>
+              </div>
+
+              {/* 5. In-App Notification Toggle */}
+              <div className="form-check mb-4">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="consolidateNotifyToggle"
+                  checked={consolidateNotify}
+                  onChange={(e) => setConsolidateNotify(e.target.checked)}
+                />
+                <label className="form-check-label text-white small" htmlFor="consolidateNotifyToggle">
+                  Notify all affected candidates on their dashboard with an in-app alert banner
+                </label>
+              </div>
+
+              {/* 6. Summary Card */}
+              <div
+                className="p-3 rounded mb-2"
+                style={{ background: "rgba(224, 194, 20, 0.08)", border: "1px solid rgba(224, 194, 20, 0.3)" }}
+              >
+                <div className="d-flex justify-content-between mb-1" style={{ fontSize: "0.85rem" }}>
+                  <span className="text-muted">Target Batch:</span>
+                  <span className="fw-bold text-warning">Batch #{consolidateTargetBatch?.batchNo || consolidateTargetBatch?.title}</span>
+                </div>
+                {consolidateNewDate && (
+                  <div className="d-flex justify-content-between mb-1" style={{ fontSize: "0.85rem" }}>
+                    <span className="text-muted">Revised Start Date:</span>
+                    <span className="fw-bold text-white">{new Date(consolidateNewDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                  </div>
+                )}
+                <div className="d-flex justify-content-between mb-1" style={{ fontSize: "0.85rem" }}>
+                  <span className="text-muted">Batches Absorbed:</span>
+                  <span>{consolidateSourceBatches.length > 0 ? consolidateSourceBatches.map((b) => `#${b.batchNo || b.title}`).join(", ") : "None"}</span>
+                </div>
+                <div className="d-flex justify-content-between pt-2 border-top border-secondary" style={{ fontSize: "0.9rem" }}>
+                  <span className="fw-bold text-white">Total Combined Candidates:</span>
+                  <span className="fw-bold text-warning">{consolidateCombinedTotal} students</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer px-4 pb-4 pt-2">
+              <button type="button" className="thm-btn cancel-btn" onClick={() => setConsolidateModalOpen(false)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="thm-btn"
+                style={{ background: "linear-gradient(135deg, #e67e22, #d35400)", borderColor: "#e67e22" }}
+                onClick={submitConsolidation}
+                disabled={savingConsolidate}
+              >
+                <GitMerge size={16} className="me-1" style={ICON_STYLE} /> {savingConsolidate ? "Consolidating..." : "Execute Consolidation"}
+              </button>
             </div>
           </div>
         </div>
