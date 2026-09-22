@@ -51,9 +51,6 @@ interface EnquiryFormData {
   countryCode: string;
   dob: string;
   aspirant: string;
-  vtx: string;
-  youtube: string;
-  podcast: string;
   experience: string;
   courseType: string;
   nextSsb: string;
@@ -73,9 +70,6 @@ const EMPTY_FORM_DATA: EnquiryFormData = {
   countryCode: "+91",
   dob: "",
   aspirant: "-None-",
-  vtx: "-None-",
-  youtube: "-None-",
-  podcast: "-None-",
   experience: "-None-",
   courseType: "-None-",
   nextSsb: "",
@@ -125,7 +119,7 @@ function formatDateToZoho(dateStr: string) {
  * in legacy — not required for lead submission), and all localStorage-based
  * auth/gate bookkeeping (replaced with the cookie-based useSiteUser()).
  */
-export default function EnquiryForm() {
+export default function EnquiryForm({ isModal = false }: { isModal?: boolean } = {}) {
   const { user } = useSiteUser();
   const [formData, setFormData] = useState<EnquiryFormData>(EMPTY_FORM_DATA);
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
@@ -301,9 +295,6 @@ export default function EnquiryForm() {
         dob: formData.dob,
         ssbAspirant: formData.aspirant,
         servingCandidate: formData.serving,
-        vtxHeard: formData.vtx,
-        youtubeSubscribed: formData.youtube,
-        podcastSubscribed: formData.podcast,
         ssbExperience: formData.experience,
         courseType: formData.courseType,
         nextSsbDate: formData.nextSsb,
@@ -329,6 +320,38 @@ export default function EnquiryForm() {
       setErrors(validationErrors);
       toast.error("Please fill in the required fields correctly");
       return;
+    }
+
+    // Trigger Zoho Analytics submission tracking to populate hidden tracking inputs
+    try {
+      const wfaTrack = (window as unknown as { _wfa_track?: { wfa_submit?: (e: unknown) => void } })._wfa_track;
+      if (wfaTrack && wfaTrack.wfa_submit) {
+        wfaTrack.wfa_submit(e);
+      }
+    } catch (error) {
+      console.error("Zoho Analytics tracking error:", error);
+    }
+
+    // Set Zoho SalesIQ visitor information if widget is available
+    try {
+      const zoho = (
+        window as unknown as {
+          $zoho?: { salesiq?: { visitor: { name: (n: string) => void; email: (e: string) => void; uniqueid: () => string } } };
+        }
+      ).$zoho;
+      if (zoho && zoho.salesiq) {
+        const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim();
+        zoho.salesiq.visitor.name(fullName);
+        zoho.salesiq.visitor.email(formData.email.trim());
+        const ldtUvidValue = zoho.salesiq.visitor.uniqueid() || "";
+
+        const ldtUvidInput = document.getElementById("LDTuvid") as HTMLInputElement | null;
+        if (ldtUvidInput) {
+          ldtUvidInput.value = ldtUvidValue;
+        }
+      }
+    } catch (error) {
+      console.error("Zoho SalesIQ tracking error:", error);
     }
 
     const formElement = e.target as HTMLFormElement;
@@ -405,48 +428,43 @@ export default function EnquiryForm() {
 
   const { text: parsedText, url: parsedUrl } = parseSplashMessage(splashMessage);
 
-  return (
-    <section className="enquiry-form-section sectionspace80">
-      <Background />
-      <div className="container">
-        <div className="sct-title">
-          <h2>Enquire With Us</h2>
-        </div>
-
-        {showSplash && (
-          <div className="wf_success_overlay" onClick={() => setShowSplash(false)}>
-            <div className="wf_success_modal" onClick={(e) => e.stopPropagation()}>
-              <button
-                type="button"
-                className="wf_success_close"
-                onClick={() => setShowSplash(false)}
-                aria-label="Close success message"
-              >
-                <RxCross1 />
-              </button>
-              <div className="wf_success_icon_container">
-                <div className="wf_success_circle">
-                  <div className="wf_success_checkmark"></div>
-                </div>
+  const formContent = (
+    <>
+      {showSplash && (
+        <div className="wf_success_overlay" onClick={() => setShowSplash(false)}>
+          <div className="wf_success_modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="wf_success_close"
+              onClick={() => setShowSplash(false)}
+              aria-label="Close success message"
+            >
+              <RxCross1 />
+            </button>
+            <div className="wf_success_icon_container">
+              <div className="wf_success_circle">
+                <div className="wf_success_checkmark"></div>
               </div>
-              <h3 className="wf_success_title">Enquiry Submitted</h3>
-              <p className="wf_success_text">{parsedText}</p>
-              {parsedUrl && (
-                <a href={parsedUrl} className="wf_success_btn" target="_self">
-                  View Upcoming Batches
-                </a>
-              )}
             </div>
+            <h3 className="wf_success_title">Enquiry Submitted</h3>
+            <p className="wf_success_text">{parsedText}</p>
+            {parsedUrl && (
+              <a href={parsedUrl} className="wf_success_btn" target="_self">
+                View Upcoming Batches
+              </a>
+            )}
           </div>
-        )}
+        </div>
+      )}
 
-        <form
-          id="webform736128000000759294"
-          name="WebToLeads736128000000759294"
-          onSubmit={handleSubmit}
-          acceptCharset="UTF-8"
-          className="enquiry-form"
-        >
+      <form
+        style={isModal ? { padding: "10px 0" } : {}}
+        id="webform736128000000759294"
+        name="WebToLeads736128000000759294"
+        onSubmit={handleSubmit}
+        acceptCharset="UTF-8"
+        className="enquiry-form"
+      >
           {/* Zoho Hidden Configurations */}
           <input type="hidden" name="xnQsjsdp" value="17c0c7e5ffbb359477bf66c14fe1a4352ecf64b98fbd005f1d9962b324219997" readOnly />
           <input type="hidden" name="zc_gad" id="zc_gad" value="" readOnly />
@@ -478,7 +496,7 @@ export default function EnquiryForm() {
             <div className={`step-indicator-line ${currentStep > 2 ? "active" : ""}`}></div>
             <div className={`step-indicator-item ${currentStep === 3 ? "active" : ""}`}>
               <span className="step-indicator-number">3</span>
-              <span className="step-indicator-label">Familiarity</span>
+              <span className="step-indicator-label">Comments & Queries</span>
             </div>
           </div>
 
@@ -806,6 +824,9 @@ export default function EnquiryForm() {
                     </div>
                   </div>
 
+                  {/* Row break on md+ screens so the two tall checkbox containers start side-by-side on their own row */}
+                  <div className="w-100 d-none d-md-block" style={{ height: 0, margin: 0, padding: 0 }} />
+
                   <div className="col-md-6">
                     <div className="form-group">
                       <label className="form-label-custom">
@@ -887,91 +908,13 @@ export default function EnquiryForm() {
             <div className="col-12 form-step-content" style={{ display: currentStep === 3 ? "block" : "none" }}>
               <div className="form-section">
                 <div className="form-section-header">
-                  <span className="section-number">03</span> Are you famaliar with us?
+                  <span className="section-number">03</span> Queries & Comments
                 </div>
                 <div className="row g-4">
-                  <div className="col-md-6">
-                    <div className="form-group">
-                      <label className="form-label-custom" htmlFor="LEADCF5">
-                        Have you heard about VTX™?
-                      </label>
-                      <select
-                        id="LEADCF5"
-                        name="LEADCF5"
-                        value={formData.vtx}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, vtx: e.target.value }))}
-                      >
-                        <option value="-None-">-None-</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                      </select>
-                      <a
-                        href="https://www.ssbwithisv.in/ssbVirtualTrainingXperience"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="form-help-link"
-                      >
-                        India&apos;s 1st virtual GTO ground
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="col-md-6">
-                    <div className="form-group">
-                      <label className="form-label-custom" htmlFor="LEADCF8">
-                        Have you subscribed to our YouTube Channel?
-                      </label>
-                      <select
-                        id="LEADCF8"
-                        name="LEADCF8"
-                        value={formData.youtube}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, youtube: e.target.value }))}
-                      >
-                        <option value="-None-">-None-</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                      </select>
-                      <a
-                        href="https://www.youtube.com/@ssbwithisv"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="form-help-link"
-                      >
-                        SSB with ISV YouTube Channel
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="col-md-6">
-                    <div className="form-group">
-                      <label className="form-label-custom" htmlFor="LEADCF7">
-                        Have you subscribed to our Podcast (RTWNKC)?
-                      </label>
-                      <select
-                        id="LEADCF7"
-                        name="LEADCF7"
-                        value={formData.podcast}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, podcast: e.target.value }))}
-                      >
-                        <option value="-None-">-None-</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                      </select>
-                      <a
-                        href="https://www.youtube.com/@rogerthatwithnkc"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="form-help-link"
-                      >
-                        Roger That with NKC
-                      </a>
-                    </div>
-                  </div>
-
                   <div className="col-12">
                     <div className="form-group">
                       <label className="form-label-custom" htmlFor="LEADCF16">
-                        Comments
+                        Comments / Queries
                       </label>
                       <textarea
                         id="LEADCF16"
@@ -1017,7 +960,22 @@ export default function EnquiryForm() {
             </div>
           </div>
         </form>
-      </div>
-    </section>
-  );
-}
+      </>
+    );
+
+    if (isModal) {
+      return formContent;
+    }
+
+    return (
+      <section className="enquiry-form-section sectionspace80">
+        <Background />
+        <div className="container">
+          <div className="sct-title">
+            <h2>Enquire With Us</h2>
+          </div>
+          {formContent}
+        </div>
+      </section>
+    );
+  }

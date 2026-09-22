@@ -6,6 +6,7 @@ import Link from "next/link";
 import { FaQuoteLeft } from "react-icons/fa";
 import styles from "@/style/OfficerLikeQualities.module.css";
 import CustomHeader from "@/components/site/CustomHeader";
+import EnquiryForm from "@/components/site/EnquiryForm";
 
 interface OLQComponent {
   name: string;
@@ -475,6 +476,8 @@ export default function OfficerLikeQualities() {
           Explore the Nagpur Offline Batch →
         </Link>
       </section>
+
+      <EnquiryForm />
     </div>
   );
 }

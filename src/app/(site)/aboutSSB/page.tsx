@@ -8,6 +8,7 @@ import DaySchedule from "./DaySchedule";
 import TipsToExcel from "./TipsToExcel";
 import SelectionMap from "./SelectionMap";
 import OfficerEntriesChart from "./OfficerEntriesChart";
+import EnquiryForm from "@/components/site/EnquiryForm";
 
 export const metadata: Metadata = {
   title: "What is Services Selection Board? | Complete SSB Selection Explained",
@@ -164,6 +165,7 @@ export default function SsbPage() {
       </section>
 
       <Faq data={faqData} />
+      <EnquiryForm />
     </>
   );
 }
