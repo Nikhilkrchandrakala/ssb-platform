@@ -195,7 +195,17 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
               style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px" }}
             >
               <span>Contact Us</span>
-              <span style={{ fontSize: "11px", color: "#8a8978", textTransform: "none", fontWeight: "normal", lineHeight: "1.3" }}>
+              <span
+                style={{
+                  fontFamily: "var(--font-Preragraph)",
+                  fontSize: "11px",
+                  letterSpacing: "0.5px",
+                  color: "#8a8978",
+                  textTransform: "none",
+                  fontWeight: "normal",
+                  lineHeight: "1.3",
+                }}
+              >
                 [For business enquiries only, not for SSB course queries]
               </span>
             </Link>

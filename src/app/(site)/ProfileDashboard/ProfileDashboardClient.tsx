@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { RAZORPAY_KEY_ID } from "@/lib/razorpayKey";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import toast from "react-hot-toast";
 import {
   BiUser,
@@ -851,7 +852,9 @@ export default function ProfileDashboardClient({
       <section className={styles.pageSection}>
         <div className={`${styles.sidebar} ${isMobileMenuOpen ? styles.mobileOpen : ""}`}>
           <div className={styles.logoSection}>
-            <img src="/assets/logo/ISV.webp" alt="SSB with ISV" className={styles.logo} />
+            <Link href="/">
+              <img src="/assets/logo/ISV.webp" alt="SSB with ISV" className={styles.logo} style={{ cursor: "pointer" }} />
+            </Link>
           </div>
 
           <nav className={styles.navTabs}>
@@ -905,10 +908,7 @@ export default function ProfileDashboardClient({
 
         <div>
           <div className="container position-relative z-1">
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 20, marginBottom: 20 }}>
-              <div onClick={() => router.back()} className="arrow_button_two" style={{ cursor: "pointer" }}>
-                <BiArrowBack />
-              </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", marginTop: 20, marginBottom: 20 }}>
               <button
                 className={styles.mobileMenuToggle}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

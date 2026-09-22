@@ -165,7 +165,18 @@ export default function ContactUs({ open, setOpen }: { open: boolean; setOpen: (
           <div className="container">
             <div className="sct-title">
               <h2>Contact Us</h2>
-              <span style={{ fontSize: "13px", color: "#8a8978", textTransform: "none", fontWeight: "normal", display: "block", marginTop: "5px" }}>
+              <span
+                style={{
+                  fontFamily: "var(--font-Preragraph)",
+                  fontSize: "13px",
+                  letterSpacing: "0.5px",
+                  color: "#8a8978",
+                  textTransform: "none",
+                  fontWeight: "normal",
+                  display: "block",
+                  marginTop: "5px",
+                }}
+              >
                 [For business enquiries only, not for SSB course queries]
               </span>
             </div>

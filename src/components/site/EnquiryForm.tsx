@@ -131,10 +131,13 @@ export default function EnquiryForm({ isModal = false }: { isModal?: boolean } =
   useEffect(() => {
     const formEl = document.getElementById("webform736128000000759294") as HTMLFormElement | null;
     if (formEl) {
-      // Dummy handler to prevent the Zoho script's "formObj.wf_sub is not a function" error.
-      formEl.onsubmit = (e) => {
-        e.preventDefault();
+      const safePreventDefault = (e?: Event) => {
+        if (e && typeof e.preventDefault === "function") {
+          e.preventDefault();
+        }
       };
+      formEl.onsubmit = safePreventDefault;
+      (formEl as unknown as { wf_sub?: (e?: Event) => void }).wf_sub = safePreventDefault;
     }
 
     const scriptId = "wf_anal";
@@ -263,7 +266,8 @@ export default function EnquiryForm({ isModal = false }: { isModal?: boolean } =
     });
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e?: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    if (!e || !e.target) return;
     const { name } = e.target;
     if (errors[name]) {
       setErrors((prev) => {
@@ -312,8 +316,10 @@ export default function EnquiryForm({ isModal = false }: { isModal?: boolean } =
     setCurrentStep(1);
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = (e?: React.FormEvent<HTMLFormElement>) => {
+    if (e && typeof e.preventDefault === "function") {
+      e.preventDefault();
+    }
 
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
@@ -354,7 +360,15 @@ export default function EnquiryForm({ isModal = false }: { isModal?: boolean } =
       console.error("Zoho SalesIQ tracking error:", error);
     }
 
-    const formElement = e.target as HTMLFormElement;
+    const formElement =
+      (e && e.target ? (e.target as HTMLFormElement) : null) ||
+      (document.getElementById("webform736128000000759294") as HTMLFormElement);
+
+    if (!formElement) {
+      toast.error("Form element not found");
+      return;
+    }
+
     const bodyFormData = new FormData(formElement);
 
     // React-controlled hidden inputs may not flush their value to the real DOM
@@ -366,7 +380,9 @@ export default function EnquiryForm({ isModal = false }: { isModal?: boolean } =
       bodyFormData.set("service", "smarturl");
     }
 
-    const urlEncodedData = new URLSearchParams(bodyFormData as unknown as Record<string, string>);
+    const urlEncodedData = new URLSearchParams(
+      Array.from(bodyFormData.entries()).filter((entry): entry is [string, string] => typeof entry[1] === "string")
+    );
 
     const submitBtn = document.querySelector<HTMLButtonElement>(".crmWebToEntityForm .formsubmit");
     if (submitBtn) submitBtn.setAttribute("disabled", "true");
