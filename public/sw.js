@@ -102,7 +102,7 @@ self.addEventListener("fetch", (event) => {
         const cached = await cache.match(request);
         const fetchPromise = fetch(request)
           .then((response) => {
-            if (response.ok) cache.put(request, response.clone());
+            if (response.status === 200) cache.put(request, response.clone());
             return response;
           })
           .catch(() => cached);

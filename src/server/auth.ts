@@ -95,65 +95,70 @@ export async function getCurrentUser() {
   const payload = await getSessionPayload();
   if (!payload) return null;
 
-  await connectDB();
+  try {
+    await connectDB();
 
-  const elevatedRoles = ["owner", "admin", "assessor"];
-  let foundUser: Record<string, unknown> | null = null;
+    const elevatedRoles = ["owner", "admin", "assessor"];
+    let foundUser: Record<string, unknown> | null = null;
 
-  if (payload.role === "franchise") {
-    const franchise = await Franchise.findById(payload.id).lean();
-    if (franchise) {
-      foundUser = { ...franchise, role: "franchise" };
+    if (payload.role === "franchise") {
+      const franchise = await Franchise.findById(payload.id).lean();
+      if (franchise) {
+        foundUser = { ...franchise, role: "franchise" };
+      }
+    } else if (elevatedRoles.includes(payload.role)) {
+      const admin = await AdminUser.findById(payload.id).lean();
+      if (admin) {
+        foundUser = { ...admin, role: payload.role };
+      }
     }
-  } else if (elevatedRoles.includes(payload.role)) {
-    const admin = await AdminUser.findById(payload.id).lean();
-    if (admin) {
-      foundUser = { ...admin, role: payload.role };
+
+    if (!foundUser) {
+      const user = await User.findById(payload.id)
+        .populate("assignedPsych", "name email")
+        .populate("assignedGTO", "name email")
+        .populate("assignedIO", "name email")
+        .populate("assignedTO", "name email")
+        .lean();
+      if (user) {
+        const role = payload.role || (user as { role?: string }).role || "student";
+        // rawRole preserves "lead" before the normalization below overwrites
+        // `role` to "student" (needed so a not-yet-paid lead's session still
+        // passes truthy/student-shaped checks in the checkout flow itself) —
+        // requireSiteUser() uses it to tell a genuine student apart from an
+        // unpaid lead who'd otherwise also pass that same check.
+        foundUser = { ...user, role: role === "lead" ? "student" : role, rawRole: role };
+      }
     }
+
+    if (!foundUser) return null;
+
+    // Captured before deletion below — requireSiteUser() uses this (not an
+    // Order lookup) to tell a still-mid-checkout quick-join lead (no password
+    // until they pay, per verifyPayment's deferred-credential pattern) apart
+    // from a genuinely registered lead who simply hasn't purchased a course
+    // yet (has a password from the full /SignUp flow or a later reset) — the
+    // latter must still be able to see their own profile.
+    foundUser.hasPassword = !!foundUser.password;
+
+    // `.lean()` skips Mongoose documents entirely, so the schema-level toJSON
+    // transform that strips `password` never runs — strip it explicitly here,
+    // since getCurrentUser()'s result is passed straight through to Client
+    // Component props (SiteUserProvider/AdminUserProvider/PsychUserProvider).
+    delete foundUser.password;
+
+    // Also round-trip through JSON: `.lean()` still leaves ObjectId/Date
+    // instances (e.g. `_id`, populated refs' `_id`, `createdAt`/`updatedAt`) in
+    // the result, and those aren't plain objects — passing them as props to a
+    // Client Component throws ("Only plain objects can be passed..."). Every
+    // field here already round-trips safely through JSON (ObjectId/Date both
+    // implement toJSON), so this is a cheap, safe way to guarantee a
+    // serializable result without hand-walking the (nested/populated) shape.
+    return JSON.parse(JSON.stringify(foundUser));
+  } catch (err) {
+    console.error("[auth] getCurrentUser failed to resolve user from DB:", err);
+    return null;
   }
-
-  if (!foundUser) {
-    const user = await User.findById(payload.id)
-      .populate("assignedPsych", "name email")
-      .populate("assignedGTO", "name email")
-      .populate("assignedIO", "name email")
-      .populate("assignedTO", "name email")
-      .lean();
-    if (user) {
-      const role = payload.role || (user as { role?: string }).role || "student";
-      // rawRole preserves "lead" before the normalization below overwrites
-      // `role` to "student" (needed so a not-yet-paid lead's session still
-      // passes truthy/student-shaped checks in the checkout flow itself) —
-      // requireSiteUser() uses it to tell a genuine student apart from an
-      // unpaid lead who'd otherwise also pass that same check.
-      foundUser = { ...user, role: role === "lead" ? "student" : role, rawRole: role };
-    }
-  }
-
-  if (!foundUser) return null;
-
-  // Captured before deletion below — requireSiteUser() uses this (not an
-  // Order lookup) to tell a still-mid-checkout quick-join lead (no password
-  // until they pay, per verifyPayment's deferred-credential pattern) apart
-  // from a genuinely registered lead who simply hasn't purchased a course
-  // yet (has a password from the full /SignUp flow or a later reset) — the
-  // latter must still be able to see their own profile.
-  foundUser.hasPassword = !!foundUser.password;
-
-  // `.lean()` skips Mongoose documents entirely, so the schema-level toJSON
-  // transform that strips `password` never runs — strip it explicitly here,
-  // since getCurrentUser()'s result is passed straight through to Client
-  // Component props (SiteUserProvider/AdminUserProvider/PsychUserProvider).
-  delete foundUser.password;
-
-  // Also round-trip through JSON: `.lean()` still leaves ObjectId/Date
-  // instances (e.g. `_id`, populated refs' `_id`, `createdAt`/`updatedAt`) in
-  // the result, and those aren't plain objects — passing them as props to a
-  // Client Component throws ("Only plain objects can be passed..."). Every
-  // field here already round-trips safely through JSON (ObjectId/Date both
-  // implement toJSON), so this is a cheap, safe way to guarantee a
-  // serializable result without hand-walking the (nested/populated) shape.
-  return JSON.parse(JSON.stringify(foundUser));
 }
 
 export function hasRole(user: { role?: string } | null, roles: string[]): boolean {

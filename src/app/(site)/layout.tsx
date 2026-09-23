@@ -57,9 +57,14 @@ export const metadata: Metadata = {
 };
 
 async function getContactSettings() {
-  await connectDB();
-  const settings = await ContactSettings.findOne().lean<{ whatsappNumber?: string; callNumber?: string }>();
-  return settings ? { whatsappNumber: settings.whatsappNumber, callNumber: settings.callNumber } : null;
+  try {
+    await connectDB();
+    const settings = await ContactSettings.findOne().lean<{ whatsappNumber?: string; callNumber?: string }>();
+    return settings ? { whatsappNumber: settings.whatsappNumber, callNumber: settings.callNumber } : null;
+  } catch (err) {
+    console.error("[layout] failed to fetch contact settings, falling back to defaults:", err);
+    return null;
+  }
 }
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
@@ -99,7 +104,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         crossOrigin="anonymous"
         strategy="afterInteractive"
       />
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <Script src="https://cdn-in.pagesense.io/js/60070446894/c47efbddcb31458ab634e57373f70600.js" strategy="afterInteractive" />
 
       <Script id="zoho-init" strategy="afterInteractive">

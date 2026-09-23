@@ -25,20 +25,25 @@ const cache: MongooseCache = global._mongooseCache ?? { conn: null, promise: nul
 global._mongooseCache = cache;
 
 export async function connectDB(): Promise<typeof mongoose> {
-  if (cache.conn) return cache.conn;
+  if (cache.conn && mongoose.connection.readyState === 1) return cache.conn;
 
   if (!MONGODB_URI) {
     throw new Error("MONGODB_URI is not set in the environment.");
   }
 
-  if (!cache.promise) {
-    cache.promise = mongoose.connect(MONGODB_URI).then((m) => m);
+  if (!cache.promise || mongoose.connection.readyState === 0) {
+    cache.promise = mongoose
+      .connect(MONGODB_URI, {
+        serverSelectionTimeoutMS: 5000,
+      })
+      .then((m) => m);
   }
 
   try {
     cache.conn = await cache.promise;
   } catch (err) {
     cache.promise = null;
+    cache.conn = null;
     throw err;
   }
 
