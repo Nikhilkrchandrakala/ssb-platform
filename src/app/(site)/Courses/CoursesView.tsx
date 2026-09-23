@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { IoChevronBack, IoChevronForward, IoGridOutline } from "react-icons/io5";
+import { BsTable } from "react-icons/bs";
 import CustomHeader from "@/components/site/CustomHeader";
 import Faq from "@/components/site/Faq";
 import EnquiryForm from "@/components/site/EnquiryForm";
 import { CoursesfaqData, scheduleData, CoursesModuleOne, tabs } from "@/util/data";
+import styles from "@/style/Courses.module.css";
 
 interface DbCourse {
   courseId: string;
@@ -22,6 +25,50 @@ export default function CoursesView() {
   const [activeTab, setActiveTab] = useState("c1");
   const [scheduleTab, setScheduleTab] = useState<"morning" | "evening">("morning");
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  // Responsive tabs scroll tracking
+  const tabsContainerRef = useRef<HTMLUListElement | null>(null);
+  const activeTabRef = useRef<HTMLLIElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  // Mobile schedule view mode: table with horizontal scroll vs clean cards
+  const [scheduleViewMode, setScheduleViewMode] = useState<"table" | "card">("table");
+
+  const checkTabScroll = () => {
+    const el = tabsContainerRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 6);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 6);
+  };
+
+  useEffect(() => {
+    checkTabScroll();
+    const handleResize = () => checkTabScroll();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (activeTabRef.current) {
+      activeTabRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
+    }
+    const timer = setTimeout(checkTabScroll, 320);
+    return () => clearTimeout(timer);
+  }, [activeTab]);
+
+  const scrollTabs = (direction: "left" | "right") => {
+    const el = tabsContainerRef.current;
+    if (!el) return;
+    const scrollAmount = direction === "left" ? -220 : 220;
+    el.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    setTimeout(checkTabScroll, 320);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -56,7 +103,6 @@ export default function CoursesView() {
 
       <section className="container sectionspace80">
         <div className="course-intro">
-
           <div className="mvk-benefits">
             <h3>Our Online SSB Courses are designed for aspirants for:</h3>
 
@@ -78,43 +124,67 @@ export default function CoursesView() {
           </div>
         </div>
 
-        <div style={{ marginTop: "60px" }} className="our-courses-section">
-          {/* ================= MOBILE SELECT ================= */}
-          <div className="col-12 col-md-4 text-md-end d-md-none">
-            <form>
-              <div className="form-group">
-                <label htmlFor="courseTabSelect" className="form-label mb-1" style={{ color: "var(--theme-white)" }}>
-                  Select Course:-
-                </label>
+        <div className={`${styles.ourCoursesSection} our-courses-section`}>
+          {/* ================= RESPONSIVE HORIZONTAL SLIDING TABS ================= */}
+          <div className={styles.tabsWrapper}>
+            <div className={styles.tabsScrollContainer}>
+              {/* Left subtle fade mask */}
+              <div className={`${styles.fadeMaskLeft} ${canScrollLeft ? styles.fadeMaskVisible : ""}`} />
 
-                <select
-                  className="form-select thm-select w-100 w-md-auto"
-                  id="courseTabSelect"
-                  value={activeTab}
-                  onChange={(e) => setActiveTab(e.target.value)}
-                >
-                  {tabs.map((tab) => (
-                    <option key={tab.id} value={tab.id}>
-                      {tab.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </form>
+              {/* Left scroll chevron button */}
+              <button
+                type="button"
+                className={`${styles.scrollBtn} ${styles.scrollBtnLeft} ${canScrollLeft ? styles.scrollBtnVisible : ""}`}
+                onClick={() => scrollTabs("left")}
+                aria-label="Slide tabs left"
+              >
+                <IoChevronBack size={18} />
+              </button>
+
+              {/* Tab items list */}
+              <ul
+                ref={tabsContainerRef}
+                onScroll={checkTabScroll}
+                className={`nav course-nav-tabs ${styles.courseNavTabs}`}
+                role="tablist"
+              >
+                {tabs.map((tab) => (
+                  <li
+                    className={`nav-item ${styles.navItem}`}
+                    key={tab.id}
+                    ref={activeTab === tab.id ? activeTabRef : null}
+                    role="presentation"
+                  >
+                    <button
+                      className={`nav-link ${activeTab === tab.id ? "active" : ""} ${styles.navLink}`}
+                      onClick={() => setActiveTab(tab.id)}
+                      dangerouslySetInnerHTML={{ __html: tab.label }}
+                      role="tab"
+                      aria-selected={activeTab === tab.id}
+                    />
+                  </li>
+                ))}
+              </ul>
+
+              {/* Right scroll chevron button */}
+              <button
+                type="button"
+                className={`${styles.scrollBtn} ${styles.scrollBtnRight} ${canScrollRight ? styles.scrollBtnVisible : ""}`}
+                onClick={() => scrollTabs("right")}
+                aria-label="Slide tabs right"
+              >
+                <IoChevronForward size={18} />
+              </button>
+
+              {/* Right subtle fade mask */}
+              <div className={`${styles.fadeMaskRight} ${canScrollRight ? styles.fadeMaskVisible : ""}`} />
+            </div>
+
+            {/* Mobile swipe helper text */}
+            <div className={styles.mobileScrollHint}>
+              <span>⇄ Slide to explore courses</span>
+            </div>
           </div>
-
-          {/* ================= DESKTOP TABS ================= */}
-          <ul className="nav course-nav-tabs d-none d-md-flex">
-            {tabs.map((tab) => (
-              <li className="nav-item" key={tab.id}>
-                <button
-                  className={`nav-link ${activeTab === tab.id ? "active" : ""}`}
-                  onClick={() => setActiveTab(tab.id)}
-                  dangerouslySetInnerHTML={{ __html: tab.label }}
-                />
-              </li>
-            ))}
-          </ul>
 
           {/* ================= TAB CONTENT ================= */}
           <div className="tab-content mt-4">
@@ -269,62 +339,87 @@ export default function CoursesView() {
             </button>
           </div>
 
-          <div className="schedule-table-wrapper">
-            <table className="schedule-table">
-              <thead>
-                <tr>
-                  <th>Day</th>
-                  <th>Time</th>
-                  <th>Topic</th>
-                  <th>Classes Taken By</th>
-                </tr>
-              </thead>
+          {/* ================= MOBILE VIEW TOGGLE (Table vs Cards) ================= */}
+          <div className={styles.scheduleViewToggle}>
+            <button
+              type="button"
+              className={`${styles.viewToggleBtn} ${scheduleViewMode === "table" ? styles.viewToggleActive : ""}`}
+              onClick={() => setScheduleViewMode("table")}
+            >
+              <BsTable size={13} />
+              <span>Table View</span>
+            </button>
+            <button
+              type="button"
+              className={`${styles.viewToggleBtn} ${scheduleViewMode === "card" ? styles.viewToggleActive : ""}`}
+              onClick={() => setScheduleViewMode("card")}
+            >
+              <IoGridOutline size={14} />
+              <span>Cards View</span>
+            </button>
+          </div>
 
-              <tbody>
-                {scheduleData[scheduleTab]?.map((item, index) => (
-                  <tr key={index}>
-                    <td>{item.day}</td>
-                    <td>{item.time}</td>
-                    <td>{item.topic}</td>
-                    <td>{item.by}</td>
+          {/* ================= TABLE VIEW (Desktop default & Mobile scrollable) ================= */}
+          <div className={scheduleViewMode === "card" ? "d-none d-md-block" : "d-block"}>
+            <div className={styles.tableScrollHint}>
+              <span>⇄ Swipe table horizontally to see all details</span>
+            </div>
+
+            <div className="schedule-table-wrapper">
+              <table className="schedule-table">
+                <thead>
+                  <tr>
+                    <th>Day</th>
+                    <th>Time</th>
+                    <th>Topic</th>
+                    <th>Classes Taken By</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+
+                <tbody>
+                  {scheduleData[scheduleTab]?.map((item, index) => (
+                    <tr key={index}>
+                      <td>{item.day}</td>
+                      <td>{item.time}</td>
+                      <td>{item.topic}</td>
+                      <td>{item.by}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <div className="schedule-mobile">
-            {scheduleData[scheduleTab]?.map((item, index) => (
-              <div key={index} className="schedule-card">
-                <div className="schedule-row">
-                  <span>Day</span>
-                  <p>{item.day}</p>
-                </div>
+          {/* ================= CARDS VIEW (Clean, uncluttered cards on mobile) ================= */}
+          {scheduleViewMode === "card" && (
+            <div className="d-md-none">
+              {scheduleData[scheduleTab]?.map((item, index) => (
+                <div key={index} className={styles.cleanScheduleCard}>
+                  <div className={styles.cardHeaderRow}>
+                    <span className={styles.dayBadge}>Day {item.day}</span>
+                    <span className={styles.timeText}>{item.time}</span>
+                  </div>
 
-                <div className="schedule-row">
-                  <span>Time</span>
-                  <p>{item.time}</p>
-                </div>
+                  <div className={styles.cardDetailRow}>
+                    <span className={styles.detailLabel}>Topic:</span>
+                    <span className={styles.detailVal}>{item.topic}</span>
+                  </div>
 
-                <div className="schedule-row">
-                  <span>Topic</span>
-                  <p>{item.topic}</p>
+                  <div className={styles.cardDetailRow}>
+                    <span className={styles.detailLabel}>Classes Taken By:</span>
+                    <span className={styles.detailVal}>{item.by}</span>
+                  </div>
                 </div>
+              ))}
+            </div>
+          )}
 
-                <div className="schedule-row">
-                  <span>Classes Taken By</span>
-                  <p>{item.by}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ marginTop: "40px" }}>
-            <h3 style={{ margin: "10px 0", textAlign: "center" }}>Important Notes</h3>
+          <div style={{ marginTop: "36px" }}>
+            <h3 style={{ margin: "10px 0 16px", textAlign: "center", fontSize: "20px" }}>Important Notes</h3>
 
             {scheduleData.notes.map((note, index) => (
-              <p key={index}>
-                <strong>{index + 1}.</strong> {note}
+              <p key={index} style={{ fontSize: "14px", lineHeight: "1.6", color: "rgba(255, 255, 255, 0.75)" }}>
+                <strong style={{ color: "var(--theme-color)" }}>{index + 1}.</strong> {note}
               </p>
             ))}
           </div>
