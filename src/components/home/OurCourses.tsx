@@ -100,7 +100,7 @@ const OurCourses = () => {
             role="button"
             tabIndex={0}
           >
-            <img src={course.image} alt={course.title} />
+            <img src={course.image} alt={course.title} loading="lazy" />
             <div className={styles.cardBlur} />
             <div className={styles.cardGradient} />
             <div className={styles.card3dContent}>
@@ -160,7 +160,7 @@ const OurCourses = () => {
               <FaTimes />
             </button>
             <div className={styles.detailImageWrap}>
-              <img src={detailCourse.image} alt={detailCourse.title} />
+              <img src={detailCourse.image} alt={detailCourse.title} loading="lazy" />
             </div>
             <div className={styles.detailBody}>
               <span className={styles.detailNumber}>{detailCourse.number}</span>

@@ -25,7 +25,8 @@ export default function PrivacyPolicy() {
               differently (e.g. "22/7/2026" vs "22/07/2026"), which React flags as a
               server/client text mismatch. Ported as-is from legacy, which only ever
               ran client-side so this never surfaced there. */}
-          <strong>Last Updated:</strong> {new Date().toLocaleDateString("en-GB")}
+          <strong>Last Updated:</strong>{" "}
+          <span suppressHydrationWarning>{new Date().toLocaleDateString("en-GB")}</span>
         </p>
 
         <div className="privacy-content">

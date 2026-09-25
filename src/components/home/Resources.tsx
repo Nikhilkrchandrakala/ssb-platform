@@ -46,7 +46,7 @@ const Resources = () => {
             <SwiperSlide key={index}>
               <div className={styles.card}>
                 <div className={styles.imageBox}>
-                  <img src={item.image} alt="" />
+                  <img src={item.image} alt="" loading="lazy" />
                 </div>
               </div>
             </SwiperSlide>

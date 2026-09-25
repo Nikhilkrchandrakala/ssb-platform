@@ -99,7 +99,7 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
                   <span className={styles.welcomeTitle}>Welcome</span>
                   <span className={styles.welcomeSubtitle}>Sign in to access your profile</span>
                 </div>
-                <Link href="/SignIn" onClick={onClose} className={styles.signInBtn}>
+                <Link href="/SignIn" onClick={onClose} className={styles.signInBtn} prefetch={false}>
                   Sign In
                 </Link>
               </div>
@@ -113,11 +113,11 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
 
           <nav className={styles.menu}>
             {user?.role === "student" && (
-              <Link href="/ProfileDashboard" onClick={onClose} className={pathname === "/ProfileDashboard" ? styles.active : ""}>
+              <Link href="/ProfileDashboard" onClick={onClose} className={pathname === "/ProfileDashboard" ? styles.active : ""} prefetch={false}>
                 My Profile
               </Link>
             )}
-            <Link href="/" onClick={onClose} className={pathname === "/" ? styles.active : ""}>
+            <Link href="/" onClick={onClose} className={pathname === "/" ? styles.active : ""} prefetch={false}>
               Home
             </Link>
 
@@ -140,6 +140,7 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
                   <span className={styles.coursesSubmenuLabel}>Choose a format</span>
                   <Link
                     href="/Courses"
+                    prefetch={false}
                     onClick={() => {
                       setCoursesSubOpen(false);
                       onClose();
@@ -157,6 +158,7 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
                   </Link>
                   <Link
                     href="/CoursesOffline"
+                    prefetch={false}
                     onClick={() => {
                       setCoursesSubOpen(false);
                       onClose();
@@ -180,7 +182,7 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
             </div>
 
             {NAV_LINKS.map((link) => (
-              <Link key={link.href} href={link.href} onClick={onClose} className={pathname === link.href ? styles.active : ""}>
+              <Link key={link.href} href={link.href} prefetch={false} onClick={onClose} className={pathname === link.href ? styles.active : ""}>
                 <span dangerouslySetInnerHTML={{ __html: link.label }} />
               </Link>
             ))}

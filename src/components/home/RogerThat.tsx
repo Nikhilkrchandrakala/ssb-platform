@@ -88,7 +88,7 @@ const RogerThat = () => {
               {/* IMAGE */}
               {activeVideo !== e.id && (
                 <>
-                  <img src={e.img} alt={e.id} />
+                  <img src={e.img} alt={e.id} loading="lazy" />
 
                   {/* HOVER OVERLAY */}
                   <div

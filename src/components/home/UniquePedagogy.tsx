@@ -50,7 +50,7 @@ const UniquePedagogy = () => {
         autoPlay
         loop
         playsInline
-        preload="auto"
+        preload="none"
         muted={isMuted}
         ref={videoRef}
       >

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { RAZORPAY_KEY_ID } from "@/lib/razorpayKey";
+import { loadRazorpay } from "@/lib/loadRazorpay";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import {
@@ -370,8 +371,10 @@ export default function BatchesView() {
         return;
       }
 
-      if (typeof window === "undefined" || !window.Razorpay) {
-        toast.error("Payment gateway is still loading. Please try again in a moment.");
+      if (typeof window === "undefined") return;
+      const loaded = await loadRazorpay();
+      if (!loaded || !window.Razorpay) {
+        toast.error("Payment gateway failed to load. Please refresh and try again.");
         return;
       }
 

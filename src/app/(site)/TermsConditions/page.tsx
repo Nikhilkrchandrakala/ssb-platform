@@ -16,7 +16,8 @@ export default function TermsConditions() {
         <h1 className="terms-title">Terms & Conditions</h1>
 
         <p className="terms-meta">
-          <strong>Effective Date:</strong> {new Date().toLocaleDateString("en-GB")}
+          <strong>Effective Date:</strong>{" "}
+          <span suppressHydrationWarning>{new Date().toLocaleDateString("en-GB")}</span>
         </p>
 
         <div className="terms-content">

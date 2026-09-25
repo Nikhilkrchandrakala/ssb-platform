@@ -23,7 +23,7 @@ const OurMentor = () => {
         <div className={styles.headingContainer}>
           <HeadingTwo h1="Our" t1="mentors" />
           <div className={styles.headingContainerImg}>
-            <img src="/assets/Group16.png" alt="Decoration" />
+            <img src="/assets/Group16.png" alt="Decoration" loading="lazy" />
           </div>
         </div>
 
@@ -36,6 +36,7 @@ const OurMentor = () => {
                     src={mentor.image}
                     alt={`${mentor.name} - ${mentor.role} - SSB with ISV`}
                     className={styles.mentorImage}
+                    loading="lazy"
                   />
                 </div>
               </div>
@@ -93,6 +94,7 @@ const OurMentor = () => {
                 src={selectedMentor.modalImage || selectedMentor.image}
                 alt={`${selectedMentor.name} - ${selectedMentor.role}`}
                 className={styles.modalFullPhoto}
+                loading="lazy"
               />
             </div>
 

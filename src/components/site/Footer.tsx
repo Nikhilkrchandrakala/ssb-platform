@@ -63,7 +63,7 @@ export default function Footer({ contactSettings }: { contactSettings: ContactSe
     <footer className={styles.footer} ref={footerRef}>
       <div className={styles.container}>
         <div className={styles.logoBox}>
-          <img src="/assets/logo/ISV.webp" alt="Joint Services Academy" className={styles.logo} />
+          <img src="/assets/logo/ISV.webp" alt="Joint Services Academy" className={styles.logo} loading="lazy" />
           <div className={styles.socials}>
             <a href="https://www.youtube.com/@ssbwithisv" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
               <i className="fa fa-youtube-play"></i>
@@ -107,7 +107,7 @@ export default function Footer({ contactSettings }: { contactSettings: ContactSe
             <li onClick={() => router.push("/")}>Home</li>
             <li onClick={() => router.push("/aboutSSB")}>What is SSB?</li>
             <li onClick={() => router.push("/OfficerLikeQualities")}>Officer Like Qualities</li>
-            <li onClick={() => router.push("/ContactUS")}>Enquire with us</li>
+            <li onClick={() => router.push("/Contactus")}>Enquire with us</li>
             <li onClick={() => router.push("/PrivacyPolicy")}>Privacy policy</li>
             <li onClick={() => router.push("/RefundCancellation")}>Refund & Cancellation Policy</li>
           </ul>
@@ -147,7 +147,9 @@ export default function Footer({ contactSettings }: { contactSettings: ContactSe
         </div>
       </div>
       <div className={styles.copyrightBox}>
-        <span className={styles.copy}>© Copyright 2021 – {year} SSB with ISV, CS Joint Services Academy Pvt. Ltd.</span>
+        <span className={styles.copy} suppressHydrationWarning>
+          © Copyright 2021 – {year} SSB with ISV, CS Joint Services Academy Pvt. Ltd.
+        </span>
       </div>
       <div className={styles.watermarkText}>SSB with ISV</div>
     </footer>

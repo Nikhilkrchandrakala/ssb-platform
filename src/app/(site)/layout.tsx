@@ -104,10 +104,9 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         crossOrigin="anonymous"
         strategy="afterInteractive"
       />
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
-      <Script src="https://cdn-in.pagesense.io/js/60070446894/c47efbddcb31458ab634e57373f70600.js" strategy="afterInteractive" />
+      <Script src="https://cdn-in.pagesense.io/js/60070446894/c47efbddcb31458ab634e57373f70600.js" strategy="lazyOnload" />
 
-      <Script id="zoho-init" strategy="afterInteractive">
+      <Script id="zoho-init" strategy="lazyOnload">
         {`window.$zoho = window.$zoho || {};
           $zoho.salesiq = $zoho.salesiq || { ready: function () {} };
           $zoho.salesiq.ready = function () { $zoho.salesiq.floatbutton.visible("hide"); };`}
@@ -115,7 +114,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <Script
         id="zsiqscript"
         src="https://salesiq.zohopublic.in/widget?wc=siqc08ba46cfbc1f55a60348a1fa7a43c8c13ee00806f8a303d6411d3b3493cae77"
-        strategy="afterInteractive"
+        strategy="lazyOnload"
       />
 
       <Toaster position="top-center" reverseOrder={false} />

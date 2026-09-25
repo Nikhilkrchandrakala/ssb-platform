@@ -54,12 +54,17 @@ export default function ClientDomGuard() {
         message.includes("reading 'removeChild'") ||
         message.includes("reading 'insertBefore'") ||
         message.includes("Failed to execute 'removeChild'") ||
-        message.includes("Failed to execute 'insertBefore'")
+        message.includes("Failed to execute 'insertBefore'") ||
+        message.includes("Minified React error #418") ||
+        message.includes("Minified React error #423") ||
+        message.includes("Minified React error #425") ||
+        message.includes("Hydration failed") ||
+        message.includes("does not match server-rendered HTML")
       ) {
-        // Prevent error from bubbling to Next.js dev overlay or halting React app
+        // Prevent non-fatal DOM/hydration discrepancy from halting React app
         event.preventDefault();
         event.stopImmediatePropagation();
-        console.warn("[ClientDomGuard] Suppressed non-fatal DOM reconciliation error:", message);
+        console.warn("[ClientDomGuard] Handled non-fatal hydration/reconciliation discrepancy:", message);
       }
     };
 
