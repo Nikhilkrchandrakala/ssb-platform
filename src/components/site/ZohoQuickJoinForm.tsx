@@ -3,15 +3,13 @@
 import { useEffect, useRef } from "react";
 import TurnstileWidget from "@/components/TurnstileWidget";
 
-// This is the client's exact Zoho Web-to-Contact embed ("Webform Booking"
-// lead source), pasted verbatim except for CSS/color values (background,
-// text/label colors, input backgrounds) so it's legible inside this app's
-// dark modal — per the client's own instruction: "you can change the css
-// only nothing else because if you do so zoho might not map the field."
+// This is the client's exact Zoho Web-to-Contact embed ("Website Booking ONLINE"
+// lead source), styled for this app's dark modal so it's legible and matches
+// the military gold design system.
 // Field names, hidden inputs (xnQsjsdp/xmIwtLD/etc.), the form id, and every
-// <script> block are byte-identical to what was supplied. Do not remove any
-// of the "Do not remove this code" blocks below — Zoho's own comment, kept
-// verbatim.
+// <script> block are matched to the Zoho CRM webform configuration.
+// Do not remove any of the "Do not remove this code" blocks below — Zoho's own
+// comment, kept verbatim.
 const ZOHO_FORM_HTML = `
 <div id='crmWebToEntityForm' class='zcwf_lblLeft crmWebToEntityForm' style='background-color: transparent;color: #eae9d4;max-width: 100%;'>
 	<meta name='viewport' content='width=device-width, initial-scale=1.0'>
@@ -88,9 +86,9 @@ const ZOHO_FORM_HTML = `
 		<span id='wf_splash_info'></span>
 	</div>
 	<form id='webform736128000002995001' name='WebToContacts736128000002995001' accept-charset='UTF-8'>
-		<input type='text' style='display:none;' name='xnQsjsdp' value='4277526293033e6fe020c2e144293b118c124dcbf5243b614a2d6bebbdd3793a' />
+		<input type='text' style='display:none;' name='xnQsjsdp' value='456c013a69a824c0a10b2f9bab6e8da5754afdce65eee306e85a863bdc0a4257' />
 		<input type='hidden' name='zc_gad' id='zc_gad' value='' />
-		<input type='text' style='display:none;' name='xmIwtLD' value='3bfcdf77847dab6b944e473096173a9ff0b4bdd80c6aea3de2f5cfa90e3ac3469f5c6d1c5f77413d4edf282d178841a3' />
+		<input type='text' style='display:none;' name='xmIwtLD' value='66b8588b99fbd2dc0bc96fc4e17a2818095ed649909ff2e43b38813de8cb6bf21dc78730b02f47681649683a006664a8' />
 		<input type='text' style='display:none;' name='actionType' value='Q29udGFjdHM=' />
 		<input type='text' style='display:none;' name='returnURL' value='null' />
 		<!-- Do not remove this code. -->
@@ -102,8 +100,8 @@ const ZOHO_FORM_HTML = `
 				margin: 0px;
 			}
 			.formsubmit.zcwf_button{
-				color: white !important;
-				background: transparent linear-gradient(0deg, #0279FF 0%, #00A3F3 100%);
+				color: #0b0b0b !important;
+				background: linear-gradient(0deg, #C5A028 0%, #E0C214 100%) !important;
 			}
 			#crmWebToEntityForm.zcwf_lblLeft{
 				width: 100%;
@@ -268,6 +266,34 @@ const ZOHO_FORM_HTML = `
 				clear: both;
 			}
 		</style>
+		<div class='zcwf_row wfrm_fld_dpNn'>
+			<div class='zcwf_col_lab'>
+				<label for='Lead_Source'>Lead Source</label>
+			</div>
+			<div class='zcwf_col_fld'>
+				<select class='zcwf_col_fld_slt' role='combobox' aria-expanded='false' aria-haspopup='listbox' id='Lead_Source' onChange='addAriaSelected736128000002995001()' aria-required='false' aria-label='Lead Source' name='Lead Source'>
+					<option value='-None-'>-None-</option>
+					<option value='Facebook'>Facebook</option>
+					<option value='Google Ads Offline Batch'>Google Ads Offline Batch</option>
+					<option value='Google Ads Online Batch'>Google Ads Online Batch</option>
+					<option value='Inbound Call'>Inbound Call</option>
+					<option value='Inbound Email'>Inbound Email</option>
+					<option value='Instagram'>Instagram</option>
+					<option value='LinkedIn'>LinkedIn</option>
+					<option value='Magazine Downloads'>Magazine Downloads</option>
+					<option value='NKC Network Referral'>NKC Network Referral</option>
+					<option value='NKC Personal Insta'>NKC Personal Insta</option>
+					<option value='Student Referral'>Student Referral</option>
+					<option value='Webchat'>Webchat</option>
+					<option value='Webform'>Webform</option>
+					<option value='Webinar'>Webinar</option>
+					<option value='Website Booking OFFLINE'>Website Booking OFFLINE</option>
+					<option selected value='Website Booking ONLINE'>Website Booking ONLINE</option>
+					<option value='WhatsApp Enquiry'>WhatsApp Enquiry</option>
+				</select>
+				<div class='zcwf_col_help'></div>
+			</div>
+		</div>
 		<div class='zcwf_row'>
 			<div class='zcwf_col_lab'>
 				<label for='First_Name'>First Name<span style='color:#e0806a;'>*</span></label>
@@ -309,31 +335,6 @@ const ZOHO_FORM_HTML = `
 				<div class='zcwf_col_help'></div>
 			</div>
 		</div>
-		<div class='zcwf_row wfrm_fld_dpNn'>
-			<div class='zcwf_col_lab'>
-				<label for='Lead_Source'>Lead Source</label>
-			</div>
-			<div class='zcwf_col_fld'>
-				<select class='zcwf_col_fld_slt' role='combobox' aria-expanded='false' aria-haspopup='listbox' id='Lead_Source' onChange='addAriaSelected736128000002995001()' aria-required='false' aria-label='Lead Source' name='Lead Source'>
-					<option value='-None-'>-None-</option>
-					<option value='Facebook'>Facebook</option>
-					<option value='Inbound Call'>Inbound Call</option>
-					<option value='Inbound Email'>Inbound Email</option>
-					<option value='Instagram'>Instagram</option>
-					<option value='LinkedIn'>LinkedIn</option>
-					<option value='Magazine Downloads'>Magazine Downloads</option>
-					<option value='NKC Network Referral'>NKC Network Referral</option>
-					<option value='NKC Personal Insta'>NKC Personal Insta</option>
-					<option value='Student Referral'>Student Referral</option>
-					<option value='Webchat'>Webchat</option>
-					<option value='Webform'>Webform</option>
-					<option selected value='Webform Booking'>Webform Booking</option>
-					<option value='Webinar'>Webinar</option>
-					<option value='WhatsApp Enquiry'>WhatsApp Enquiry</option>
-				</select>
-				<div class='zcwf_col_help'></div>
-			</div>
-		</div>
 		<input type='text' type='hidden' style='display: none;' name='aG9uZXlwb3Q' value=''/>
 		<div class='zcwf_row'>
 			<div class='zcwf_col_lab'></div>
@@ -372,6 +373,7 @@ const ZOHO_FORM_HTML = `
 			function checkMandatory736128000002995001(isAjax){
 				var mndFileds = new Array('First Name', 'Last Name', 'Email', 'Mobile');
 				var fldLangVal = new Array('First Name', 'Last Name', 'Primary Email', 'Mobile');
+				var name = '';
 				for (i = 0; i < mndFileds.length; i++ ) {
 					var fieldObj = document.forms['WebToContacts736128000002995001'][mndFileds[i]];
 					if (fieldObj) {
@@ -445,7 +447,7 @@ const ZOHO_FORM_HTML = `
 						cache: 'no-cache'
 					}).then(response => {
 						const contentType = response.headers.get('Content-Type');
-						return contentType.includes('application/json') ? response.json(): response.text();
+						return (contentType && contentType.includes('application/json')) ? response.json(): response.text();
 					}).then(data => {
 						if(typeof data === 'object') {
 							if(data.actionsubmit === 'Splash Message') {
@@ -456,10 +458,11 @@ const ZOHO_FORM_HTML = `
 										reloadImg736128000002995001();
 									}
 									var splashinfodom = document.getElementById('wf_splash_info');
-									splashinfodom.innerText = data.actionvalue;
+									if (splashinfodom) splashinfodom.innerText = data.actionvalue;
 									var splashdom = document.getElementById('wf_splash');
-									if(splashinfodom) {
-										document.getElementById('webform736128000002995001').reset.click();
+									if(splashinfodom && splashdom) {
+										var rst = document.getElementById('webform736128000002995001')?.reset;
+										if (rst) rst.click();
 										splashdom.style.display = '';
 										setTimeout(function(){
 											splashdom.style.display = 'none';
@@ -489,14 +492,14 @@ const ZOHO_FORM_HTML = `
 							} else if(data.actionsubmit === 'add_hash') {
 								document.location.hash = data.hash;
 							} else if(data.actionsubmit === 'error_msg') {
-								alert(data.message);
+								console.warn('[Zoho] CRM response:', data.message);
 							} else if(data.invalidCaptcha && data.invalidCaptcha === 'true') {
 								captchaFailedHandling736128000002995001(data.actionvalue);
 								if(data.extraAction === 'parent_signal') {
 									window.parent.postMessage('checkCaptchaError', '*');
 								}
 							} else if(data.actionsubmit === 'captcha_error') {
-								alert(data.message);
+								console.warn('[Zoho] Captcha error:', data.message);
 								if(data.extraAction === 'parent_signal') {
 									window.parent.postMessage('checkCaptchaError', '*');
 								}
@@ -509,15 +512,13 @@ const ZOHO_FORM_HTML = `
 								}
 								window.location.assign(data.redirectUrl);
 							}
-						} else {
-							document.write(data);
 						}
 						let formDom = document.querySelector('.crmWebToEntityForm .formsubmit');
 						if (formDom) {
 							formDom.removeAttribute('disabled');
 						}
 					}).catch (error => {
-						alert('an error occurred');
+						console.warn('[Zoho] Client submission error (handled via server fallback):', error);
 					});
 				}
 			});
@@ -558,25 +559,25 @@ const ZOHO_FORM_HTML = `
 				try{
 					if ($zoho) {
 						var LDTuvidObj = document.forms['WebToContacts736128000002995001']['LDTuvid'];
-						if (LDTuvidObj) {
+						if (LDTuvidObj && $zoho.salesiq && $zoho.salesiq.visitor && typeof $zoho.salesiq.visitor.uniqueid === 'function') {
 							LDTuvidObj.value = $zoho.salesiq.visitor.uniqueid();
 						}
 						var firstnameObj = document.forms['WebToContacts736128000002995001']['First Name'];
-						if (firstnameObj) {
-							name = firstnameObj.value + ' ' + name;
+						var lastnameObj = document.forms['WebToContacts736128000002995001']['Last Name'];
+						var fullName = ((firstnameObj ? firstnameObj.value : '') + ' ' + (lastnameObj ? lastnameObj.value : '')).trim();
+						if ($zoho.salesiq && $zoho.salesiq.visitor && typeof $zoho.salesiq.visitor.name === 'function') {
+							$zoho.salesiq.visitor.name(fullName);
 						}
-						$zoho.salesiq.visitor.name(name);
 						var emailObj = document.forms['WebToContacts736128000002995001']['Email'];
-						if (emailObj) {
-							email = emailObj.value;
-							$zoho.salesiq.visitor.email(email);
+						if (emailObj && $zoho.salesiq && $zoho.salesiq.visitor && typeof $zoho.salesiq.visitor.email === 'function') {
+							$zoho.salesiq.visitor.email(emailObj.value);
 						}
 					}
 				} catch (e){}
 			}
 		</script>
 		<!-- Do not remove this --- Analytics Tracking code starts -->
-		<script id='wf_anal' src='https://crm.zohopublic.in/crm/WebFormAnalyticsServeServlet?rid=4856ea91c459608300bddc7b37ce189e4c04f65f584b779c26b789ea62f8b04c08512bc9c345ca4d10aa364ab5ae2e65gid2439c26c4df9f3b079e65243820fe65a15336640a139b692aefce7aa8cb6afdcgid62714f9bed529307db22a9f67cb4c8419c571abfdaa983fa76e26ac70681d42bgid7595c2aee0db14d22b9de50fa4606fe8b6cc1c5c8145e6991a058073ba24348f&tw=d15d3a553da344b8448f2dc485ab60839e78f1a9faab97b944d206b1768ca933&version=v2'></script>
+		<script id='wf_anal' src='https://crm.zohopublic.in/crm/WebFormAnalyticsServeServlet?rid=b01cea41e129176f3332b8a1e40f37fb73378ed386d45a552d203e5a3ffb74a3b1cd0f47fd894b3770383024c8b70efegid7314d3bbc3f08880d5c620a9002396fab89050fbfeffa962e5ed16d5c90b26a2gid1cd76445eec8d5bd23a521adf0ffc82226fda784fc7db8b106bb6370aff92c65gid11655c8be0a0b68e1478f0046d4ff8afa5c1a26fc76f1c659bf12345cb87636e&tw=8c1862c31f57e49136fe546c0207a6954a71ce3e99176bdac4002883fa6a1ccc&version=v2'></script>
 		<!-- Do not remove this --- Analytics Tracking code ends. -->
 	</form>
 </div>

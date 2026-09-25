@@ -5,6 +5,7 @@ import { User, Lead } from "@/server/models";
 import { signSessionToken, setSessionCookie } from "@/server/auth";
 import { last10 } from "@/server/integrations/msg91";
 import { verifyTurnstileToken } from "@/server/turnstile";
+import { submitOnlineJoinContact } from "@/server/integrations/zoho";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -70,6 +71,9 @@ export async function POST(req: NextRequest) {
       }
 
       // Phone matches what's already on file — safe to re-session this record.
+      submitOnlineJoinContact(name, email, phone).catch((err) => {
+        console.error("[quickJoin] submitOnlineJoinContact failed (non-fatal)", err);
+      });
       const token = signSessionToken({ id: String(existing._id), role: existing.role || "lead" });
       await setSessionCookie(token);
       return NextResponse.json({ status: "ok" });
@@ -92,6 +96,10 @@ export async function POST(req: NextRequest) {
     // full /SignUp flow already makes after registration.
     await Lead.create({ name, email, phoneNumber: phone }).catch((err) => {
       console.error("[quickJoin] Lead.create failed (non-fatal)", err);
+    });
+
+    submitOnlineJoinContact(name, email, phone).catch((err) => {
+      console.error("[quickJoin] submitOnlineJoinContact failed (non-fatal)", err);
     });
 
     const token = signSessionToken({ id: String(user._id), role: user.role || "lead" });
