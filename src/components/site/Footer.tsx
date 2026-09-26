@@ -52,8 +52,20 @@ export default function Footer({ contactSettings }: { contactSettings: ContactSe
   const callNumFormatted = formatPhoneNumber(callNumRaw);
 
   const openZohoChat = () => {
-    if (window.$zoho?.salesiq) {
-      window.$zoho.salesiq.floatwindow?.visible("show");
+    if (window.$zoho?.salesiq?.floatwindow) {
+      window.$zoho.salesiq.floatwindow.visible("show");
+    } else {
+      window.$zoho = window.$zoho || {};
+      window.$zoho.salesiq = window.$zoho.salesiq || { ready: function () {} };
+      const prevReady = window.$zoho.salesiq.ready;
+      window.$zoho.salesiq.ready = function () {
+        if (typeof prevReady === "function") {
+          try {
+            prevReady();
+          } catch {}
+        }
+        window.$zoho?.salesiq?.floatwindow?.visible("show");
+      };
     }
   };
 

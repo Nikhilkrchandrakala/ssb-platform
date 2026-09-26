@@ -1,7 +1,7 @@
 /* FOOTER STYLES */
 .footer {
     background: #000000;
-    padding: 20px 0 85px; /* Added padding-bottom to prevent modern-floating-dock overlap */
+    padding: 20px 0 calc(85px + env(safe-area-inset-bottom, 0px)); /* Accounts for modern-floating-dock and iOS home indicator */
     color: #c6c5af;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }

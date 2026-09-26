@@ -2225,8 +2225,8 @@ p {
 /* Modern Floating Action Dock - Left (Join SSB Batch) */
 .modern-floating-dock-left {
     position: fixed;
-    left: 30px;
-    bottom: 30px;
+    left: max(30px, calc(env(safe-area-inset-left) + 20px));
+    bottom: max(30px, calc(env(safe-area-inset-bottom) + 20px));
     display: flex;
     align-items: center;
     background: rgba(18, 18, 18, 0.85);
@@ -2241,11 +2241,11 @@ p {
     animation: dockSlideUpLeft 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Modern Floating Action Dock - Right (Communication Icons) */
+/* Modern Floating Action Dock - Right (Communication Icons / Chatbot & WhatsApp) */
 .modern-floating-dock-right {
     position: fixed;
-    right: 30px;
-    bottom: 30px;
+    right: max(30px, calc(env(safe-area-inset-right) + 20px));
+    bottom: max(30px, calc(env(safe-area-inset-bottom) + 20px));
     display: flex;
     align-items: center;
     background: rgba(18, 18, 18, 0.85);
@@ -2370,17 +2370,17 @@ p {
 /* Responsive Styles */
 @media (max-width: 768px) {
     .modern-floating-dock-left {
-        left: 16px;
+        left: max(16px, calc(env(safe-area-inset-left) + 10px));
         right: auto;
-        bottom: 16px;
+        bottom: max(16px, calc(env(safe-area-inset-bottom) + 12px));
         transform: none;
         padding: 6px 8px;
     }
 
     .modern-floating-dock-right {
-        right: 16px;
+        right: max(16px, calc(env(safe-area-inset-right) + 10px));
         left: auto;
-        bottom: 16px;
+        bottom: max(16px, calc(env(safe-area-inset-bottom) + 12px));
         transform: none;
         padding: 6px 8px;
     }
@@ -2388,12 +2388,41 @@ p {
     .dock-join-btn {
         padding: 8px 12px;
         font-size: 11px;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
     }
 
     .dock-icon-btn {
-        width: 34px;
-        height: 34px;
-        font-size: 15px;
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        min-height: 38px;
+        font-size: 16px;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+}
+
+/* Zoho SalesIQ Chatbot iOS PWA & Standalone Optimizations */
+#siq_cht,
+.zsiq_floatmain,
+.zsiq_flt_wrp,
+iframe[id*="siq"],
+div[id*="zsiq"],
+.zsiq_custommenus {
+    box-sizing: border-box !important;
+}
+
+@media (max-width: 768px) {
+    /* Ensure the open Zoho chat window does not collide with iPhone Dynamic Island, Notch, or Home Bar */
+    #siq_cht,
+    .zsiq_floatmain,
+    .zsiq_flt_wrp {
+        max-height: 100dvh !important;
+        padding-top: max(env(safe-area-inset-top, 0px), 0px) !important;
+        padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px) !important;
+        padding-left: max(env(safe-area-inset-left, 0px), 0px) !important;
+        padding-right: max(env(safe-area-inset-right, 0px), 0px) !important;
     }
 }
 
