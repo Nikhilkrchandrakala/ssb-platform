@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { BiArrowBack, BiPackage, BiDetail } from "react-icons/bi";
 import { FaBox, FaCheckCircle, FaClock, FaCreditCard, FaExclamationCircle } from "react-icons/fa";
 import CustomButton from "@/components/site/CustomButton";
+import { safeBack } from "@/lib/safeBack";
 import "@/style/custom-theme.css";
 import styles from "@/style/OrderHistory.module.css";
 
@@ -97,9 +98,15 @@ export default function OrderHistoryClient({ orders }: { orders: OrderHistoryOrd
   return (
     <div className="thm-content-layer">
       <div className="thm-content-bg"></div>
-      <div onClick={() => router.back()} className="arrow_button">
+      <button
+        type="button"
+        onClick={() => safeBack(router, "/ProfileDashboard")}
+        className="arrow_button"
+        aria-label="Go back"
+        title="Go back"
+      >
         <BiArrowBack />
-      </div>
+      </button>
 
       <div className="container position-relative">
         <h1 className="thm-big-title">Order History</h1>

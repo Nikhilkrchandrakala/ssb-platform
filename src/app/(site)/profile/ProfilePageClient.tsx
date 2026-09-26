@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { BiArrowBack } from "react-icons/bi";
 import CustomButton from "@/components/site/CustomButton";
+import { safeBack } from "@/lib/safeBack";
 import "@/style/custom-theme.css";
 import styles from "@/style/ProfilePage.module.css";
 
@@ -65,9 +66,15 @@ export default function ProfilePageClient({ user }: { user: ProfilePageUser }) {
   return (
     <div className="thm-content-layer">
       <div className="thm-content-bg"></div>
-      <div onClick={() => router.back()} className="arrow_button">
+      <button
+        type="button"
+        onClick={() => safeBack(router, "/ProfileDashboard")}
+        className="arrow_button"
+        aria-label="Go back"
+        title="Go back"
+      >
         <BiArrowBack />
-      </div>
+      </button>
 
       <div className="container position-relative">
         <h1 className="thm-big-title">{isEditMode ? "Edit Profile" : "My Profile"}</h1>

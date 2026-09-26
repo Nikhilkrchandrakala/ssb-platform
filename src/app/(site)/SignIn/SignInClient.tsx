@@ -2,12 +2,14 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import CustomButton from "@/components/site/CustomButton";
 import SocialLoginButtons from "@/components/site/SocialLoginButtons";
 import toast from "react-hot-toast";
 import { BiArrowBack } from "react-icons/bi";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { ApiError } from "@/lib/authApi";
+import { safeBack } from "@/lib/safeBack";
 import "@/style/custom-theme.css";
 
 export interface AuthDisplaySettings {
@@ -287,9 +289,15 @@ function SignInForm({ initialDisplaySettings }: { initialDisplaySettings: AuthDi
       </div>
 
       <div className="auth-split-form-panel">
-        <div onClick={() => router.back()} className="auth-back-arrow">
+        <button
+          type="button"
+          onClick={() => safeBack(router, "/")}
+          className="auth-back-arrow"
+          aria-label="Go back"
+          title="Go back"
+        >
           <BiArrowBack />
-        </div>
+        </button>
 
         <div className="auth-card">
           <div className="auth-logo-wrapper">
@@ -367,13 +375,14 @@ function SignInForm({ initialDisplaySettings }: { initialDisplaySettings: AuthDi
               </label>
             </div>
 
-            <div
-              onClick={() => !isDisabled && router.push(portal === "admin" ? "/admin/AccountRecovery" : "/AccountRecovery")}
-              className="col-6 mt-4 text-end"
-            >
-              <div className="thm-account-link" style={{ cursor: isDisabled ? "not-allowed" : "pointer", opacity: isDisabled ? 0.6 : 1 }}>
+            <div className="col-6 mt-4 text-end">
+              <Link
+                href={portal === "admin" ? "/admin/AccountRecovery" : "/AccountRecovery"}
+                className="thm-account-link"
+                style={{ opacity: isDisabled ? 0.6 : 1, pointerEvents: isDisabled ? "none" : "auto" }}
+              >
                 Forgot Password?
-              </div>
+              </Link>
             </div>
 
             {/* Error Message */}
@@ -401,13 +410,13 @@ function SignInForm({ initialDisplaySettings }: { initialDisplaySettings: AuthDi
 
                 {/* Signup link */}
                 <div className="col-12 text-center mt-5">
-                  <div
-                    onClick={() => !isDisabled && router.push("/SignUp")}
+                  <Link
+                    href="/SignUp"
                     className="thm-account-link"
-                    style={{ cursor: isDisabled ? "not-allowed" : "pointer", opacity: isDisabled ? 0.6 : 1 }}
+                    style={{ opacity: isDisabled ? 0.6 : 1, pointerEvents: isDisabled ? "none" : "auto" }}
                   >
                     Create a new account.
-                  </div>
+                  </Link>
                 </div>
               </>
             )}

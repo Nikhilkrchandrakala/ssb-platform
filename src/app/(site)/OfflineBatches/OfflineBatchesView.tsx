@@ -5,6 +5,7 @@ import { RAZORPAY_KEY_ID } from "@/lib/razorpayKey";
 import { loadRazorpay } from "@/lib/loadRazorpay";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { safeBack } from "@/lib/safeBack";
 import {
   FaArrowLeft,
   FaCalendarAlt,
@@ -295,7 +296,12 @@ export default function OfflineBatchesView() {
   return (
     <div className={styles.page}>
       <div className={styles.hero}>
-        <button className={styles.backButton} onClick={() => router.push("/JoinSSB")}>
+        <button
+          type="button"
+          className={styles.backButton}
+          onClick={() => safeBack(router, "/JoinSSB")}
+          aria-label="Back to Join SSB"
+        >
           <FaArrowLeft /> <span>Back</span>
         </button>
         <span className={styles.heroBadge}>

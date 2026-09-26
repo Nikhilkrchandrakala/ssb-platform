@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import CustomButton from "@/components/site/CustomButton";
 import SocialLoginButtons from "@/components/site/SocialLoginButtons";
 import TurnstileWidget from "@/components/TurnstileWidget";
@@ -9,6 +10,7 @@ import { BiArrowBack } from "react-icons/bi";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import toast from "react-hot-toast";
 import { postJSON, ApiError } from "@/lib/authApi";
+import { safeBack } from "@/lib/safeBack";
 import "@/style/MagazineGateForm.css";
 import "@/style/custom-theme.css";
 
@@ -473,9 +475,15 @@ export default function SignUpClient({ initialDisplaySettings }: { initialDispla
       </div>
 
       <div className="auth-split-form-panel">
-        <div onClick={() => (step > 1 ? setStep(step - 1) : router.back())} className="auth-back-arrow">
+        <button
+          type="button"
+          onClick={() => (step > 1 ? setStep(step - 1) : safeBack(router, "/"))}
+          className="auth-back-arrow"
+          aria-label="Go back"
+          title="Go back"
+        >
           <BiArrowBack />
-        </div>
+        </button>
 
         <div className={`auth-card ${step === 4 ? "auth-card-wide" : ""}`}>
           <div className="auth-logo-wrapper">
@@ -649,9 +657,9 @@ export default function SignUpClient({ initialDisplaySettings }: { initialDispla
               <SocialLoginButtons hideProviders={["facebook"]} />
 
               <div className="col-12 text-center mt-5">
-                <div onClick={() => router.push("/SignIn")} className="thm-account-link" style={{ cursor: "pointer" }}>
+                <Link href="/SignIn" className="thm-account-link">
                   I already have an account.
-                </div>
+                </Link>
               </div>
             </div>
           )}
@@ -717,17 +725,17 @@ export default function SignUpClient({ initialDisplaySettings }: { initialDispla
               </div>
 
               <div className="col-12 text-center mt-3">
-                <div
+                <button
+                  type="button"
                   className="thm-account-link"
                   onClick={() => {
                     setStep(1);
                     setErrorMsg("");
                     setSuccessMsg("");
                   }}
-                  style={{ cursor: "pointer" }}
                 >
                   ← Back to edit info
-                </div>
+                </button>
               </div>
             </div>
           )}
@@ -793,17 +801,17 @@ export default function SignUpClient({ initialDisplaySettings }: { initialDispla
               </div>
 
               <div className="col-12 text-center mt-3">
-                <div
+                <button
+                  type="button"
                   className="thm-account-link"
                   onClick={() => {
                     setStep(2);
                     setErrorMsg("");
                     setSuccessMsg("");
                   }}
-                  style={{ cursor: "pointer" }}
                 >
                   ← Back to email verification
-                </div>
+                </button>
               </div>
             </div>
           )}

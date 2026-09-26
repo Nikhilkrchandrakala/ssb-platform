@@ -14,15 +14,24 @@
 
 .BackBtn {
     position: sticky;
-    top: 20px;
+    top: max(20px, calc(env(safe-area-inset-top) + 10px));
     width: 100%;
-    /* background-color: transparent(black); */
-    /* background:
-        radial-gradient(circle at 70% 30%, rgba(224, 194, 20, 0.15), transparent 40%),
-        radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.05), transparent 40%),
-        linear-gradient(135deg, #050505, #0b0b0b 40%, #050505); */
-    font-size: 30px;
-    padding: 10px 60px;
+    font-size: 26px;
+    padding: 10px max(24px, calc(env(safe-area-inset-left) + 16px));
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    z-index: 100;
+}
+
+@media (max-width: 768px) {
+    .BackBtn {
+        top: max(14px, calc(env(safe-area-inset-top) + 8px));
+        padding: 8px max(16px, calc(env(safe-area-inset-left) + 10px));
+        font-size: 22px;
+    }
 }
 
 .privacy-container {

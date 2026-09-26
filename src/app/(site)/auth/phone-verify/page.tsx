@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
+import { BiArrowBack } from "react-icons/bi";
 import CustomButton from "@/components/site/CustomButton";
 import { postJSON, ApiError } from "@/lib/authApi";
+import { safeBack } from "@/lib/safeBack";
 import "@/style/custom-theme.css";
 import "@/style/MagazineGateForm.css"; // for the .mgf-* SSB Profile step
 
@@ -203,6 +205,15 @@ function OAuthPhoneVerifyInner() {
 
   return (
     <div className="thm-content-layer">
+      <button
+        type="button"
+        className="arrow_button"
+        aria-label="Go back"
+        title="Go back"
+        onClick={() => (step === 2 ? setStep(1) : safeBack(router, "/SignIn"))}
+      >
+        <BiArrowBack />
+      </button>
       <div className="thm-content-bg"></div>
       <div className="container position-relative">
         <h1 className="thm-big-title">One Last Step</h1>
@@ -353,9 +364,13 @@ function OAuthPhoneVerifyInner() {
               </div>
 
               <div className="col-12 text-center mt-3">
-                <div className="thm-account-link" onClick={() => router.push("/SignIn")} style={{ cursor: "pointer" }}>
+                <button
+                  type="button"
+                  className="thm-account-link"
+                  onClick={() => safeBack(router, "/SignIn")}
+                >
                   ← Cancel and go back to Sign In
-                </div>
+                </button>
               </div>
             </div>
           )}
@@ -462,19 +477,23 @@ function OAuthPhoneVerifyInner() {
 
               {/* Back / Cancel */}
               <div className="col-12 text-center mt-3 d-flex justify-content-center gap-3">
-                <div
+                <button
+                  type="button"
                   className="thm-account-link"
                   onClick={() => {
                     setStep(1);
                     setErrorMsg("");
                   }}
-                  style={{ cursor: "pointer" }}
                 >
                   ← Back to SSB Profile
-                </div>
-                <div className="thm-account-link" onClick={() => router.push("/SignIn")} style={{ cursor: "pointer" }}>
+                </button>
+                <button
+                  type="button"
+                  className="thm-account-link"
+                  onClick={() => safeBack(router, "/SignIn")}
+                >
                   Cancel and go back to Sign In
-                </div>
+                </button>
               </div>
             </div>
           )}

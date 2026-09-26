@@ -6,6 +6,7 @@ import CustomButton from "@/components/site/CustomButton";
 import { BiArrowBack } from "react-icons/bi";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { postJSON, ApiError } from "@/lib/authApi";
+import { safeBack } from "@/lib/safeBack";
 import "@/style/custom-theme.css";
 
 // ─── Password strength helpers ───
@@ -235,9 +236,15 @@ function AccountRecovery() {
   return (
     <div className="thm-content-layer">
       <div className="thm-content-bg"></div>
-      <div onClick={() => router.back()} className="arrow_button">
+      <button
+        type="button"
+        onClick={() => safeBack(router, "/SignIn")}
+        className="arrow_button"
+        aria-label="Go back"
+        title="Go back"
+      >
         <BiArrowBack />
-      </div>
+      </button>
 
       <div className="container position-relative">
         <h1 className="thm-big-title">Account Recovery</h1>
@@ -317,9 +324,13 @@ function AccountRecovery() {
               </div>
 
               <div className="col-12 text-center mt-3">
-                <div className="thm-account-link" onClick={() => setStep(1)} style={{ cursor: "pointer" }}>
+                <button
+                  type="button"
+                  className="thm-account-link"
+                  onClick={() => setStep(1)}
+                >
                   ← Back to change email
-                </div>
+                </button>
               </div>
             </div>
           </div>
@@ -434,9 +445,13 @@ function AccountRecovery() {
               </div>
 
               <div className="col-12 text-center mt-3">
-                <div className="thm-account-link" onClick={() => setStep(2)} style={{ cursor: "pointer" }}>
+                <button
+                  type="button"
+                  className="thm-account-link"
+                  onClick={() => setStep(2)}
+                >
                   ← Back to OTP verification
-                </div>
+                </button>
               </div>
             </div>
           </div>

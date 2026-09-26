@@ -6,6 +6,7 @@ import { BiArrowBack, BiCreditCard, BiDetail } from "react-icons/bi";
 import { FaCreditCard, FaCheckCircle, FaTimesCircle, FaClock, FaExclamationCircle, FaCalendarAlt } from "react-icons/fa";
 import { MdPending, MdReceipt } from "react-icons/md";
 import CustomButton from "@/components/site/CustomButton";
+import { safeBack } from "@/lib/safeBack";
 import "@/style/custom-theme.css";
 import styles from "@/style/PaymentHistory.module.css";
 
@@ -104,9 +105,15 @@ export default function PaymentHistoryClient({ orders }: { orders: PaymentHistor
   return (
     <div className="thm-content-layer">
       <div className="thm-content-bg"></div>
-      <div onClick={() => router.back()} className="arrow_button">
+      <button
+        type="button"
+        onClick={() => safeBack(router, "/ProfileDashboard")}
+        className="arrow_button"
+        aria-label="Go back"
+        title="Go back"
+      >
         <BiArrowBack />
-      </div>
+      </button>
 
       <div className="container position-relative">
         <h1 className="thm-big-title">Payment History</h1>

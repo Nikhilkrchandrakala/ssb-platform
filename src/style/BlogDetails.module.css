@@ -15,9 +15,8 @@
 /* Back Arrow Container - Fixed outside */
 .arrowBackContainer {
   position: fixed;
-  top: 30px;
-  /* Header के बाद थोड़ा नीचे */
-  left: 8%;
+  top: max(30px, calc(env(safe-area-inset-top) + 16px));
+  left: max(24px, calc(env(safe-area-inset-left) + 16px));
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -225,8 +224,8 @@
   }
 
   .arrowBackContainer {
-    top: 25px;
-    left: 15px;
+    top: max(16px, calc(env(safe-area-inset-top) + 10px));
+    left: max(16px, calc(env(safe-area-inset-left) + 10px));
   }
 
   .arrowBackBtn {

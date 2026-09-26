@@ -883,6 +883,16 @@ export default function ProfileDashboardClient({
                 <BiChevronRight className={styles.chevron} />
               </button>
             ))}
+            <Link
+              href="/"
+              className={styles.navTab}
+              style={{ textDecoration: "none" }}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <BiArrowBack />
+              <span>Back to Home</span>
+              <BiChevronRight className={styles.chevron} />
+            </Link>
           </nav>
 
           <div className={styles.rightActions}>
@@ -911,12 +921,22 @@ export default function ProfileDashboardClient({
 
         <div>
           <div className="container position-relative z-1">
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", marginTop: 20, marginBottom: 20 }}>
+            <div className={styles.mobileTopNav}>
+              <Link
+                href="/"
+                className={styles.mobileHomeLink}
+                aria-label="Back to Homepage"
+              >
+                <BiArrowBack style={{ fontSize: 18, color: "var(--primary-gold)" }} />
+                <span>Home</span>
+              </Link>
+
               <button
                 className={styles.mobileMenuToggle}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 style={{ position: "static" }}
                 type="button"
+                aria-label="Toggle Dashboard Menu"
               >
                 <BiUser style={{ color: "white" }} />
                 <span>Menu</span>

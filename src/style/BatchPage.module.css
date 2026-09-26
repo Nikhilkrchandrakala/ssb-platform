@@ -1,6 +1,7 @@
 .container {
     min-height: 100vh;
-    padding: 40px 20px;
+    min-height: 100dvh;
+    padding: max(40px, calc(env(safe-area-inset-top) + 20px)) max(20px, calc(env(safe-area-inset-right) + 12px)) max(40px, calc(env(safe-area-inset-bottom) + 20px)) max(20px, calc(env(safe-area-inset-left) + 12px));
     max-width: 1400px;
     margin: 0 auto;
 }
@@ -25,8 +26,6 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    /* background: rgba(210, 161, 0, 0.15); */
-    /* border: 1px solid var(--secondary-color, #d2a100); */
     border-radius: 40px;
     padding: 10px 20px;
     color: white;
@@ -34,12 +33,46 @@
     cursor: pointer;
     transition: all 0.3s ease;
     font-size: 14px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(18, 18, 18, 0.45);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .backButton:hover {
-    /* background: var(--secondary-color, #d2a100); */
     color: var(--secondary-color, #d2a100);
-    transform: translateY(-50%) translateX(-5px);
+    border-color: var(--secondary-color, #d2a100);
+    transform: translateY(-50%) translateX(-4px);
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: max(20px, calc(env(safe-area-inset-top) + 16px)) max(16px, calc(env(safe-area-inset-right) + 10px)) max(30px, calc(env(safe-area-inset-bottom) + 20px)) max(16px, calc(env(safe-area-inset-left) + 10px));
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .backButton {
+        position: static;
+        transform: none;
+        padding: 8px 16px;
+        min-width: 44px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .backButton:hover {
+        transform: translateX(-4px);
+    }
 }
 
 .title {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BiArrowBack } from "react-icons/bi";
+import { safeBack } from "@/lib/safeBack";
 import styles from "@/style/BlogDetails.module.css";
 
 export default function BackArrowButton() {
@@ -21,9 +22,15 @@ export default function BackArrowButton() {
 
   return (
     <div className={`${styles.arrowBackContainer} ${showBackArrow ? styles.visible : styles.hidden}`}>
-      <div className={styles.arrowBackBtn}>
-        <BiArrowBack style={{ cursor: "pointer" }} onClick={() => router.back()} title="Go back" />
-      </div>
+      <button
+        type="button"
+        className={styles.arrowBackBtn}
+        onClick={() => safeBack(router, "/blogs")}
+        aria-label="Go back to blogs"
+        title="Go back"
+      >
+        <BiArrowBack />
+      </button>
     </div>
   );
 }

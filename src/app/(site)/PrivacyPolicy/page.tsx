@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { IoMdArrowBack } from "react-icons/io";
+import { safeBack } from "@/lib/safeBack";
 import "@/style/PrivacyPolicy.css";
 
 export default function PrivacyPolicy() {
@@ -9,9 +10,15 @@ export default function PrivacyPolicy() {
 
   return (
     <section className="privacy-root">
-      <div onClick={() => router.back()} className="BackBtn">
+      <button
+        type="button"
+        onClick={() => safeBack(router, "/")}
+        className="BackBtn"
+        aria-label="Go back"
+        title="Go back"
+      >
         <IoMdArrowBack />
-      </div>
+      </button>
 
       <div className="privacy-container">
         <h1 className="privacy-title">Privacy Policy</h1>

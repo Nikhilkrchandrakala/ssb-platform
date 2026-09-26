@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { IoMdArrowBack } from "react-icons/io";
+import { safeBack } from "@/lib/safeBack";
 import "@/style/RefundCancellation.css";
 
 export default function RefundCancellationClient() {
@@ -9,9 +10,15 @@ export default function RefundCancellationClient() {
 
   return (
     <section className="refund-root">
-      <div onClick={() => router.back()} className="BackBtn" title="Go Back">
+      <button
+        type="button"
+        onClick={() => safeBack(router, "/")}
+        className="BackBtn"
+        aria-label="Go back"
+        title="Go Back"
+      >
         <IoMdArrowBack />
-      </div>
+      </button>
 
       <div className="refund-container">
         <h1 className="refund-title">Refund & Cancellation Policy</h1>

@@ -29,6 +29,7 @@ import QuickJoinPanel from "@/components/site/QuickJoinPanel";
 import { postJSON, ApiError } from "@/lib/authApi";
 import type { RazorpayOptions } from "@/global";
 import { isBookingClosed, formatTimeRemaining, formatRealStartTime, getRealStartTime } from "@/lib/batchTiming";
+import { safeBack } from "@/lib/safeBack";
 import styles from "@/style/BatchPage.module.css";
 
 interface Slot {
@@ -554,7 +555,13 @@ export default function BatchesView() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <button className={styles.backButton} onClick={() => router.back()}>
+        <button
+          className={styles.backButton}
+          onClick={() => safeBack(router, "/Courses")}
+          aria-label="Go back to courses"
+          title="Go back"
+          type="button"
+        >
           <FaArrowLeft />
         </button>
         <h1 className={styles.title}>Ongoing Online SSB Batches</h1>
