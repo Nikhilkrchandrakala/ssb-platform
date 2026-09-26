@@ -231,7 +231,15 @@ export default function CoursesOfflineView() {
             className={navStyles.logo}
             onClick={() => router.push("/")}
           />
-          <IoMenu className={navStyles.menuIcon} onClick={() => setMenuOpen(true)} />
+          <button
+            type="button"
+            className={navStyles.menuIcon}
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open navigation menu"
+            title="Open Menu"
+          >
+            <IoMenu style={{ width: "100%", height: "100%" }} />
+          </button>
         </div>
 
         <div className={styles.heroContent}>

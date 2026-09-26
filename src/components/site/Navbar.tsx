@@ -31,7 +31,15 @@ export default function Navbar({ video, subtitle, title, title1, subtitleTwo, ba
         <section className={styles.heroSection}>
           <div className={styles.topBar}>
             <img src="/assets/logo/ISV.webp" alt="Logo" className={styles.logo} onClick={() => router.push("/")} />
-            <IoMenu className={styles.menuIcon} onClick={() => setOpen(true)} />
+            <button
+              type="button"
+              className={styles.menuIcon}
+              onClick={() => setOpen(true)}
+              aria-label="Open navigation menu"
+              title="Open Menu"
+            >
+              <IoMenu style={{ width: "100%", height: "100%" }} />
+            </button>
           </div>
 
           <header className={styles.header}>

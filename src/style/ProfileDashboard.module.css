@@ -12,8 +12,8 @@
 .mobileMenuToggle {
     display: none;
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    bottom: max(20px, calc(env(safe-area-inset-bottom) + 16px));
+    right: max(20px, calc(env(safe-area-inset-right) + 16px));
     z-index: 99999;
     background: #d2a100;
     border: none;
@@ -25,6 +25,8 @@
     gap: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 .mobileMenuToggle:hover {
@@ -61,7 +63,7 @@
     width: 100%;
     gap: 20px;
     position: sticky;
-    top: 15px;
+    top: max(15px, calc(env(safe-area-inset-top) + 10px));
     z-index: 100000;
     animation: navbarSlideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -1397,11 +1399,13 @@
         width: 85%;
         max-width: 320px;
         height: 100vh;
+        height: 100dvh;
         border-radius: 0;
         z-index: 99998;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
         transition: left 0.3s ease;
-        padding: 24px;
+        padding: max(24px, calc(env(safe-area-inset-top) + 16px)) max(20px, calc(env(safe-area-inset-right) + 16px)) max(24px, calc(env(safe-area-inset-bottom) + 20px)) max(20px, calc(env(safe-area-inset-left) + 16px));
         display: flex;
         flex-direction: column;
         align-items: stretch;

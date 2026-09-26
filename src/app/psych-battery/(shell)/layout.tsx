@@ -95,7 +95,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen app-mesh-bg text-app-text-main relative font-sans">
       <AmbientBackground />
 
-      <div className="relative z-10 flex h-screen p-3 sm:p-4 gap-3 sm:gap-4 overflow-hidden">
+      <div className="relative z-10 flex h-screen h-[100dvh] pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] p-3 sm:p-4 gap-3 sm:gap-4 overflow-hidden">
       {/* Sidebar - Desktop */}
       <aside
         className={cn(
@@ -235,7 +235,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
       {isMenuOpen && (
         <div className="fixed inset-0 z-[100] md:hidden">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsMenuOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 w-72 bg-app-sidebar p-6 flex flex-col animate-in slide-in-from-left duration-300">
+          <aside className="absolute inset-y-0 left-0 w-72 bg-app-sidebar pt-[max(1.5rem,calc(env(safe-area-inset-top)+1rem))] pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] px-6 flex flex-col animate-in slide-in-from-left duration-300">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-2">
                 <img src="/assets/logo/ISV2.png" alt="Logo" className="w-8 h-8 object-contain rounded-full" />

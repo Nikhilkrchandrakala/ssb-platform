@@ -12,6 +12,11 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Safe-area insets for iPhone notch/Dynamic Island, iPad multitasking, and macOS standalone PWA */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
 }
 
 @theme inline {
@@ -39,10 +44,66 @@
    its own overflow-x:auto container, not the page body.*/
 html, body {
   overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html {
+  height: 100%;
+  height: -webkit-fill-available;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  min-height: 100%;
+  min-height: -webkit-fill-available;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  -webkit-tap-highlight-color: transparent;
 }
+
+/* Prevent unwanted iOS Safari auto-zoom on input focus when font-size < 16px */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="search"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Safe-area utility classes for components touching screen edges */
+.safe-area-top {
+  padding-top: max(env(safe-area-inset-top, 0px), 0px);
+}
+
+.safe-area-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
+}
+
+.safe-area-left {
+  padding-left: max(env(safe-area-inset-left, 0px), 0px);
+}
+
+.safe-area-right {
+  padding-right: max(env(safe-area-inset-right, 0px), 0px);
+}
+
+/* Standalone PWA adjustments for iOS & macOS */
+@media all and (display-mode: standalone) {
+  /* Prevent accidental text-select on quick taps on touch devices */
+  .pwa-interactive {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+

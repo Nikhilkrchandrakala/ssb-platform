@@ -20,21 +20,22 @@
     top: 0;
     right: 0;
     height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
     overflow-y: auto;
-    /* 🔥 ADD THIS */
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
     background: linear-gradient(270deg,
             #3b3930 0%,
             #2a291f 50%,
             #1f1f1a 100%);
-    padding: 30px 40px 20px; /* Reduced vertical padding for better spacing and visibility without scrolling */
+    padding: max(30px, calc(env(safe-area-inset-top) + 20px)) max(40px, calc(env(safe-area-inset-right) + 24px)) max(24px, calc(env(safe-area-inset-bottom) + 20px)) max(40px, calc(env(safe-area-inset-left) + 24px));
     transform: translateX(100%);
-    transition: transform 0.45s ease;
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 9999999 !important;
     color: #c6c5af;
     display: flex;
     justify-content: flex-end;
-    /* margin-bottom: ; */
 }
 
 .sidebarContainer {
@@ -43,7 +44,7 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: calc(100vh - 50px);
+    min-height: 100%;
 }
 
 .sidebar.open {
@@ -73,20 +74,24 @@
 }
 
 .closeBtn {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
     color: #c6c5af;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 20px;
+    font-size: 22px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     outline: none;
     padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 .closeBtn:hover {
@@ -696,8 +701,9 @@
     }
 
     .sidebar {
-        /* width: 100%; */
-        padding: 30px 20px 20px; /* Compact mobile padding */
+        width: 100%;
+        max-width: 100%;
+        padding: max(20px, calc(env(safe-area-inset-top) + 14px)) max(20px, calc(env(safe-area-inset-right) + 16px)) max(20px, calc(env(safe-area-inset-bottom) + 20px)) max(20px, calc(env(safe-area-inset-left) + 16px));
     }
 
     .menu a {
@@ -714,5 +720,6 @@
     .contact {
         flex-direction: column;
         gap: 10px;
+        padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
     }
 }

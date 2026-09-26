@@ -35,6 +35,8 @@ export const metadata: Metadata = {
     // added explicitly to still get the no-browser-chrome standalone
     // window on older iOS versions.
     "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+    "mobile-web-app-capable": "yes",
   },
 };
 

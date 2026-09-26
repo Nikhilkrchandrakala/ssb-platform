@@ -59,6 +59,8 @@
     transition: width 0.28s cubic-bezier(0.2, 0, 0, 1), left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 1020;
     user-select: none;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .admin-sidebar.collapsed {
@@ -531,7 +533,7 @@
    -------------------------------------------------------------------------- */
 
 .admin-top-header {
-    height: 72px;
+    height: calc(72px + env(safe-area-inset-top, 0px));
     position: sticky;
     top: 0;
     background: #0b0b0b;
@@ -539,7 +541,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 28px;
+    padding: env(safe-area-inset-top, 0px) max(28px, env(safe-area-inset-right, 28px)) 0 max(28px, env(safe-area-inset-left, 28px));
     z-index: 1010;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
 }
@@ -774,8 +776,8 @@
 
 @media (max-width: 768px) {
     .admin-top-header {
-        padding: 0 16px;
-        height: 64px;
+        padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 16px)) 0 max(16px, env(safe-area-inset-left, 16px));
+        height: calc(64px + env(safe-area-inset-top, 0px));
     }
 
     .admin-header-title {
@@ -788,9 +790,9 @@
 
     .dropdown-menu {
         position: fixed !important;
-        top: 68px !important;
-        left: 16px !important;
-        right: 16px !important;
+        top: calc(68px + env(safe-area-inset-top, 0px)) !important;
+        left: max(16px, env(safe-area-inset-left, 16px)) !important;
+        right: max(16px, env(safe-area-inset-right, 16px)) !important;
         width: calc(100% - 32px) !important;
     }
 }
