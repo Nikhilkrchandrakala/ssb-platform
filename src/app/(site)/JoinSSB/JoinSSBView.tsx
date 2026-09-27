@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { FaLaptop, FaBuilding, FaArrowRight, FaArrowLeft, FaCheckCircle, FaCompass } from "react-icons/fa";
+import { safeBack } from "@/lib/safeBack";
 import styles from "@/style/JoinSSBPage.module.css";
 
 const CHOICES = [
@@ -28,8 +29,13 @@ export default function JoinSSBView() {
 
   return (
     <div className={styles.page}>
-      <button className={styles.backLink} onClick={() => router.push("/")}>
-        <FaArrowLeft /> Home
+      <button
+        type="button"
+        className={styles.backLink}
+        onClick={() => safeBack(router, "/")}
+        aria-label="Back to Home"
+      >
+        <FaArrowLeft /> <span>Home</span>
       </button>
 
       <span className={styles.eyebrow}>
