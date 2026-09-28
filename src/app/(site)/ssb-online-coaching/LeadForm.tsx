@@ -126,8 +126,8 @@ export default function LeadForm() {
           name: `${firstName} ${lastName}`.trim(),
           email,
           phoneNumber: mobile,
-          enrollmentMode: "offline",
-          source: "google-ads-offline",
+          enrollmentMode: "online",
+          source: "google-ads-online",
         }),
       }).catch(() => {});
     } catch {
@@ -203,7 +203,7 @@ export default function LeadForm() {
           <input type="text" style={{ display: "none" }} name="returnURL" defaultValue="https://ssbwithisv.in/Batches" />
           <input type="text" style={{ display: "none" }} id="ldeskuid" name="ldeskuid" />
           <input type="text" style={{ display: "none" }} id="LDTuvid" name="LDTuvid" />
-          <input type="hidden" name="Lead Source" defaultValue="Google Ads Offline Batch" />
+          <input type="hidden" name="Lead Source" defaultValue="Google Ads Online Batch" />
           <input
             type="text"
             tabIndex={-1}
