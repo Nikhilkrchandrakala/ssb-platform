@@ -83,6 +83,15 @@ const nextConfig: NextConfig = {
       fallback: [],
     };
   },
+  async redirects() {
+    return [
+      {
+        source: "/ssb-coaching",
+        destination: "/ssb-online-coaching",
+        permanent: true,
+      },
+    ];
+  },
   // PWA-specific response headers: the service worker file must never be
   // served from a stale cache (an intermediary/browser cache holding an old
   // sw.js is the classic "why won't my PWA update" bug), and manifest.json

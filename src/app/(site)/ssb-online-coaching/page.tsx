@@ -16,11 +16,11 @@ const PAGE_DESCRIPTION =
 export const metadata: Metadata = {
   title: PAGE_TITLE,
   description: PAGE_DESCRIPTION,
-  alternates: { canonical: "https://ssbwithisv.in/ssb-coaching" },
+  alternates: { canonical: "https://ssbwithisv.in/ssb-online-coaching" },
   openGraph: {
     title: PAGE_TITLE,
     description: PAGE_DESCRIPTION,
-    url: "https://ssbwithisv.in/ssb-coaching",
+    url: "https://ssbwithisv.in/ssb-online-coaching",
     type: "website",
   },
 };

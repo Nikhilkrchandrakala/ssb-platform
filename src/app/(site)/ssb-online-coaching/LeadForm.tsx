@@ -32,7 +32,7 @@ const labelStyle = { display: "block", font: "400 12.5px/1.3 var(--font-body)", 
 // POST navigation, so it isn't subject to CORS the way a fetch() submit to
 // this same auto-redirecting form was (confirmed broken 2026-08-19) — it
 // just navigates inside the iframe, not the visible page.
-const ZOHO_TARGET_IFRAME = "ssb-coaching-zoho-target";
+const ZOHO_TARGET_IFRAME = "ssb-online-coaching-zoho-target";
 
 export default function LeadForm() {
   const [submitted, setSubmitted] = useState(false);
