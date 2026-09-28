@@ -18,6 +18,10 @@ const leadSchema = new Schema({
   // Where the capture came from (e.g. "google-ads-online"); empty for the
   // generic site forms that predate this field.
   source: { type: String, default: "" },
+  ssbExperience: { type: String, default: "" },
+  nextSsbDate: { type: String, default: "" },
+  entries: { type: [String], default: [] },
+  boards: { type: [String], default: [] },
 });
 
 export const Lead = mongoose.models.Lead || mongoose.model("Lead", leadSchema);

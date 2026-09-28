@@ -137,6 +137,7 @@ export default function LeadForm() {
       const firstName = (form.elements.namedItem("First Name") as HTMLInputElement | null)?.value ?? "";
       const lastName = (form.elements.namedItem("Last Name") as HTMLInputElement | null)?.value ?? "";
       const mobile = (form.elements.namedItem("Mobile") as HTMLInputElement | null)?.value ?? "";
+      const ssbExperience = (form.elements.namedItem("CONTACTCF11") as HTMLSelectElement | null)?.value ?? "";
       fetch("/api/addLead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -146,6 +147,10 @@ export default function LeadForm() {
           phoneNumber: mobile,
           enrollmentMode: "offline",
           source: "google-ads-offline",
+          ssbExperience: ssbExperience !== "-None-" ? ssbExperience : "",
+          nextSsbDate,
+          entries,
+          boards,
         }),
       }).catch(() => {});
     } catch {

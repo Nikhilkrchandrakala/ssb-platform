@@ -26,12 +26,25 @@ export async function POST(req: NextRequest) {
     }
 
     const source = ALLOWED_SOURCES.includes(body?.source) ? body.source : "";
+    const ssbExperience = typeof body?.ssbExperience === "string" ? body.ssbExperience.trim() : "";
+    const nextSsbDate = typeof body?.nextSsbDate === "string" ? body.nextSsbDate.trim() : "";
+    const entries = Array.isArray(body?.entries)
+      ? body.entries.map((item: unknown) => String(item).trim()).filter(Boolean)
+      : [];
+    const boards = Array.isArray(body?.boards)
+      ? body.boards.map((item: unknown) => String(item).trim()).filter(Boolean)
+      : [];
+
     const newLead = new Lead({
       name,
       email,
       phoneNumber,
-      ...(body?.enrollmentMode === "offline" ? { enrollmentMode: "offline" } : {}),
+      ...(body?.enrollmentMode === "offline" ? { enrollmentMode: "offline" } : { enrollmentMode: "online" }),
       ...(source ? { source } : {}),
+      ...(ssbExperience ? { ssbExperience } : {}),
+      ...(nextSsbDate ? { nextSsbDate } : {}),
+      ...(entries.length ? { entries } : {}),
+      ...(boards.length ? { boards } : {}),
     });
     await newLead.save();
     // Deliberately not returning the lead list — this endpoint is public.
