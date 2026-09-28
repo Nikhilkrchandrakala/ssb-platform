@@ -31,6 +31,8 @@ import {
   X,
   Indent,
   Outdent,
+  Globe,
+  MapPin,
   type LucideIcon,
 } from "lucide-react";
 import { useAdminUser } from "./AdminUserProvider";
@@ -373,9 +375,17 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                       </NavLink>
                     )}
                     {hasAdminPermission(user ?? null, "leads") && (
-                      <NavLink href="/admin/leads" active={isActive("/admin/leads")} icon={UserSearch} onClick={closeMobile}>
-                        Leads
-                      </NavLink>
+                      <>
+                        <NavLink href="/admin/leads" active={isActive("/admin/leads")} icon={UserSearch} onClick={closeMobile}>
+                          Leads
+                        </NavLink>
+                        <NavLink href="/admin/online-batch" active={isActive("/admin/online-batch")} icon={Globe} onClick={closeMobile}>
+                          Online Google Ad Batch
+                        </NavLink>
+                        <NavLink href="/admin/offline-batch" active={isActive("/admin/offline-batch")} icon={MapPin} onClick={closeMobile}>
+                          Offline Google Ad Batch
+                        </NavLink>
+                      </>
                     )}
                     {hasAdminPermission(user ?? null, "roles") && (
                       <NavLink href="/admin/RolesManagement" active={isActive("/admin/RolesManagement")} icon={ShieldUser} onClick={closeMobile}>
