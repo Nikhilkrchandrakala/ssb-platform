@@ -120,7 +120,7 @@ interface BatchLeadsViewProps {
 
 export default function BatchLeadsView({ batchType }: BatchLeadsViewProps) {
   const targetSource = batchType === "online" ? "google-ads-online" : "google-ads-offline";
-  const title = batchType === "online" ? "Online Google Ad Batch" : "Offline Google Ad Batch";
+  const title = batchType === "online" ? "Online Batch Google Ads" : "Offline Batch Google Ads";
   const subtitle =
     batchType === "online"
       ? "Track and manage leads submitted from the online batch Google Ads landing page"

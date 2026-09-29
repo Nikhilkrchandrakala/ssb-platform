@@ -380,10 +380,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                           Leads
                         </NavLink>
                         <NavLink href="/admin/online-batch" active={isActive("/admin/online-batch")} icon={Globe} onClick={closeMobile}>
-                          Online Google Ad Batch
+                          Online Batch Google Ads
                         </NavLink>
                         <NavLink href="/admin/offline-batch" active={isActive("/admin/offline-batch")} icon={MapPin} onClick={closeMobile}>
-                          Offline Google Ad Batch
+                          Offline Batch Google Ads
                         </NavLink>
                       </>
                     )}
