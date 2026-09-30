@@ -57,6 +57,7 @@ export const mentorsData = [
             branch: "Executive",
             ships: "INS Shardul, INS Ganga, INS Prabal, INS Abhay",
             commandAfloat: "IN ISV T-15, Squadron Commander - 81st ISV Squadron, Senior Officer - ISVs (West)",
+            commandAshoreLabel: "Ashore Appointments:",
             commandAshore: "Flag Lieutenant to Flag Officer Commanding Maharashtra & Gujarat Naval Area, Commissioning crew: SSB (Kolkata), Ex Naval Selection Board, Coimbatore & 12 Services Selection Board, Bangalore",
             education: [
                 "Schooling from St. Aloysius, Yavatmal",
@@ -85,8 +86,9 @@ export const mentorsData = [
             type: "structured",
             commissionDate: "25 Jun 2012",
             retirementDate: "24 Jun 2024",
-            branch: "Electrical (GS)",
+            branch: "Electrical",
             ships: "INS Tarkash, INS Ranvijay, SPB Squadron (Vzg)",
+            commandAshoreLabel: "Ashore Appointments:",
             commandAshore: "NSB (Vizag) and 12 SSB Bangalore",
             education: [
                 "Master in Data Science and Analytics",

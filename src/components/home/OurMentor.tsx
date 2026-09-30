@@ -140,7 +140,9 @@ const OurMentor = () => {
                   )}
                   {selectedMentor.fullBiodata.commandAshore && (
                     <div className={styles.biodataRow}>
-                      <span className={styles.biodataLabel}>Command Appointments Ashore:</span>
+                      <span className={styles.biodataLabel}>
+                        {selectedMentor.fullBiodata.commandAshoreLabel || "Command Appointments Ashore:"}
+                      </span>
                       <span className={styles.biodataVal}>{selectedMentor.fullBiodata.commandAshore}</span>
                     </div>
                   )}
