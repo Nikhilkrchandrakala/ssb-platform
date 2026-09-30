@@ -224,6 +224,53 @@
     text-align-last: left;
 }
 
+.shimmerBannerBox {
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    background-color: #0b0b0b;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.shimmerBannerText {
+    font-family: "Poppins", sans-serif;
+    font-size: clamp(14px, 1.55vw, 22px);
+    font-weight: 300;
+    font-style: italic;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1.45;
+    letter-spacing: -0.02em;
+    margin: 0;
+    width: 100%;
+
+    background: linear-gradient(
+        to right,
+        #555 20%,
+        #fff 40%,
+        #fff 60%,
+        #555 80%
+    );
+    background-size: 200% auto;
+    background-position: 200% center;
+
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    animation: shineLeft 5s linear infinite;
+    padding: 0 4px;
+}
+
+@keyframes shineLeft {
+    to {
+        background-position: 0% center;
+    }
+}
+
 .statRow {
     display: flex;
     gap: 20px;
@@ -290,6 +337,7 @@
 .ctaRow {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 14px;
     margin-top: 8px;
 }

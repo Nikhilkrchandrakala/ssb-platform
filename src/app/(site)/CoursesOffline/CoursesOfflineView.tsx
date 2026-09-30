@@ -26,13 +26,16 @@ function useReveal<T extends HTMLElement>() {
           observer.disconnect();
         }
       },
-      { threshold: 0.15 }
+      { threshold: 0.15 },
     );
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
-  return { ref, className: `${styles.reveal} ${visible ? styles.visible : ""}` };
+  return {
+    ref,
+    className: `${styles.reveal} ${visible ? styles.visible : ""}`,
+  };
 }
 
 // Built from the Nagpur-campus offline course design/copy. Every photo the
@@ -40,13 +43,31 @@ function useReveal<T extends HTMLElement>() {
 // until the real files are supplied — the label is exactly which photo is
 // needed, so this page doubles as a checklist. Swap a slot to a real <img>
 // by adding its file to /public/uploads/nagpur-offline/ and passing `src`.
-function PhotoSlot({ label, src, alt, className }: { label: string; src?: string; alt?: string; className?: string }) {
+function PhotoSlot({
+  label,
+  src,
+  alt,
+  className,
+}: {
+  label: string;
+  src?: string;
+  alt?: string;
+  className?: string;
+}) {
   if (src) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt || ""} className={className || styles.photoSlot} />;
+    return (
+      <img
+        src={src}
+        alt={alt || ""}
+        className={className || styles.photoSlot}
+      />
+    );
   }
   return (
-    <div className={`${className || styles.photoSlot} ${styles.photoPlaceholder}`}>
+    <div
+      className={`${className || styles.photoSlot} ${styles.photoPlaceholder}`}
+    >
       <BiCamera />
       <small>{label}</small>
     </div>
@@ -56,12 +77,26 @@ function PhotoSlot({ label, src, alt, className }: { label: string; src?: string
 // Auto-scrolling photo marquee (matches the original design's continuous
 // scroll) — the image list renders twice back-to-back so the CSS
 // animation's -50% translateX loops seamlessly with no visible jump/reset.
-function PhotoStrip({ images, durationS = 34 }: { images: { src: string; alt: string }[]; durationS?: number }) {
+function PhotoStrip({
+  images,
+  durationS = 34,
+}: {
+  images: { src: string; alt: string }[];
+  durationS?: number;
+}) {
   return (
     <div className={styles.facilityPhotos}>
-      <div className={styles.facilityPhotoStrip} style={{ animationDuration: `${durationS}s` }}>
+      <div
+        className={styles.facilityPhotoStrip}
+        style={{ animationDuration: `${durationS}s` }}
+      >
         {[...images, ...images].map((img, i) => (
-          <PhotoSlot key={`${img.src}-${i}`} label={img.alt} src={img.src} alt={img.alt} />
+          <PhotoSlot
+            key={`${img.src}-${i}`}
+            label={img.alt}
+            src={img.src}
+            alt={img.alt}
+          />
         ))}
       </div>
     </div>
@@ -71,18 +106,30 @@ function PhotoStrip({ images, durationS = 34 }: { images: { src: string; alt: st
 const UPLOADS = "/uploads/nagpur-offline";
 const nums = (n: number) => Array.from({ length: n }, (_, i) => i + 1);
 const photoSet = (prefix: string, count: number, alt: string) =>
-  nums(count).map((n) => ({ src: `${UPLOADS}/${prefix}-${n}.jpeg`, alt: `${alt} ${n}` }));
+  nums(count).map((n) => ({
+    src: `${UPLOADS}/${prefix}-${n}.jpeg`,
+    alt: `${alt} ${n}`,
+  }));
 
 const GTO_PHOTOS = photoSet("gto", 11, "GTO training");
-const ACCO_MEALS_PHOTOS = [...photoSet("acco", 5, "Accommodation"), ...photoSet("meals", 3, "Meals")];
+const ACCO_MEALS_PHOTOS = [
+  ...photoSet("acco", 5, "Accommodation"),
+  ...photoSet("meals", 3, "Meals"),
+];
 const ADVENTURE_PHOTOS = photoSet("adv", 18, "Adventure activity");
-const OUTDOOR_ECA_PHOTOS = [...photoSet("outdoor", 8, "Outdoor activity"), ...photoSet("eca", 3, "Extra-curricular activity")];
+const OUTDOOR_ECA_PHOTOS = [
+  ...photoSet("outdoor", 8, "Outdoor activity"),
+  ...photoSet("eca", 3, "Extra-curricular activity"),
+];
 const CLASSROOM_PHOTOS = [
   { src: `${UPLOADS}/classroom-1.jpeg`, alt: "Classroom training 1" },
   { src: `${UPLOADS}/classroom-3.jpeg`, alt: "Classroom training 3" },
 ];
 const GETTING_THERE_PHOTOS = [
-  { src: `${UPLOADS}/road-sign.jpeg`, alt: "Sahas the Camp, SSB with ISV campus entrance" },
+  {
+    src: `${UPLOADS}/road-sign.jpeg`,
+    alt: "Sahas the Camp, SSB with ISV campus entrance",
+  },
   { src: `${UPLOADS}/main-building.jpeg`, alt: "Academy building" },
   ...photoSet("academy", 3, "Academy"),
 ];
@@ -210,10 +257,12 @@ export default function CoursesOfflineView() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const { ref: whoForRef, className: whoForClass } = useReveal<HTMLElement>();
-  const { ref: scheduleRef, className: scheduleClass } = useReveal<HTMLElement>();
-  const { ref: facilityRef, className: facilityClass } = useReveal<HTMLElement>();
-  const { ref: regFeeRef, className: regFeeClass } = useReveal<HTMLElement>();
-  const { ref: whyChooseRef, className: whyChooseClass } = useReveal<HTMLElement>();
+  const { ref: scheduleRef, className: scheduleClass } =
+    useReveal<HTMLElement>();
+  const { ref: facilityRef, className: facilityClass } =
+    useReveal<HTMLElement>();
+  const { ref: whyChooseRef, className: whyChooseClass } =
+    useReveal<HTMLElement>();
   const { ref: faqRef, className: faqClass } = useReveal<HTMLElement>();
 
   return (
@@ -223,7 +272,12 @@ export default function CoursesOfflineView() {
       {/* Hero */}
       <section className={styles.hero}>
         <div className={styles.heroBg}>
-          <PhotoSlot label="Main Building.jpeg" src={`${UPLOADS}/main-building.jpeg`} alt="" className={styles.photoSlot} />
+          <PhotoSlot
+            label="Main Building.jpeg"
+            src={`${UPLOADS}/main-building.jpeg`}
+            alt=""
+            className={styles.photoSlot}
+          />
         </div>
         <div className={styles.heroGlow} />
 
@@ -246,25 +300,40 @@ export default function CoursesOfflineView() {
         </div>
 
         <div className={styles.heroContent}>
-
-          <span className={styles.chip}>Nagpur Campus · Fully Residential · Batches Filling Fast</span>
+          <span className={styles.chip}>
+            Nagpur Campus · Fully Residential · Batches Filling Fast
+          </span>
 
           <h1 className={styles.heroTitle}>Our Offline SSB Course — Nagpur</h1>
 
           <p className={styles.heroText}>
-            At SSB with ISV, we now offer a fully residential SSB coaching programme at our Nagpur campus — the same
-            SSB mentoring, personality development and officer-like qualities training we have delivered online for 5
-            years, now in person. Mentored throughout by Lt Cdr Nikhil Kumar Chandrakala (Retd.), founding member of
-            the team that established SSB Kolkata, and team of DIPR certified ex-SSB assessors this 12-Day programme
-            combines theoretical understanding, practical training on a real GTO ground, mock assessments, and
-            personalised feedback — fully immersive, with no distractions between sessions.
+            At SSB with ISV, we now offer a fully residential SSB coaching
+            programme at our Nagpur campus — the same SSB mentoring, personality
+            development and officer-like qualities training we have delivered
+            online for 5 years, now in person. Mentored throughout by Lt Cdr
+            Nikhil Kumar Chandrakala (Retd.), founding member of the team that
+            established SSB Kolkata, and team of DIPR certified ex-SSB assessors
+            this 12-Day programme combines theoretical understanding, practical
+            training on a real GTO ground, mock assessments, and personalised
+            feedback — fully immersive, with no distractions between sessions.
           </p>
+
+          <div className={styles.shimmerBannerBox}>
+            <p className={styles.shimmerBannerText}>
+              The most affordable authentic, assessor-led residential SSB
+              programme in the country — taught in-person by DIPR certified
+              ex-SSB assessors.
+            </p>
+          </div>
+
           <div className={styles.statRow}>
             <div className={styles.statCircleWrap}>
               <div className={styles.statCircle}>
                 <span>₹21,000</span>
               </div>
-              <span className={styles.statLabel}>Course Fee, incl. all taxes</span>
+              <span className={styles.statLabel}>
+                Course Fee, incl. all taxes
+              </span>
             </div>
             <div className={styles.statCircleWrap}>
               <div className={styles.statCircle}>
@@ -274,15 +343,17 @@ export default function CoursesOfflineView() {
             </div>
             <div className={styles.statCircleWrap}>
               <div className={styles.statCircle}>
-                <span>All-In</span>
+                <span>All-Inclusive</span>
               </div>
-              <span className={styles.statLabel}>Food + Stay + Nagpur Railway Station Transfer</span>
+              <span className={styles.statLabel}>
+                Food + Stay + Nagpur Railway Station Transfer
+              </span>
             </div>
           </div>
 
           <div className={styles.ctaRow}>
-            <a href="#enquire" className={styles.btnSolid}>
-              Enquire for Nagpur Batch →
+            <a href="/OfflineBatches" className={styles.btnSolid}>
+              Enroll for Nagpur Batch →
             </a>
             <a href="#schedule" className={styles.btnGlass}>
               View 12-Day Schedule
@@ -295,7 +366,9 @@ export default function CoursesOfflineView() {
         {/* Who this is for */}
         <section ref={whoForRef} className={`${styles.section} ${whoForClass}`}>
           <span className={styles.eyebrow}>01 — Who This Is For</span>
-          <h2 className={styles.sectionTitle}>Our Nagpur Offline Course Is Designed for Aspirants For</h2>
+          <h2 className={styles.sectionTitle}>
+            Our Nagpur Offline Course Is Designed for Aspirants For
+          </h2>
           <div className={styles.chipGrid}>
             {WHO_FOR.map((label) => (
               <span key={label} className={styles.chip}>
@@ -306,18 +379,27 @@ export default function CoursesOfflineView() {
         </section>
 
         {/* Schedule */}
-        <section ref={scheduleRef} className={`${styles.section} ${scheduleClass}`} id="schedule">
+        <section
+          ref={scheduleRef}
+          className={`${styles.section} ${scheduleClass}`}
+          id="schedule"
+        >
           <span className={styles.eyebrow}>02 — Schedule</span>
-          <h2 className={styles.sectionTitle}>12 Days Offline SSB Mentoring cum Personality Development Programme</h2>
+          <h2 className={styles.sectionTitle}>
+            12 Days Offline SSB Mentoring cum Personality Development Programme
+          </h2>
           <p className={styles.sectionIntro}>
-            Full-day, residential format — each day below runs as a complete training day on campus.
+            Full-day, residential format — each day below runs as a complete
+            training day on campus.
           </p>
           <div className={styles.scheduleAccordion}>
             {SCHEDULE.map((row) => (
               <details key={row.day} className={styles.scheduleAccordionItem}>
                 <summary>
                   <span className={styles.dayBadge}>{row.day}</span>
-                  <span className={styles.scheduleAccordionFocus}>{row.focus}</span>
+                  <span className={styles.scheduleAccordionFocus}>
+                    {row.focus}
+                  </span>
                 </summary>
                 <p>{row.topic}</p>
               </details>
@@ -326,29 +408,48 @@ export default function CoursesOfflineView() {
         </section>
 
         {/* Facility & Accommodation */}
-        <section ref={facilityRef} className={`${styles.section} ${facilityClass}`}>
-          <span className={styles.eyebrow}>03 — Facility &amp; Accommodation</span>
+        <section
+          ref={facilityRef}
+          className={`${styles.section} ${facilityClass}`}
+        >
+          <span className={styles.eyebrow}>
+            03 — Facility &amp; Accommodation
+          </span>
           <h2 className={styles.sectionTitle}>The Campus</h2>
           <p className={styles.sectionIntro}>
-            Our Nagpur campus has been purpose-built to deliver this 12-day programme in one location — combining a
-            physical GTO ground, dedicated indoor training spaces, residential accommodation, and outdoor adventure
-            facilities, so candidates remain fully immersed in the programme without the disruption of commuting or
-            outside distractions.
+            Our Nagpur campus has been purpose-built to deliver this 12-day
+            programme in one location — combining a physical GTO ground,
+            dedicated indoor training spaces, residential accommodation, and
+            outdoor adventure facilities, so candidates remain fully immersed in
+            the programme without the disruption of commuting or outside
+            distractions.
           </p>
 
           <div className={styles.facilityList}>
             {/* 1: GTO Training */}
             <div className={styles.facilityRow}>
               <div className={styles.facilityText}>
-                <span className={styles.facilityTitle}>1. On-Ground GTO Training Facilities</span>
+                <span className={styles.facilityTitle}>
+                  1. On-Ground GTO Training Facilities
+                </span>
                 <ul className={styles.facilityUl}>
                   <li>
-                    A physical GTO ground designed to replicate the exact task structures used across Services
-                    Selection Boards and Air Force Selection Boards
+                    A physical GTO ground designed to replicate the exact task
+                    structures used across Services Selection Boards and Air
+                    Force Selection Boards
                   </li>
-                  <li>Dedicated open spaces to conduct Group Discussions and Group Planning Exercises</li>
-                  <li>Open air spaces to conduct lecturette to simulate real-time SSB/AFSB tasks</li>
-                  <li>Individual Obstacles, Group Obstacle Race and other military-style physical obstacles</li>
+                  <li>
+                    Dedicated open spaces to conduct Group Discussions and Group
+                    Planning Exercises
+                  </li>
+                  <li>
+                    Open air spaces to conduct lecturette to simulate real-time
+                    SSB/AFSB tasks
+                  </li>
+                  <li>
+                    Individual Obstacles, Group Obstacle Race and other
+                    military-style physical obstacles
+                  </li>
                 </ul>
               </div>
               <PhotoStrip images={GTO_PHOTOS} />
@@ -357,18 +458,28 @@ export default function CoursesOfflineView() {
             {/* 2: Food and Accommodation */}
             <div className={`${styles.facilityRow} ${styles.reverse}`}>
               <div className={styles.facilityText}>
-                <span className={styles.facilityTitle}>2. Food and Accommodation</span>
+                <span className={styles.facilityTitle}>
+                  2. Food and Accommodation
+                </span>
                 <ul className={styles.facilityUl}>
                   <li>
-                    Three vegetarian meals a day and refreshments (twice) provided through an in-house dining
-                    facility; drinking water available throughout the training day
+                    Three vegetarian meals a day and refreshments (twice)
+                    provided through an in-house dining facility; drinking water
+                    available throughout the training day
                   </li>
                   <li>
-                    Twin-sharing residential accommodation on campus for the full duration of the 12-day programme.
-                    Clean, secure living quarters and daily housekeeping with on-site 24/7 security
+                    Twin-sharing residential accommodation on campus for the
+                    full duration of the 12-day programme. Clean, secure living
+                    quarters and daily housekeeping with on-site 24/7 security
                   </li>
-                  <li>Separate accommodation arrangements for male and female candidates</li>
-                  <li>Basic first-aid and on-call medical support available on campus for the duration of the programme</li>
+                  <li>
+                    Separate accommodation arrangements for male and female
+                    candidates
+                  </li>
+                  <li>
+                    Basic first-aid and on-call medical support available on
+                    campus for the duration of the programme
+                  </li>
                 </ul>
               </div>
               <PhotoStrip images={ACCO_MEALS_PHOTOS} />
@@ -379,7 +490,10 @@ export default function CoursesOfflineView() {
               <div className={styles.facilityText}>
                 <span className={styles.facilityTitle}>3. Adventure</span>
                 <ul className={styles.facilityUl}>
-                  <li>Water sports (rowing, rafting) in the lake within the academy</li>
+                  <li>
+                    Water sports (rowing, rafting) in the lake within the
+                    academy
+                  </li>
                   <li>65-feet rock climbing and net climbing</li>
                   <li>On-site camping, nearby dam visit and excursions</li>
                 </ul>
@@ -390,10 +504,15 @@ export default function CoursesOfflineView() {
             {/* 4: Outdoor & ECA */}
             <div className={`${styles.facilityRow} ${styles.reverse}`}>
               <div className={styles.facilityText}>
-                <span className={styles.facilityTitle}>4. Outdoor Physical Training &amp; Extra-Curricular Activities</span>
+                <span className={styles.facilityTitle}>
+                  4. Outdoor Physical Training &amp; Extra-Curricular Activities
+                </span>
                 <ul className={styles.facilityUl}>
                   <li>Swimming pool</li>
-                  <li>Daily yoga and morning physical training sessions with our in-house physical training instructors</li>
+                  <li>
+                    Daily yoga and morning physical training sessions with our
+                    in-house physical training instructors
+                  </li>
                   <li>Team building activities</li>
                 </ul>
               </div>
@@ -403,13 +522,19 @@ export default function CoursesOfflineView() {
             {/* 5: Classroom Training */}
             <div className={styles.facilityRow}>
               <div className={styles.facilityText}>
-                <span className={styles.facilityTitle}>5. Classroom Training</span>
+                <span className={styles.facilityTitle}>
+                  5. Classroom Training
+                </span>
                 <ul className={styles.facilityUl}>
                   <li>
-                    Dedicated indoor classrooms for Psychology and interview theory sessions and mock tests,
-                    conducted under timed, real-assessment conditions
+                    Dedicated indoor classrooms for Psychology and interview
+                    theory sessions and mock tests, conducted under timed,
+                    real-assessment conditions
                   </li>
-                  <li>A private space for individual interview sessions, ensuring candidates receive undivided, one-on-one attention</li>
+                  <li>
+                    A private space for individual interview sessions, ensuring
+                    candidates receive undivided, one-on-one attention
+                  </li>
                 </ul>
               </div>
               <PhotoStrip images={CLASSROOM_PHOTOS} />
@@ -421,12 +546,14 @@ export default function CoursesOfflineView() {
                 <span className={styles.facilityTitle}>6. Getting There</span>
                 <ul className={styles.facilityUl}>
                   <li>
-                    Located in Nagpur, with convenient access from Nagpur Railway Station and Dr. Babasaheb Ambedkar
-                    International Airport
+                    Located in Nagpur, with convenient access from Nagpur
+                    Railway Station and Dr. Babasaheb Ambedkar International
+                    Airport
                   </li>
                   <li>
-                    Local transport assistance available for candidates arriving from outside Nagpur — Nagpur Railway
-                    Station pick-up and drop available free of cost; details shared upon enrolment
+                    Local transport assistance available for candidates arriving
+                    from outside Nagpur — Nagpur Railway Station pick-up and
+                    drop available free of cost; details shared upon enrolment
                   </li>
                 </ul>
               </div>
@@ -435,37 +562,30 @@ export default function CoursesOfflineView() {
           </div>
         </section>
 
-        {/* Registration fee / pricing CTA */}
-        <section ref={regFeeRef} className={`${styles.section} ${regFeeClass}`} style={{ paddingTop: 0 }} id="enquire">
-          <div className={styles.pricingCta}>
-            <span className={styles.eyebrow} style={{ marginBottom: 8 }}>
-              Nagpur Offline Batch
-            </span>
-            <h2>12 Days | INR 21,000/- | Food, Stay and Nagpur Railway Station Transfer included</h2>
-            <p>
-              The most affordable authentic, assessor-led residential SSB programme in the country — taught
-              in-person by DIPR certified ex-SSB assessors. Share your details and our team will confirm your seat
-              and the next batch start date.
-            </p>
-            <a href="/OfflineBatches" className={styles.btnSolid}>
-              Reserve Your Seat →
-            </a>
-          </div>
-        </section>
 
         {/* Why choose us */}
-        <section ref={whyChooseRef} className={`${styles.section} ${whyChooseClass}`}>
+        <section
+          ref={whyChooseRef}
+          className={`${styles.section} ${whyChooseClass}`}
+        >
           <span className={styles.eyebrow}>04 — Why Choose Us</span>
-          <h2 className={styles.sectionTitle}>Why Choose SSB with ISV&rsquo;s Nagpur Offline Batch?</h2>
+          <h2 className={styles.sectionTitle}>
+            Why Choose SSB with ISV&rsquo;s Nagpur Offline Batch?
+          </h2>
           <div className={styles.whyChooseGrid}>
             <p>
-              SSB with ISV focuses on authentic personality development rather than superficial coaching techniques.
-              Our training philosophy is based on the principle of <strong>Manasa – Vācha – Karmaṇa</strong>,
-              emphasising alignment between thought, communication, and action. At Nagpur, this philosophy is
-              delivered in person, on real ground, by a mentor who has not only served on an SSB board but was part
-              of the team that built one — SSB Kolkata. Through structured mentoring, behavioural training, and
-              realistic, fully immersive simulations, we help candidates develop the mindset and qualities required
-              to succeed at the SSB and, eventually, to serve as officers in the Indian Armed Forces.
+              SSB with ISV focuses on authentic personality development rather
+              than superficial coaching techniques. Our training philosophy is
+              based on the principle of{" "}
+              <strong>Manasa – Vācha – Karmaṇa</strong>, emphasising alignment
+              between thought, communication, and action. At Nagpur, this
+              philosophy is delivered in person, on real ground, by a mentor who
+              has not only served on an SSB board but was part of the team that
+              built one — SSB Kolkata. Through structured mentoring, behavioural
+              training, and realistic, fully immersive simulations, we help
+              candidates develop the mindset and qualities required to succeed
+              at the SSB and, eventually, to serve as officers in the Indian
+              Armed Forces.
             </p>
             <div className={styles.mentorCard}>
               <PhotoSlot
