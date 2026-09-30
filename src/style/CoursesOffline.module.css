@@ -369,6 +369,10 @@
     box-shadow: 0 10px 25px rgba(210, 161, 0, 0.35);
 }
 
+.mobileEnrollBtn {
+    display: none;
+}
+
 .btnGlass {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.15);
@@ -757,6 +761,19 @@
 }
 
 @media (max-width: 768px) {
+    .mobileEnrollBtn {
+        display: inline-flex;
+        align-self: center;
+        width: fit-content;
+        max-width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .desktopEnrollBtn {
+        display: none;
+    }
+
     .heroTitle {
         white-space: normal;
     }

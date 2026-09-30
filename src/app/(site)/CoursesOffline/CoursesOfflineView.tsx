@@ -300,6 +300,13 @@ export default function CoursesOfflineView() {
         </div>
 
         <div className={styles.heroContent}>
+          <a
+            href="/OfflineBatches"
+            className={`${styles.btnSolid} ${styles.mobileEnrollBtn}`}
+          >
+            Enroll for Nagpur Batch →
+          </a>
+
           <span className={styles.chip}>
             Nagpur Campus · Fully Residential · Batches Filling Fast
           </span>
@@ -352,7 +359,10 @@ export default function CoursesOfflineView() {
           </div>
 
           <div className={styles.ctaRow}>
-            <a href="/OfflineBatches" className={styles.btnSolid}>
+            <a
+              href="/OfflineBatches"
+              className={`${styles.btnSolid} ${styles.desktopEnrollBtn}`}
+            >
               Enroll for Nagpur Batch →
             </a>
             <a href="#schedule" className={styles.btnGlass}>
