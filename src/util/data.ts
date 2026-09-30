@@ -58,7 +58,11 @@ export const mentorsData = [
             ships: "INS Shardul, INS Ganga, INS Prabal, INS Abhay",
             commandAfloat: "IN ISV T-15, Squadron Commander - 81st ISV Squadron, Senior Officer - ISVs (West)",
             commandAshoreLabel: "Ashore Appointments:",
-            commandAshore: "Flag Lieutenant to Flag Officer Commanding Maharashtra & Gujarat Naval Area, Commissioning crew: SSB (Kolkata), Ex Naval Selection Board, Coimbatore & 12 Services Selection Board, Bangalore",
+            commandAshore: [
+                "Flag Lieutenant to Flag Officer Commanding Maharashtra & Gujarat Naval Area",
+                "Commissioning crew: SSB (Kolkata)",
+                "Ex Naval Selection Board Coimbatore & 12 Services Selection Board Bangalore",
+            ],
             education: [
                 "Schooling from St. Aloysius, Yavatmal",
                 "B. Tech, Electrical Engineering - NIT Srinagar",

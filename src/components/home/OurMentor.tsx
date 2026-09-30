@@ -17,6 +17,28 @@ const OurMentor = () => {
     setSelectedMentor(null);
   };
 
+  const renderBiodataValue = (val: any) => {
+    if (Array.isArray(val)) {
+      return (
+        <div className={styles.biodataLines}>
+          {val.map((item: string, idx: number) => (
+            <div key={idx} className={styles.biodataLine}>{item}</div>
+          ))}
+        </div>
+      );
+    }
+    if (typeof val === "string" && val.includes("\n")) {
+      return (
+        <div className={styles.biodataLines}>
+          {val.split("\n").map((item: string, idx: number) => (
+            <div key={idx} className={styles.biodataLine}>{item}</div>
+          ))}
+        </div>
+      );
+    }
+    return val;
+  };
+
   return (
     <section className={styles.mentorsSection}>
       <div className="">
@@ -143,7 +165,9 @@ const OurMentor = () => {
                       <span className={styles.biodataLabel}>
                         {selectedMentor.fullBiodata.commandAshoreLabel || "Command Appointments Ashore:"}
                       </span>
-                      <span className={styles.biodataVal}>{selectedMentor.fullBiodata.commandAshore}</span>
+                      <div className={styles.biodataVal}>
+                        {renderBiodataValue(selectedMentor.fullBiodata.commandAshore)}
+                      </div>
                     </div>
                   )}
                   {selectedMentor.fullBiodata.otherAppointments && (

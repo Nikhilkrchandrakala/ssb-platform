@@ -456,6 +456,16 @@
   line-height: 1.55;
 }
 
+.biodataLines {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.biodataLine {
+  line-height: 1.55;
+}
+
 .biodataSection {
   margin-top: 15px;
 }
