@@ -77,7 +77,10 @@ const GTO_PHOTOS = photoSet("gto", 11, "GTO training");
 const ACCO_MEALS_PHOTOS = [...photoSet("acco", 5, "Accommodation"), ...photoSet("meals", 3, "Meals")];
 const ADVENTURE_PHOTOS = photoSet("adv", 18, "Adventure activity");
 const OUTDOOR_ECA_PHOTOS = [...photoSet("outdoor", 8, "Outdoor activity"), ...photoSet("eca", 3, "Extra-curricular activity")];
-const CLASSROOM_PHOTOS = photoSet("classroom", 3, "Classroom training");
+const CLASSROOM_PHOTOS = [
+  { src: `${UPLOADS}/classroom-1.jpeg`, alt: "Classroom training 1" },
+  { src: `${UPLOADS}/classroom-3.jpeg`, alt: "Classroom training 3" },
+];
 const GETTING_THERE_PHOTOS = [
   { src: `${UPLOADS}/road-sign.jpeg`, alt: "Sahas the Camp, SSB with ISV campus entrance" },
   { src: `${UPLOADS}/main-building.jpeg`, alt: "Academy building" },

@@ -102,7 +102,6 @@ const facilityGallery = [
   { src: `${CAMPUS_IMG}/adv-13.jpeg`, category: "Adventure", title: "Rope Climb" },
   { src: `${CAMPUS_IMG}/adv-7.jpeg`, category: "Adventure", title: "Rope Net Climb" },
   { src: `${CAMPUS_IMG}/classroom-1.jpeg`, category: "Classrooms", title: "Classroom" },
-  { src: `${CAMPUS_IMG}/classroom-2.jpeg`, category: "Classrooms", title: "Classroom" },
   { src: `${CAMPUS_IMG}/classroom-3.jpeg`, category: "Classrooms", title: "Classroom" },
   { src: `${CAMPUS_IMG}/acco-1.jpeg`, category: "Accommodation", title: "Dormitory" },
   { src: `${CAMPUS_IMG}/acco-2.jpeg`, category: "Accommodation", title: "Dormitory" },
