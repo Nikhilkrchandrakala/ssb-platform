@@ -165,15 +165,40 @@ export function StatTile({
   tone = "neutral",
   icon: Icon,
   className,
+  onClick,
+  active,
 }: {
   label: string;
   value: number | React.ReactNode;
   tone?: keyof typeof statTone;
   icon?: LucideIcon;
   className?: string;
+  onClick?: () => void;
+  active?: boolean;
 }) {
+  const isInteractive = Boolean(onClick);
   return (
-    <div className={cn("flex items-center gap-3.5 px-5 py-3.5 rounded-xl bg-app-card border border-app-border min-w-[112px]", className)}>
+    <div
+      role={isInteractive ? "button" : undefined}
+      tabIndex={isInteractive ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={
+        isInteractive
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick?.();
+              }
+            }
+          : undefined
+      }
+      className={cn(
+        "flex items-center gap-3.5 px-5 py-3.5 rounded-xl bg-app-card border border-app-border min-w-[112px] transition-all",
+        isInteractive && "cursor-pointer hover:border-app-accent/50 hover:bg-app-accent/5 select-none",
+        active && "border-app-accent ring-2 ring-app-accent/25 bg-app-accent/10 shadow-glow",
+        className
+      )}
+    >
       {Icon && (
         <span className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0", statIconTone[tone])}>
           <Icon size={17} />

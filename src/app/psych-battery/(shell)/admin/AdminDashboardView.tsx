@@ -10,7 +10,7 @@ import { latestDistinctValues } from "@/lib/latestValues";
 import { Plus, Trash2, Edit2, Database, Play, Eye, X, CheckCircle, Send, Copy } from "lucide-react";
 import {
   PageHeader, Badge, Card, GlassCard, Button, IconButton, TableShell, Th, Td, Tr, EmptyState,
-  Reveal, Skeleton, staggerDelay, Dialog, DialogContent, DialogTitle,
+  Reveal, Skeleton, staggerDelay, Dialog, DialogContent, DialogTitle, SegmentedControl,
 } from "../../components/ui/Primitives";
 import SearchCombobox from "../../components/ui/SearchCombobox";
 import { useDocumentPip, PipContent, FileGallery, resolveFileUrl, isPdfPath } from "../../components/ui/DocumentPipViewer";
@@ -126,10 +126,11 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
   const [submissions, setSubmissions] = useState<SubmissionWithAssessorFields[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Candidate Evaluation table filters (name / batch no / chest no).
+  // Candidate Evaluation table filters (name / batch no / chest no / status).
   const [nameFilter, setNameFilter] = useState("");
   const [batchFilter, setBatchFilter] = useState("");
   const [chestNoFilter, setChestNoFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "PENDING" | "COMPLETED">("ALL");
 
   // Super Admin Auditing State
   const [selectedSubmission, setSelectedSubmission] = useState<SubmissionWithAssessorFields | null>(null);
@@ -246,11 +247,16 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
     [evaluationStudents]
   );
 
+  const isSubmissionCompleted = (s: SubmissionWithAssessorFields) =>
+    s.status === "COMPLETED" || s.status === "REPORT_RELEASED";
+
   const filteredSubmissions = submissions.filter((s) => {
     const student = resolveStudent(s);
     if (nameFilter.trim() && !(student?.name || "").toLowerCase().includes(nameFilter.trim().toLowerCase())) return false;
     if (batchFilter.trim() && !(student?.batch || "").toLowerCase().includes(batchFilter.trim().toLowerCase())) return false;
     if (chestNoFilter.trim() && !(student?.chestNo || "").toLowerCase().includes(chestNoFilter.trim().toLowerCase())) return false;
+    if (statusFilter === "PENDING" && isSubmissionCompleted(s)) return false;
+    if (statusFilter === "COMPLETED" && !isSubmissionCompleted(s)) return false;
     return true;
   });
 
@@ -334,10 +340,19 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
             <Card><EmptyState icon={Database} title="No candidate assignments yet" /></Card>
           ) : (
             <>
-              <Reveal delay={0.1} className="flex flex-col sm:flex-row gap-3">
+              <Reveal delay={0.1} className="flex flex-col sm:flex-row gap-3 sm:items-center">
                 <SearchCombobox placeholder="Filter by name" value={nameFilter} onChange={setNameFilter} options={nameOptions} />
-                <SearchCombobox placeholder="Filter by batch no" value={batchFilter} onChange={setBatchFilter} options={batchOptions} containerClassName="sm:max-w-[220px]" />
-                <SearchCombobox placeholder="Filter by chest no" value={chestNoFilter} onChange={setChestNoFilter} options={chestNoOptions} containerClassName="sm:max-w-[220px]" />
+                <SearchCombobox placeholder="Filter by batch no" value={batchFilter} onChange={setBatchFilter} options={batchOptions} containerClassName="sm:max-w-[180px]" />
+                <SearchCombobox placeholder="Filter by chest no" value={chestNoFilter} onChange={setChestNoFilter} options={chestNoOptions} containerClassName="sm:max-w-[180px]" />
+                <SegmentedControl
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  options={[
+                    { value: "ALL", label: "All" },
+                    { value: "PENDING", label: "Review Pending" },
+                    { value: "COMPLETED", label: "Review Completed" },
+                  ]}
+                />
               </Reveal>
 
               {filteredSubmissions.length === 0 ? (

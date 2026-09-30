@@ -5,7 +5,7 @@ import Link from "next/link";
 import { api } from "@/app/psych-battery/lib/api";
 import { AssessmentSubmission, UserProfile } from "@/app/psych-battery/types";
 import { usePsychUser } from "@/components/psych/PsychUserProvider";
-import { Users, User as UserIcon, Bell, Check, Eye, FileCheck, GraduationCap, Clock3, CheckCircle2, ClipboardList } from "lucide-react";
+import { Users, User as UserIcon, Bell, Check, Eye, FileCheck, GraduationCap, Clock3, CheckCircle2, ClipboardList, RotateCcw } from "lucide-react";
 import { cn } from "@/app/psych-battery/lib/utils";
 import { assessorLabel } from "@/lib/assessorLabels";
 import {
@@ -39,6 +39,9 @@ const STATUS_TONE: Record<string, "success" | "warning" | "info" | "neutral"> = 
   REPORT_RELEASED: "success",
   MEETING_SCHEDULED: "warning",
   UPLOADED: "info",
+  REVIEW_PENDING: "warning",
+  UNDER_REVIEW: "warning",
+  PENDING: "neutral",
 };
 
 const ROLE_BADGE: Record<string, string> = {
@@ -55,6 +58,8 @@ const STATUS_ACCENT: Record<string, { bar: string; ring: string }> = {
   REPORT_RELEASED: { bar: "bg-emerald-400", ring: "ring-emerald-400/40" },
   MEETING_SCHEDULED: { bar: "bg-amber-400", ring: "ring-amber-400/40" },
   UPLOADED: { bar: "bg-blue-400", ring: "ring-blue-400/40" },
+  REVIEW_PENDING: { bar: "bg-amber-400", ring: "ring-amber-400/40" },
+  UNDER_REVIEW: { bar: "bg-amber-400", ring: "ring-amber-400/40" },
 };
 const DEFAULT_ACCENT = { bar: "bg-app-border", ring: "ring-app-border" };
 
@@ -68,6 +73,7 @@ export default function AssessorDashboardView() {
   const [search, setSearch] = useState("");
   const [batchFilter, setBatchFilter] = useState("");
   const [chestNoFilter, setChestNoFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "PENDING" | "COMPLETED">("ALL");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   useEffect(() => {
@@ -125,9 +131,24 @@ export default function AssessorDashboardView() {
     }
   };
 
+  const isReviewCompleted = (
+    sub: AssessmentSubmission & { psychStatus?: string; gtoStatus?: string; ioStatus?: string; toStatus?: string }
+  ) => {
+    if (sub.status === "COMPLETED" || sub.status === "REPORT_RELEASED") return true;
+    if (activeAssessorType === "Psych" && sub.psychStatus === "COMPLETED") return true;
+    if (activeAssessorType === "GTO" && sub.gtoStatus === "COMPLETED") return true;
+    if (activeAssessorType === "IO" && sub.ioStatus === "COMPLETED") return true;
+    if (activeAssessorType === "TO" && sub.toStatus === "COMPLETED") return true;
+    return false;
+  };
+
   const unreadCount = notifications.filter((n) => !n.isRead).length;
-  const pendingCount = submissions.filter((s) => s.status !== "COMPLETED" && s.status !== "REPORT_RELEASED").length;
-  const completedCount = submissions.filter((s) => s.status === "COMPLETED" || s.status === "REPORT_RELEASED").length;
+  const completedCount = useMemo(
+    () => submissions.filter((s) => isReviewCompleted(s)).length,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [submissions, activeAssessorType]
+  );
+  const pendingCount = submissions.length - completedCount;
 
   const filteredSubmissions = submissions.filter((s) => {
     const q = search.trim().toLowerCase();
@@ -140,9 +161,18 @@ export default function AssessorDashboardView() {
     }
     if (batchFilter.trim() && !(s.student?.batch || "").toLowerCase().includes(batchFilter.trim().toLowerCase())) return false;
     if (chestNoFilter.trim() && !(s.student?.chestNo || "").toLowerCase().includes(chestNoFilter.trim().toLowerCase())) return false;
+    if (statusFilter === "PENDING" && isReviewCompleted(s)) return false;
+    if (statusFilter === "COMPLETED" && !isReviewCompleted(s)) return false;
     return true;
   });
-  const hasActiveFilter = Boolean(search.trim() || batchFilter.trim() || chestNoFilter.trim());
+  const hasActiveFilter = Boolean(search.trim() || batchFilter.trim() || chestNoFilter.trim() || statusFilter !== "ALL");
+
+  const resetFilters = () => {
+    setSearch("");
+    setBatchFilter("");
+    setChestNoFilter("");
+    setStatusFilter("ALL");
+  };
 
   const candidateNameOptions = useMemo(
     () => latestDistinctValues(submissions, (s) => s.student?.name, (s) => s.student?.createdAt as string | undefined),
@@ -254,24 +284,71 @@ export default function AssessorDashboardView() {
 
       {/* Caseload stats */}
       <Reveal delay={0.05} className="flex flex-wrap gap-3">
-        <StatTile label="Pending" value={pendingCount} tone="warning" icon={Clock3} />
-        <StatTile label="Completed" value={completedCount} tone="success" icon={CheckCircle2} />
-        <StatTile label="Total Assigned" value={submissions.length} icon={ClipboardList} />
+        <StatTile
+          label="Review Pending"
+          value={pendingCount}
+          tone="warning"
+          icon={Clock3}
+          onClick={() => setStatusFilter((prev) => (prev === "PENDING" ? "ALL" : "PENDING"))}
+          active={statusFilter === "PENDING"}
+        />
+        <StatTile
+          label="Review Completed"
+          value={completedCount}
+          tone="success"
+          icon={CheckCircle2}
+          onClick={() => setStatusFilter((prev) => (prev === "COMPLETED" ? "ALL" : "COMPLETED"))}
+          active={statusFilter === "COMPLETED"}
+        />
+        <StatTile
+          label="Total Assigned"
+          value={submissions.length}
+          icon={ClipboardList}
+          onClick={() => setStatusFilter("ALL")}
+          active={statusFilter === "ALL"}
+        />
       </Reveal>
 
       {/* Search & filter */}
-      <Reveal delay={0.1} className="flex flex-col sm:flex-row gap-3 sm:items-center">
-        <SearchCombobox placeholder="Search by name, email, or chest number" value={search} onChange={setSearch} options={candidateNameOptions} />
-        <SearchCombobox placeholder="Filter by batch no" value={batchFilter} onChange={setBatchFilter} options={batchOptions} containerClassName="sm:max-w-[220px] flex-none" />
-        <SearchCombobox placeholder="Filter by chest no" value={chestNoFilter} onChange={setChestNoFilter} options={chestNoOptions} containerClassName="sm:max-w-[220px] flex-none" />
-        <SegmentedControl
-          value={viewMode}
-          onChange={setViewMode}
-          options={[
-            { value: "grid", label: "Grid" },
-            { value: "list", label: "List" },
-          ]}
-        />
+      <Reveal delay={0.1} className="flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+          <SearchCombobox placeholder="Search by name, email, or chest number" value={search} onChange={setSearch} options={candidateNameOptions} />
+          <SearchCombobox placeholder="Filter by batch no" value={batchFilter} onChange={setBatchFilter} options={batchOptions} containerClassName="sm:max-w-[200px] flex-none" />
+          <SearchCombobox placeholder="Filter by chest no" value={chestNoFilter} onChange={setChestNoFilter} options={chestNoOptions} containerClassName="sm:max-w-[200px] flex-none" />
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-app-text-muted">Status:</span>
+            <SegmentedControl
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={[
+                { value: "ALL", label: `All (${submissions.length})` },
+                { value: "PENDING", label: `Review Pending (${pendingCount})` },
+                { value: "COMPLETED", label: `Review Completed (${completedCount})` },
+              ]}
+            />
+            {hasActiveFilter && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-app-text-muted hover:text-app-text-bright hover:bg-app-card border border-transparent hover:border-app-border transition-all cursor-pointer"
+                title="Reset all filters"
+              >
+                <RotateCcw size={13} />
+                <span>Reset</span>
+              </button>
+            )}
+          </div>
+          <SegmentedControl
+            value={viewMode}
+            onChange={setViewMode}
+            options={[
+              { value: "grid", label: "Grid" },
+              { value: "list", label: "List" },
+            ]}
+          />
+        </div>
       </Reveal>
 
       {/* Candidate grid / list */}
@@ -280,8 +357,20 @@ export default function AssessorDashboardView() {
           <EmptyState
             icon={Users}
             title={hasActiveFilter ? "No matching candidates" : "No dossiers detected"}
-            description={hasActiveFilter ? "Try a different name, email, batch, or chest number." : "No candidates have been assigned to your evaluation queue yet."}
+            description={hasActiveFilter ? "Try adjusting your search query, status, batch, or chest filters." : "No candidates have been assigned to your evaluation queue yet."}
           />
+          {hasActiveFilter && (
+            <div className="flex justify-center pb-6">
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-app-accent/15 border border-app-accent/30 text-app-accent-light text-xs font-bold hover:bg-app-accent/25 transition-all cursor-pointer"
+              >
+                <RotateCcw size={13} />
+                Clear all filters
+              </button>
+            </div>
+          )}
         </Card>
       ) : viewMode === "list" ? (
         <TableShell minWidth={900}>
@@ -374,7 +463,11 @@ export default function AssessorDashboardView() {
                     </div>
                   </Td>
                   <Td align="center">
-                    <Badge tone={STATUS_TONE[sub.status] || "neutral"}>{sub.status.replace(/_/g, " ")}</Badge>
+                    <Badge tone={isReviewCompleted(sub) ? "success" : (STATUS_TONE[sub.status] || "neutral")}>
+                      {isReviewCompleted(sub) && sub.status !== "REPORT_RELEASED" && sub.status !== "COMPLETED"
+                        ? "Review Completed"
+                        : sub.status.replace(/_/g, " ")}
+                    </Badge>
                   </Td>
                   <Td align="right">
                     {isAwaiting ? (
@@ -406,7 +499,8 @@ export default function AssessorDashboardView() {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
           {filteredSubmissions.map((sub, index) => {
             const isAwaiting = sub.status === "PENDING" && activeAssessorType !== "GTO" && activeAssessorType !== "IO" && !sub.isOffline;
-            const accent = STATUS_ACCENT[sub.status] || DEFAULT_ACCENT;
+            const isCompletedForAssessor = isReviewCompleted(sub);
+            const accent = isCompletedForAssessor ? STATUS_ACCENT.COMPLETED : (STATUS_ACCENT[sub.status] || DEFAULT_ACCENT);
             const courseLabel = (() => {
               const stage = sub.student?.clinicalStage || "";
               const parts = stage.split(",").map((s: string) => s.trim()).filter(Boolean);
@@ -449,7 +543,11 @@ export default function AssessorDashboardView() {
                         <div className="text-[11px] text-app-text-muted truncate">{sub.student?.email || "N/A"}</div>
                       </div>
                     </div>
-                    <Badge tone={STATUS_TONE[sub.status] || "neutral"} className="shrink-0">{sub.status.replace(/_/g, " ")}</Badge>
+                    <Badge tone={isCompletedForAssessor ? "success" : (STATUS_TONE[sub.status] || "neutral")} className="shrink-0">
+                      {isCompletedForAssessor && sub.status !== "REPORT_RELEASED" && sub.status !== "COMPLETED"
+                        ? "Review Completed"
+                        : sub.status.replace(/_/g, " ")}
+                    </Badge>
                   </div>
 
                   <div className="flex items-center gap-2 flex-wrap">

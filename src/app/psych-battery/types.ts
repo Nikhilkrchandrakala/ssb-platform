@@ -98,6 +98,12 @@ export interface AssessmentSubmission {
   assessorRemarks?: string;
   psychStatus?: string;
   psychRemarks?: string;
+  gtoStatus?: string;
+  gtoRemarks?: string;
+  ioStatus?: string;
+  ioRemarks?: string;
+  toStatus?: string;
+  toRemarks?: string;
   evaluation?: string;
   scores?: Record<string, number>;
   score?: number;
