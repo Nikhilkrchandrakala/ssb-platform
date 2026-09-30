@@ -362,6 +362,8 @@ export function sendInterviewCandidateEmail(params: {
   });
 }
 
+const DIRECT_BOOKING_DEFAULT_EMAILS = "priyanka@ssbwithisv.in,info@ssbwithisv.in";
+
 export async function sendSalesNotificationEmail(params: {
   studentName: string;
   studentEmail: string;
@@ -370,20 +372,47 @@ export async function sendSalesNotificationEmail(params: {
   bookingMethod: string;
   orderId: string;
 }): Promise<{ delivered: boolean }> {
-  const salesEmail = process.env.SALES_TEAM_EMAIL || "sales@quantumclimb.com";
-  return sendTemplateEmail({
-    to: salesEmail,
-    name: "Sales Team",
-    templateId: NEW_ENROLLMENT_ALERT_TEMPLATE_ID,
-    variables: {
-      student_name: params.studentName,
-      student_email: params.studentEmail,
-      course_name: params.courseName,
-      amount_paid: String(params.amountPaid),
-      booking_method: params.bookingMethod,
-      order_id: params.orderId,
-    },
-  });
+  // Direct website bookings ("standard", "franchise") route to Priyanka & Info
+  // Sales bookings ("sales") route to the Sales team email
+  const isDirectBooking = params.bookingMethod !== "sales";
+
+  const rawEmails = isDirectBooking
+    ? process.env.DIRECT_BOOKING_NOTIFICATION_EMAILS || DIRECT_BOOKING_DEFAULT_EMAILS
+    : process.env.SALES_TEAM_EMAIL || process.env.DIRECT_BOOKING_NOTIFICATION_EMAILS || DIRECT_BOOKING_DEFAULT_EMAILS;
+
+  const recipientEmails = rawEmails
+    .split(",")
+    .map((e) => e.trim())
+    .filter(Boolean);
+
+  if (recipientEmails.length === 0) {
+    console.error("[msg91] No recipient emails configured for new enrollment alert");
+    return { delivered: false };
+  }
+
+  const results = await Promise.allSettled(
+    recipientEmails.map((toEmail) =>
+      sendTemplateEmail({
+        to: toEmail,
+        name: isDirectBooking ? "Admissions Team" : "Sales Team",
+        templateId: NEW_ENROLLMENT_ALERT_TEMPLATE_ID,
+        variables: {
+          student_name: params.studentName,
+          student_email: params.studentEmail,
+          course_name: params.courseName,
+          amount_paid: String(params.amountPaid),
+          booking_method: params.bookingMethod,
+          order_id: params.orderId,
+        },
+      })
+    )
+  );
+
+  const anyDelivered = results.some(
+    (res) => res.status === "fulfilled" && res.value.delivered === true
+  );
+
+  return { delivered: anyDelivered };
 }
 
 export async function sendContactEnquiryEmail(params: {
