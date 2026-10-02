@@ -18,6 +18,8 @@ export const EVENING_START_IST = { hour: 19, minute: 30 };
 
 export const BOOKING_CUTOFF_MS_BEFORE_START = 60 * 60 * 1000; // 1 hour
 
+export const BATCH_DURATION_DAYS = 12;
+
 export interface BatchTimingSlot {
   startTime?: string | null;
   batchType?: string | null;
@@ -56,6 +58,76 @@ export function isBookingClosed(slot: BatchTimingSlot, now: number = Date.now())
   const cutoff = getBookingCutoff(slot);
   if (!cutoff) return true;
   return now > cutoff.getTime();
+}
+
+/**
+ * A batch runs for 12 consecutive calendar days in IST (Day 1 = start date, Day 12 = start date + 11 days).
+ * Concludes at 23:59:59.999 IST on Day 12.
+ */
+export function getBatchEndTime(slot: BatchTimingSlot): Date | null {
+  if (!slot.startTime) return null;
+  const base = new Date(slot.startTime);
+  if (Number.isNaN(base.getTime())) return null;
+
+  return new Date(
+    Date.UTC(
+      base.getUTCFullYear(),
+      base.getUTCMonth(),
+      base.getUTCDate() + (BATCH_DURATION_DAYS - 1),
+      23 - IST_OFFSET_HOURS,
+      59 - IST_OFFSET_MINUTES,
+      59,
+      999
+    )
+  );
+}
+
+/**
+ * Returns true if the batch's 12-day duration has completely finished.
+ */
+export function hasBatchEnded(slot: BatchTimingSlot, now: number = Date.now()): boolean {
+  const end = getBatchEndTime(slot);
+  if (!end) return true;
+  return now > end.getTime();
+}
+
+/**
+ * 1-based calendar day index in IST:
+ * - 0: upcoming (not yet started)
+ * - 1 to 12: active day of the batch
+ * - 13+: ended
+ */
+export function getBatchCurrentDay(slot: BatchTimingSlot, now: number = Date.now()): number | null {
+  if (!slot.startTime) return null;
+  const base = new Date(slot.startTime);
+  if (Number.isNaN(base.getTime())) return null;
+
+  const nowIST = new Date(now + (IST_OFFSET_HOURS * 60 + IST_OFFSET_MINUTES) * 60 * 1000);
+  const nowMidnightUTC = Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth(), nowIST.getUTCDate());
+  const startMidnightUTC = Date.UTC(base.getUTCFullYear(), base.getUTCMonth(), base.getUTCDate());
+
+  const diffMs = nowMidnightUTC - startMidnightUTC;
+  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+
+  if (diffDays < 0) return 0;
+  return diffDays + 1;
+}
+
+/**
+ * True if the batch start cutoff has passed, but the 12-day duration has NOT ended.
+ * Sales executives can perform late enrollment during this period.
+ */
+export function isLateEnrollmentActive(slot: BatchTimingSlot, now: number = Date.now()): boolean {
+  if (!slot.startTime) return false;
+  return isBookingClosed(slot, now) && !hasBatchEnded(slot, now);
+}
+
+/** Days remaining in the 12-day batch run (1 to 12). */
+export function getBatchDaysRemaining(slot: BatchTimingSlot, now: number = Date.now()): number {
+  const currentDay = getBatchCurrentDay(slot, now);
+  if (!currentDay || currentDay <= 0) return BATCH_DURATION_DAYS;
+  if (currentDay > BATCH_DURATION_DAYS) return 0;
+  return BATCH_DURATION_DAYS - currentDay + 1;
 }
 
 /** "2d 4h left to book" / "45m left to book" / "Booking Closed". */

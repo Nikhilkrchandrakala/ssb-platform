@@ -5,7 +5,7 @@ import { hasAdminPermission } from "@/server/adminAccess";
 import { Slot, Order, InstallmentPlan, SalesAuditLog, User, Lead } from "@/server/models";
 import { getSlotBasePrice, applySalesCoupon, resolveOrderSelectedModules, describeSelectedModules, MIN_INITIAL_AMOUNT } from "@/server/sales/pricing";
 import { createPaymentLink, razorpay } from "@/server/integrations/razorpay";
-import { formatRealStartTime } from "@/lib/batchTiming";
+import { formatRealStartTime, hasBatchEnded } from "@/lib/batchTiming";
 import { sendRegistrationPaymentEmail } from "@/server/integrations/msg91";
 
 interface SubmittedInstallment {
@@ -44,6 +44,13 @@ export async function POST(req: NextRequest) {
 
     const slot = await Slot.findById(slotId);
     if (!slot) return NextResponse.json({ message: "Slot not found" }, { status: 404 });
+
+    if (hasBatchEnded(slot)) {
+      return NextResponse.json(
+        { message: "This batch has already concluded (12-day run completed). Late enrollment is closed for this batch." },
+        { status: 400 }
+      );
+    }
 
     // The batch's own mode is authoritative — never trust the client's
     // enrollmentMode over what the selected slot actually is.

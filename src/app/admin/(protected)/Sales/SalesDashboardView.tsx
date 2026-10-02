@@ -17,7 +17,15 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useAdminUser } from "@/components/admin/AdminUserProvider";
-import { isBookingClosed, formatTimeRemaining } from "@/lib/batchTiming";
+import {
+  isBookingClosed,
+  formatTimeRemaining,
+  hasBatchEnded,
+  isLateEnrollmentActive,
+  getBatchCurrentDay,
+  getBatchDaysRemaining,
+  BATCH_DURATION_DAYS,
+} from "@/lib/batchTiming";
 import { redistributeRemaining } from "@/lib/redistributeInstallments";
 import SearchCombobox from "@/components/admin/SearchCombobox";
 import { latestDistinctValues } from "@/lib/latestValues";
@@ -379,13 +387,12 @@ export default function SalesDashboardView() {
 
   const [section, setSection] = useState<Section>("enroll");
 
-  // --- Enroll tab --- only "live" batches: not yet started (an invalid/past
-  // startTime naturally fails this too) and not already full.
+  // --- Enroll tab --- batches: upcoming and ongoing (within 12 days)
   const [slots, setSlots] = useState<SlotItem[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(true);
   const [courses, setCourses] = useState<CourseItem[]>([]);
 
-  // Ticks once a minute so every "time left to book" card label on this
+  // Ticks once a minute so every "time left to book" / ongoing status card label on this
   // page stays live without needing a full data refetch.
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -397,11 +404,12 @@ export default function SalesDashboardView() {
     fetch("/api/allSlots")
       .then((res) => (res.ok ? res.json() : []))
       .then((data: SlotItem[]) => {
-        const live = (Array.isArray(data) ? data : []).filter((slot) => {
-          const isOpen = (slot.bookedStudents?.length || 0) < (slot.maxStudents || 50);
-          return !isBookingClosed(slot) && isOpen;
+        const sorted = (Array.isArray(data) ? data : []).sort((a, b) => {
+          const timeA = a.startTime ? new Date(a.startTime).getTime() : 0;
+          const timeB = b.startTime ? new Date(b.startTime).getTime() : 0;
+          return timeB - timeA;
         });
-        setSlots(live);
+        setSlots(sorted);
       })
       .catch(() => setSlots([]))
       .finally(() => setSlotsLoading(false));
@@ -412,8 +420,9 @@ export default function SalesDashboardView() {
       .catch(() => setCourses([]));
   }, []);
 
-  // Search/type/date-range filters over the already-live-only `slots` list.
+  // Search/type/status/date-range filters over the `slots` list.
   const [batchSearch, setBatchSearch] = useState("");
+  const [batchStatusFilter, setBatchStatusFilter] = useState<"active" | "ongoing" | "upcoming" | "ended" | "all">("active");
   const [batchTypeFilter, setBatchTypeFilter] = useState<"all" | "morning" | "evening">("all");
   const [batchModeFilter, setBatchModeFilter] = useState("all");
   const [batchDateFrom, setBatchDateFrom] = useState("");
@@ -426,6 +435,15 @@ export default function SalesDashboardView() {
       const q = batchSearch.trim().toLowerCase();
       const matches = (slot.title || "").toLowerCase().includes(q) || (slot.batchNo || "").toLowerCase().includes(q);
       if (!matches) return false;
+    }
+    if (batchStatusFilter === "active") {
+      if (hasBatchEnded(slot, now)) return false;
+    } else if (batchStatusFilter === "upcoming") {
+      if (isBookingClosed(slot, now) || hasBatchEnded(slot, now)) return false;
+    } else if (batchStatusFilter === "ongoing") {
+      if (!isLateEnrollmentActive(slot, now)) return false;
+    } else if (batchStatusFilter === "ended") {
+      if (!hasBatchEnded(slot, now)) return false;
     }
     if (batchTypeFilter !== "all") {
       const isMorning = (slot.title || "").toLowerCase().includes("morning");
@@ -445,6 +463,7 @@ export default function SalesDashboardView() {
 
   const clearBatchFilters = () => {
     setBatchSearch("");
+    setBatchStatusFilter("active");
     setBatchTypeFilter("all");
     setBatchModeFilter("all");
     setBatchDateFrom("");
@@ -588,6 +607,16 @@ export default function SalesDashboardView() {
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
 
   const openEnrollModal = (slot: SlotItem) => {
+    if (hasBatchEnded(slot, now)) {
+      window.alert("This batch has already ended (12-day run completed). Late enrollment is closed for this batch.");
+      return;
+    }
+    const booked = (slot.bookedStudents || []).length;
+    const max = slot.maxStudents || 50;
+    if (booked >= max) {
+      window.alert("This batch is already fully booked.");
+      return;
+    }
     setSelectedSlot(slot);
     setStudentName("");
     setStudentEmail("");
@@ -1154,11 +1183,23 @@ export default function SalesDashboardView() {
             <SearchCombobox
               options={batchTitleOptions}
               wrapperClassName="search-wrapper"
-              maxWidth={320}
+              maxWidth={300}
               placeholder="Search batches by name or #number..."
               value={batchSearch}
               onChange={setBatchSearch}
             />
+            <select
+              className="filter-select"
+              value={batchStatusFilter}
+              onChange={(e) => setBatchStatusFilter(e.target.value as "active" | "ongoing" | "upcoming" | "ended" | "all")}
+              title="Batch status filter"
+            >
+              <option value="active">Active (Upcoming & Ongoing)</option>
+              <option value="ongoing">🟢 Ongoing · Late Enrollment (Day 1–12)</option>
+              <option value="upcoming">Upcoming Only</option>
+              <option value="ended">Ended Batches (&gt;12 Days)</option>
+              <option value="all">All Batches</option>
+            </select>
             <select className="filter-select" value={batchTypeFilter} onChange={(e) => setBatchTypeFilter(e.target.value as "all" | "morning" | "evening")}>
               <option value="all">All Types</option>
               <option value="morning">Morning Batch</option>
@@ -1177,7 +1218,7 @@ export default function SalesDashboardView() {
               <span className="text-muted">to</span>
               <input type="date" className="admin-input" value={batchDateTo} onChange={(e) => setBatchDateTo(e.target.value)} title="Starts on/before" />
             </div>
-            {(batchSearch || batchTypeFilter !== "all" || batchModeFilter !== "all" || batchDateFrom || batchDateTo) && (
+            {(batchSearch || batchStatusFilter !== "active" || batchTypeFilter !== "all" || batchModeFilter !== "all" || batchDateFrom || batchDateTo) && (
               <button className="thm-btn secondary" style={{ padding: "8px 16px" }} onClick={clearBatchFilters}>
                 Clear
               </button>
@@ -1187,33 +1228,126 @@ export default function SalesDashboardView() {
           {slotsLoading ? (
             <p className="text-muted">Loading batches…</p>
           ) : slots.length === 0 ? (
-            <p className="text-muted">No live batches right now — create one under Courses/Allotment, or check back once a new batch opens.</p>
+            <p className="text-muted">No batches found — create one under Courses/Allotment, or check back once a new batch opens.</p>
           ) : filteredSlots.length === 0 ? (
-            <p className="text-muted">No live batches match your filters.</p>
+            <p className="text-muted">No batches match your filters.</p>
           ) : (
             <div className="sales-slot-grid">
-              {filteredSlots.map((slot) => (
-                <div key={slot._id} className="sales-slot-card">
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                    <div style={{ fontWeight: 700, color: "#fff" }}>
-                      {slot.title || "Batch"} {slot.batchNo ? `(#${slot.batchNo})` : ""}
+              {filteredSlots.map((slot) => {
+                const isEnded = hasBatchEnded(slot, now);
+                const isOngoing = isLateEnrollmentActive(slot, now);
+                const currentDay = getBatchCurrentDay(slot, now);
+                const daysRemaining = getBatchDaysRemaining(slot, now);
+                const bookedCount = (slot.bookedStudents || []).length;
+                const maxStudents = slot.maxStudents || 50;
+                const isFull = bookedCount >= maxStudents;
+
+                return (
+                  <div
+                    key={slot._id}
+                    className="sales-slot-card"
+                    style={{
+                      border: isOngoing
+                        ? "1px solid rgba(46, 204, 113, 0.45)"
+                        : isEnded
+                        ? "1px solid rgba(255, 255, 255, 0.05)"
+                        : undefined,
+                      background: isOngoing ? "rgba(46, 204, 113, 0.03)" : undefined,
+                      opacity: isEnded ? 0.7 : 1,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                      <div style={{ fontWeight: 700, color: "#fff" }}>
+                        {slot.title || "Batch"} {slot.batchNo ? `(#${slot.batchNo})` : ""}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        {isOngoing && (
+                          <span
+                            style={{
+                              fontSize: "0.72rem",
+                              fontWeight: 700,
+                              background: "rgba(46, 204, 113, 0.2)",
+                              color: "#2ecc71",
+                              border: "1px solid rgba(46, 204, 113, 0.4)",
+                              padding: "2px 7px",
+                              borderRadius: 4,
+                            }}
+                          >
+                            Day {currentDay || 1}/12
+                          </span>
+                        )}
+                        {isEnded && (
+                          <span
+                            style={{
+                              fontSize: "0.72rem",
+                              fontWeight: 600,
+                              background: "rgba(255, 255, 255, 0.08)",
+                              color: "var(--text-muted)",
+                              padding: "2px 7px",
+                              borderRadius: 4,
+                            }}
+                          >
+                            Ended
+                          </span>
+                        )}
+                        <EnrollmentModeBadge mode={slot.mode} />
+                      </div>
                     </div>
-                    <EnrollmentModeBadge mode={slot.mode} />
+                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                      Starts {formatDate(slot.startTime)}
+                    </div>
+                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                      {bookedCount}/{maxStudents} booked ·{" "}
+                      {slot.isFullCourse ? "Full course" : "Module batch"}
+                    </div>
+
+                    {isOngoing ? (
+                      <div style={{ fontSize: "0.8rem", color: "#2ecc71", fontWeight: 600 }}>
+                        ⚡ Late Enrollment Active · {daysRemaining} {daysRemaining === 1 ? "day" : "days"} left
+                      </div>
+                    ) : isEnded ? (
+                      <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                        Batch completed (12-day run ended)
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: "0.8rem", color: "var(--primary-gold)" }}>⏰ {formatTimeRemaining(slot, now)}</div>
+                    )}
+
+                    <div style={{ fontWeight: 700, color: "var(--primary-gold)" }}>₹{Number(slot.price || 0).toFixed(2)}</div>
+
+                    {isEnded ? (
+                      <button
+                        className="thm-btn secondary"
+                        style={{ marginTop: 8, opacity: 0.5, cursor: "not-allowed" }}
+                        disabled
+                      >
+                        Batch Ended
+                      </button>
+                    ) : isFull ? (
+                      <button
+                        className="thm-btn secondary"
+                        style={{ marginTop: 8, opacity: 0.5, cursor: "not-allowed" }}
+                        disabled
+                      >
+                        Batch Full
+                      </button>
+                    ) : (
+                      <button
+                        className="thm-btn"
+                        style={{
+                          marginTop: 8,
+                          background: isOngoing ? "linear-gradient(135deg, #27ae60, #2ecc71)" : undefined,
+                          color: isOngoing ? "#fff" : undefined,
+                        }}
+                        onClick={() => openEnrollModal(slot)}
+                      >
+                        <UserPlus size={14} className="me-1" style={ICON_STYLE} />{" "}
+                        {isOngoing ? "Enroll Student (Late)" : "Enroll Student"}
+                      </button>
+                    )}
                   </div>
-                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                    Starts {formatDate(slot.startTime)}
-                  </div>
-                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                    {(slot.bookedStudents || []).length}/{slot.maxStudents || 50} booked ·{" "}
-                    {slot.isFullCourse ? "Full course" : "Module batch"}
-                  </div>
-                  <div style={{ fontSize: "0.8rem", color: "var(--primary-gold)" }}>⏰ {formatTimeRemaining(slot, now)}</div>
-                  <div style={{ fontWeight: 700, color: "var(--primary-gold)" }}>₹{Number(slot.price || 0).toFixed(2)}</div>
-                  <button className="thm-btn" style={{ marginTop: 8 }} onClick={() => openEnrollModal(slot)}>
-                    <UserPlus size={14} className="me-1" style={ICON_STYLE} /> Enroll Student
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -1679,8 +1813,33 @@ export default function SalesDashboardView() {
                 <>
                   {(() => {
                     const isOfflineSlot = resolveEnrollmentMode(selectedSlot.mode) === "offline";
+                    const isLate = isLateEnrollmentActive(selectedSlot, now);
+                    const currentDay = getBatchCurrentDay(selectedSlot, now);
+                    const daysRemaining = getBatchDaysRemaining(selectedSlot, now);
                     return (
-                  <div className="row">
+                      <>
+                        {isLate && (
+                          <div
+                            style={{
+                              background: "rgba(46, 204, 113, 0.12)",
+                              border: "1px solid rgba(46, 204, 113, 0.35)",
+                              borderRadius: 8,
+                              padding: "10px 14px",
+                              marginBottom: 16,
+                              color: "#2ecc71",
+                              fontSize: "0.85rem",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 10,
+                            }}
+                          >
+                            <span style={{ fontSize: "1.1rem" }}>🟢</span>
+                            <div>
+                              <strong>Late Enrollment Active:</strong> This batch is ongoing (Day {currentDay || 1} of {BATCH_DURATION_DAYS}, {daysRemaining} {daysRemaining === 1 ? "day" : "days"} remaining). The candidate will be enrolled into this active batch.
+                            </div>
+                          </div>
+                        )}
+                        <div className="row">
                     <div className="col-md-6">
                       <div className="admin-form-group">
                         <label className="admin-form-label">Student Name</label>
@@ -1756,8 +1915,9 @@ export default function SalesDashboardView() {
                       )}
                     </div>
                   </div>
-                    );
-                  })()}
+                </>
+              );
+            })()}
 
                   {selectedSlot.isFullCourse && resolveEnrollmentMode(selectedSlot.mode) !== "offline" && (
                     <div style={{ borderLeft: "3px solid var(--primary-gold)", paddingLeft: 15, marginBottom: 16 }}>
