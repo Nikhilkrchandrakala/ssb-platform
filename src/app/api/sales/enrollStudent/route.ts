@@ -242,9 +242,11 @@ export async function POST(req: NextRequest) {
     const batchLabel = `${slot.title}${slot.batchNo ? ` (#${slot.batchNo})` : ""}`;
     const moduleLabel = describeSelectedModules(order.selectedModules || []);
     const isFullPayment = remaining <= 0;
-    const description = isFullPayment
-      ? `${moduleLabel} Fee — ${batchLabel} — ${formatRealStartTime(slot)}`
-      : `${moduleLabel} — Registration Fee — ${batchLabel} — ${formatRealStartTime(slot)}`;
+    const description = isOfflineSlot
+      ? `Registration Fee — ${batchLabel}`
+      : isFullPayment
+        ? `${moduleLabel} Fee — ${batchLabel} — ${formatRealStartTime(slot)}`
+        : `${moduleLabel} — Registration Fee — ${batchLabel} — ${formatRealStartTime(slot)}`;
 
     const paymentLink = await createPaymentLink({
       amountRupees: initialAmount,
@@ -268,12 +270,21 @@ export async function POST(req: NextRequest) {
     // Awaited (not fire-and-forget) so a failure — sendTemplateEmail already
     // retries once internally — can be surfaced back to the sales person
     // instead of only ever landing in a server log nobody sees.
+    const emailStartDate = isOfflineSlot && slot.startTime
+      ? new Date(slot.startTime).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          timeZone: "Asia/Kolkata",
+        })
+      : formatRealStartTime(slot);
+
     const registrationMail = await sendRegistrationPaymentEmail({
       to: studentEmail,
       name: studentName,
       courseName: slot.title || "—",
       batchNo: slot.batchNo || "—",
-      startDate: formatRealStartTime(slot),
+      startDate: emailStartDate,
       amount: initialAmount,
       link: paymentLink.short_url,
     }).catch((err) => {
