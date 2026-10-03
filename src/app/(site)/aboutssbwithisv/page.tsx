@@ -6,11 +6,13 @@ import SwiperComponents from "./SwiperComponents";
 import TeamCarousel from "./TeamCarousel";
 
 export const metadata: Metadata = {
-  title: "About SSB with ISV | Veteran-Led SSB Coaching in India",
-  description:
-    "Learn about SSB with ISV, a mentoring platform focused on personality development, officer-like qualities, and structured preparation for the Services Selection Board (SSB) interview, led by defence veterans and seasoned assessors.",
-  alternates: {
-    canonical: "https://ssbwithisv.in/aboutssbwithisv",
+  title: "About SSB with ISV | Veteran-Led SSB Mentoring",
+  description: "Meet SSB with ISV, a veteran-led mentoring community founded in 2021 by an ex-GTO. Learn our method, our Aspirants' results and our ONLINE and Nagpur offline formats.",
+  alternates: { canonical: "/aboutssbwithisv" },
+  openGraph: {
+    title: "About SSB with ISV | Veteran-Led SSB Mentoring",
+    description: "Meet SSB with ISV, a veteran-led mentoring community founded in 2021 by an ex-GTO. Learn our method, our Aspirants' results and our ONLINE and Nagpur offline formats.",
+    url: "/aboutssbwithisv",
   },
 };
 

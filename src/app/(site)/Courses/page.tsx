@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import CoursesView from "./CoursesView";
 
 export const metadata: Metadata = {
-  title: "Best SSB Coaching Courses in India | Online SSB Training Program | SSB with ISV",
-  description:
-    "Join India's best online SSB coaching courses taught by DIPR certified ex-SSB assessors. Covers GTO tasks, psychology tests, personal interview, OLQ development and more. 50%+ recommendation rate.",
-  alternates: {
-    canonical: "https://ssbwithisv.in/Courses",
+  title: "SSB Courses | ONLINE, VTX™ and Offline Nagpur Programs",
+  description: "Compare SSB preparation programs: ONLINE mentoring, VTX™ virtual GTO ground and the 12-day residential camp in Nagpur. Pick the format that fits your Aspirant journey.",
+  alternates: { canonical: "/Courses" },
+  openGraph: {
+    title: "SSB Courses | ONLINE, VTX™ and Offline Nagpur Programs",
+    description: "Compare SSB preparation programs: ONLINE mentoring, VTX™ virtual GTO ground and the 12-day residential camp in Nagpur. Pick the format that fits your Aspirant journey.",
+    url: "/Courses",
   },
 };
 

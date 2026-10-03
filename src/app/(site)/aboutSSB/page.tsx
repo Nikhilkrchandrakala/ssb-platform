@@ -11,11 +11,13 @@ import OfficerEntriesChart from "./OfficerEntriesChart";
 import EnquiryForm from "@/components/site/EnquiryForm";
 
 export const metadata: Metadata = {
-  title: "What is Services Selection Board? | Complete SSB Selection Explained",
-  description:
-    "Learn how the Services Selection Board (SSB) interview works, including screening tests, psychology assessments, GTO tasks, personal interview and officer-like qualities evaluation.",
-  alternates: {
-    canonical: "https://ssbwithisv.in/aboutSSB",
+  title: "What is SSB? Services Selection Board Explained",
+  description: "Understand the SSB process day by day: screening, psychology tests, GTO tasks, personal interview and conference. A clear guide for first-time Aspirants.",
+  alternates: { canonical: "/aboutSSB" },
+  openGraph: {
+    title: "What is SSB? Services Selection Board Explained",
+    description: "Understand the SSB process day by day: screening, psychology tests, GTO tasks, personal interview and conference. A clear guide for first-time Aspirants.",
+    url: "/aboutSSB",
   },
 };
 

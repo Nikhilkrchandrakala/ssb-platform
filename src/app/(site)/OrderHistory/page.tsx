@@ -4,7 +4,9 @@ import { Order } from "@/server/models";
 import OrderHistoryClient, { type OrderHistoryOrder } from "./OrderHistoryClient";
 
 export const metadata = {
-  title: "Order History | SSB with ISV",
+  title: "Order History",
+  description: "View your SSB with ISV course orders and enrolment details.",
+  robots: { index: false, follow: false }
 };
 
 // Server-side auth guard — replaces legacy AuthRoute's client-side localStorage

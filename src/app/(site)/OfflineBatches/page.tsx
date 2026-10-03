@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import OfflineBatchesView from "./OfflineBatchesView";
 
 export const metadata: Metadata = {
-  title: "Offline SSB Batches | SSB with ISV",
-  description:
-    "Register for an in-person SSB training batch at our center. Pay a ₹5,000 registration fee online — the balance is settled at the center.",
-  alternates: {
-    canonical: "https://ssbwithisv.in/OfflineBatches",
+  title: "Nagpur SSB Camp Batches | Register for Offline Training",
+  description: "Register for the next 12-day residential SSB batch in Nagpur. View dates, fees, seat availability and what to bring before you reserve your place.",
+  alternates: { canonical: "/OfflineBatches" },
+  openGraph: {
+    title: "Nagpur SSB Camp Batches | Register for Offline Training",
+    description: "Register for the next 12-day residential SSB batch in Nagpur. View dates, fees, seat availability and what to bring before you reserve your place.",
+    url: "/OfflineBatches",
   },
 };
 

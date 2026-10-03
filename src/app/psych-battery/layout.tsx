@@ -9,8 +9,10 @@ import { PsychUserProvider, type PsychUser } from "@/components/psych/PsychUserP
 
 // icons inherited from the root layout (src/app/layout.tsx) — see the
 // comment there on why a per-segment override would shadow it.
-export const metadata: Metadata = {
-  title: "Candidate Evaluation | SSB with ISV",
+export const metadata = {
+  title: "Candidate Evaluation",
+  description: "Psychology battery and candidate evaluation for SSB with ISV Aspirants.",
+  robots: { index: false, follow: false }
 };
 
 // Outer shell for the entire /psych-battery segment (both the sidebar-shell

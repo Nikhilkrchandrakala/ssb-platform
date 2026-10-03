@@ -4,7 +4,9 @@ import { Order } from "@/server/models";
 import PaymentHistoryClient, { type PaymentHistoryOrder } from "./PaymentHistoryClient";
 
 export const metadata = {
-  title: "Payment History | SSB with ISV",
+  title: "Payment History",
+  description: "View your payments and receipts for SSB with ISV programs.",
+  robots: { index: false, follow: false }
 };
 
 // Server-side auth guard — replaces legacy AuthRoute's client-side localStorage

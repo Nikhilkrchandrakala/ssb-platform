@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import RefundCancellationClient from "./RefundCancellationClient";
 
 export const metadata: Metadata = {
-  title: "Refund & Cancellation Policy | SSB with ISV",
-  description: "Refund and cancellation policy for SSB with ISV's courses, mentoring sessions and batches.",
-  alternates: {
-    canonical: "https://ssbwithisv.in/RefundCancellation",
+  title: "Refund & Cancellation Policy",
+  description: "Refund and cancellation terms for SSB with ISV ONLINE courses, VTX™ access and the Nagpur residential camp. Read before you enrol.",
+  alternates: { canonical: "/RefundCancellation" },
+  openGraph: {
+    title: "Refund & Cancellation Policy",
+    description: "Refund and cancellation terms for SSB with ISV ONLINE courses, VTX™ access and the Nagpur residential camp. Read before you enrol.",
+    url: "/RefundCancellation",
   },
 };
 

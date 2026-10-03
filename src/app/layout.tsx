@@ -6,6 +6,11 @@ import ServiceWorkerRegister from "@/components/pwa/ServiceWorkerRegister";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import { APPLE_SPLASH_SCREENS } from "@/components/pwa/appleSplashScreens";
 
+const SITE_URL = "https://ssbwithisv.in";
+const SITE_NAME = "SSB with ISV";
+const DEFAULT_DESCRIPTION =
+  "Assessor-led SSB preparation by an ex-GTO. Join ONLINE mentoring with VTX™, India's first virtual GTO ground, or the 12-day residential SSB camp in Nagpur.";
+
 // PWA icon/manifest metadata lives here (root layout) rather than per-segment
 // so it applies uniformly to (site), /admin, and /psych-battery alike —
 // Next.js metadata merging replaces a parent's `icons` object wholesale if a
@@ -13,7 +18,22 @@ import { APPLE_SPLASH_SCREENS } from "@/components/pwa/appleSplashScreens";
 // `icons` overrides (which only ever set a bare favicon) would otherwise
 // have shadowed the fuller icon set below on those routes.
 export const metadata: Metadata = {
-  title: "SSB with ISV",
+  metadataBase: new URL("https://ssbwithisv.in"),
+  title: {
+    default: "SSB with ISV | ONLINE & Offline SSB Training by Ex-GTO",
+    template: "%s | SSB with ISV",
+  },
+  description: DEFAULT_DESCRIPTION,
+  applicationName: "SSB with ISV",
+  openGraph: {
+    type: "website",
+    siteName: "SSB with ISV",
+    locale: "en_IN",
+    url: "https://ssbwithisv.in",
+    images: [{ url: "/og-default.jpg", width: 1200, height: 630, alt: "SSB with ISV" }],
+  },
+  twitter: { card: "summary_large_image" },
+  robots: { index: true, follow: true },
   manifest: "/manifest.json",
   icons: {
     icon: [

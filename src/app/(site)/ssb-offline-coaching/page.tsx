@@ -9,19 +9,15 @@ import Philosophy from "@/components/home/Philosophy";
 // No literal "#" in this title — Zoho SalesIQ's own widget-init API 400s on
 // any page_title containing one (see ../ssb-coaching/page.tsx for the
 // confirmed-broken details), which silently breaks the chat button.
-const PAGE_TITLE = "SSB Offline Coaching in Nagpur | 12-Day Residential SSB Camp | SSB with ISV";
-const PAGE_DESCRIPTION =
-  "Authentic, on-ground SSB mentoring - now in Nagpur. A 12-day residential programme led by Lt Cdr Nikhil Kumar Chandrakala (Retd.), founding GTO of SSB Kolkata. Limited seats.";
 
 export const metadata: Metadata = {
-  title: PAGE_TITLE,
-  description: PAGE_DESCRIPTION,
-  alternates: { canonical: "https://ssbwithisv.in/ssb-offline-coaching" },
+  title: "SSB Offline Training in Nagpur | 12-Day Residential Camp",
+  description: "Residential SSB training academy in Nagpur by SSB with ISV. 12 days of GTO tasks, interview and psychology preparation led by an ex-GTO. Limited seats per batch.",
+  alternates: { canonical: "/ssb-offline-coaching" },
   openGraph: {
-    title: PAGE_TITLE,
-    description: PAGE_DESCRIPTION,
-    url: "https://ssbwithisv.in/ssb-offline-coaching",
-    type: "website",
+    title: "SSB Offline Training in Nagpur | 12-Day Residential Camp",
+    description: "Residential SSB training academy in Nagpur by SSB with ISV. 12 days of GTO tasks, interview and psychology preparation led by an ex-GTO. Limited seats per batch.",
+    url: "/ssb-offline-coaching",
   },
 };
 
@@ -127,9 +123,34 @@ const sectionLabelStyle = { font: "500 20px/1 var(--font-cta)", letterSpacing: "
 const sectionHeadingStyle = { margin: "16px 0 20px", font: "500 clamp(24px,2.8vw,36px)/1.25 var(--font-display)" };
 const sectionLeadStyle = { margin: "0 0 24px", font: "400 17px/1.6 var(--font-body)", color: "var(--base-cream-300)" };
 
+const offlineJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "LocalBusiness",
+      "@id": "https://ssbwithisv.in/ssb-offline-coaching#localbusiness",
+      "name": "SSB with ISV, Nagpur",
+      "address": "TODO: Add real address",
+      "telephone": "TODO: Add real phone number",
+      "openingHours": "TODO: Add real opening hours",
+      "image": "https://ssbwithisv.in/assets/logo/ISV.webp"
+    },
+    {
+      "@type": "Course",
+      "name": "12-Day Residential SSB Camp in Nagpur",
+      "description": "Residential SSB training academy in Nagpur by SSB with ISV. 12 days of GTO tasks, interview and psychology preparation led by an ex-GTO. Limited seats per batch.",
+      "provider": {
+        "@type": "Organization",
+        "name": "SSB with ISV"
+      }
+    }
+  ]
+};
+
 export default function SsbOfflineCoachingLandingPage() {
   return (
     <div className="ssb-lp-offline">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(offlineJsonLd) }} />
       {/* Utility bar */}
       <div
         style={{

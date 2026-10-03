@@ -2,7 +2,9 @@ import { requireSiteUser } from "@/server/auth";
 import ProfilePageClient, { type ProfilePageUser } from "./ProfilePageClient";
 
 export const metadata = {
-  title: "My Profile | SSB with ISV",
+  title: "My Profile",
+  description: "Manage your SSB with ISV Aspirant profile and account details.",
+  robots: { index: false, follow: false }
 };
 
 // Server-side auth guard — replaces legacy AuthRoute's client-side localStorage

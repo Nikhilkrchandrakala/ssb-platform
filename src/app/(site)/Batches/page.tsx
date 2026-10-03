@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import BatchesView from "./BatchesView";
 
 export const metadata: Metadata = {
-  title: "Ongoing Online SSB Batches | SSB with ISV",
-  description:
-    "Browse ongoing online SSB batches and book your seat for the 12-day SSB Hackathon or individual modules — Intro to SSB & PPDT, Psych Test Prep, Interview Theory and Group Testing on VTX.",
-  alternates: {
-    canonical: "https://ssbwithisv.in/Batches",
+  title: "SSB Batches & Schedule | ONLINE and Nagpur Offline",
+  description: "See upcoming SSB batch dates for ONLINE mentoring and the residential camp in Nagpur. Check seats, schedule and enrolment details before you register.",
+  alternates: { canonical: "/Batches" },
+  openGraph: {
+    title: "SSB Batches & Schedule | ONLINE and Nagpur Offline",
+    description: "See upcoming SSB batch dates for ONLINE mentoring and the residential camp in Nagpur. Check seats, schedule and enrolment details before you register.",
+    url: "/Batches",
   },
 };
 

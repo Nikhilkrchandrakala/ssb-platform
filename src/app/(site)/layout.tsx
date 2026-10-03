@@ -27,28 +27,24 @@ import "../legacy-custom.css";
 // (and other auth-portal-only rules) onto every public page. Each of those
 // pages imports it directly instead.
 
-const SITE_TITLE = "Best SSB Coaching in India | Online SSB Training by Ex-GTO | SSB with ISV";
-const SITE_DESCRIPTION =
-  "India's trusted SSB coaching institute led by ex-SSB assessors. Complete SSB preparation for Army, Navy & Air Force aspirants.";
+const DEFAULT_DESCRIPTION =
+  "Assessor-led SSB preparation by an ex-GTO. Join ONLINE mentoring with VTX™, India's first virtual GTO ground, or the 12-day residential SSB camp in Nagpur.";
 
 export const metadata: Metadata = {
-  title: SITE_TITLE,
-  description: SITE_DESCRIPTION,
-  // icons/manifest intentionally omitted — inherited from the root layout
+  description: DEFAULT_DESCRIPTION,
+  // icons/manifest intentionally omitted , inherited from the root layout
   // (src/app/layout.tsx), which now carries the full PWA icon set. Next.js
   // metadata merging replaces `icons` wholesale rather than deep-merging it,
   // so redeclaring even one field here would shadow the rest.
   openGraph: {
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
+    description: DEFAULT_DESCRIPTION,
     url: "https://ssbwithisv.in",
     images: ["https://ssbwithisv.in/assets/logo/ISV2.png"],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
+    description: DEFAULT_DESCRIPTION,
     images: ["https://ssbwithisv.in/assets/logo/ISV2.png"],
   },
   other: {

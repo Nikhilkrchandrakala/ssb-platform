@@ -14,15 +14,15 @@ import From from "@/components/home/From";
 import ReferralCapture from "@/components/home/ReferralCapture";
 import AnnouncementStrip from "@/components/home/AnnouncementStrip";
 
-const TITLE = "Best SSB Coaching in India | Online SSB Training by Ex-GTO | SSB with ISV";
-const DESCRIPTION =
-  "Prepare for the Services Selection Board (SSB) with India’s leading SSB coaching institute. Learn how to crack SSB interviews, psychology tests, GTO tasks and leadership assessments through expert mentoring by DIPR certified former SSB assessors";
 
 export const metadata: Metadata = {
-  title: TITLE,
-  description: DESCRIPTION,
-  alternates: {
-    canonical: "https://ssbwithisv.in/",
+  title: "SSB Training in India | ONLINE + Nagpur Offline",
+  description: "Assessor-led SSB preparation by an ex-GTO. Join ONLINE mentoring with VTX™, India's first virtual GTO ground, or the 12-day residential SSB camp in Nagpur.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "SSB Training in India | ONLINE + Nagpur Offline",
+    description: "Assessor-led SSB preparation by an ex-GTO. Join ONLINE mentoring with VTX™, India's first virtual GTO ground, or the 12-day residential SSB camp in Nagpur.",
+    url: "/",
   },
 };
 
@@ -149,6 +149,30 @@ const homeJsonLd = {
         },
       ],
     },
+    {
+      "@type": "Course",
+      "name": "ONLINE SSB Mentoring",
+      "description": "Live sessions, personal feedback and VTX™ virtual GTO ground practice.",
+      "provider": {
+        "@id": "https://ssbwithisv.in/#organization"
+      }
+    },
+    {
+      "@type": "Course",
+      "name": "VTX™ Virtual GTO Ground",
+      "description": "Practise GTO tasks on VTX™, India's first virtual GTO ground.",
+      "provider": {
+        "@id": "https://ssbwithisv.in/#organization"
+      }
+    },
+    {
+      "@type": "Course",
+      "name": "12-Day Residential SSB Camp in Nagpur",
+      "description": "Residential SSB training academy in Nagpur. 12 days of GTO tasks, interview and psychology preparation.",
+      "provider": {
+        "@id": "https://ssbwithisv.in/#organization"
+      }
+    }
   ],
 };
 

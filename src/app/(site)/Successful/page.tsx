@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import "@/style/custom-theme.css";
 
-export const metadata: Metadata = {
-  title: "Account Recovered | SSB with ISV",
+export const metadata = {
+  title: "Account Recovered",
+  description: "Your SSB with ISV account has been recovered successfully.",
+  robots: { index: false, follow: false }
 };
 
 export default function Successful() {

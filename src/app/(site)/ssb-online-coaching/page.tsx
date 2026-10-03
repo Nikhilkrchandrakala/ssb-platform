@@ -9,19 +9,15 @@ import LeadForm from "./LeadForm";
 // any page_title containing one ({"code":1015,"message":"Either the
 // inputstream is invalid or absent"}, confirmed 2026-08-20), which silently
 // breaks the chat button since the widget never finishes initializing.
-const PAGE_TITLE = "SSB with ISV - India's No. 1 Online SSB Coaching | Book Your Free Discovery Call";
-const PAGE_DESCRIPTION =
-  "Authentic online SSB mentorship by a DIPR-certified GTO. Assessor-led, personality-first coaching for Army, Navy & Air Force aspirants - fully online. ~35% success rate.";
 
 export const metadata: Metadata = {
-  title: PAGE_TITLE,
-  description: PAGE_DESCRIPTION,
-  alternates: { canonical: "https://ssbwithisv.in/ssb-online-coaching" },
+  title: "ONLINE SSB Training by Ex-GTO | Free Discovery Call",
+  description: "India's first ONLINE SSB mentoring academy. Live sessions, personal feedback and VTX™ virtual GTO ground practice. Book your free discovery call today.",
+  alternates: { canonical: "/ssb-online-coaching" },
   openGraph: {
-    title: PAGE_TITLE,
-    description: PAGE_DESCRIPTION,
-    url: "https://ssbwithisv.in/ssb-online-coaching",
-    type: "website",
+    title: "ONLINE SSB Training by Ex-GTO | Free Discovery Call",
+    description: "India's first ONLINE SSB mentoring academy. Live sessions, personal feedback and VTX™ virtual GTO ground practice. Book your free discovery call today.",
+    url: "/ssb-online-coaching",
   },
 };
 

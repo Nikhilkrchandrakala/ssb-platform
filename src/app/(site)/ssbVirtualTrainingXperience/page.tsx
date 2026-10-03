@@ -9,11 +9,13 @@ import VtxMuteVideo from "./VtxMuteVideo";
 import SweepTitle from "./SweepTitle";
 
 export const metadata: Metadata = {
-  title: "Virtual Training Xperience | Virtual GTO Ground by SSB with ISV",
-  description:
-    "XperienceIndia’s first Virtual Training Xperience (VTX™) for SSB preparation. Practice GTO tasks, group discussions, and leadership exercises in a simulated SSB environment designed by ex-GTO assessors.",
-  alternates: {
-    canonical: "https://ssbwithisv.in/ssbVirtualTrainingXperience",
+  title: "VTX™ Virtual GTO Ground | India's First Virtual SSB Training",
+  description: "Practise GTO tasks on VTX™, India's first virtual GTO ground. Group tasks, observation and expert feedback designed by an ex-GTO, from anywhere in India.",
+  alternates: { canonical: "/ssbVirtualTrainingXperience" },
+  openGraph: {
+    title: "VTX™ Virtual GTO Ground | India's First Virtual SSB Training",
+    description: "Practise GTO tasks on VTX™, India's first virtual GTO ground. Group tasks, observation and expert feedback designed by an ex-GTO, from anywhere in India.",
+    url: "/ssbVirtualTrainingXperience",
   },
 };
 

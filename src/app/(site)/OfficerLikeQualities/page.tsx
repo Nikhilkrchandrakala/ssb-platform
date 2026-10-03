@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "15 Officer Like Qualities (OLQs) Explained | SSB with ISV",
     description:
-      "Understand all 15 Officer Like Qualities (OLQs) assessed at the Services Selection Board — mapped across 4 personality factors by DIPR certified ex-SSB assessors.",
+      "Understand all 15 Officer Like Qualities (OLQs) assessed at the Services Selection Board , mapped across 4 personality factors by DIPR certified ex-SSB assessors.",
     url: "https://ssbwithisv.in/OfficerLikeQualities",
     type: "website",
   },
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "15 Officer Like Qualities (OLQs) Explained | SSB with ISV",
     description:
-      "Understand all 15 Officer Like Qualities (OLQs) assessed at the Services Selection Board — mapped across 4 personality factors.",
+      "Understand all 15 Officer Like Qualities (OLQs) assessed at the Services Selection Board , mapped across 4 personality factors.",
   },
 };
 

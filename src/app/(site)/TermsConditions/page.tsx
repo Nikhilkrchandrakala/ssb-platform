@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import "@/style/TermsConditions.css";
 
 export const metadata: Metadata = {
-  title: "Terms & Conditions | SSB with ISV",
-  description: "Terms & Conditions governing use of SSB with ISV's website, courses and mentoring services.",
-  alternates: {
-    canonical: "https://ssbwithisv.in/TermsConditions",
+  title: "Terms & Conditions",
+  description: "Terms governing use of the SSB with ISV website, ONLINE courses, VTX™ and offline programs in Nagpur. Please read before registering.",
+  alternates: { canonical: "/TermsConditions" },
+  openGraph: {
+    title: "Terms & Conditions",
+    description: "Terms governing use of the SSB with ISV website, ONLINE courses, VTX™ and offline programs in Nagpur. Please read before registering.",
+    url: "/TermsConditions",
   },
 };
 

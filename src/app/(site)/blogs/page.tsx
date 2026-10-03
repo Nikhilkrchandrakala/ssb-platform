@@ -8,11 +8,13 @@ import { slugifyBlogTitle } from "./utils";
 import BlogThumb from "./BlogThumb";
 
 export const metadata: Metadata = {
-  title: "SSB Preparation Blog | Expert SSB Interview Tips & Guides | SSB with ISV",
-  description:
-    "Read expert SSB preparation guides, tips and insights on SSB psychology tests, GTO tasks, interview preparation and officer-like qualities. Written by ex-SSB assessors.",
-  alternates: {
-    canonical: "https://ssbwithisv.in/blogs",
+  title: "SSB Preparation Blog | Interview Tips and Guides",
+  description: "Practical SSB preparation guides by an ex-GTO: Officer Like Qualities, GTO tasks, psychology tests, interview questions and common reasons for screen out.",
+  alternates: { canonical: "/blogs" },
+  openGraph: {
+    title: "SSB Preparation Blog | Interview Tips and Guides",
+    description: "Practical SSB preparation guides by an ex-GTO: Officer Like Qualities, GTO tasks, psychology tests, interview questions and common reasons for screen out.",
+    url: "/blogs",
   },
 };
 

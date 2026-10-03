@@ -4,7 +4,9 @@ import { Order, MagazinePdf } from "@/server/models";
 import ProfileDashboardClient, { type DashboardOrder, type DashboardUser, type DashboardMagazine } from "./ProfileDashboardClient";
 
 export const metadata = {
-  title: "My Dashboard | SSB with ISV",
+  title: "My Dashboard",
+  description: "Access your SSB with ISV courses, VTX™ sessions and progress.",
+  robots: { index: false, follow: false }
 };
 
 // Server-side auth guard: replaces legacy AuthRoute's client-side localStorage
