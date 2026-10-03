@@ -9,7 +9,7 @@ import { APPLE_SPLASH_SCREENS } from "@/components/pwa/appleSplashScreens";
 const SITE_URL = "https://ssbwithisv.in";
 const SITE_NAME = "SSB with ISV";
 const DEFAULT_DESCRIPTION =
-  "Assessor-led SSB preparation by an ex-GTO. Join ONLINE mentoring with VTX™, India's first virtual GTO ground, or the 12-day residential SSB camp in Nagpur.";
+  "Assessor-led SSB preparation by an ex-GTO. Join online mentoring with VTX™, India's first virtual GTO ground, or the 12-day residential SSB camp in Nagpur.";
 
 // PWA icon/manifest metadata lives here (root layout) rather than per-segment
 // so it applies uniformly to (site), /admin, and /psych-battery alike —

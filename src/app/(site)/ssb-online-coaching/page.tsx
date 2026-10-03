@@ -11,12 +11,12 @@ import LeadForm from "./LeadForm";
 // breaks the chat button since the widget never finishes initializing.
 
 export const metadata: Metadata = {
-  title: "ONLINE SSB Training by Ex-GTO | Free Discovery Call",
-  description: "India's first ONLINE SSB mentoring academy. Live sessions, personal feedback and VTX™ virtual GTO ground practice. Book your free discovery call today.",
+  title: "Best Online SSB Training by Ex-GTO | Free Discovery Call",
+  description: "India's first Online SSB mentoring academy. Live sessions, personal feedback and VTX™ virtual GTO ground practice. Book your free discovery call today.",
   alternates: { canonical: "/ssb-online-coaching" },
   openGraph: {
-    title: "ONLINE SSB Training by Ex-GTO | Free Discovery Call",
-    description: "India's first ONLINE SSB mentoring academy. Live sessions, personal feedback and VTX™ virtual GTO ground practice. Book your free discovery call today.",
+    title: "Best Online SSB Training by Ex-GTO | Free Discovery Call",
+    description: "India's first Online SSB mentoring academy. Live sessions, personal feedback and VTX™ virtual GTO ground practice. Book your free discovery call today.",
     url: "/ssb-online-coaching",
   },
 };

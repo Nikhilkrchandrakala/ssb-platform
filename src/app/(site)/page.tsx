@@ -16,12 +16,12 @@ import AnnouncementStrip from "@/components/home/AnnouncementStrip";
 
 
 export const metadata: Metadata = {
-  title: "SSB Training in India | ONLINE + Nagpur Offline",
-  description: "Assessor-led SSB preparation by an ex-GTO. Join ONLINE mentoring with VTX™, India's first virtual GTO ground, or the 12-day residential SSB camp in Nagpur.",
+  title: "Best SSB Training in India | Online + Nagpur Offline",
+  description: "Assessor-led SSB preparation by an ex-GTO. Join online mentoring with VTX™, India's first virtual GTO ground, or the 12-day residential SSB camp in Nagpur.",
   alternates: { canonical: "/" },
   openGraph: {
-    title: "SSB Training in India | ONLINE + Nagpur Offline",
-    description: "Assessor-led SSB preparation by an ex-GTO. Join ONLINE mentoring with VTX™, India's first virtual GTO ground, or the 12-day residential SSB camp in Nagpur.",
+    title: "Best SSB Training in India | Online + Nagpur Offline",
+    description: "Assessor-led SSB preparation by an ex-GTO. Join online mentoring with VTX™, India's first virtual GTO ground, or the 12-day residential SSB camp in Nagpur.",
     url: "/",
   },
 };

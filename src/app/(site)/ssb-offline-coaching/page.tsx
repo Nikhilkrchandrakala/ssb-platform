@@ -11,11 +11,11 @@ import Philosophy from "@/components/home/Philosophy";
 // confirmed-broken details), which silently breaks the chat button.
 
 export const metadata: Metadata = {
-  title: "SSB Offline Training in Nagpur | 12-Day Residential Camp",
+  title: "Best Offline SSB Training in India | 12-Day Residential Camp",
   description: "Residential SSB training academy in Nagpur by SSB with ISV. 12 days of GTO tasks, interview and psychology preparation led by an ex-GTO. Limited seats per batch.",
   alternates: { canonical: "/ssb-offline-coaching" },
   openGraph: {
-    title: "SSB Offline Training in Nagpur | 12-Day Residential Camp",
+    title: "Best Offline SSB Training in India | 12-Day Residential Camp",
     description: "Residential SSB training academy in Nagpur by SSB with ISV. 12 days of GTO tasks, interview and psychology preparation led by an ex-GTO. Limited seats per batch.",
     url: "/ssb-offline-coaching",
   },

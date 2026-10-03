@@ -28,7 +28,7 @@ import "../legacy-custom.css";
 // pages imports it directly instead.
 
 const DEFAULT_DESCRIPTION =
-  "Assessor-led SSB preparation by an ex-GTO. Join ONLINE mentoring with VTX™, India's first virtual GTO ground, or the 12-day residential SSB camp in Nagpur.";
+  "Assessor-led SSB preparation by an ex-GTO. Join online mentoring with VTX™, India's first virtual GTO ground, or the 12-day residential SSB camp in Nagpur.";
 
 export const metadata: Metadata = {
   description: DEFAULT_DESCRIPTION,
