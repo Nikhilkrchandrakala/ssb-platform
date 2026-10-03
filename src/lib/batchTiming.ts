@@ -162,3 +162,58 @@ export function formatRealStartTime(slot: BatchTimingSlot): string {
     timeZone: "Asia/Kolkata",
   });
 }
+
+/**
+ * Returns the time remaining until a payment link expires (e.g. "4d 18h left", "2h 15m left", "Link Expired").
+ */
+export function formatLinkTimeRemaining(expiresAt?: string | Date | null, now: number = Date.now()): {
+  text: string;
+  isExpired: boolean;
+  isExpiringSoon: boolean;
+} {
+  if (!expiresAt) return { text: "No expiry", isExpired: false, isExpiringSoon: false };
+  const expiryTime = new Date(expiresAt).getTime();
+  if (Number.isNaN(expiryTime)) return { text: "No expiry", isExpired: false, isExpiringSoon: false };
+
+  const msLeft = expiryTime - now;
+  if (msLeft <= 0) {
+    return { text: "Link Expired", isExpired: true, isExpiringSoon: false };
+  }
+
+  const totalMinutes = Math.floor(msLeft / 60000);
+  const days = Math.floor(totalMinutes / (60 * 24));
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+  const minutes = totalMinutes % 60;
+
+  let text = "";
+  if (days > 0) {
+    text = `${days}d ${hours}h left`;
+  } else if (hours > 0) {
+    text = `${hours}h ${minutes}m left`;
+  } else {
+    text = `${minutes}m left`;
+  }
+
+  return {
+    text,
+    isExpired: false,
+    isExpiringSoon: days === 0,
+  };
+}
+
+/** Formats an expiry date for human-readable display (e.g. "08 Oct 2026, 4:52 PM"). */
+export function formatLinkExpiryDateTime(expiresAt?: string | Date | null): string {
+  if (!expiresAt) return "No expiry";
+  const d = new Date(expiresAt);
+  if (Number.isNaN(d.getTime())) return "No expiry";
+  return d.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata",
+  });
+}
+

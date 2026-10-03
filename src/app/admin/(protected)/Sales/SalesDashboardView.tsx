@@ -15,6 +15,7 @@ import {
   MoreVertical,
   ChevronLeft,
   ChevronRight,
+  Clock,
 } from "lucide-react";
 import { useAdminUser } from "@/components/admin/AdminUserProvider";
 import {
@@ -25,6 +26,8 @@ import {
   getBatchCurrentDay,
   getBatchDaysRemaining,
   BATCH_DURATION_DAYS,
+  formatLinkTimeRemaining,
+  formatLinkExpiryDateTime,
 } from "@/lib/batchTiming";
 import { redistributeRemaining } from "@/lib/redistributeInstallments";
 import SearchCombobox from "@/components/admin/SearchCombobox";
@@ -54,6 +57,7 @@ interface Installment {
   dueDate?: string;
   status: "pending" | "paid" | "overdue" | "failed";
   paymentLinkUrl?: string | null;
+  paymentLinkExpiresAt?: string | null;
   paymentId?: string | null;
   paidAt?: string | null;
   paymentMethod?: "razorpay" | "manual" | null;
@@ -599,7 +603,11 @@ export default function SalesDashboardView() {
   const [installmentRows, setInstallmentRows] = useState<SuggestedInstallment[]>([]);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
-  const [enrollResult, setEnrollResult] = useState<{ paymentLink: string; registrationEmailDelivered: boolean } | null>(null);
+  const [enrollResult, setEnrollResult] = useState<{
+    paymentLink: string;
+    registrationEmailDelivered: boolean;
+    paymentLinkExpiresAt?: string | null;
+  } | null>(null);
   const EMPTY_MODULE_CHECKS: Record<string, boolean> = { full_course: false, ssb_ppdt: false, psych: false, interview: false, group_testing: false };
   const [moduleChecks, setModuleChecks] = useState<Record<string, boolean>>(EMPTY_MODULE_CHECKS);
   const [couponCode, setCouponCode] = useState("");
@@ -755,7 +763,11 @@ export default function SalesDashboardView() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Enrollment failed");
-      setEnrollResult({ paymentLink: data.paymentLink, registrationEmailDelivered: data.registrationEmailDelivered !== false });
+      setEnrollResult({
+        paymentLink: data.paymentLink,
+        registrationEmailDelivered: data.registrationEmailDelivered !== false,
+        paymentLinkExpiresAt: data.paymentLinkExpiresAt,
+      });
       loadMyOrders();
       swalToast("success", "Student enrolled — payment link generated");
     } catch (err) {
@@ -1416,7 +1428,28 @@ export default function SalesDashboardView() {
                         </td>
                         <td>₹{Number(order.installmentPlanId?.installments?.[0]?.amount ?? 0).toFixed(2)}</td>
                         <td>{remainingCount}</td>
-                        <td>{inst ? formatDate(inst.dueDate) : "—"}</td>
+                        <td>
+                          <div>{inst ? formatDate(inst.dueDate) : "—"}</div>
+                          {inst?.paymentLinkUrl && inst.status !== "paid" && (() => {
+                            const expiry = formatLinkTimeRemaining(inst.paymentLinkExpiresAt, now);
+                            return (
+                              <div
+                                style={{
+                                  fontSize: "0.72rem",
+                                  color: expiry.isExpired ? "#e74c3c" : expiry.isExpiringSoon ? "#f39c12" : "var(--primary-gold)",
+                                  marginTop: 3,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 4,
+                                  fontWeight: 600,
+                                }}
+                                title={inst.paymentLinkExpiresAt ? `Expires: ${formatLinkExpiryDateTime(inst.paymentLinkExpiresAt)}` : undefined}
+                              >
+                                <Clock size={11} style={ICON_STYLE} /> {expiry.text}
+                              </div>
+                            );
+                          })()}
+                        </td>
                         <td>{planStatusChip(order)}</td>
                         <td style={{ textAlign: "center" }}>
                           <button
@@ -1492,6 +1525,25 @@ export default function SalesDashboardView() {
                     // paid by the student directly from their own dashboard — there's
                     // no link for a sales person to copy/resend/check here anymore.
                     <>
+                      {inst?.paymentLinkExpiresAt && (() => {
+                        const expiry = formatLinkTimeRemaining(inst.paymentLinkExpiresAt, now);
+                        return (
+                          <div
+                            style={{
+                              padding: "6px 14px",
+                              fontSize: "0.72rem",
+                              color: expiry.isExpired ? "#e74c3c" : expiry.isExpiringSoon ? "#f39c12" : "var(--primary-gold)",
+                              borderBottom: "1px solid rgba(255,255,255,0.08)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 5,
+                              fontWeight: 600,
+                            }}
+                          >
+                            <Clock size={12} style={ICON_STYLE} /> Link: {expiry.text}
+                          </div>
+                        );
+                      })()}
                       <button style={menuItemStyle} onClick={() => runAction(() => copyLink(inst.paymentLinkUrl!))}>
                         Copy Link
                       </button>
@@ -1796,6 +1848,12 @@ export default function SalesDashboardView() {
                     <button className="thm-btn secondary" style={{ padding: "6px 14px" }} onClick={() => copyLink(enrollResult.paymentLink)}>
                       Copy
                     </button>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, fontSize: "0.83rem", color: "var(--primary-gold)" }}>
+                    <Clock size={14} style={ICON_STYLE} />
+                    <span>
+                      Link expires in <strong>5 days</strong> ({formatLinkExpiryDateTime(enrollResult.paymentLinkExpiresAt)})
+                    </span>
                   </div>
                   {!enrollResult.registrationEmailDelivered && (
                     <p style={{ color: "#e74c3c", fontSize: "0.82rem", marginTop: 10 }}>
@@ -2177,7 +2235,28 @@ export default function SalesDashboardView() {
                         <td>{inst.seq}</td>
                         <td>₹{Number(inst.amount || 0).toFixed(2)}</td>
                         <td>{formatDate(inst.dueDate)}</td>
-                        <td>{installmentStatusChip(inst.status)}</td>
+                        <td>
+                          {installmentStatusChip(inst.status)}
+                          {inst.status !== "paid" && inst.paymentLinkExpiresAt && (() => {
+                            const expiry = formatLinkTimeRemaining(inst.paymentLinkExpiresAt, now);
+                            return (
+                              <div
+                                style={{
+                                  fontSize: "0.7rem",
+                                  marginTop: 4,
+                                  color: expiry.isExpired ? "#e74c3c" : expiry.isExpiringSoon ? "#f39c12" : "var(--primary-gold)",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 4,
+                                  fontWeight: 600,
+                                }}
+                                title={`Expires: ${formatLinkExpiryDateTime(inst.paymentLinkExpiresAt)}`}
+                              >
+                                <Clock size={11} style={ICON_STYLE} /> {expiry.text}
+                              </div>
+                            );
+                          })()}
+                        </td>
                         <td>{inst.paidAt ? formatDate(inst.paidAt) : "—"}</td>
                         <td>
                           {inst.status === "paid" ? (
@@ -2207,6 +2286,20 @@ export default function SalesDashboardView() {
                         <td style={{ textAlign: "center" }}>
                           {inst.status !== "paid" && (
                             <div style={{ display: "flex", gap: 4, justifyContent: "center", flexWrap: "wrap" }}>
+                              {inst.paymentLinkUrl && (
+                                <button
+                                  type="button"
+                                  className="thm-btn secondary"
+                                  style={{ padding: "3px 8px", fontSize: "0.7rem" }}
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(inst.paymentLinkUrl || "");
+                                    swalToast("success", "Payment link copied");
+                                  }}
+                                  title={inst.paymentLinkExpiresAt ? `Expires: ${formatLinkExpiryDateTime(inst.paymentLinkExpiresAt)}` : undefined}
+                                >
+                                  Copy Link
+                                </button>
+                              )}
                               <button
                                 type="button"
                                 className="thm-btn secondary"

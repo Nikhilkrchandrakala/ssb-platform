@@ -248,17 +248,23 @@ export async function POST(req: NextRequest) {
         ? `${moduleLabel} Fee — ${batchLabel} — ${formatRealStartTime(slot)}`
         : `${moduleLabel} — Registration Fee — ${batchLabel} — ${formatRealStartTime(slot)}`;
 
+    // Razorpay payment link expires in exactly 5 days from generation
+    const LINK_EXPIRY_DAYS = 5;
+    const linkExpiresAt = new Date(Date.now() + LINK_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+    const expireBy = Math.floor(linkExpiresAt.getTime() / 1000);
+
     const paymentLink = await createPaymentLink({
       amountRupees: initialAmount,
       customerName: studentName,
       customerEmail: studentEmail,
       description,
       notes: { orderId: String(order._id), installmentPlanId: String(plan._id), seq: "1" },
+      expireBy,
     });
 
     plan.installments[0].paymentLinkId = paymentLink.id;
     plan.installments[0].paymentLinkUrl = paymentLink.short_url;
-    plan.installments[0].paymentLinkExpiresAt = paymentLink.expire_by ? new Date(paymentLink.expire_by * 1000) : null;
+    plan.installments[0].paymentLinkExpiresAt = paymentLink.expire_by ? new Date(paymentLink.expire_by * 1000) : linkExpiresAt;
     await plan.save();
 
     // The student's own "batch_registration_link" notification — this used
@@ -297,7 +303,7 @@ export async function POST(req: NextRequest) {
       action: "LINK_GENERATED",
       orderId: order._id,
       installmentPlanId: plan._id,
-      meta: { seq: 1, amount: initialAmount, paymentLinkId: paymentLink.id },
+      meta: { seq: 1, amount: initialAmount, paymentLinkId: paymentLink.id, expiresAt: plan.installments[0].paymentLinkExpiresAt },
     });
 
     return NextResponse.json({
@@ -305,6 +311,7 @@ export async function POST(req: NextRequest) {
       installmentPlanId: plan._id,
       studentId: student._id,
       paymentLink: paymentLink.short_url,
+      paymentLinkExpiresAt: plan.installments[0].paymentLinkExpiresAt,
       finalPriceInclGST,
       discount,
       couponCode: appliedCouponCode,
