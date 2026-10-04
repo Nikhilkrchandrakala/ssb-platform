@@ -81,6 +81,9 @@ function seatsInfo(slot: OfflineSlot) {
 export default function OfflineBatchesView() {
   const router = useRouter();
   const { user } = useSiteUser();
+  const isAdmin = Boolean(
+    user?.role && ["admin", "owner", "franchise", "assessor"].includes(user.role)
+  );
 
   const [slots, setSlots] = useState<OfflineSlot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -334,7 +337,7 @@ export default function OfflineBatchesView() {
           </div>
           <select className={styles.sortSelect} value={sortBy} onChange={(e) => handleSortChange(e.target.value as "soonest" | "seats")}>
             <option value="soonest">Sort: Starting Soonest</option>
-            <option value="seats">Sort: Most Seats Available</option>
+            {isAdmin && <option value="seats">Sort: Most Seats Available</option>}
           </select>
           <div className={styles.dateRangeBox}>
             <input
@@ -413,20 +416,22 @@ export default function OfflineBatchesView() {
                   </div>
                 )}
 
-                <div className={styles.seatsSection}>
-                  <div className={styles.seatsRow}>
-                    <span>Seats filled</span>
-                    <span className={full ? styles.seatsFullText : lowSeats ? styles.seatsUrgent : ""}>
-                      {full ? "Batch Full" : lowSeats ? `Only ${available} left!` : `${available} of ${max} left`}
-                    </span>
+                {isAdmin && (
+                  <div className={styles.seatsSection}>
+                    <div className={styles.seatsRow}>
+                      <span>Seats filled</span>
+                      <span className={full ? styles.seatsFullText : lowSeats ? styles.seatsUrgent : ""}>
+                        {full ? "Batch Full" : lowSeats ? `Only ${available} left!` : `${available} of ${max} left`}
+                      </span>
+                    </div>
+                    <div className={styles.progressTrack}>
+                      <div
+                        className={`${styles.progressFill} ${full ? styles.progressFillFull : lowSeats ? styles.progressFillWarn : ""}`}
+                        style={{ width: `${pctFilled}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className={styles.progressTrack}>
-                    <div
-                      className={`${styles.progressFill} ${full ? styles.progressFillFull : lowSeats ? styles.progressFillWarn : ""}`}
-                      style={{ width: `${pctFilled}%` }}
-                    />
-                  </div>
-                </div>
+                )}
 
                 <ul className={styles.featureList}>
                   {INCLUDES.map((item) => (
@@ -484,7 +489,10 @@ export default function OfflineBatchesView() {
               <h2 className={styles.modalTitle}>{selectedBatch.title}</h2>
 
               <div className={styles.modalMetaGrid}>
-                <div className={styles.modalMetaCell}>
+                <div
+                  className={styles.modalMetaCell}
+                  style={!isAdmin && !selectedBatch.location ? { gridColumn: "1 / -1" } : undefined}
+                >
                   <div className={styles.modalMetaLabel}>
                     <FaCalendarAlt /> Start Date
                   </div>
@@ -492,14 +500,19 @@ export default function OfflineBatchesView() {
                     {new Date(selectedBatch.startTime).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
                   </div>
                 </div>
-                <div className={styles.modalMetaCell}>
-                  <div className={styles.modalMetaLabel}>
-                    <FaUsers /> Seats Left
+                {isAdmin && (
+                  <div className={styles.modalMetaCell}>
+                    <div className={styles.modalMetaLabel}>
+                      <FaUsers /> Seats Left
+                    </div>
+                    <div className={styles.modalMetaValue}>{seatsInfo(selectedBatch).available}</div>
                   </div>
-                  <div className={styles.modalMetaValue}>{seatsInfo(selectedBatch).available}</div>
-                </div>
+                )}
                 {selectedBatch.location && (
-                  <div className={styles.modalMetaCell} style={{ gridColumn: "1 / -1" }}>
+                  <div
+                    className={styles.modalMetaCell}
+                    style={isAdmin ? { gridColumn: "1 / -1" } : undefined}
+                  >
                     <div className={styles.modalMetaLabel}>
                       <FaMapMarkerAlt /> Location
                     </div>
