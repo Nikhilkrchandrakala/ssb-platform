@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { connectDB } from "@/server/db";
 import { InstallmentPlan, Order, Slot, User, Coupon } from "@/server/models";
 import { sendCredentialsEmail, sendSalesNotificationEmail } from "@/server/integrations/msg91";
+import { resolveClinicalStageFromModules } from "@/server/clinicalStageSync";
 
 interface InstallmentSubdoc {
   seq: number;
@@ -95,13 +96,7 @@ export async function markInstallmentPaid(opts: {
   student.role = "student";
   if (slot?.batchNo) student.batch = slot.batchNo.trim();
   const bookedModules: string[] = order.selectedModules || [];
-  if (bookedModules.length === 1 && bookedModules[0] !== "full_course") {
-    student.clinicalStage = bookedModules[0];
-  } else {
-    // Covers full_course, multi-module, and the empty-array (module-batch)
-    // case alike — mirrors verifyPayment/manualBookSlot's exact branching.
-    student.clinicalStage = "full_course";
-  }
+  student.clinicalStage = resolveClinicalStageFromModules(bookedModules);
 
   // Credentials, per Open Decision #3: cryptographically random, never derived
   // from name/phone/DOB, never logged. `pre("save")` hashes it via bcrypt.

@@ -208,7 +208,8 @@ function formatDate(dateStr?: string) {
 }
 
 function stagesOf(clinicalStage?: string) {
-  return (clinicalStage || "full_course")
+  if (!clinicalStage) return [];
+  return clinicalStage
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
@@ -353,7 +354,8 @@ export default function StudentRosterView() {
         s.name?.toLowerCase().includes(query) ||
         s.email?.toLowerCase().includes(query) ||
         (s.phone && s.phone.toLowerCase().includes(query));
-      const matchesStage = stageFilter === "all" || s.clinicalStage === stageFilter;
+      const rowStages = stagesOfRow(o, s.clinicalStage);
+      const matchesStage = stageFilter === "all" || rowStages.includes(stageFilter);
       const matchesBatch = batchFilter === "all" || (o?.slotId?.batchNo || s.batch) === batchFilter;
       const matchesMode = modeFilter === "all" || resolveEnrollmentMode(o?.slotId?.mode || s.enrollmentMode) === modeFilter;
       return matchesSearch && matchesStage && matchesBatch && matchesMode;
@@ -392,7 +394,16 @@ export default function StudentRosterView() {
       setEditPhone(student.phone || "");
       setEditBatch(student.batch || "");
       setEditChestNo(student.chestNo || "");
-      setEditModules(stagesOf(student.clinicalStage));
+      const studentStages = stagesOf(student.clinicalStage);
+      const effectiveStages =
+        studentStages.length > 0
+          ? studentStages
+          : Array.from(
+              new Set<string>(
+                (orders || []).flatMap((o: OrderItem) => stagesOfRow(o, student.clinicalStage))
+              )
+            );
+      setEditModules(effectiveStages);
       setEditEnrollmentMode(resolveEnrollmentMode(student.enrollmentMode));
       setIsDetailOpen(true);
     } catch (error) {
@@ -1042,7 +1053,10 @@ export default function StudentRosterView() {
                         onChange={(e) => setEditName(e.target.value)}
                       />
                       <div className="d-flex flex-wrap gap-1 mt-1">
-                        {stagesOf(detailStudent.clinicalStage).map((st) => (
+                        {(detailStudent.clinicalStage
+                          ? stagesOf(detailStudent.clinicalStage)
+                          : Array.from(new Set<string>(detailOrders.flatMap((o) => stagesOfRow(o, detailStudent.clinicalStage))))
+                        ).map((st) => (
                           <span key={st} className={`badge stage-select-inline ${STAGE_CLASS[st] || "stage-val-full_course"}`}>
                             {STAGE_TITLES[st] || st}
                           </span>
@@ -1131,6 +1145,7 @@ export default function StudentRosterView() {
                               renderAssessorMiniLabel(o.assignedPsych, "Psych"),
                               renderAssessorMiniLabel(o.assignedIO, "IO"),
                             ].filter(Boolean);
+                            const orderModuleTags = stagesOfRow(o, detailStudent.clinicalStage);
                             return (
                             <div className="course-item-card" key={o._id}>
                               <div className="course-item-left">
@@ -1138,10 +1153,23 @@ export default function StudentRosterView() {
                                   {o.slotId?.title || "Purchased Course Registration"}
                                   <EnrollmentModeBadge mode={o.slotId?.mode} />
                                 </h6>
-                                <p>
+                                <p className="mb-1">
                                   <code style={{ color: "var(--primary-gold)" }}>#{(o.orderId || o._id).substring(0, 10)}</code> &nbsp;|&nbsp;{" "}
                                   {o.slotId?.batchNo ? `Batch #${o.slotId.batchNo}` : "Course Module"}
                                 </p>
+                                {orderModuleTags.length > 0 && (
+                                  <div className="d-flex flex-wrap gap-1 mb-1">
+                                    {orderModuleTags.map((st) => (
+                                      <span
+                                        key={st}
+                                        className={`stage-select-inline ${STAGE_CLASS[st] || "stage-val-full_course"}`}
+                                        style={{ fontSize: "0.68rem", padding: "2px 7px" }}
+                                      >
+                                        {STAGE_TITLES[st] || st}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
                                 {orderAssessorBadges.length > 0 ? (
                                   <div className="d-flex flex-wrap gap-1 mt-1">{orderAssessorBadges}</div>
                                 ) : (

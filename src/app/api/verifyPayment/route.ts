@@ -6,6 +6,7 @@ import { Order, Slot, Coupon, User } from "@/server/models";
 import { verifyRazorpaySignature } from "@/server/integrations/razorpay";
 import { sendSalesNotificationEmail, sendCredentialsEmail } from "@/server/integrations/msg91";
 import { syncEnrollmentModeForUser } from "@/server/enrollmentModeSync";
+import { resolveClinicalStageFromModules, syncClinicalStageForUser } from "@/server/clinicalStageSync";
 
 export async function POST(req: NextRequest) {
   try {
@@ -60,11 +61,7 @@ export async function POST(req: NextRequest) {
       // would be a fabricated course-access grant.
     } else {
       const bookedModules: string[] = order.selectedModules || [];
-      if (bookedModules.length === 1 && bookedModules[0] !== "full_course") {
-        updateFields.clinicalStage = bookedModules[0];
-      } else if (bookedModules.includes("full_course") || bookedModules.length > 1 || bookedModules.length === 0) {
-        updateFields.clinicalStage = "full_course";
-      }
+      updateFields.clinicalStage = resolveClinicalStageFromModules(bookedModules);
     }
     await User.findByIdAndUpdate(order.userId, updateFields);
     // Re-derives enrollmentMode from this student's most recent paid Order
@@ -72,6 +69,7 @@ export async function POST(req: NextRequest) {
     // student who buys an offline batch and later an online one keeps
     // showing as offline everywhere forever.
     await syncEnrollmentModeForUser(String(order.userId));
+    await syncClinicalStageForUser(String(order.userId));
 
     // mark coupon used
     if (order.couponCode) {

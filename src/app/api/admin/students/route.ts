@@ -3,6 +3,7 @@ import { escapeRegExp } from "@/server/escapeRegExp";
 import { connectDB } from "@/server/db";
 import { getCurrentUser, hasRole } from "@/server/auth";
 import { User, Order } from "@/server/models";
+import { resolveClinicalStageFromModules } from "@/server/clinicalStageSync";
 
 /**
  * GET /api/admin/students
@@ -73,6 +74,28 @@ export async function GET(req: NextRequest) {
         if (!student.batch && paidOrders.length > 0 && paidOrders[0].slotId?.batchNo) {
           student.batch = paidOrders[0].slotId.batchNo.trim();
           modified = true;
+        }
+
+        const onlineOrders = paidOrders.filter((o) => (o.slotId as unknown as { mode?: string })?.mode !== "offline");
+        const hasFullCourseOrder = onlineOrders.some((o) => {
+          const mods = o.selectedModules || [];
+          const slot = o.slotId as unknown as { isFullCourse?: boolean } | null;
+          return mods.includes("full_course") || (slot?.isFullCourse && mods.length === 0);
+        });
+
+        if (!student.clinicalStage || (student.clinicalStage === "full_course" && !hasFullCourseOrder && onlineOrders.length > 0)) {
+          const allModules = Array.from(
+            new Set(
+              onlineOrders.flatMap((o) => o.selectedModules || []).filter((m: string) => m && m !== "full_course")
+            )
+          );
+          if (allModules.length > 0 && allModules.length < 4) {
+            const expectedStage = resolveClinicalStageFromModules(allModules);
+            if (student.clinicalStage !== expectedStage) {
+              student.clinicalStage = expectedStage;
+              modified = true;
+            }
+          }
         }
 
         if (modified) {

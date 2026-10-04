@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/server/db";
 import { getCurrentUser, hasRole } from "@/server/auth";
 import { User, Order, Submission, InstallmentPlan, Notification, SalesAuditLog, Slot, Lead, DeletedUserLog } from "@/server/models";
+import { syncClinicalStageForUser } from "@/server/clinicalStageSync";
 
 /**
  * GET /api/admin/students/:id
@@ -59,6 +60,26 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       .populate("assignedPsych", "name email phone")
       .populate("assignedIO", "name email phone")
       .sort({ createdAt: -1 });
+
+    // Self-heal clinicalStage if it was mistakenly set to full_course by the multi-module bug
+    if (orders.length > 0) {
+      const onlineOrders = orders.filter((o) => {
+        const slot = o.slotId as unknown as { mode?: string } | null;
+        return slot?.mode !== "offline";
+      });
+      const hasFullCourseOrder = onlineOrders.some((o) => {
+        const mods = o.selectedModules || [];
+        const slot = o.slotId as unknown as { isFullCourse?: boolean } | null;
+        return mods.includes("full_course") || (slot?.isFullCourse && mods.length === 0);
+      });
+
+      if (!student.clinicalStage || (student.clinicalStage === "full_course" && !hasFullCourseOrder && onlineOrders.length > 0)) {
+        const syncedStage = await syncClinicalStageForUser(id);
+        if (syncedStage) {
+          student.clinicalStage = syncedStage;
+        }
+      }
+    }
 
     let submissions: unknown[] = [];
     try {

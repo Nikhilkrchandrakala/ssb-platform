@@ -3,6 +3,7 @@ import { connectDB } from "@/server/db";
 import { getCurrentUser, hasRole } from "@/server/auth";
 import { Slot, Order, Course, User } from "@/server/models";
 import { syncEnrollmentModeForUser } from "@/server/enrollmentModeSync";
+import { resolveClinicalStageFromModules, syncClinicalStageForUser } from "@/server/clinicalStageSync";
 
 // Offline-safe baseline defaults, mirrors legacy slotRoutes.js
 const DEFAULT_PRICES: Record<string, number> = {
@@ -152,12 +153,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       targetUser.batch = slot.batchNo.trim();
     }
 
-    const bookedModules: string[] = order.selectedModules;
-    if (bookedModules.length === 1 && bookedModules[0] !== "full_course") {
-      targetUser.clinicalStage = bookedModules[0];
-    } else if (bookedModules.includes("full_course") || bookedModules.length > 1) {
-      targetUser.clinicalStage = "full_course";
-    }
+    const bookedModules: string[] = order.selectedModules || [];
+    targetUser.clinicalStage = resolveClinicalStageFromModules(bookedModules);
 
     // Forcefully save to trigger Mongoose `updatedAt` update even if nothing
     // strictly changed, so the student jumps to the top of the Student Roster
@@ -168,6 +165,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // booked into an online batch after an earlier offline purchase (or vice
     // versa) kept showing the wrong enrollment-mode badge everywhere forever.
     await syncEnrollmentModeForUser(String(targetUser._id));
+    await syncClinicalStageForUser(String(targetUser._id));
 
     return NextResponse.json({
       message: "Slot booked manually successfully",
