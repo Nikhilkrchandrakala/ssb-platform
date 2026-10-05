@@ -216,6 +216,97 @@
     transform: scale(0.95);
 }
 
+.userNameRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.rolePill {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(210, 161, 0, 0.2);
+    border: 1px solid rgba(210, 161, 0, 0.4);
+    color: #ffd700;
+    flex-shrink: 0;
+}
+
+.adminQuickBtn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid rgba(210, 161, 0, 0.35);
+    background: rgba(210, 161, 0, 0.12);
+    color: var(--secondary-color, #d2a100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    outline: none;
+    flex-shrink: 0;
+    text-decoration: none !important;
+}
+
+.adminQuickBtn:hover {
+    background: rgba(210, 161, 0, 0.3);
+    border-color: var(--secondary-color, #d2a100);
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(210, 161, 0, 0.3);
+}
+
+.adminMenuItem {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px;
+    margin-bottom: 2px;
+    background: linear-gradient(135deg, rgba(210, 161, 0, 0.16) 0%, rgba(210, 161, 0, 0.05) 100%);
+    border: 1px solid rgba(210, 161, 0, 0.35);
+    border-radius: 10px;
+    color: #ffffff !important;
+    font-weight: 600;
+    text-decoration: none !important;
+    transition: all 0.25s ease;
+}
+
+.adminMenuItem:hover {
+    background: linear-gradient(135deg, rgba(210, 161, 0, 0.28) 0%, rgba(210, 161, 0, 0.12) 100%);
+    border-color: var(--secondary-color, #d2a100);
+    transform: translateX(4px);
+    box-shadow: 0 4px 16px rgba(210, 161, 0, 0.2);
+    color: #ffffff !important;
+}
+
+.adminMenuItemLeft {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.adminMenuIcon {
+    font-size: 18px;
+    color: var(--secondary-color, #d2a100);
+    flex-shrink: 0;
+}
+
+.adminBadge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: rgba(210, 161, 0, 0.25);
+    color: #ffd700;
+    border: 1px solid rgba(210, 161, 0, 0.4);
+}
+
 .welcomeCard {
     display: flex;
     align-items: center;

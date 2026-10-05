@@ -5,8 +5,11 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import styles from "@/style/Sidebar.module.css";
 import { BiX, BiLogOut, BiWorld, BiBuilding, BiChevronRight, BiChevronDown } from "react-icons/bi";
+import { RiShieldUserLine } from "react-icons/ri";
 import ContactUs from "./ContactUs";
 import { useSiteUser } from "./SiteUserProvider";
+
+const STAFF_ROLES = ["admin", "owner", "franchise", "assessor"];
 
 const getInitials = (name?: string) => {
   if (!name) return "";
@@ -32,6 +35,19 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
   const { user, logout } = useSiteUser();
   const [openContact, setOpenContact] = useState(false);
   const [coursesSubOpen, setCoursesSubOpen] = useState(false);
+
+  const isStaff = Boolean(user?.role && STAFF_ROLES.includes(user.role));
+  const adminHref = user?.role === "franchise" ? "/admin/FranchiseDashboard" : "/admin/Profile";
+  const roleLabel =
+    user?.role === "owner"
+      ? "Owner"
+      : user?.role === "franchise"
+      ? "Franchise"
+      : user?.role === "assessor"
+      ? "Assessor"
+      : user?.role === "admin"
+      ? "Admin"
+      : "SSB Aspirant";
 
   const toggleCourses = () => {
     setCoursesSubOpen((prev) => !prev);
@@ -79,9 +95,23 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
                   </span>
                 </div>
                 <div className={styles.profileInfo}>
-                  <span className={styles.userName}>{user.name}</span>
-                  <span className={styles.userSubtitle}>{user.email || "SSB Aspirant"}</span>
+                  <div className={styles.userNameRow}>
+                    <span className={styles.userName}>{user.name}</span>
+                    {isStaff && <span className={styles.rolePill}>{roleLabel}</span>}
+                  </div>
+                  <span className={styles.userSubtitle}>{user.email || (isStaff ? `${roleLabel} Account` : "SSB Aspirant")}</span>
                 </div>
+                {isStaff && (
+                  <Link
+                    href={adminHref}
+                    onClick={onClose}
+                    className={styles.adminQuickBtn}
+                    title="Open Admin Panel"
+                    prefetch={false}
+                  >
+                    <RiShieldUserLine />
+                  </Link>
+                )}
                 <button
                   onClick={() => {
                     onClose();
@@ -112,6 +142,20 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
           </div>
 
           <nav className={styles.menu}>
+            {isStaff && (
+              <Link
+                href={adminHref}
+                onClick={onClose}
+                className={`${styles.adminMenuItem} ${pathname.startsWith("/admin") ? styles.active : ""}`}
+                prefetch={false}
+              >
+                <span className={styles.adminMenuItemLeft}>
+                  <RiShieldUserLine className={styles.adminMenuIcon} />
+                  <span>Admin Panel</span>
+                </span>
+                <span className={styles.adminBadge}>DASHBOARD</span>
+              </Link>
+            )}
             {user?.role === "student" && (
               <Link href="/ProfileDashboard" onClick={onClose} className={pathname === "/ProfileDashboard" ? styles.active : ""} prefetch={false}>
                 My Profile
