@@ -76,6 +76,9 @@ const DEFAULT_MODULES: CourseModule[] = [
 export default function BatchesView() {
   const router = useRouter();
   const { user } = useSiteUser();
+  const isAdmin = Boolean(
+    user?.role && ["admin", "owner", "franchise", "assessor"].includes(user.role)
+  );
 
   const [slotsData, setSlotsData] = useState<Slot[]>([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(true);
@@ -707,7 +710,7 @@ export default function BatchesView() {
 
                 {isClosed && <div className={styles.cutoffMessageClosed}>❌ Booking Closed</div>}
 
-                {!isClosed && !isFull && (
+                {!isClosed && !isFull && isAdmin && (
                   <div className={styles.batchStats}>
                     <div className={styles.stat}>
                       <FaUsers />
@@ -770,17 +773,23 @@ export default function BatchesView() {
                 </div>
               </div>
 
-              <div className={styles.modalAvailability}>
-                <h4>
-                  <FaUsers /> Seat Availability
-                </h4>
-                <div className={styles.availabilityStats}>
-                  <div className={`${styles.statRow} ${styles.highlight}`}>
-                    <span>Status:</span>
-                    <strong className={styles.availableCount}>Limited Seats Available</strong>
+              {isAdmin && (
+                <div className={styles.modalAvailability}>
+                  <h4>
+                    <FaUsers /> Seat Availability
+                  </h4>
+                  <div className={styles.availabilityStats}>
+                    <div className={`${styles.statRow} ${styles.highlight}`}>
+                      <span>Status:</span>
+                      <strong className={styles.availableCount}>
+                        {selectedBatch.maxStudents
+                          ? `${Math.max((selectedBatch.maxStudents || 0) - (selectedBatch.bookedStudents?.length || 0), 0)} Seats Left`
+                          : "Limited Seats Available"}
+                      </strong>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {selectedBatch.isFullCourse && (
                 <div className={styles.modalModules}>
