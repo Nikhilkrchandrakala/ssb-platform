@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
 
   const orderQuery = { bookingMethod: "sales", ...salesPersonFilter };
   const orders = await Order.find(orderQuery)
-    .populate("userId", "name email enrollmentMode")
+    .populate("userId", "name email phone enrollmentMode")
     .populate("slotId", "title batchNo startTime isFullCourse mode")
     .populate("installmentPlanId")
     .populate("salesPersonId", "name email")
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
   }
 
   const freshOrders = await Order.find(orderQuery)
-    .populate("userId", "name email enrollmentMode")
+    .populate("userId", "name email phone enrollmentMode")
     .populate("slotId", "title batchNo startTime isFullCourse mode")
     .populate("installmentPlanId")
     .populate("salesPersonId", "name email")

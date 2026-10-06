@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const studentName = String(body.studentName || "").trim();
     const studentEmail = String(body.studentEmail || "").trim().toLowerCase();
+    const studentPhoneRaw = body.studentPhone != null ? String(body.studentPhone).trim() : "";
     const slotId = body.slotId;
     const initialAmount = body.initialAmount;
     const submittedInstallments: SubmittedInstallment[] = Array.isArray(body.installments) ? body.installments : [];
@@ -40,7 +41,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "studentName, studentEmail, and slotId are required" }, { status: 400 });
     }
 
+    const cleanedDigits = studentPhoneRaw.replace(/\D/g, "");
+    let studentPhone: string | null = cleanedDigits.length >= 10 ? cleanedDigits.slice(-10) : (cleanedDigits || null);
+
     await connectDB();
+
+    // If phone wasn't explicitly entered, check if a matching lead already has a phone number
+    if (!studentPhone) {
+      const matchingLead = await Lead.findOne({
+        email: { $regex: `^${studentEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" },
+        phoneNumber: { $exists: true, $ne: "" },
+      }).sort({ _id: -1 });
+
+      if (matchingLead?.phoneNumber) {
+        const leadDigits = matchingLead.phoneNumber.replace(/\D/g, "");
+        studentPhone = leadDigits.length >= 10 ? leadDigits.slice(-10) : (leadDigits || null);
+      }
+    }
 
     const slot = await Slot.findById(slotId);
     if (!slot) return NextResponse.json({ message: "Slot not found" }, { status: 404 });
@@ -127,13 +144,29 @@ export async function POST(req: NextRequest) {
     // Find-or-create the User by email — do not overwrite an existing student.
     let student = await User.findOne({ email: studentEmail });
     if (!student) {
+      let phoneToSet: string | undefined = undefined;
+      if (studentPhone) {
+        const existingWithPhone = await User.findOne({ phone: studentPhone });
+        if (!existingWithPhone) {
+          phoneToSet = studentPhone;
+        }
+      }
+
       student = await User.create({
         name: studentName,
         email: studentEmail,
+        ...(phoneToSet ? { phone: phoneToSet } : {}),
         role: "lead",
         isManuallyCreated: true,
         enrollmentMode,
       });
+    } else if (!student.phone && studentPhone) {
+      // Backfill phone on existing user if they don't have one yet
+      const existingWithPhone = await User.findOne({ phone: studentPhone, _id: { $ne: student._id } });
+      if (!existingWithPhone) {
+        student.phone = studentPhone;
+        await student.save();
+      }
     }
 
     // Hard stop — a student who already has a paid order for this exact
@@ -191,6 +224,7 @@ export async function POST(req: NextRequest) {
       userId: student._id,
       buyerName: studentName,
       buyerEmail: studentEmail,
+      buyerPhone: student.phone || studentPhone || null,
       slotId: slot._id,
       price: finalPriceInclGST,
       originalAmount,
@@ -257,6 +291,7 @@ export async function POST(req: NextRequest) {
       amountRupees: initialAmount,
       customerName: studentName,
       customerEmail: studentEmail,
+      ...(student.phone || studentPhone ? { customerPhone: student.phone || studentPhone } : {}),
       description,
       notes: { orderId: String(order._id), installmentPlanId: String(plan._id), seq: "1" },
       expireBy,

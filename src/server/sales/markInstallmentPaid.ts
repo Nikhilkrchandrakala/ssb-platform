@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { connectDB } from "@/server/db";
-import { InstallmentPlan, Order, Slot, User, Coupon } from "@/server/models";
+import { InstallmentPlan, Order, Slot, User, Coupon, Lead } from "@/server/models";
 import { sendCredentialsEmail, sendSalesNotificationEmail } from "@/server/integrations/msg91";
 import { resolveClinicalStageFromModules } from "@/server/clinicalStageSync";
 
@@ -97,6 +97,31 @@ export async function markInstallmentPaid(opts: {
   if (slot?.batchNo) student.batch = slot.batchNo.trim();
   const bookedModules: string[] = order.selectedModules || [];
   student.clinicalStage = resolveClinicalStageFromModules(bookedModules);
+
+  if (!student.phone) {
+    const fallbackPhone = (order as unknown as { buyerPhone?: string })?.buyerPhone;
+    if (fallbackPhone) {
+      const existingWithPhone = await User.findOne({ phone: fallbackPhone, _id: { $ne: student._id } });
+      if (!existingWithPhone) {
+        student.phone = fallbackPhone;
+      }
+    } else if (student.email) {
+      const matchingLead = await Lead.findOne({
+        email: { $regex: `^${student.email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" },
+        phoneNumber: { $exists: true, $ne: "" },
+      }).sort({ _id: -1 });
+      if (matchingLead?.phoneNumber) {
+        const cleaned = matchingLead.phoneNumber.replace(/\D/g, "");
+        const phone10 = cleaned.length >= 10 ? cleaned.slice(-10) : cleaned;
+        if (phone10) {
+          const existingWithPhone = await User.findOne({ phone: phone10, _id: { $ne: student._id } });
+          if (!existingWithPhone) {
+            student.phone = phone10;
+          }
+        }
+      }
+    }
+  }
 
   // Credentials, per Open Decision #3: cryptographically random, never derived
   // from name/phone/DOB, never logged. `pre("save")` hashes it via bcrypt.

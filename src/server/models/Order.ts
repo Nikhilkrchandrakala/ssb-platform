@@ -13,6 +13,7 @@ const orderSchema = new Schema(
     // account behind it is gone.
     buyerName: { type: String, default: null },
     buyerEmail: { type: String, default: null },
+    buyerPhone: { type: String, default: null },
     slotId: { type: Schema.Types.ObjectId, ref: "Slot", required: true },
     price: { type: Number, required: true },
     originalAmount: { type: Number },

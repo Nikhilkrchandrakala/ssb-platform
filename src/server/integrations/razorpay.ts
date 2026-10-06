@@ -52,6 +52,7 @@ export async function createPaymentLink(opts: {
   amountRupees: number;
   customerName: string;
   customerEmail: string;
+  customerPhone?: string;
   description?: string;
   notes?: Record<string, string>;
   expireBy?: number;
@@ -59,7 +60,11 @@ export async function createPaymentLink(opts: {
   return razorpay.paymentLink.create({
     amount: Math.round(opts.amountRupees * 100),
     currency: "INR",
-    customer: { name: opts.customerName, email: opts.customerEmail },
+    customer: {
+      name: opts.customerName,
+      email: opts.customerEmail,
+      ...(opts.customerPhone ? { contact: opts.customerPhone } : {}),
+    },
     notify: { email: true, sms: false },
     description: opts.description,
     notes: opts.notes,

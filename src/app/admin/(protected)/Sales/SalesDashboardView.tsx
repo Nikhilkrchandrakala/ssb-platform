@@ -82,11 +82,12 @@ interface SalesOrderItem {
   status?: string;
   accessRevoked?: boolean;
   createdAt?: string;
-  userId?: { name?: string; email?: string; enrollmentMode?: string } | null;
+  userId?: { name?: string; email?: string; phone?: string; enrollmentMode?: string } | null;
   // Snapshot taken at purchase time — falls back to this when userId is a
   // dangling reference (the candidate's account was later deleted).
   buyerName?: string | null;
   buyerEmail?: string | null;
+  buyerPhone?: string | null;
   slotId?: { title?: string; batchNo?: string; startTime?: string; isFullCourse?: boolean; mode?: string } | null;
   salesPersonId?: { name?: string; email?: string } | null;
   installmentPlanId?: InstallmentPlanPopulated | null;
@@ -596,6 +597,7 @@ export default function SalesDashboardView() {
   const [selectedSlot, setSelectedSlot] = useState<SlotItem | null>(null);
   const [studentName, setStudentName] = useState("");
   const [studentEmail, setStudentEmail] = useState("");
+  const [studentPhone, setStudentPhone] = useState("");
   const [initialAmount, setInitialAmount] = useState<number>(3000);
   const [numberOfInstallments, setNumberOfInstallments] = useState<number>(1);
   const [finalDueDate, setFinalDueDate] = useState("");
@@ -628,6 +630,7 @@ export default function SalesDashboardView() {
     setSelectedSlot(slot);
     setStudentName("");
     setStudentEmail("");
+    setStudentPhone("");
     setNumberOfInstallments(1);
     const defaultFinal = new Date();
     defaultFinal.setDate(defaultFinal.getDate() + 30);
@@ -742,6 +745,10 @@ export default function SalesDashboardView() {
       swalToast("error", "Student name and email are required");
       return;
     }
+    if (studentPhone.trim() && studentPhone.trim().replace(/\D/g, "").length < 10) {
+      swalToast("error", "Phone number must be at least 10 digits");
+      return;
+    }
     if (finalPriceInclGST === null) {
       swalToast("error", "Preview the schedule before enrolling");
       return;
@@ -754,6 +761,7 @@ export default function SalesDashboardView() {
         body: JSON.stringify({
           studentName: studentName.trim(),
           studentEmail: studentEmail.trim(),
+          studentPhone: studentPhone.trim() || undefined,
           slotId: selectedSlot._id,
           initialAmount,
           installments: installmentRows.map((r) => ({ amount: r.amount, dueDate: r.dueDate })),
@@ -1417,6 +1425,9 @@ export default function SalesDashboardView() {
                         <td>
                           <div style={{ fontWeight: 600 }}>{order.userId?.name || order.buyerName || "—"}</div>
                           <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{order.userId?.email || order.buyerEmail}</div>
+                          {(order.userId?.phone || order.buyerPhone) && (
+                            <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>{order.userId?.phone || order.buyerPhone}</div>
+                          )}
                         </td>
                         <td>
                           {/* This order's own slot, not the buyer's global enrollmentMode —
@@ -1692,6 +1703,9 @@ export default function SalesDashboardView() {
                           <td>
                             <div style={{ fontWeight: 600 }}>{order.userId?.name || order.buyerName || "—"}</div>
                             <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{order.userId?.email || order.buyerEmail}</div>
+                            {(order.userId?.phone || order.buyerPhone) && (
+                              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>{order.userId?.phone || order.buyerPhone}</div>
+                            )}
                           </td>
                           <td>
                             <EnrollmentModeBadge mode={order.slotId?.mode || order.userId?.enrollmentMode} />
@@ -1911,6 +1925,16 @@ export default function SalesDashboardView() {
                           value={studentEmail}
                           onChange={(e) => setStudentEmail(e.target.value)}
                           placeholder="student@example.com"
+                        />
+                      </div>
+                      <div className="admin-form-group">
+                        <label className="admin-form-label">Student Phone Number</label>
+                        <input
+                          type="tel"
+                          className="admin-input"
+                          value={studentPhone}
+                          onChange={(e) => setStudentPhone(e.target.value)}
+                          placeholder="e.g. 9876543210"
                         />
                       </div>
                       <div className="admin-form-group">
@@ -2183,6 +2207,9 @@ export default function SalesDashboardView() {
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontWeight: 600, fontSize: "1.05rem" }}>{detailsOrder.userId?.name || detailsOrder.buyerName || "—"}</div>
                 <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{detailsOrder.userId?.email || detailsOrder.buyerEmail}</div>
+                {(detailsOrder.userId?.phone || detailsOrder.buyerPhone) && (
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{detailsOrder.userId?.phone || detailsOrder.buyerPhone}</div>
+                )}
                 <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: 4 }}>
                   {detailsOrder.slotId?.title} {detailsOrder.slotId?.batchNo ? `(#${detailsOrder.slotId.batchNo})` : ""}
                   {detailsOrder.selectedModules?.length ? ` — ${detailsOrder.selectedModules.join(", ")}` : ""}
