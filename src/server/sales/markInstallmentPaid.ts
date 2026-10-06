@@ -1,8 +1,9 @@
 import crypto from "node:crypto";
 import { connectDB } from "@/server/db";
 import { InstallmentPlan, Order, Slot, User, Coupon, Lead } from "@/server/models";
-import { sendCredentialsEmail, sendSalesNotificationEmail } from "@/server/integrations/msg91";
+import { sendCredentialsEmail, sendSalesNotificationEmail, sendOfflineBookingConfirmationEmail } from "@/server/integrations/msg91";
 import { resolveClinicalStageFromModules } from "@/server/clinicalStageSync";
+import { formatRealStartDate } from "@/lib/batchTiming";
 
 interface InstallmentSubdoc {
   seq: number;
@@ -160,6 +161,27 @@ export async function markInstallmentPaid(opts: {
     bookingMethod: order.bookingMethod || "sales",
     orderId: order._id.toString(),
   }).catch((err) => console.error("[msg91] sendSalesNotificationEmail failed", err));
+
+  // Send offline batch registration confirmation to student
+  if (slot?.mode === "offline") {
+    const cleanLocation = slot.location?.trim()
+      ? slot.location.trim().toUpperCase() === "NAGPUR"
+        ? "Nagpur"
+        : slot.location.trim()
+      : "Nagpur";
+    const cleanBatchNo = slot.batchNo ? (slot.batchNo.startsWith("#") ? slot.batchNo : `#${slot.batchNo}`) : "—";
+
+    await sendOfflineBookingConfirmationEmail({
+      to: student.email,
+      name: student.name,
+      batchTitle: slot.title || "Offline Batch",
+      batchNo: cleanBatchNo,
+      startDate: formatRealStartDate(slot),
+      location: cleanLocation,
+      amountPaid: installment.amount,
+      paymentId: opts.paymentId,
+    }).catch((err) => console.error("[msg91] sendOfflineBookingConfirmationEmail failed", err));
+  }
 
   return {
     alreadyProcessed: false,

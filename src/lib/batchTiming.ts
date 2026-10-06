@@ -163,6 +163,18 @@ export function formatRealStartTime(slot: BatchTimingSlot): string {
   });
 }
 
+/** "26 Oct 2026" — real start date without clock time, ideal for offline batches. */
+export function formatRealStartDate(slot: BatchTimingSlot): string {
+  const real = getRealStartTime(slot);
+  if (!real) return "N/A";
+  return real.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "Asia/Kolkata",
+  });
+}
+
 /**
  * Returns the time remaining until a payment link expires (e.g. "4d 18h left", "2h 15m left", "Link Expired").
  */

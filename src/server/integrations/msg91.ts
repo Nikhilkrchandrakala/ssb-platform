@@ -99,6 +99,8 @@ const NEW_ENROLLMENT_ALERT_TEMPLATE_ID = process.env.MSG91_NEW_ENROLLMENT_ALERT_
 // Awaiting MSG91 dashboard approval (2026-09-06) — see scripts/msg91_contact_enquiry_template.html
 // for the submitted template. Fill this env var in once MSG91 assigns/approves the template id.
 const CONTACT_ENQUIRY_TEMPLATE_ID = process.env.MSG91_CONTACT_ENQUIRY_TEMPLATE_ID || "";
+const OFFLINE_BOOKING_CONFIRMATION_TEMPLATE_ID =
+  process.env.MSG91_OFFLINE_BOOKING_CONFIRMATION_TEMPLATE_ID || "offline_batch_booking";
 
 async function postEmail(params: { to: string; name: string; templateId: string; variables: Record<string, string> }): Promise<boolean> {
   const { data } = await axios.post(
@@ -207,6 +209,32 @@ export async function sendInstallmentPaymentEmail(params: {
       due_date: params.dueDate,
       amount: String(params.amount),
       link: params.link,
+    },
+  });
+}
+
+export async function sendOfflineBookingConfirmationEmail(params: {
+  to: string;
+  name: string;
+  batchTitle: string;
+  batchNo: string;
+  startDate: string;
+  location: string;
+  amountPaid: number;
+  paymentId: string;
+}): Promise<{ delivered: boolean }> {
+  return sendTemplateEmail({
+    to: params.to,
+    name: params.name,
+    templateId: OFFLINE_BOOKING_CONFIRMATION_TEMPLATE_ID,
+    variables: {
+      name: params.name,
+      batch_title: params.batchTitle,
+      batch_no: params.batchNo,
+      start_date: params.startDate,
+      location: params.location,
+      amount_paid: String(params.amountPaid),
+      payment_id: params.paymentId,
     },
   });
 }

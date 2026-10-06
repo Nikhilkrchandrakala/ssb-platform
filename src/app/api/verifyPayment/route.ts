@@ -4,9 +4,10 @@ import { connectDB } from "@/server/db";
 import { getCurrentUser } from "@/server/auth";
 import { Order, Slot, Coupon, User } from "@/server/models";
 import { verifyRazorpaySignature } from "@/server/integrations/razorpay";
-import { sendSalesNotificationEmail, sendCredentialsEmail } from "@/server/integrations/msg91";
+import { sendSalesNotificationEmail, sendCredentialsEmail, sendOfflineBookingConfirmationEmail } from "@/server/integrations/msg91";
 import { syncEnrollmentModeForUser } from "@/server/enrollmentModeSync";
 import { resolveClinicalStageFromModules, syncClinicalStageForUser } from "@/server/clinicalStageSync";
+import { formatRealStartDate } from "@/lib/batchTiming";
 
 export async function POST(req: NextRequest) {
   try {
@@ -116,6 +117,26 @@ export async function POST(req: NextRequest) {
         bookingMethod: order.bookingMethod || "standard",
         orderId: order._id.toString(),
       }).catch((err) => console.error("[msg91] sendSalesNotificationEmail failed", err));
+
+      if (slot?.mode === "offline") {
+        const cleanLocation = slot.location?.trim()
+          ? slot.location.trim().toUpperCase() === "NAGPUR"
+            ? "Nagpur"
+            : slot.location.trim()
+          : "Nagpur";
+        const cleanBatchNo = slot.batchNo ? (slot.batchNo.startsWith("#") ? slot.batchNo : `#${slot.batchNo}`) : "—";
+
+        await sendOfflineBookingConfirmationEmail({
+          to: student.email,
+          name: student.name,
+          batchTitle: slot.title || "Offline Batch",
+          batchNo: cleanBatchNo,
+          startDate: formatRealStartDate(slot),
+          location: cleanLocation,
+          amountPaid: order.price,
+          paymentId: razorpay_payment_id,
+        }).catch((err) => console.error("[msg91] sendOfflineBookingConfirmationEmail failed", err));
+      }
     }
 
     return NextResponse.json({ success: true });
