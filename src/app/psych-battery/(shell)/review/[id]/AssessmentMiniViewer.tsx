@@ -136,9 +136,9 @@ export function AssessmentMiniViewer({ assessmentId }: AssessmentMiniViewerProps
   }
 
   return (
-    <div className="w-full h-full flex flex-col bg-app-sidebar overflow-hidden font-sans select-none relative rounded-3xl">
+    <div className="w-full h-full flex flex-col bg-app-sidebar overflow-hidden font-sans select-none relative rounded-2xl sm:rounded-3xl">
       {/* Quick Section Links */}
-      <div className="shrink-0 flex gap-2 p-3 bg-black/20 border-b border-app-border overflow-x-auto select-none no-scrollbar">
+      <div className="shrink-0 flex gap-2 p-2.5 sm:p-3 bg-black/20 border-b border-app-border overflow-x-auto select-none no-scrollbar">
         {Object.entries(groupedSlides).map(([mod, slides]) => (
           <button
             key={mod}
@@ -148,7 +148,7 @@ export function AssessmentMiniViewer({ assessmentId }: AssessmentMiniViewerProps
                 el.scrollIntoView({ behavior: "smooth", block: "start" });
               }
             }}
-            className="px-3 py-1.5 bg-app-card border border-app-border/60 hover:border-app-accent text-app-text-bright hover:text-app-accent rounded-lg text-[9px] font-black transition-all uppercase tracking-widest shrink-0 cursor-pointer"
+            className="px-2.5 sm:px-3 py-1.5 bg-app-card border border-app-border/60 hover:border-app-accent text-app-text-bright hover:text-app-accent rounded-lg text-[9px] font-black transition-all uppercase tracking-widest shrink-0 cursor-pointer"
           >
             {mod} ({slides.length})
           </button>
@@ -156,7 +156,7 @@ export function AssessmentMiniViewer({ assessmentId }: AssessmentMiniViewerProps
       </div>
 
       {/* Scrollable Questions list */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-6 bg-app-bg text-app-text-bright custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-4 sm:space-y-6 bg-app-bg text-app-text-bright custom-scrollbar">
         {Object.entries(groupedSlides).map(([moduleName, slides]) => (
           <div key={moduleName} id={`qp-sec-${moduleName}`} className="space-y-4 pt-1">
             <div className="sticky top-0 bg-app-bg/95 backdrop-blur border-b border-app-border/60 pb-2 z-10 flex items-center justify-between">
@@ -168,11 +168,11 @@ export function AssessmentMiniViewer({ assessmentId }: AssessmentMiniViewerProps
               </span>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:gap-4">
               {slides.map((slide, idx) => (
                 <div
                   key={slide.id}
-                  className="bg-app-card/40 border border-app-border/40 hover:border-app-accent/20 rounded-2xl p-4 transition-all space-y-3"
+                  className="bg-app-card/40 border border-app-border/40 hover:border-app-accent/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all space-y-3"
                 >
                   <div className="flex justify-between items-center text-[9px] font-black text-app-text-muted uppercase tracking-widest">
                     <span>Question {idx + 1}</span>

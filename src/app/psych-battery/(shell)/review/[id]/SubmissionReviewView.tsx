@@ -10,10 +10,11 @@ import {
   User as UserIcon, Clock, ShieldCheck,
   CheckCircle2, Sparkles, AlertCircle, Maximize2,
   FileSearch, ChevronLeft, ChevronRight,
-  Loader2, Users,
+  Loader2, Users, Zap,
 } from "lucide-react";
 import { cn } from "@/app/psych-battery/lib/utils";
 import { AssessmentMiniViewer } from "./AssessmentMiniViewer";
+import RapidAssessmentEngineView from "./RapidAssessmentEngineView";
 import { Reveal, Skeleton, Button } from "@/app/psych-battery/components/ui/Primitives";
 import { assessorLabel } from "@/lib/assessorLabels";
 
@@ -273,14 +274,14 @@ const ModernDateTimePicker: React.FC<ModernDateTimePickerProps> = ({ value, onCh
 
   if (isCollapsed && tempDate) {
     return (
-      <div className="bg-app-card border border-green-500/20 rounded-3xl p-5 shadow-xl flex items-center justify-between animate-in fade-in duration-300">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-green-500/20 border border-green-400/40 flex items-center justify-center text-green-400">
+      <div className="bg-app-card border border-green-500/20 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-300">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 rounded-xl bg-green-500/20 border border-green-400/40 flex items-center justify-center text-green-400 shrink-0">
             <CheckCircle2 size={20} />
           </div>
           <div>
             <div className="text-[10px] font-black uppercase text-app-text-muted tracking-wider">Confirmed Meeting Time</div>
-            <div className="text-base font-black text-app-text-bright tracking-tight mt-0.5">
+            <div className="text-sm sm:text-base font-black text-app-text-bright tracking-tight mt-0.5">
               {tempDate.toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
             </div>
           </div>
@@ -288,7 +289,7 @@ const ModernDateTimePicker: React.FC<ModernDateTimePickerProps> = ({ value, onCh
         <button
           type="button"
           onClick={() => setIsCollapsed(false)}
-          className="px-4 py-2 bg-black/40 border border-app-border hover:border-app-accent hover:text-app-accent text-app-text-muted text-[10px] font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 cursor-pointer"
+          className="w-full sm:w-auto px-4 py-2 bg-black/40 border border-app-border hover:border-app-accent hover:text-app-accent text-app-text-muted text-[10px] font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 cursor-pointer text-center"
         >
           Change
         </button>
@@ -297,7 +298,7 @@ const ModernDateTimePicker: React.FC<ModernDateTimePickerProps> = ({ value, onCh
   }
 
   return (
-    <div className="bg-app-card border border-app-border rounded-3xl p-6 shadow-xl space-y-6">
+    <div className="bg-app-card border border-app-border rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <div className="md:col-span-3 space-y-4">
           <div className="flex items-center justify-between">
@@ -474,7 +475,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
   const [student, setStudent] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"dossier" | "evaluation" | "meeting" | "feedback">("dossier");
+  const [activeTab, setActiveTab] = useState<"dossier" | "evaluation" | "rapid" | "meeting" | "feedback">("dossier");
   const [showEthicsModal, setShowEthicsModal] = useState(() => !ethicsAgreedThisSession);
   const [doNotShowEthics, setDoNotShowEthics] = useState(false);
   const [showMeetingModal, setShowMeetingModal] = useState(false);
@@ -842,7 +843,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
   const assessmentTitle = assessment?.title || "Assessment";
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-20">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 pb-20">
       {/* Navigation & Header */}
       <Reveal className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-4">
@@ -852,25 +853,27 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
           >
             <ArrowLeft size={14} /> Back to Candidates
           </button>
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-app-card border border-app-border overflow-hidden flex items-center justify-center shrink-0 shadow-2xl">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-app-card border border-app-border overflow-hidden flex items-center justify-center shrink-0 shadow-2xl">
               {student?.profileImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={student.profileImage} alt={studentName} className="w-full h-full object-cover" />
               ) : (
-                <UserIcon size={32} className="text-app-text-muted" />
+                <UserIcon size={24} className="text-app-text-muted sm:size-8" />
               )}
             </div>
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-4xl font-black tracking-tighter text-app-text-bright">{studentName}</h1>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <h1 className="text-xl sm:text-3xl md:text-4xl font-black tracking-tighter text-app-text-bright truncate max-w-full">
+                  {studentName}
+                </h1>
                 <span className="px-2.5 py-1 rounded-lg bg-black/30 border border-app-border text-[9px] font-black uppercase tracking-[0.15em] text-app-text-bright whitespace-nowrap">
                   Batch: {student?.batch || "--"} | Chest: {student?.chestNo || "--"}
                 </span>
               </div>
-              <div className="flex items-center gap-3 mt-1">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
                 <span className="text-[10px] font-black text-app-text-muted uppercase tracking-widest">{assessmentTitle}</span>
-                <span className="w-1 h-1 bg-app-border rounded-full" />
+                <span className="w-1 h-1 bg-app-border rounded-full hidden sm:inline-block" />
                 <span className="px-2 py-0.5 rounded bg-app-accent/20 border border-app-accent/40 text-[9px] font-black text-app-accent-light uppercase tracking-[0.15em] leading-none">
                   {submission.status.replace(/_/g, " ")}
                 </span>
@@ -880,10 +883,10 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
           </div>
         </div>
 
-        <div className="flex flex-col items-end gap-2 text-right">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:items-end items-stretch gap-3 text-left sm:text-right w-full md:w-auto">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             {isAssessorCompleted ? (
-              <div className="px-6 py-3 bg-green-500/20 border border-green-400/40 text-green-300 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-2">
+              <div className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-green-500/20 border border-green-400/40 text-green-300 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2">
                 <CheckCircle2 size={16} />
                 Evaluation Finalized &amp; Locked
               </div>
@@ -891,7 +894,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
                 <button
                   onClick={() => handleUpdate("COMPLETED")}
                   disabled={saving || (!isOffline && (activeAssessorType === "Psych" || activeAssessorType === "TO") && !isDossierUploaded)}
-                  className="px-6 py-3 bg-app-accent text-app-on-accent rounded-2xl text-xs font-black hover:opacity-90 transition-all shadow-lg shadow-app-accent/30 active:scale-95 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-3 bg-app-accent text-app-on-accent rounded-2xl text-xs font-black hover:opacity-90 transition-all shadow-lg shadow-app-accent/30 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
                   Finalize Evaluation
@@ -900,7 +903,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
           </div>
 
           {/* Temporal Markers */}
-          <div className="flex items-center gap-4 text-[10px] font-black text-app-text-muted uppercase tracking-wider px-1">
+          <div className="flex items-center sm:justify-end justify-between gap-3 sm:gap-4 text-[10px] font-black text-app-text-muted uppercase tracking-wider px-1 flex-wrap">
             <div className="flex items-center gap-1.5">
               <Clock size={12} className="text-app-text-muted/65" />
               <span>Started: {submission?.startedAt || submission?.createdAt ? new Date((submission.startedAt || submission.createdAt) as string).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "N/A"}</span>
@@ -916,39 +919,42 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
       </Reveal>
 
       {/* Tabs and Sidebar Toggle */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex gap-1 bg-app-sidebar/50 p-1 rounded-2xl border border-app-border w-fit shadow-inner">
-          {[
-            { id: "dossier", label: "Document Viewer", icon: FileSearch },
-            { id: "meeting", label: activeAssessorType === "IO" ? "Mock Interview" : "Feedback Scheduler", icon: Calendar },
-            { id: "evaluation", label: "Assessment", icon: MessageSquare },
-            ...(submission.status === "REPORT_RELEASED" ? [{ id: "feedback", label: "All Assessor Feedback", icon: Users }] : []),
-          ].filter((tab) => {
-            if (isOffline && (tab.id === "dossier" || tab.id === "meeting")) return false;
-            if (activeAssessorType === "GTO" && tab.id === "dossier") return false;
-            if (tab.id === "meeting" && !["Psych", "TO", "IO"].includes(activeAssessorType)) return false;
-            return true;
-          }).map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id as "dossier" | "evaluation" | "meeting" | "feedback")}
-              className={cn(
-                "px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all flex items-center gap-2",
-                effectiveTab === tab.id ? "bg-app-accent text-app-on-accent shadow-xl" : "text-app-text-muted hover:text-app-text-bright"
-              )}
-            >
-              <tab.icon size={16} />
-              {tab.label}
-            </button>
-          ))}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="w-full sm:w-auto overflow-x-auto no-scrollbar -mx-1 px-1 py-1">
+          <div className="flex gap-1 bg-app-sidebar/50 p-1 rounded-2xl border border-app-border w-max min-w-full sm:min-w-0 sm:w-fit shadow-inner">
+            {[
+              { id: "dossier", label: "Document Viewer", icon: FileSearch },
+              { id: "meeting", label: activeAssessorType === "IO" ? "Mock Interview" : "Feedback Scheduler", icon: Calendar },
+              { id: "evaluation", label: "Assessment", icon: MessageSquare },
+              { id: "rapid", label: "Rapid Assessment", icon: Zap },
+              ...(submission.status === "REPORT_RELEASED" ? [{ id: "feedback", label: "All Assessor Feedback", icon: Users }] : []),
+            ].filter((tab) => {
+              if (isOffline && (tab.id === "dossier" || tab.id === "meeting")) return false;
+              if (activeAssessorType === "GTO" && tab.id === "dossier") return false;
+              if (tab.id === "meeting" && !["Psych", "TO", "IO"].includes(activeAssessorType)) return false;
+              return true;
+            }).map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id as "dossier" | "evaluation" | "rapid" | "meeting" | "feedback")}
+                className={cn(
+                  "px-3.5 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.12em] sm:tracking-[0.15em] transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 whitespace-nowrap cursor-pointer",
+                  effectiveTab === tab.id ? "bg-app-accent text-app-on-accent shadow-xl" : "text-app-text-muted hover:text-app-text-bright"
+                )}
+              >
+                <tab.icon size={15} />
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {effectiveTab === "dossier" && viewerMode === "dossier" && (activeAssessorType === "Psych" || activeAssessorType === "TO") && assessment && (
           <button
             type="button"
             onClick={() => setShowSidebar(!showSidebar)}
-            className="px-4 py-2.5 rounded-2xl bg-app-card border border-app-border text-[10px] font-black uppercase tracking-widest text-app-text-muted hover:text-app-text-bright hover:border-app-accent/50 transition-all flex items-center gap-2 shadow-lg active:scale-95 cursor-pointer"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-app-card border border-app-border text-[10px] font-black uppercase tracking-widest text-app-text-muted hover:text-app-text-bright hover:border-app-accent/50 transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95 cursor-pointer shrink-0"
           >
             <Maximize2 size={14} className="text-app-accent" />
             {showSidebar ? "Hide Test Preview" : "Show Test Preview"}
@@ -979,31 +985,33 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               {/* Selector Tabs at the Top */}
               {activeAssessorType !== "IO" && (
-                <div className="flex gap-2 bg-app-card/30 p-1 border border-app-border rounded-2xl w-fit">
-                  <button
-                    type="button"
-                    onClick={() => setViewerMode("piq")}
-                    className={cn(
-                      "px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                      viewerMode === "piq"
-                        ? "bg-app-accent text-app-on-accent shadow-lg"
-                        : "text-app-text-muted hover:text-app-text-bright"
-                    )}
-                  >
-                    PIQ Forms ({piqFiles.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setViewerMode("dossier")}
-                    className={cn(
-                      "px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                      viewerMode === "dossier"
-                        ? "bg-app-accent text-app-on-accent shadow-lg"
-                        : "text-app-text-muted hover:text-app-text-bright"
-                    )}
-                  >
-                    Dossier Sheets ({answerFiles.length})
-                  </button>
+                <div className="w-full sm:w-fit overflow-x-auto no-scrollbar">
+                  <div className="flex gap-2 bg-app-card/30 p-1 border border-app-border rounded-2xl w-max sm:w-fit">
+                    <button
+                      type="button"
+                      onClick={() => setViewerMode("piq")}
+                      className={cn(
+                        "px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shrink-0 cursor-pointer",
+                        viewerMode === "piq"
+                          ? "bg-app-accent text-app-on-accent shadow-lg"
+                          : "text-app-text-muted hover:text-app-text-bright"
+                      )}
+                    >
+                      PIQ Forms ({piqFiles.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewerMode("dossier")}
+                      className={cn(
+                        "px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shrink-0 cursor-pointer",
+                        viewerMode === "dossier"
+                          ? "bg-app-accent text-app-on-accent shadow-lg"
+                          : "text-app-text-muted hover:text-app-text-bright"
+                      )}
+                    >
+                      Dossier Sheets ({answerFiles.length})
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -1032,27 +1040,29 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
                 return (
                   <div className="space-y-4">
                     {viewerMode === "piq" && activeAssessorType !== "IO" && (
-                      <div className="flex gap-2 p-1 bg-black/30 border border-app-border rounded-xl w-fit">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedPiqTab("piq1")}
-                          className={cn(
-                            "px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all",
-                            selectedPiqTab === "piq1" ? "bg-app-accent text-app-on-accent shadow" : "text-app-text-muted hover:text-app-text-bright"
-                          )}
-                        >
-                          PIQ 1: Initial Assessment [{piq1Files.length}]
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedPiqTab("piq2")}
-                          className={cn(
-                            "px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all",
-                            selectedPiqTab === "piq2" ? "bg-app-accent text-app-on-accent shadow" : "text-app-text-muted hover:text-app-text-bright"
-                          )}
-                        >
-                          PIQ 2: Final/Interview Prep [{piq2Files.length}]
-                        </button>
+                      <div className="w-full sm:w-fit overflow-x-auto no-scrollbar">
+                        <div className="flex gap-2 p-1 bg-black/30 border border-app-border rounded-xl w-max sm:w-fit">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedPiqTab("piq1")}
+                            className={cn(
+                              "px-3.5 sm:px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all shrink-0 cursor-pointer",
+                              selectedPiqTab === "piq1" ? "bg-app-accent text-app-on-accent shadow" : "text-app-text-muted hover:text-app-text-bright"
+                            )}
+                          >
+                            PIQ 1: Initial Assessment [{piq1Files.length}]
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedPiqTab("piq2")}
+                            className={cn(
+                              "px-3.5 sm:px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all shrink-0 cursor-pointer",
+                              selectedPiqTab === "piq2" ? "bg-app-accent text-app-on-accent shadow" : "text-app-text-muted hover:text-app-text-bright"
+                            )}
+                          >
+                            PIQ 2: Final/Interview Prep [{piq2Files.length}]
+                          </button>
+                        </div>
                       </div>
                     )}
 
@@ -1117,7 +1127,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
                             )}
                           </div>
 
-                          <div className="bg-app-card rounded-3xl border border-app-border overflow-hidden shadow-2xl" style={{ height: "720px" }}>
+                          <div className="bg-app-card rounded-2xl sm:rounded-3xl border border-app-border overflow-hidden shadow-2xl h-[480px] sm:h-[600px] lg:h-[720px]">
                             {isPdf(activeFiles[activePiqIndex]) ? (
                               <iframe
                                 key={`${viewerMode}-${selectedPiqTab}-${activePiqIndex}`}
@@ -1176,11 +1186,11 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
             return (
               <div className="w-full flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {/* Main Evaluation Card */}
-                <div className="glass-card rounded-3xl p-12 shadow-glow space-y-8 w-full">
+                <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 lg:p-12 shadow-glow space-y-6 sm:space-y-8 w-full">
                   <div className="space-y-4">
                     <div className="flex items-center gap-3 text-app-accent">
                       <Sparkles size={24} className="fill-current" />
-                      <h3 className="text-2xl font-black text-app-text-bright tracking-tight">
+                      <h3 className="text-xl sm:text-2xl font-black text-app-text-bright tracking-tight">
                         {activeAssessorType === "Psych" ? `${assessorLabel("Psych")} Evaluation Suite` :
                          activeAssessorType === "GTO" ? `${assessorLabel("GTO")} Case Scorecard` :
                          activeAssessorType === "IO" ? `${assessorLabel("IO")} Assessment Dossier` :
@@ -1215,7 +1225,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
                     </div>
                   )}
 
-                  <div className="space-y-8">
+                  <div className="space-y-6 sm:space-y-8">
                     {/* Remarks Textarea */}
                     <div className="space-y-3">
                       <label className="text-[10px] font-black text-app-text-muted uppercase tracking-[0.2em] px-2 block">Comprehensive Remarks &amp; Dossier Analysis</label>
@@ -1230,7 +1240,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
                           "Enter technical aptitude, analytical comprehension, and structural thinking..."
                         }
                         rows={6}
-                        className="w-full bg-app-card border border-app-border rounded-3xl p-6 text-app-text-bright font-serif text-lg italic focus:outline-none focus:border-app-accent focus:ring-1 focus:ring-app-accent/20 transition-all placeholder:text-app-text-muted/30"
+                        className="w-full bg-app-card border border-app-border rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-app-text-bright font-serif text-sm sm:text-base md:text-lg italic focus:outline-none focus:border-app-accent focus:ring-1 focus:ring-app-accent/20 transition-all placeholder:text-app-text-muted/30"
                       />
                       <div className="flex justify-end pt-2">
                         <Button
@@ -1245,140 +1255,145 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
                     </div>
 
                     {/* Scoring Table Row */}
-                    <div className="space-y-4">
-                      <label className="text-[10px] font-black text-app-accent uppercase tracking-[0.2em] px-2 block">
-                        TICKS and MARKS
-                      </label>
+                    <div className="space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                        <label className="text-[10px] font-black text-app-accent uppercase tracking-[0.2em] px-2 block">
+                          TICKS and MARKS
+                        </label>
+                        <span className="text-[9px] text-app-text-muted font-bold px-2 lg:hidden">
+                          ← Swipe horizontally to grade all 15 qualities and overall marks →
+                        </span>
+                      </div>
 
-                        <div className="w-full bg-app-card border border-app-border rounded-3xl overflow-hidden shadow-xl">
-                          <div className="w-full overflow-hidden">
-                            {(() => {
-                              const traineeWidth = "w-[13%]";
-                              const marksWidth = "w-[9%]";
-                              const traitWidth = "w-[5.2%]";
+                      <div className="w-full bg-app-card border border-app-border rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl">
+                        <div className="w-full overflow-x-auto custom-scrollbar">
+                          {(() => {
+                            const traineeWidth = "w-[120px] sm:w-[140px]";
+                            const marksWidth = "w-[75px] sm:w-[90px]";
+                            const traitWidth = "w-[44px] sm:w-[50px]";
 
-                              return (
-                                <table className="w-full border-collapse text-left table-fixed">
-                                  <colgroup>
-                                    <col className={traineeWidth} />
-                                    {gridConfig.traits.map((t) => (
-                                      <col key={t.id} className={traitWidth} />
-                                    ))}
-                                    <col className={marksWidth} />
-                                  </colgroup>
-                                  <thead>
-                                    {/* Factor Headers Row */}
-                                    <tr className="bg-black/30 border-b border-app-border divide-x divide-app-border/40 text-xs font-black text-app-accent uppercase tracking-widest text-center">
-                                      <th className="px-2 py-3 text-left overflow-hidden text-ellipsis whitespace-nowrap">Trainee / Chest No</th>
-                                      {gridConfig.factors.map((f, i) => (
-                                        <th key={i} colSpan={f.colSpan} className="px-1 py-2 leading-tight">
-                                          {f.label}
-                                        </th>
-                                      ))}
-                                      <th rowSpan={2} className="px-1 py-3 text-center align-middle font-bold text-app-accent bg-app-accent/18 overflow-hidden text-ellipsis whitespace-nowrap">
-                                        MARKS
+                            return (
+                              <table className="w-full border-collapse text-left min-w-[880px] sm:min-w-[940px] table-fixed">
+                                <colgroup>
+                                  <col className={traineeWidth} />
+                                  {gridConfig.traits.map((t) => (
+                                    <col key={t.id} className={traitWidth} />
+                                  ))}
+                                  <col className={marksWidth} />
+                                </colgroup>
+                                <thead>
+                                  {/* Factor Headers Row */}
+                                  <tr className="bg-black/30 border-b border-app-border divide-x divide-app-border/40 text-xs font-black text-app-accent uppercase tracking-widest text-center">
+                                    <th className="px-2 py-3 text-left overflow-hidden text-ellipsis whitespace-nowrap">Trainee / Chest No</th>
+                                    {gridConfig.factors.map((f, i) => (
+                                      <th key={i} colSpan={f.colSpan} className="px-1 py-2 leading-tight">
+                                        {f.label}
                                       </th>
-                                    </tr>
-                                    {/* OLQ Codes Row */}
-                                    <tr className="bg-black/10 border-b border-app-border divide-x divide-app-border/40 text-xs font-black text-app-text-bright uppercase tracking-wider text-center">
-                                      <td className="px-2 py-2 text-left text-app-text-muted text-[10px] overflow-hidden text-ellipsis whitespace-nowrap">Code</td>
-                                      {gridConfig.traits.map((t) => (
-                                        <td key={t.id} className="px-1 py-2 font-mono text-xs hover:bg-black/20 group relative cursor-help overflow-hidden text-ellipsis whitespace-nowrap">
-                                          <span className="underline decoration-dotted decoration-app-text-muted/50">{t.code}</span>
-                                          {/* Tooltip for description */}
-                                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-black border border-app-border text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow-2xl whitespace-nowrap z-50">
-                                            {t.name}
-                                          </div>
-                                        </td>
-                                      ))}
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {/* Trainee Row */}
-                                    <tr className="divide-x divide-app-border/40 hover:bg-black/10 transition-colors">
-                                      <td className="px-2 py-3">
-                                        <div className="flex flex-col overflow-hidden">
-                                          <span className="text-xs font-black text-app-text-bright uppercase tracking-wide leading-tight truncate mb-1">
-                                            {student?.name || "Trainee"}
-                                          </span>
-                                          <div className="flex items-center gap-1">
-                                            <span className="px-1 py-0.5 rounded bg-black/30 border border-app-border text-[9px] font-black uppercase tracking-widest text-app-text-bright truncate whitespace-nowrap">
-                                              B: {student?.batch || "--"} | C: {student?.chestNo || "--"}
-                                            </span>
-                                          </div>
+                                    ))}
+                                    <th rowSpan={2} className="px-1 py-3 text-center align-middle font-bold text-app-accent bg-app-accent/18 overflow-hidden text-ellipsis whitespace-nowrap">
+                                      MARKS
+                                    </th>
+                                  </tr>
+                                  {/* OLQ Codes Row */}
+                                  <tr className="bg-black/10 border-b border-app-border divide-x divide-app-border/40 text-xs font-black text-app-text-bright uppercase tracking-wider text-center">
+                                    <td className="px-2 py-2 text-left text-app-text-muted text-[10px] overflow-hidden text-ellipsis whitespace-nowrap">Code</td>
+                                    {gridConfig.traits.map((t) => (
+                                      <td key={t.id} className="px-1 py-2 font-mono text-xs hover:bg-black/20 group relative cursor-help overflow-hidden text-ellipsis whitespace-nowrap">
+                                        <span className="underline decoration-dotted decoration-app-text-muted/50">{t.code}</span>
+                                        {/* Tooltip for description */}
+                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-black border border-app-border text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow-2xl whitespace-nowrap z-50">
+                                          {t.name}
                                         </div>
                                       </td>
-                                      {gridConfig.traits.map((t) => (
-                                        <td key={t.id} className="p-0.5 text-center">
-                                          <input
-                                            type="number"
-                                            min={0}
-                                            max={9}
-                                            disabled={isAssessorCompleted}
-                                            value={scores[t.id] ?? ""}
-                                            onChange={(e) => {
-                                              const valStr = e.target.value;
-                                              if (valStr === "") {
-                                                setScores((prev) => ({ ...prev, [t.id]: "" }));
-                                                return;
-                                              }
-                                              const parsed = parseInt(valStr, 10);
-                                              if (isNaN(parsed)) {
-                                                setScores((prev) => ({ ...prev, [t.id]: "" }));
-                                                return;
-                                              }
-                                              const val = parsed % 10;
-                                              setScores((prev) => ({ ...prev, [t.id]: val }));
-                                            }}
-                                            onFocus={(e) => e.target.select()}
-                                            placeholder="--"
-                                            className="w-full bg-transparent border-0 text-center text-sm font-black text-app-text-bright focus:outline-none focus:ring-1 focus:ring-app-accent/50 focus:bg-black/30 rounded py-2 px-0.5 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                          />
-                                        </td>
-                                      ))}
-                                      <td className="p-0.5 text-center bg-app-accent/12">
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {/* Trainee Row */}
+                                  <tr className="divide-x divide-app-border/40 hover:bg-black/10 transition-colors">
+                                    <td className="px-2 py-3">
+                                      <div className="flex flex-col overflow-hidden">
+                                        <span className="text-xs font-black text-app-text-bright uppercase tracking-wide leading-tight truncate mb-1">
+                                          {student?.name || "Trainee"}
+                                        </span>
+                                        <div className="flex items-center gap-1">
+                                          <span className="px-1 py-0.5 rounded bg-black/30 border border-app-border text-[9px] font-black uppercase tracking-widest text-app-text-bright truncate whitespace-nowrap">
+                                            B: {student?.batch || "--"} | C: {student?.chestNo || "--"}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </td>
+                                    {gridConfig.traits.map((t) => (
+                                      <td key={t.id} className="p-0.5 text-center">
                                         <input
                                           type="number"
                                           min={0}
-                                          max={999}
+                                          max={9}
                                           disabled={isAssessorCompleted}
-                                          value={scores["marks"] ?? ""}
+                                          value={scores[t.id] ?? ""}
                                           onChange={(e) => {
                                             const valStr = e.target.value;
                                             if (valStr === "") {
-                                              setScores((prev) => ({ ...prev, marks: "" }));
+                                              setScores((prev) => ({ ...prev, [t.id]: "" }));
                                               return;
                                             }
                                             const parsed = parseInt(valStr, 10);
                                             if (isNaN(parsed)) {
-                                              setScores((prev) => ({ ...prev, marks: "" }));
+                                              setScores((prev) => ({ ...prev, [t.id]: "" }));
                                               return;
                                             }
-                                            if (parsed > 999) return;
-                                            setScores((prev) => ({ ...prev, marks: parsed }));
+                                            const val = parsed % 10;
+                                            setScores((prev) => ({ ...prev, [t.id]: val }));
                                           }}
                                           onFocus={(e) => e.target.select()}
                                           placeholder="--"
-                                          className="w-full bg-app-accent/15 border-0 text-center text-sm font-black text-app-accent focus:outline-none focus:ring-1 focus:ring-app-accent/80 focus:bg-app-accent/20 rounded py-2 px-1 transition-all font-mono [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                          className="w-full bg-transparent border-0 text-center text-sm font-black text-app-text-bright focus:outline-none focus:ring-1 focus:ring-app-accent/50 focus:bg-black/30 rounded py-2 px-0.5 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         />
                                       </td>
-                                    </tr>
-                                  </tbody>
-                                </table>
-                              );
-                            })()}
-                          </div>
-                          <div className="flex justify-end p-4 border-t border-app-border/40">
-                            <Button
-                              type="button"
-                              variant="secondary"
-                              onClick={handleUploadMarks}
-                              disabled={saving || isAssessorCompleted || (!isOffline && (activeAssessorType === "Psych" || activeAssessorType === "TO") && !isDossierUploaded)}
-                            >
-                              Upload Marks
-                            </Button>
-                          </div>
+                                    ))}
+                                    <td className="p-0.5 text-center bg-app-accent/12">
+                                      <input
+                                        type="number"
+                                        min={0}
+                                        max={999}
+                                        disabled={isAssessorCompleted}
+                                        value={scores["marks"] ?? ""}
+                                        onChange={(e) => {
+                                          const valStr = e.target.value;
+                                          if (valStr === "") {
+                                            setScores((prev) => ({ ...prev, marks: "" }));
+                                            return;
+                                          }
+                                          const parsed = parseInt(valStr, 10);
+                                          if (isNaN(parsed)) {
+                                            setScores((prev) => ({ ...prev, marks: "" }));
+                                            return;
+                                          }
+                                          if (parsed > 999) return;
+                                          setScores((prev) => ({ ...prev, marks: parsed }));
+                                        }}
+                                        onFocus={(e) => e.target.select()}
+                                        placeholder="--"
+                                        className="w-full bg-app-accent/15 border-0 text-center text-sm font-black text-app-accent focus:outline-none focus:ring-1 focus:ring-app-accent/80 focus:bg-app-accent/20 rounded py-2 px-1 transition-all font-mono [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                      />
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            );
+                          })()}
                         </div>
+                        <div className="flex justify-end p-4 border-t border-app-border/40">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={handleUploadMarks}
+                            disabled={saving || isAssessorCompleted || (!isOffline && (activeAssessorType === "Psych" || activeAssessorType === "TO") && !isDossierUploaded)}
+                          >
+                            Upload Marks
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1386,10 +1401,29 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
             );
           })()}
 
+          {/* RAPID ASSESSMENT TAB */}
+          {effectiveTab === "rapid" && (
+            <RapidAssessmentEngineView
+              submissionId={submissionId}
+              submission={submission}
+              student={student}
+              activeAssessorType={activeAssessorType}
+              scores={scores}
+              setScores={setScores}
+              remarks={remarks}
+              setRemarks={setRemarks}
+              isAssessorCompleted={isAssessorCompleted}
+              saving={saving}
+              handleUploadRemarks={handleUploadRemarks}
+              handleUploadMarks={handleUploadMarks}
+              handleUpdate={handleUpdate}
+            />
+          )}
+
           {/* INTERVENTION PLAN TAB */}
           {effectiveTab === "meeting" && (
             <div className="max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="glass-card rounded-3xl p-12 shadow-glow space-y-10">
+              <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 lg:p-12 shadow-glow space-y-8 sm:space-y-10">
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 text-app-accent">
                     <Calendar size={24} />
@@ -1445,7 +1479,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
             const subWithRemarks = submission as SubmissionWithAssessorFields;
             return (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="glass-card rounded-3xl p-12 shadow-glow space-y-8 w-full">
+                <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 lg:p-12 shadow-glow space-y-6 sm:space-y-8 w-full">
                   <div className="space-y-4">
                     <div className="flex items-center gap-3 text-app-accent">
                       <Users size={24} className="fill-current" />
@@ -1494,7 +1528,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
                 <span>Question Reference Sheet</span>
               </div>
 
-              <div className="bg-app-card rounded-3xl border border-app-border overflow-hidden shadow-2xl flex flex-col relative w-full" style={{ height: "720px" }}>
+              <div className="bg-app-card rounded-2xl sm:rounded-3xl border border-app-border overflow-hidden shadow-2xl flex flex-col relative w-full h-[480px] sm:h-[600px] lg:h-[720px]">
                 <AssessmentMiniViewer assessmentId={assessment._id || assessment.id} />
               </div>
             </div>
@@ -1504,14 +1538,14 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
 
       {/* Ethics & Integrity Consent Modal */}
       {showEthicsModal && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="bg-app-sidebar border border-app-border rounded-3xl p-8 md:p-12 max-w-lg w-full text-center relative overflow-hidden shadow-2xl space-y-8 animate-in scale-in-95 duration-300">
-            <div className="relative z-10 space-y-6">
-              <div className="w-16 h-16 bg-app-card rounded-3xl border border-app-border flex items-center justify-center mx-auto mb-6 text-app-accent shadow-inner">
-                <ShieldCheck size={32} />
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[9999] flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-300">
+          <div className="bg-app-sidebar border border-app-border rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-12 max-w-lg w-full text-center relative overflow-hidden shadow-2xl space-y-6 sm:space-y-8 animate-in scale-in-95 duration-300 max-h-[92vh] overflow-y-auto">
+            <div className="relative z-10 space-y-4 sm:space-y-6">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-app-card rounded-2xl sm:rounded-3xl border border-app-border flex items-center justify-center mx-auto mb-4 sm:mb-6 text-app-accent shadow-inner">
+                <ShieldCheck size={28} className="sm:w-8 sm:h-8" />
               </div>
 
-              <h2 className="text-3xl font-black tracking-tight text-app-text-bright uppercase">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-app-text-bright uppercase">
                 Ethics &amp; Integrity Protocols
               </h2>
 
