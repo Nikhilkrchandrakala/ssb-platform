@@ -77,7 +77,7 @@ function CircleBox() {
           </p>
 
           <p className={styles.titleOfSecondSection}>
-            For 5 years, we have mentored candidates online: 800+ students coached, 200+ recommended into the
+            For 5 years, we have mentored candidates online: 800+ students coached, 202+ recommended into the
             Indian Armed Forces. Our mentors, Lt Cdr Nikhil Kumar Chandrakala (Retd.), India&rsquo;s youngest Group Testing
             Officer since 1947, and and team of DIPR certififed ex-SSB assessors, have personally assessed over 50000 candidates between them.
           </p>
