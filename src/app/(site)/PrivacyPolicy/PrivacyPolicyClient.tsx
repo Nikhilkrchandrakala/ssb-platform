@@ -18,6 +18,7 @@ export default function PrivacyPolicyClient() {
         title="Go back"
       >
         <IoMdArrowBack />
+        <span>Back</span>
       </button>
 
       <div className="privacy-container">

@@ -44,25 +44,32 @@
 
 /* Arrow Button Styles */
 .arrowBackBtn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 50px;
-  height: 50px;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 50%;
+  gap: 8px;
+  height: 42px;
+  min-height: 42px;
+  padding: 0 16px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  color: #e6e6d8;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .arrowBackBtn:hover {
-  background: rgba(0, 0, 0, 0.6);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
+  background: rgba(0, 0, 0, 0.65);
+  border-color: rgba(244, 196, 48, 0.5);
+  color: #f4c430;
+  transform: translateX(-3px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
@@ -71,8 +78,7 @@
 }
 
 .arrowBackBtn svg {
-  font-size: 28px;
-  color: #e6e6d8;
+  font-size: 20px;
 }
 
 .container {
@@ -229,12 +235,13 @@
   }
 
   .arrowBackBtn {
-    width: 45px;
-    height: 45px;
+    height: 40px;
+    min-height: 40px;
+    padding: 0 14px;
   }
 
   .arrowBackBtn svg {
-    font-size: 24px;
+    font-size: 19px;
   }
 }
 
@@ -287,14 +294,17 @@
   }
 
   .arrowBackBtn {
-    width: 40px;
-    height: 40px;
+    height: 38px;
+    min-height: 38px;
+    padding: 0 12px;
+    font-size: 13px;
+    gap: 6px;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
 
   .arrowBackBtn svg {
-    font-size: 22px;
+    font-size: 18px;
   }
 }
 
@@ -323,12 +333,15 @@
   }
 
   .arrowBackBtn {
-    width: 36px;
     height: 36px;
+    min-height: 36px;
+    padding: 0 10px;
+    font-size: 12px;
+    gap: 5px;
   }
 
   .arrowBackBtn svg {
-    font-size: 20px;
+    font-size: 16px;
   }
 
   .quote {
@@ -350,11 +363,14 @@
   }
 
   .arrowBackBtn {
-    width: 32px;
-    height: 32px;
+    height: 34px;
+    min-height: 34px;
+    padding: 0 8px;
+    font-size: 11px;
+    gap: 4px;
   }
 
   .arrowBackBtn svg {
-    font-size: 18px;
+    font-size: 15px;
   }
 }

@@ -18,6 +18,7 @@ export default function RefundCancellationClient() {
         title="Go Back"
       >
         <IoMdArrowBack />
+        <span>Back</span>
       </button>
 
       <div className="refund-container">

@@ -30,6 +30,7 @@ export default function BackArrowButton() {
         title="Go back"
       >
         <BiArrowBack />
+        <span>Back</span>
       </button>
     </div>
   );

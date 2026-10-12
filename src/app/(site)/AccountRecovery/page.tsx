@@ -244,6 +244,7 @@ function AccountRecovery() {
         title="Go back"
       >
         <BiArrowBack />
+        <span>Back</span>
       </button>
 
       <div className="container position-relative">

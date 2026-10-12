@@ -213,6 +213,7 @@ function OAuthPhoneVerifyInner() {
         onClick={() => (step === 2 ? setStep(1) : safeBack(router, "/SignIn"))}
       >
         <BiArrowBack />
+        <span>Back</span>
       </button>
       <div className="thm-content-bg"></div>
       <div className="container position-relative">

@@ -113,6 +113,7 @@ export default function PaymentHistoryClient({ orders }: { orders: PaymentHistor
         title="Go back"
       >
         <BiArrowBack />
+        <span>Back</span>
       </button>
 
       <div className="container position-relative">

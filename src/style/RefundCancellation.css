@@ -15,17 +15,18 @@
   position: absolute;
   top: max(24px, calc(env(safe-area-inset-top) + 12px));
   left: max(24px, calc(env(safe-area-inset-left) + 12px));
-  font-size: 24px;
+  font-size: 14px;
+  font-weight: 600;
   color: #c6c5af;
   cursor: pointer;
   transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
+  gap: 8px;
+  height: 42px;
+  min-height: 42px;
+  padding: 0 16px;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(198, 197, 175, 0.2);
@@ -33,31 +34,35 @@
   -webkit-backdrop-filter: blur(12px);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  white-space: nowrap;
   z-index: 100;
   outline: none;
-  padding: 0;
+}
+
+.BackBtn svg {
+  font-size: 20px;
 }
 
 .BackBtn:hover {
   color: #d2a100;
   border-color: #d2a100;
   background: rgba(210, 161, 0, 0.15);
-  transform: scale(1.05);
+  transform: translateX(-3px);
 }
 
 .BackBtn:active {
-  transform: scale(0.92);
+  transform: scale(0.95);
 }
 
 @media (max-width: 768px) {
   .BackBtn {
     top: max(14px, calc(env(safe-area-inset-top) + 8px));
     left: max(14px, calc(env(safe-area-inset-left) + 8px));
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    min-height: 40px;
-    font-size: 20px;
+    height: 38px;
+    min-height: 38px;
+    padding: 0 12px;
+    font-size: 13px;
+    gap: 6px;
   }
 }
 

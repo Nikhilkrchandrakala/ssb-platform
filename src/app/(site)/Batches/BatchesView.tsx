@@ -565,7 +565,7 @@ export default function BatchesView() {
           title="Go back"
           type="button"
         >
-          <FaArrowLeft />
+          <FaArrowLeft /> <span>Back</span>
         </button>
         <h1 className={styles.title}>Ongoing Online SSB Batches</h1>
       </div>

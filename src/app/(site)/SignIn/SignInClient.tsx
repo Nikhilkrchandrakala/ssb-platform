@@ -297,6 +297,7 @@ function SignInForm({ initialDisplaySettings }: { initialDisplaySettings: AuthDi
           title="Go back"
         >
           <BiArrowBack />
+          <span>Back</span>
         </button>
 
         <div className="auth-card">

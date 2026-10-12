@@ -298,7 +298,7 @@ export default function OfflineBatchesView() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.hero}>
+      <div className={styles.topNav}>
         <button
           type="button"
           className={styles.backButton}
@@ -307,6 +307,9 @@ export default function OfflineBatchesView() {
         >
           <FaArrowLeft /> <span>Back</span>
         </button>
+      </div>
+
+      <div className={styles.hero}>
         <span className={styles.heroBadge}>
           <FaMapMarkerAlt /> Offline / In-Person Training
         </span>

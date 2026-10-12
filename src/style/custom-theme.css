@@ -48,13 +48,14 @@ input[type=number] {
     position: fixed;
     top: max(20px, calc(env(safe-area-inset-top) + 12px));
     left: max(20px, calc(env(safe-area-inset-left) + 12px));
-    font-size: 24px;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
     z-index: 99999;
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
+    height: 42px;
+    min-height: 42px;
+    padding: 0 16px;
+    gap: 8px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -67,20 +68,24 @@ input[type=number] {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
-    transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+    transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
     outline: none;
-    padding: 0;
+}
+
+.arrow_button svg {
+    font-size: 20px;
 }
 
 .arrow_button:hover {
     color: #f4c430;
     border-color: #f4c430;
     background: rgba(244, 196, 48, 0.15);
-    transform: scale(1.05);
+    transform: translateX(-3px);
 }
 
 .arrow_button:active {
-    transform: scale(0.92);
+    transform: scale(0.95);
 }
 
 .arrow_button_two {
@@ -445,17 +450,17 @@ input[type=number] {
     }
 
     .thm-content-layer {
-        padding: 40px 15px 80px 15px;
+        padding: max(70px, calc(env(safe-area-inset-top) + 54px)) 15px 80px 15px;
     }
 
     .arrow_button {
-        font-size: 22px;
+        font-size: 13px;
         top: max(16px, calc(env(safe-area-inset-top) + 10px));
         left: max(16px, calc(env(safe-area-inset-left) + 10px));
-        width: 44px;
-        height: 44px;
-        min-width: 44px;
-        min-height: 44px;
+        height: 38px;
+        min-height: 38px;
+        padding: 0 12px;
+        gap: 6px;
     }
 
     .arrow_button_two {
@@ -1341,7 +1346,7 @@ input::-ms-clear {
         width: 100%;
         min-height: 100vh;
         min-height: 100dvh;
-        padding: max(30px, calc(env(safe-area-inset-top) + 24px)) max(15px, env(safe-area-inset-right)) max(30px, calc(env(safe-area-inset-bottom) + 24px)) max(15px, env(safe-area-inset-left));
+        padding: max(70px, calc(env(safe-area-inset-top) + 54px)) max(15px, env(safe-area-inset-right)) max(30px, calc(env(safe-area-inset-bottom) + 24px)) max(15px, env(safe-area-inset-left));
     }
 
     .auth-card {
@@ -1354,28 +1359,49 @@ input::-ms-clear {
     position: fixed;
     top: max(20px, calc(env(safe-area-inset-top) + 12px));
     left: max(20px, calc(env(safe-area-inset-left) + 12px));
-    font-size: 26px;
+    font-size: 14px;
+    font-weight: 600;
     color: #c6c5af;
     cursor: pointer;
-    transition: color 0.2s, transform 0.2s, background 0.2s;
+    transition: color 0.2s, transform 0.2s, background 0.2s, border-color 0.2s;
     z-index: 1000;
-    width: 44px;
-    height: 44px;
-    display: flex;
+    height: 42px;
+    min-height: 42px;
+    padding: 0 16px;
+    gap: 8px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: 12px;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+    white-space: nowrap;
+}
+
+.auth-back-arrow svg {
+    font-size: 20px;
 }
 
 .auth-back-arrow:hover {
     color: #f4c430;
-    transform: translateX(-4px);
+    border-color: #f4c430;
+    transform: translateX(-3px);
+}
+
+@media (max-width: 576px) {
+    .auth-back-arrow {
+        top: max(16px, calc(env(safe-area-inset-top) + 10px));
+        left: max(16px, calc(env(safe-area-inset-left) + 10px));
+        height: 38px;
+        min-height: 38px;
+        padding: 0 12px;
+        font-size: 13px;
+        gap: 6px;
+    }
 }
 
 .auth-card-title {

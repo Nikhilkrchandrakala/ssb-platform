@@ -2,7 +2,46 @@
     min-height: 100vh;
     padding: 40px clamp(20px, 4vw, 60px) 80px;
     width: 100%;
+    max-width: 1240px;
+    margin: 0 auto;
     box-sizing: border-box;
+}
+
+/* ── Top Navigation Row ── */
+.topNav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 24px;
+    width: 100%;
+}
+
+.backButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    background: rgba(18, 18, 18, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 40px;
+    padding: 10px 20px;
+    min-height: 42px;
+    font-size: 14px;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.backButton:hover {
+    color: var(--secondary-color, #d2a100);
+    border-color: var(--secondary-color, #d2a100);
+    background: rgba(210, 161, 0, 0.12);
+    transform: translateX(-4px);
 }
 
 /* ── Hero ── */
@@ -10,33 +49,6 @@
     text-align: center;
     margin-bottom: 30px;
     position: relative;
-}
-
-.backButton {
-    position: absolute;
-    left: 0;
-    top: 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: rgba(255, 255, 255, 0.85);
-    font-weight: 600;
-    cursor: pointer;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 8px;
-    padding: 8px 16px;
-    min-height: 44px;
-    font-size: 14px;
-    transition: all 0.2s ease;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.backButton:hover {
-    color: var(--secondary-color, #d2a100);
-    border-color: rgba(210, 161, 0, 0.4);
-    background: rgba(210, 161, 0, 0.12);
 }
 
 .heroBadge {
@@ -772,13 +784,22 @@
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-    .heroTitle {
-        font-size: 28px;
+    .page {
+        padding: max(20px, calc(env(safe-area-inset-top) + 16px)) max(16px, calc(env(safe-area-inset-right) + 10px)) 60px max(16px, calc(env(safe-area-inset-left) + 10px));
+    }
+
+    .topNav {
+        margin-bottom: 16px;
     }
 
     .backButton {
-        position: static;
-        margin-bottom: 16px;
+        padding: 8px 16px;
+        font-size: 13px;
+        gap: 6px;
+    }
+
+    .heroTitle {
+        font-size: 28px;
     }
 
     .toolbar {

@@ -33,9 +33,9 @@ export default function JoinSSBView() {
         type="button"
         className={styles.backLink}
         onClick={() => safeBack(router, "/")}
-        aria-label="Back to Home"
+        aria-label="Go back"
       >
-        <FaArrowLeft /> <span>Home</span>
+        <FaArrowLeft /> <span>Back</span>
       </button>
 
       <span className={styles.eyebrow}>

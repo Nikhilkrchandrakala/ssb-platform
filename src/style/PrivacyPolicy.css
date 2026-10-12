@@ -15,22 +15,39 @@
 .BackBtn {
     position: sticky;
     top: max(20px, calc(env(safe-area-inset-top) + 10px));
-    width: 100%;
-    font-size: 26px;
+    width: auto;
+    font-size: 15px;
+    font-weight: 600;
+    color: #c6c5af;
+    background: transparent;
+    border: none;
     padding: 10px max(24px, calc(env(safe-area-inset-left) + 16px));
     display: inline-flex;
     align-items: center;
+    gap: 8px;
+    white-space: nowrap;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
     z-index: 100;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.BackBtn svg {
+    font-size: 20px;
+}
+
+.BackBtn:hover {
+    color: var(--secondary-color, #d2a100);
+    transform: translateX(-3px);
 }
 
 @media (max-width: 768px) {
     .BackBtn {
         top: max(14px, calc(env(safe-area-inset-top) + 8px));
         padding: 8px max(16px, calc(env(safe-area-inset-left) + 10px));
-        font-size: 22px;
+        font-size: 14px;
+        gap: 6px;
     }
 }
 

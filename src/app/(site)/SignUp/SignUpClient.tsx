@@ -483,6 +483,7 @@ export default function SignUpClient({ initialDisplaySettings }: { initialDispla
           title="Go back"
         >
           <BiArrowBack />
+          <span>Back</span>
         </button>
 
         <div className={`auth-card ${step === 4 ? "auth-card-wide" : ""}`}>
