@@ -128,6 +128,25 @@
     .admin-candidate-card {
         padding: 18px;
     }
+
+    /* ── Candidate: control bar (show N, board filter, search) stacks ── */
+    .admin-card .d-flex.justify-content-between {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+
+    /* ── Candidate: table scrolls horizontally instead of breaking layout ── */
+    .admin-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* ── Candidate: pagination wraps (already in global, but override here too) ── */
+    .d-flex.justify-content-between.align-items-center.mt-3 {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 12px;
+    }
 }
 
 /* Roster table thumbnail + modal photo preview — never had a style rule,

@@ -143,8 +143,22 @@
 }
 
 /* --------------------------------------------------------------------------
-   BLOG CREATE / EDIT FORM VIEW
+   BLOG CREATE / EDIT FORM VIEW — card wrapper
    -------------------------------------------------------------------------- */
+.blog-editor-card {
+    background: rgba(18, 18, 18, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 28px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 768px) {
+    .blog-editor-card {
+        padding: 18px 14px;
+    }
+}
+
 .section-title {
     font-size: 0.88rem;
     font-weight: 700;
@@ -293,5 +307,55 @@
 @media (max-width: 768px) {
     .blog-card {
         margin-bottom: 20px;
+    }
+
+    /* ── Blog List: header stack ── */
+    .admin-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    /* ── Blog List: action buttons stack on small cards ── */
+    .blog-actions {
+        flex-direction: column;
+    }
+
+    .action-icon-btn {
+        width: 100%;
+    }
+
+    /* ── Blog List: meta wraps instead of overflowing ── */
+    .blog-meta {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    /* ── Blog Form: image-field-row collapses to vertical on mobile ── */
+    .image-field-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .image-field-thumb {
+        width: 100%;
+        height: auto;
+        max-height: 120px;
+        object-fit: cover;
+    }
+
+    /* ── Blog Form: submit + discard buttons stack ── */
+    .mt-5.d-flex {
+        flex-direction: column;
+    }
+
+    .thm-btn[style*="minWidth"] {
+        min-width: unset !important;
+        width: 100%;
+    }
+
+    /* ── Preview grid: smaller min column so it stays in 1 col ── */
+    .preview-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     }
 }

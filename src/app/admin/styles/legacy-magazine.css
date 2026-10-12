@@ -206,4 +206,27 @@
         grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
         gap: 20px;
     }
+
+    /* ── Magazine: action buttons stack on very narrow columns ── */
+    .mag-actions {
+        flex-wrap: wrap;
+    }
+
+    /* ── Magazine: modal form columns collapse to full-width ── */
+    .admin-modal .col-md-7,
+    .admin-modal .col-md-5,
+    .admin-modal .col-md-6 {
+        width: 100%;
+    }
+
+    /* ── Magazine: input-group (category + add/remove) wraps ── */
+    .input-group {
+        flex-wrap: nowrap; /* keep tight but allow internal scroll */
+    }
+}
+
+@media (max-width: 480px) {
+    .magazine-grid {
+        grid-template-columns: 1fr;
+    }
 }

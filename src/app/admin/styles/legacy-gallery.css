@@ -150,4 +150,15 @@
         grid-template-columns: 1fr;
         gap: 18px;
     }
+
+    /* ── Gallery: caption + meta stack cleanly ── */
+    .gallery-info {
+        padding: 14px 16px;
+    }
+
+    /* ── Gallery: meta row wraps on tiny screens ── */
+    .gallery-meta {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
 }

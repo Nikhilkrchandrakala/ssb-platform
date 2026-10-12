@@ -397,3 +397,52 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 768px) {
+  /* ── Dashboard: outer padding tightens ── */
+  .dashboard-container {
+    padding: 0 16px 40px 16px;
+    margin: 20px auto;
+  }
+
+  /* ── Dashboard: stat cards drop to 1-column on phones ── */
+  .stat-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* ── Dashboard: save-all / submit buttons stretch full-width ── */
+  .dashboard-container .text-end .thm-btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  /* ── Dashboard: slideshow upload row stacks ── */
+  .config-toolbar .row .col-md-9,
+  .config-toolbar .row .col-md-3,
+  .config-toolbar .row .col-md-5,
+  .config-toolbar .row .col-md-4 {
+    width: 100%;
+  }
+
+  /* ── Dashboard: mode choice cards text can overflow on 375px — add word wrap ── */
+  .mode-choice-card {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .mode-info {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .mode-desc {
+    word-break: break-word;
+  }
+
+  .mode-active-badge {
+    flex-shrink: 0;
+  }
+}

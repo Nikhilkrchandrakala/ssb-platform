@@ -501,8 +501,8 @@ export default function BlogsView({ blogId }: BlogsViewProps) {
                 />
               </div>
 
-              <div className="mt-5 d-flex gap-3">
-                <button type="submit" className="thm-btn" style={{ minWidth: 200 }} disabled={submitting}>
+              <div className="mt-5 d-flex gap-3 flex-wrap">
+                <button type="submit" className="thm-btn flex-grow-1" style={{ minWidth: 160 }} disabled={submitting}>
                   {submitting ? (
                     <>
                       <span className="spinner-border spinner-border-sm me-2" role="status"></span> Processing...
@@ -520,7 +520,7 @@ export default function BlogsView({ blogId }: BlogsViewProps) {
                 </button>
                 <button
                   type="button"
-                  className="thm-btn cancel-btn"
+                  className="thm-btn cancel-btn flex-grow-1"
                   onClick={handleCancel}
                 >
                   Discard Changes
