@@ -29,6 +29,9 @@
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    pointer-events: auto;
     z-index: 100;
     transition: color 0.2s ease, transform 0.2s ease;
 }

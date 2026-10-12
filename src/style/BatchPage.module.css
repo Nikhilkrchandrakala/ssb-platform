@@ -36,6 +36,9 @@
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
     white-space: nowrap;
+    -webkit-user-select: none;
+    user-select: none;
+    pointer-events: auto;
     border: 1px solid rgba(255, 255, 255, 0.15);
     background: rgba(18, 18, 18, 0.45);
     backdrop-filter: blur(10px);

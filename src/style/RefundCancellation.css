@@ -35,6 +35,9 @@
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   white-space: nowrap;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: auto;
   z-index: 100;
   outline: none;
 }

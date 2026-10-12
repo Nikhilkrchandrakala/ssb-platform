@@ -63,6 +63,11 @@
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: auto;
 }
 
 .arrowBackBtn:hover {

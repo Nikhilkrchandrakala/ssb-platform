@@ -7,6 +7,7 @@ import { ContactSettings } from "@/server/models";
 import { SiteUserProvider, type SiteUser } from "@/components/site/SiteUserProvider";
 import Footer from "@/components/site/Footer";
 import CookieBanner from "@/components/site/CookieBanner";
+import ZohoChatGuard from "@/components/site/ZohoChatGuard";
 
 // Bootstrap self-hosted from the npm package (not the CDN) so it's bundled
 // directly into this page's own CSS chunk instead of a separate network
@@ -115,6 +116,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
 
       <Toaster position="top-center" reverseOrder={false} />
       <CookieBanner />
+      <ZohoChatGuard />
 
       {children}
 
