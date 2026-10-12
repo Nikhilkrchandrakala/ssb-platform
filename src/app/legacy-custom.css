@@ -2429,50 +2429,6 @@ div[id*="zsiq"],
     }
 }
 
-/* Dedicated Native iOS Floating Close Button for Zoho Chatbot */
-.zoho-native-close-btn {
-    position: fixed;
-    top: max(14px, calc(env(safe-area-inset-top) + 8px));
-    right: max(16px, calc(env(safe-area-inset-right) + 12px));
-    z-index: 2147483647 !important;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    height: 38px;
-    padding: 0 16px;
-    border-radius: 20px;
-    background: rgba(18, 18, 18, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #ffffff;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-    cursor: pointer;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-    pointer-events: auto !important;
-    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-}
-
-.zoho-native-close-btn:hover {
-    background: #d2a100;
-    border-color: #d2a100;
-    color: #0b0b0b;
-    transform: scale(1.04);
-}
-
-.zoho-native-close-btn:active {
-    transform: scale(0.96);
-}
-
-.zoho-native-close-btn svg {
-    font-size: 13px;
-}
-
 .error-message {
     color: var(--secondary-color);
     margin-top: 4px;
