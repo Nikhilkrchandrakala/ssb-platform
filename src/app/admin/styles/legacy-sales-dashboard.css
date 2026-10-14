@@ -170,8 +170,318 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .sales-date-range .admin-input {
   width: auto;
+  min-width: 130px;
+  flex: 1 1 130px;
+}
+
+/* ── Audit log enhancements ── */
+.sales-audit-cell-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 520px;
+}
+
+.sales-audit-summary-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sales-audit-content {
+  flex: 1 1 auto;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.sales-audit-seq-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.sales-audit-status-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.sales-audit-status-badge.success {
+  color: #2ecc71;
+  background: rgba(46, 204, 113, 0.15);
+  border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.sales-audit-status-badge.danger {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.15);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.sales-audit-status-badge.warning {
+  color: #f39c12;
+  background: rgba(243, 156, 18, 0.15);
+  border: 1px solid rgba(243, 156, 18, 0.3);
+}
+
+.sales-audit-status-badge.info {
+  color: #3498db;
+  background: rgba(52, 152, 219, 0.15);
+  border: 1px solid rgba(52, 152, 219, 0.3);
+}
+
+.sales-audit-tag-subtle {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 0.68rem;
+  border-radius: 3px;
+  background: rgba(52, 152, 219, 0.12);
+  color: #3498db;
+  border: 1px solid rgba(52, 152, 219, 0.25);
+  white-space: nowrap;
+}
+
+.sales-audit-code-pill {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--primary-gold, #e0c214);
+  word-break: break-all;
+}
+
+.sales-audit-json-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-muted, rgba(255, 255, 255, 0.6));
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+
+.sales-audit-json-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.sales-audit-json-pre {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  background: #0d0d0e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  color: #a0aec0;
+  overflow-x: auto;
+  max-height: 180px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* ==========================================================================
+   RESPONSIVE — SALES PAGE
+   ========================================================================== */
+
+/* ── Enroll tab: filter bar wraps naturally (flex-wrap already set), but the
+      date-range row also needs to stack on phones ── */
+@media (max-width: 768px) {
+  /* ── Tab bar: allow tabs to wrap to new lines on phones ── */
+  .sales-tab-bar {
+    gap: 6px;
+  }
+
+  .sales-tab-btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    flex: 1 1 auto;
+    text-align: center;
+  }
+
+  /* ── Slot grid: 1-column on phones ── */
+  .sales-slot-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* ── Each slot card header: title + badges wrap instead of overflow ── */
+  .sales-slot-card > div:first-child {
+    flex-wrap: wrap;
+  }
+
+  /* ── Date range: stack the two date inputs vertically ── */
+  .sales-date-range {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .sales-date-range .admin-input {
+    width: 100%;
+    flex: unset;
+  }
+
+  .sales-date-range span.text-muted {
+    display: none; /* hide the "to" separator when stacked */
+  }
+
+  /* ── Filter bar: search wrapper + selects take full width on phones ── */
+  .sales-filter-bar .search-wrapper {
+    max-width: 100%;
+  }
+
+  .sales-filter-bar .filter-select {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* ── My Students / Team: TYPE FILTER row wraps; select fills space ── */
+  .admin-card .d-flex.gap-2.align-items-center.mb-3 {
+    flex-wrap: wrap;
+  }
+
+  .admin-card .d-flex.gap-2.align-items-center.mb-3 .admin-input {
+    width: 100% !important;
+    flex: 1 1 auto;
+  }
+
+  /* ── All tables: guarantee horizontal scroll at card level ── */
+  .admin-card .admin-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ── Audit log: cap the meta column — React renders inline maxWidth as
+        max-width in the DOM, so match that attribute string ── */
+  .admin-card .admin-table td[style*="max-width"] {
+    max-width: 280px !important;
+    word-break: break-word;
+  }
+
+  .sales-audit-cell-wrapper {
+    max-width: 280px;
+  }
+
+  .sales-audit-summary-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  /* ── Pagination: info + buttons stack on phones ── */
+  .pagination-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .pagination-buttons {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  /* ── Enroll modal: two-column form collapses to 1-col on phones ── */
+  .admin-modal .row .col-md-6 {
+    width: 100%;
+  }
+
+  /* ── Enroll modal: col-sm-6/col-12 pair (Installments + Due Date)
+        already has Bootstrap breakpoint; belt-and-braces for sub-576px ── */
+  .admin-modal .row .col-sm-6 {
+    width: 100%;
+  }
+
+  /* ── Enroll / Executive modal footers: flex-wrap already added in JSX via
+        flex-wrap class; ensure buttons don't shrink below readable size ── */
+  .admin-modal .d-flex.justify-content-end.gap-2.pt-3 .thm-btn {
+    min-width: 120px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* ── Enroll modal: price-summary label+value rows wrap so long labels
+        don't overflow the modal ── */
+  .sales-price-summary-row {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .sales-price-summary-row span:first-child {
+    flex: 1 1 100%;
+    word-break: break-word;
+  }
+
+  .sales-price-summary-row strong {
+    align-self: flex-end;
+  }
+
+  /* ── Team "Back to team" + name row wraps on narrow phones ── */
+  .sales-back-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* ── Installment schedule: on very narrow modals the grid can be tight —
+        switch to a more compact layout ── */
+  .sales-installment-row {
+    grid-template-columns: 24px 1fr 1fr;
+    gap: 6px;
+  }
+
+  /* ── Payment Details modal: summary cards already use col-sm-4/col-sm-6
+        col-12 from JSX, but belt-and-braces: ── */
+  .admin-modal .row.g-2 > [class*="col-"] {
+    width: 100%;
+  }
+
+  /* ── Payment Details: "FULL INSTALLMENT SCHEDULE" header row wraps ── */
+  .sales-installment-schedule-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* ── Team roster: executive cards stack to 1-col on phones ── */
+  .admin-card .row.g-3 .col-md-4 {
+    width: 100%;
+  }
+
+  /* ── Late enrollment banner in enroll modal: wraps on phones ── */
+  .sales-late-banner {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+}
+
+/* ── Slot grid: 2-column on tablets ── */
+@media (min-width: 576px) and (max-width: 900px) {
+  .sales-slot-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }

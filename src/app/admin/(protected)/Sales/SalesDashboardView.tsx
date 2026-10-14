@@ -191,6 +191,333 @@ function planStatusChip(order: SalesOrderItem) {
   );
 }
 
+function auditActionChip(action: AuditLogEntry["action"]) {
+  const map: Record<string, { label: string; color: string; bg: string }> = {
+    LINK_GENERATED: { label: "LINK GENERATED", color: "#3498db", bg: "rgba(52,152,219,0.12)" },
+    INSTALLMENT_MARKED_PAID_MANUAL: { label: "MANUAL PAYMENT", color: "#2ecc71", bg: "rgba(46,204,113,0.12)" },
+    PLAN_EDITED: { label: "PLAN EDITED", color: "#f39c12", bg: "rgba(243,156,18,0.12)" },
+    REMINDER_SENT: { label: "REMINDER SENT", color: "#9b59b6", bg: "rgba(155,89,182,0.12)" },
+  };
+  const chip = map[action] || { label: action.replace(/_/g, " "), color: "#aaa", bg: "rgba(255,255,255,0.08)" };
+  return (
+    <span
+      style={{
+        padding: "3px 8px",
+        borderRadius: 4,
+        fontSize: "0.68rem",
+        fontWeight: 700,
+        letterSpacing: "0.4px",
+        color: chip.color,
+        background: chip.bg,
+        border: `1px solid ${chip.color}44`,
+        display: "inline-block",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {chip.label}
+    </span>
+  );
+}
+
+function AuditLogDetailsCell({ entry }: { entry: AuditLogEntry }) {
+  const [showRaw, setShowRaw] = useState(false);
+  const meta = entry.meta;
+
+  if (!meta || typeof meta !== "object" || Object.keys(meta).length === 0) {
+    return <span style={{ color: "var(--text-muted)" }}>—</span>;
+  }
+
+  const seq = typeof meta.seq === "number" ? meta.seq : null;
+  const reason = typeof meta.reason === "string" && meta.reason.trim() ? meta.reason.trim() : null;
+
+  const renderContent = () => {
+    switch (entry.action) {
+      case "LINK_GENERATED": {
+        const amount = typeof meta.amount === "number" ? meta.amount : null;
+        const channels = Array.isArray(meta.channels) ? (meta.channels as string[]) : null;
+        const expiresAt = typeof meta.expiresAt === "string" ? meta.expiresAt : null;
+        const results =
+          meta.results && typeof meta.results === "object"
+            ? (meta.results as Record<string, boolean>)
+            : null;
+
+        if (channels && channels.length > 0) {
+          return (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                {seq !== null && <span className="sales-audit-seq-badge">Inst. #{seq}</span>}
+                <span style={{ fontWeight: 600, color: "var(--text-bright, #fff)" }}>
+                  Link shared via {channels.map((c) => c.toUpperCase()).join(", ")}
+                </span>
+              </div>
+              {results && (
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 3 }}>
+                  Status:{" "}
+                  {Object.entries(results).map(([ch, ok]) => (
+                    <span key={ch} style={{ color: ok ? "#2ecc71" : "#e74c3c", marginRight: 8, fontWeight: 500 }}>
+                      {ch.toUpperCase()} {ok ? "✓" : "✗"}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        return (
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              {seq !== null && <span className="sales-audit-seq-badge">Inst. #{seq}</span>}
+              {amount !== null && (
+                <span style={{ fontWeight: 600, color: "var(--primary-gold, #e0c214)" }}>
+                  ₹{amount.toLocaleString("en-IN")}
+                </span>
+              )}
+              <span style={{ color: "var(--text-muted)", fontSize: "0.76rem" }}>
+                (Payment link created)
+              </span>
+            </div>
+            {expiresAt && (
+              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 2 }}>
+                Expires: {formatDate(expiresAt)}
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      case "INSTALLMENT_MARKED_PAID_MANUAL": {
+        const reference = typeof meta.reference === "string" && meta.reference.trim() ? meta.reference.trim() : null;
+        return (
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              {seq !== null && <span className="sales-audit-seq-badge">Inst. #{seq}</span>}
+              <span style={{ fontWeight: 600, color: "#2ecc71" }}>Marked paid manually</span>
+              {reference && (
+                <span className="sales-audit-code-pill" title="Payment Reference / Transaction ID">
+                  Ref: {reference}
+                </span>
+              )}
+            </div>
+            {reason && (
+              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 3, fontStyle: "italic" }}>
+                “{reason}”
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      case "PLAN_EDITED": {
+        if (typeof meta.previousAmount === "number" || typeof meta.newAmount === "number") {
+          const prev = typeof meta.previousAmount === "number" ? `₹${meta.previousAmount.toLocaleString("en-IN")}` : "—";
+          const next = typeof meta.newAmount === "number" ? `₹${meta.newAmount.toLocaleString("en-IN")}` : "—";
+          return (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                {seq !== null && <span className="sales-audit-seq-badge">Inst. #{seq}</span>}
+                <span style={{ fontWeight: 600, color: "var(--text-bright, #fff)" }}>
+                  Amount adjusted: <span style={{ textDecoration: "line-through", color: "var(--text-muted)", marginRight: 4 }}>{prev}</span>
+                  <span style={{ color: "var(--primary-gold)" }}>{next}</span>
+                </span>
+                {Boolean(meta.autoRedistributed) && (
+                  <span className="sales-audit-tag-subtle">Redistributed</span>
+                )}
+              </div>
+              {reason && (
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 3, fontStyle: "italic" }}>
+                  Reason: {reason}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        if (Array.isArray(meta.edits)) {
+          const edits = meta.edits as Array<{ seq?: number; amount?: number; dueDate?: string }>;
+          return (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                <span style={{ fontWeight: 600, color: "var(--text-bright, #fff)" }}>
+                  Schedule modified ({edits.length} installment{edits.length > 1 ? "s" : ""})
+                </span>
+                {Boolean(meta.autoRedistributed) && (
+                  <span className="sales-audit-tag-subtle">Redistributed</span>
+                )}
+              </div>
+              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 3 }}>
+                {edits.map((e, idx) => (
+                  <span key={idx} style={{ marginRight: 8, display: "inline-block" }}>
+                    Inst. #{e.seq ?? idx + 1}: {typeof e.amount === "number" ? `₹${e.amount.toLocaleString("en-IN")}` : ""}{" "}
+                    {e.dueDate ? `due ${formatDate(e.dueDate)}` : ""}
+                  </span>
+                ))}
+              </div>
+              {reason && (
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 2, fontStyle: "italic" }}>
+                  Reason: {reason}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        if (meta.accessRestored) {
+          return (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                <span className="sales-audit-status-badge success">Access Restored</span>
+                <span style={{ fontSize: "0.76rem", color: "var(--text-bright, #fff)" }}>
+                  Student LMS access reinstated
+                </span>
+              </div>
+              {reason && (
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 3, fontStyle: "italic" }}>
+                  Reason: {reason}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        if (meta.cancelledBySalesPerson) {
+          return (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                <span className="sales-audit-status-badge danger">Cancelled</span>
+                <span style={{ fontSize: "0.76rem", color: "var(--text-bright, #fff)" }}>
+                  Enrollment cancelled by sales executive
+                </span>
+              </div>
+              {reason && (
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 3, fontStyle: "italic" }}>
+                  Reason: {reason}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        if (meta.supersededByNewEnrollment) {
+          return (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                <span className="sales-audit-status-badge warning">Superseded</span>
+                <span style={{ fontSize: "0.76rem", color: "var(--text-bright, #fff)" }}>
+                  Prior unpaid enrollment replaced
+                </span>
+              </div>
+              {reason && (
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 3, fontStyle: "italic" }}>
+                  {reason}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        if (meta.type === "credentials_reset") {
+          return (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                <span className="sales-audit-status-badge info">Credentials Reset</span>
+                <span style={{ fontSize: "0.76rem", color: "var(--text-bright, #fff)" }}>
+                  {meta.emailDelivered ? "Password reset & email sent" : "Password reset (Email delivery failed)"}
+                </span>
+              </div>
+            </div>
+          );
+        }
+
+        if (meta.automatic || meta.reason === "overdue_final_installment") {
+          return (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                <span className="sales-audit-status-badge danger">Access Revoked</span>
+                <span style={{ fontSize: "0.76rem", color: "var(--text-bright, #fff)" }}>
+                  Automatic revoke (Final installment overdue)
+                </span>
+              </div>
+              {Boolean(meta.finalDueDate) && (
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 2 }}>
+                  Final due date was: {formatDate(String(meta.finalDueDate))}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        return (
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              <span style={{ fontWeight: 600, color: "var(--text-bright, #fff)" }}>Plan updated</span>
+            </div>
+            {reason && (
+              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 2, fontStyle: "italic" }}>
+                Reason: {reason}
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      case "REMINDER_SENT": {
+        const amount = typeof meta.amount === "number" ? meta.amount : null;
+        const dueDate = typeof meta.dueDate === "string" ? meta.dueDate : null;
+        return (
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              {seq !== null && <span className="sales-audit-seq-badge">Inst. #{seq}</span>}
+              <span style={{ fontWeight: 600, color: "var(--text-bright, #fff)" }}>
+                Installment reminder sent
+              </span>
+              {amount !== null && (
+                <span style={{ color: "var(--primary-gold)", fontSize: "0.76rem", fontWeight: 600 }}>
+                  ₹{amount.toLocaleString("en-IN")}
+                </span>
+              )}
+            </div>
+            {dueDate && (
+              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 2 }}>
+                Due on {formatDate(dueDate)}
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      default: {
+        return (
+          <div style={{ color: "var(--text-bright, #fff)", fontSize: "0.76rem" }}>
+            {reason ? `Reason: ${reason}` : "Details logged"}
+          </div>
+        );
+      }
+    }
+  };
+
+  return (
+    <div className="sales-audit-cell-wrapper">
+      <div className="sales-audit-summary-row">
+        <div className="sales-audit-content">{renderContent()}</div>
+        <button
+          type="button"
+          className="sales-audit-json-btn"
+          onClick={() => setShowRaw((prev) => !prev)}
+          title="Toggle technical JSON metadata"
+        >
+          {showRaw ? "Hide" : "JSON"}
+        </button>
+      </div>
+      {showRaw && (
+        <pre className="sales-audit-json-pre">
+          {JSON.stringify(meta, null, 2)}
+        </pre>
+      )}
+    </div>
+  );
+}
+
 function swalToast(icon: "success" | "error", title: string) {
   window.Swal?.fire({
     icon,
@@ -1651,7 +1978,7 @@ export default function SalesDashboardView() {
             )
           ) : (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <div className="sales-back-header" style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
                 <button className="thm-btn secondary" style={{ padding: "6px 14px", fontSize: "0.8rem" }} onClick={backToTeamRoster}>
                   <ArrowLeft size={14} className="me-1" style={ICON_STYLE} /> Back to team
                 </button>
@@ -1746,7 +2073,7 @@ export default function SalesDashboardView() {
 
       {section === "myTeam" && isHead && (
         <div className="admin-card">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
             <h5 className="text-warning mb-0" style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase" }}>
               My Executives
             </h5>
@@ -1811,9 +2138,9 @@ export default function SalesDashboardView() {
                     <tr key={entry._id}>
                       <td style={{ whiteSpace: "nowrap" }}>{entry.createdAt ? new Date(entry.createdAt).toLocaleString("en-IN") : "—"}</td>
                       <td>{entry.actorId?.name || entry.actorId?.email || "—"}</td>
-                      <td>{entry.action.replace(/_/g, " ")}</td>
-                      <td style={{ fontSize: "0.78rem", color: "var(--text-muted)", maxWidth: 420 }}>
-                        {entry.meta ? JSON.stringify(entry.meta) : "—"}
+                      <td>{auditActionChip(entry.action)}</td>
+                      <td>
+                        <AuditLogDetailsCell entry={entry} />
                       </td>
                     </tr>
                   ))}
@@ -1857,7 +2184,7 @@ export default function SalesDashboardView() {
                   <p style={{ color: "#2ecc71", fontWeight: 600 }}>
                     <CheckCircle2 size={16} className="me-2" style={ICON_STYLE} /> Enrolled. Payment link generated:
                   </p>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center", background: "rgba(255,255,255,0.03)", padding: 10, borderRadius: 6 }}>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", background: "rgba(255,255,255,0.03)", padding: 10, borderRadius: 6 }}>
                     <code style={{ flex: 1, wordBreak: "break-all", color: "#fff" }}>{enrollResult.paymentLink}</code>
                     <button className="thm-btn secondary" style={{ padding: "6px 14px" }} onClick={() => copyLink(enrollResult.paymentLink)}>
                       Copy
@@ -1892,6 +2219,7 @@ export default function SalesDashboardView() {
                       <>
                         {isLate && (
                           <div
+                            className="sales-late-banner"
                             style={{
                               background: "rgba(46, 204, 113, 0.12)",
                               border: "1px solid rgba(46, 204, 113, 0.35)",
@@ -1911,7 +2239,7 @@ export default function SalesDashboardView() {
                             </div>
                           </div>
                         )}
-                        <div className="row">
+                        <div className="row g-3">
                     <div className="col-md-6">
                       <div className="admin-form-group">
                         <label className="admin-form-label">Student Name</label>
@@ -1968,8 +2296,8 @@ export default function SalesDashboardView() {
                               onChange={(e) => setInitialAmount(Number(e.target.value))}
                             />
                           </div>
-                          <div className="row">
-                            <div className="col-6">
+                          <div className="row g-2">
+                            <div className="col-sm-6 col-12">
                               <div className="admin-form-group">
                                 <label className="admin-form-label">Number of Installments</label>
                                 <input
@@ -1981,7 +2309,7 @@ export default function SalesDashboardView() {
                                 />
                               </div>
                             </div>
-                            <div className="col-6">
+                            <div className="col-sm-6 col-12">
                               <div className="admin-form-group">
                                 <label className="admin-form-label">Final Due Date</label>
                                 <input
@@ -2047,7 +2375,7 @@ export default function SalesDashboardView() {
 
                   {finalPriceInclGST !== null && resolveEnrollmentMode(selectedSlot.mode) === "offline" && (
                     <div style={{ background: "rgba(255,255,255,0.03)", padding: 14, borderRadius: 6, marginBottom: 16 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
+                      <div className="sales-price-summary-row" style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
                         <span className="text-muted">Registration Fee (paid now — link generated on Enroll)</span>
                         <strong style={{ color: "var(--primary-gold)" }}>₹{finalPriceInclGST.toFixed(2)}</strong>
                       </div>
@@ -2057,20 +2385,20 @@ export default function SalesDashboardView() {
                   {finalPriceInclGST !== null && resolveEnrollmentMode(selectedSlot.mode) !== "offline" && (
                     <div style={{ background: "rgba(255,255,255,0.03)", padding: 14, borderRadius: 6, marginBottom: 16 }}>
                       {appliedDiscount > 0 && (
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: "0.85rem" }}>
+                        <div className="sales-price-summary-row" style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: "0.85rem" }}>
                           <span className="text-muted">Coupon ({appliedCoupon}) discount</span>
                           <strong style={{ color: "#2ecc71" }}>− ₹{appliedDiscount.toFixed(2)}</strong>
                         </div>
                       )}
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: "0.85rem" }}>
+                      <div className="sales-price-summary-row" style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: "0.85rem" }}>
                         <span className="text-muted">Total (incl. GST)</span>
                         <strong style={{ color: "#fff" }}>₹{finalPriceInclGST.toFixed(2)}</strong>
                       </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: "0.85rem" }}>
+                      <div className="sales-price-summary-row" style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: "0.85rem" }}>
                         <span className="text-muted">Initial payment (paid now — link generated on Enroll)</span>
                         <strong style={{ color: "var(--primary-gold)" }}>₹{initialAmount.toFixed(2)}</strong>
                       </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: "0.85rem" }}>
+                      <div className="sales-price-summary-row" style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: "0.85rem" }}>
                         <span className="text-muted">Remaining after initial payment</span>
                         <strong style={{ color: "#fff" }}>₹{(remaining ?? 0).toFixed(2)}</strong>
                       </div>
@@ -2109,11 +2437,11 @@ export default function SalesDashboardView() {
                     </div>
                   )}
 
-                  <div className="d-flex justify-content-end gap-2 pt-3 border-top border-secondary">
-                    <button type="button" className="thm-btn cancel-btn" onClick={closeEnrollModal}>
+                  <div className="d-flex justify-content-end gap-2 pt-3 border-top border-secondary flex-wrap">
+                    <button type="button" className="thm-btn cancel-btn flex-grow-1" onClick={closeEnrollModal}>
                       Cancel
                     </button>
-                    <button type="button" className="thm-btn" onClick={submitEnroll} disabled={isEnrolling || finalPriceInclGST === null}>
+                    <button type="button" className="thm-btn flex-grow-1" onClick={submitEnroll} disabled={isEnrolling || finalPriceInclGST === null}>
                       {isEnrolling ? "Enrolling…" : "Enroll & Generate Link"}
                     </button>
                   </div>
@@ -2172,11 +2500,11 @@ export default function SalesDashboardView() {
                   placeholder={teamAccountEditing ? "Leave blank to keep current password" : "Min 6 characters"}
                 />
               </div>
-              <div className="d-flex justify-content-end gap-2 pt-3 border-top border-secondary mt-2">
-                <button type="button" className="thm-btn cancel-btn" onClick={() => setTeamAccountModalOpen(false)}>
+              <div className="d-flex justify-content-end gap-2 pt-3 border-top border-secondary mt-2 flex-wrap">
+                <button type="button" className="thm-btn cancel-btn flex-grow-1" onClick={() => setTeamAccountModalOpen(false)}>
                   Cancel
                 </button>
-                <button type="button" className="thm-btn" onClick={submitTeamAccount} disabled={isSavingAccount}>
+                <button type="button" className="thm-btn flex-grow-1" onClick={submitTeamAccount} disabled={isSavingAccount}>
                   {isSavingAccount ? "Saving…" : "Save"}
                 </button>
               </div>
@@ -2227,7 +2555,7 @@ export default function SalesDashboardView() {
                   { label: "Paid So Far", value: `₹${detailsSummary.paid.toFixed(2)}`, color: "#2ecc71" },
                   { label: "Remaining", value: `₹${detailsSummary.remaining.toFixed(2)}`, color: detailsSummary.remaining > 0 ? "#f39c12" : "#2ecc71" },
                 ].map((card) => (
-                  <div className={isExecutive ? "col-6" : "col-4"} key={card.label}>
+                  <div className={isExecutive ? "col-sm-6 col-12" : "col-sm-4 col-12"} key={card.label}>
                     <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #333", borderRadius: 6, padding: "10px 12px", textAlign: "center" }}>
                       <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>
                         {card.label}
@@ -2238,7 +2566,7 @@ export default function SalesDashboardView() {
                 ))}
               </div>
 
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <div className="sales-installment-schedule-header d-flex justify-content-between align-items-center" style={{ marginBottom: 8 }}>
                 <span className="text-muted small">FULL INSTALLMENT SCHEDULE</span>
                 {planStatusChip(detailsOrder)}
               </div>
@@ -2354,7 +2682,7 @@ export default function SalesDashboardView() {
                 </table>
               </div>
 
-              <div className="d-flex justify-content-between align-items-center pt-3 border-top border-secondary">
+              <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 pt-3 border-top border-secondary">
                 <div>
                   {detailsOrder.status === "paid" && (
                     <button
