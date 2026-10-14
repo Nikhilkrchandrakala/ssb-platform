@@ -505,9 +505,9 @@ export default function TotalSalesView() {
           </div>
           <div className="col-lg-4 col-md-6">
             <label className="admin-form-label">Date Range</label>
-            <div className="d-flex gap-2">
-              <input type="date" className="admin-input" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-              <input type="date" className="admin-input" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            <div className="d-flex gap-2 flex-wrap">
+              <input type="date" className="admin-input flex-grow-1" style={{ minWidth: 130 }} value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <input type="date" className="admin-input flex-grow-1" style={{ minWidth: 130 }} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             </div>
           </div>
         </div>
@@ -665,9 +665,9 @@ export default function TotalSalesView() {
                       <span>Product Title</span>
                       <span className="fw-bold">{o.slotId?.title || o.courseTitle || "Product"}</span>
                     </div>
-                    <div className="order-detail-row" style={{ alignItems: "center" }}>
+                    <div className="order-detail-row" style={{ alignItems: "flex-start" }}>
                       <span>Batch / Slot</span>
-                      <div className="d-flex gap-2 align-items-center flex-grow-1 justify-content-end" style={{ maxWidth: "65%" }}>
+                      <div className="d-flex gap-2 align-items-center flex-wrap flex-grow-1 justify-content-end" style={{ minWidth: 0 }}>
                         {availableSlots.length > 0 ? (
                           <select
                             className="admin-input py-1 px-2"
@@ -677,7 +677,8 @@ export default function TotalSalesView() {
                               border: "1px solid rgba(224, 194, 20, 0.25)",
                               color: "#fff",
                               borderRadius: 4,
-                              maxWidth: 260,
+                              flex: "1 1 160px",
+                              minWidth: 0,
                             }}
                             value={batchInputValue}
                             onChange={(e) => setBatchInputValue(e.target.value)}
@@ -699,7 +700,8 @@ export default function TotalSalesView() {
                             type="text"
                             className="admin-input py-1 px-2"
                             style={{
-                              maxWidth: 140,
+                              flex: "1 1 120px",
+                              minWidth: 0,
                               fontSize: "0.85rem",
                               background: "var(--surface-light)",
                               border: "1px solid rgba(224, 194, 20, 0.25)",
@@ -713,7 +715,7 @@ export default function TotalSalesView() {
                         )}
                         <button
                           className="thm-btn py-1 px-3"
-                          style={{ fontSize: "0.78rem", padding: "4px 10px", borderRadius: 4, whiteSpace: "nowrap" }}
+                          style={{ fontSize: "0.78rem", padding: "4px 10px", borderRadius: 4, whiteSpace: "nowrap", flexShrink: 0 }}
                           disabled={savingBatch}
                           onClick={saveOrderBatch}
                         >
