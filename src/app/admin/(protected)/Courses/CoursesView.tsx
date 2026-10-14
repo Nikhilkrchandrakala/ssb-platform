@@ -1042,7 +1042,7 @@ export default function CoursesView() {
       {/* Global Course Pricing Card */}
       <div className="admin-card mb-5" style={{ marginTop: -10 }}>
         <div
-          className="d-flex justify-content-between align-items-center mb-4 pb-2"
+          className="d-flex justify-content-between align-items-center mb-4 pb-2 flex-wrap gap-2"
           style={{ borderBottom: "1px solid rgba(224, 194, 20, 0.2)" }}
         >
           <h4
@@ -1640,8 +1640,8 @@ export default function CoursesView() {
               />
             </div>
 
-            <div className="row mb-3">
-              <div className="col-6">
+            <div className="row mb-3 g-3">
+              <div className="col-sm-6 col-12">
                 <label className="admin-form-label">Batch ID / Number</label>
                 <input
                   type="text"
@@ -1651,7 +1651,7 @@ export default function CoursesView() {
                   onChange={(e) => setOfflineBatchNo(e.target.value)}
                 />
               </div>
-              <div className="col-6">
+              <div className="col-sm-6 col-12">
                 <label className="admin-form-label">Start Date*</label>
                 <input
                   type="date"
@@ -1676,8 +1676,8 @@ export default function CoursesView() {
               />
             </div>
 
-            <div className="row mb-3">
-              <div className="col-6">
+            <div className="row mb-3 g-3">
+              <div className="col-sm-6 col-12">
                 <label className="admin-form-label">Max Capacity</label>
                 <input
                   type="number"
@@ -1689,7 +1689,7 @@ export default function CoursesView() {
                   }
                 />
               </div>
-              <div className="col-6">
+              <div className="col-sm-6 col-12">
                 <label className="admin-form-label">Registration Fee (₹)</label>
                 <input
                   type="number"
@@ -1789,8 +1789,8 @@ export default function CoursesView() {
                   onChange={(e) => setStartDate(e.target.value)}
                 />
               </div>
-              <div className="row">
-                <div className="col-md-6 mb-3">
+              <div className="row g-3">
+                <div className="col-sm-6 col-12 mb-3">
                   <label className="admin-form-label">Max Capacity</label>
                   <input
                     type="number"
@@ -1800,7 +1800,7 @@ export default function CoursesView() {
                     onChange={(e) => setMaxStudents(Number(e.target.value))}
                   />
                 </div>
-                <div className="col-md-6 mb-3">
+                <div className="col-sm-6 col-12 mb-3">
                   <label className="admin-form-label">
                     Course Price (&#8377;)
                   </label>
@@ -2007,10 +2007,10 @@ export default function CoursesView() {
                 <label className="admin-form-label mb-2">
                   Discount (optional)
                 </label>
-                <div className="d-flex gap-2">
+                <div className="d-flex gap-2 flex-wrap">
                   <select
                     className="admin-input"
-                    style={{ maxWidth: 110 }}
+                    style={{ maxWidth: 110, minWidth: 90 }}
                     value={manualDiscountType}
                     onChange={(e) =>
                       setManualDiscountType(
@@ -2025,7 +2025,7 @@ export default function CoursesView() {
                     type="number"
                     min={0}
                     max={manualDiscountType === "percent" ? 100 : undefined}
-                    className="admin-input"
+                    className="admin-input flex-grow-1"
                     placeholder="0"
                     value={manualDiscountValue || ""}
                     onChange={(e) =>

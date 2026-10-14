@@ -252,6 +252,11 @@
     box-shadow: 0 4px 12px rgba(255, 82, 82, 0.4);
 }
 
+/* ==========================================================================
+   RESPONSIVE — COURSES PAGE
+   ========================================================================== */
+
+/* ── Page header: 3 action buttons wrap on mobile ── */
 @media (max-width: 768px) {
     .month-nav-container {
         flex-direction: column;
@@ -259,7 +264,104 @@
         text-align: center;
         padding: 20px;
     }
+
+    /* Month nav prev/next buttons become equal-width when stacked */
     .month-nav-btn {
+        width: 50%;
+    }
+
+    /* Nav row: prev + next side by side, month name in the middle */
+    .month-nav-container {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .month-display-box {
+        order: -1;          /* sit above prev/next on very narrow screens */
         width: 100%;
+        text-align: center;
+    }
+
+    .month-nav-btn {
+        width: 44px;        /* keep icon-only button compact */
+    }
+
+    /* ── Global pricing form: each input-group can't share a row on phone ── */
+    /* col-xl col-md-4 col-sm-6 already handles 2-col on sm, but the
+       input-group (₹ symbol + input + Edit button) breaks on very narrow
+       phones because the ₹ span + border-right chain doesn't flex-wrap.
+       Min-width guard keeps it readable. */
+    .admin-card .input-group {
+        flex-wrap: nowrap;
+        min-width: 0;
+    }
+
+    .admin-card .input-group .admin-input {
+        min-width: 0;
+        flex: 1 1 0%;
+    }
+
+    /* ── Save Global Prices button: full width on mobile ── */
+    .admin-card .col-xl-auto .thm-btn {
+        width: 100%;
+    }
+
+    /* ── Batch card footer: icon-only buttons too small on phones.
+          Make edit + merge icon btns equal width; Book + Delete stay flex. ── */
+    .batch-footer {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .batch-footer .action-btn {
+        min-width: 40px;
+    }
+
+    /* ── stat-item: label + value on same line is fine on cards,
+          but on very narrow (<360px) it can overflow. ── */
+    .stat-item {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    /* ── Consolidate modal: summary card d-flex rows wrap ── */
+    .admin-modal-body .d-flex.justify-content-between {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+}
+
+/* ── Intermediate breakpoint: pricing form 2-col instead of 5-across ── */
+@media (max-width: 576px) {
+    /* col-sm-6 already gives 2 columns; below 400px drop to 1 */
+    .admin-card .col-sm-6 {
+        width: 100%;
+    }
+
+    /* Month name font size scales down on very small screens */
+    .month-name {
+        font-size: 1.05rem;
+    }
+
+    .month-stats {
+        font-size: 0.72rem;
+        gap: 4px;
+    }
+
+    /* batch-footer: collapse all to 2×2 grid */
+    .batch-footer {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .batch-footer .action-btn {
+        flex: unset;
+        width: 100%;
+        height: 40px;
+        justify-content: center;
     }
 }
