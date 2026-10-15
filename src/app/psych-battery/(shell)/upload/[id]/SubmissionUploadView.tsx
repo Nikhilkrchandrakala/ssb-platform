@@ -153,10 +153,18 @@ export default function SubmissionUploadView({ id }: { id: string }) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      const maxLimit = 2 * 1024 * 1024; // 2 MB
+      const nonPdf = newFiles.filter(
+        (f) => f.type !== "application/pdf" && !f.name.toLowerCase().endsWith(".pdf")
+      );
+      if (nonPdf.length > 0) {
+        setError("Only PDF files are accepted for dossiers. Images are not allowed.");
+        e.target.value = "";
+        return;
+      }
+      const maxLimit = 5 * 1024 * 1024; // 5 MB
       const oversized = newFiles.filter((f) => f.size > maxLimit);
       if (oversized.length > 0) {
-        setError(`The following file(s) exceed the 2 MB limit: ${oversized.map((f) => f.name).join(", ")}`);
+        setError(`The following file(s) exceed the 5 MB limit: ${oversized.map((f) => f.name).join(", ")}`);
         e.target.value = "";
         return;
       }
@@ -190,6 +198,13 @@ export default function SubmissionUploadView({ id }: { id: string }) {
     }
     if (files.length === 0) {
       setError("Please select at least one stimuli capture.");
+      return;
+    }
+    const nonPdf = files.filter(
+      (f) => f.type !== "application/pdf" && !f.name.toLowerCase().endsWith(".pdf")
+    );
+    if (nonPdf.length > 0) {
+      setError("Only PDF files are accepted for dossiers.");
       return;
     }
 
@@ -321,16 +336,16 @@ export default function SubmissionUploadView({ id }: { id: string }) {
 
           {/* Upload Dropzone */}
           <GlassCard className="border-dashed p-10 text-center transition-all group">
-            <input type="file" id="file-upload" multiple className="hidden" onChange={handleFileChange} accept="image/*,application/pdf" />
+            <input type="file" id="file-upload" multiple className="hidden" onChange={handleFileChange} accept="application/pdf" />
             <label htmlFor="file-upload" className="cursor-pointer block">
               <div className="w-16 h-16 bg-app-card rounded-2xl mx-auto flex items-center justify-center mb-5 border border-app-border group-hover:bg-app-accent/12 transition-all">
                 <Upload size={28} className="text-app-accent" />
               </div>
-              <h3 className="text-xl font-bold text-app-text-bright mb-1.5">Import Stimuli Captures</h3>
+              <h3 className="text-xl font-bold text-app-text-bright mb-1.5">Import Dossier PDF</h3>
               <p className="text-app-text-muted text-sm">
                 Drag &amp; drop or <span className="text-app-accent font-semibold">browse filesystem</span>
               </p>
-              <p className="text-[9px] font-bold text-app-text-muted uppercase tracking-widest mt-2">Max 2 MB per file</p>
+              <p className="text-[9px] font-bold text-app-text-muted uppercase tracking-widest mt-2">Max 5 MB per file (PDF only)</p>
             </label>
           </GlassCard>
 

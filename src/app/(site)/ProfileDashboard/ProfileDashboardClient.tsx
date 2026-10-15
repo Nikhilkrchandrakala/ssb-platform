@@ -139,6 +139,9 @@ interface Submission {
   piq2Status?: string;
   piqStatus?: string;
   uploadedFiles?: string[];
+  testConductedVia?: string;
+  dossierUploadedBy?: string;
+  dossierUploadNotes?: string;
   workflowStage?: string;
   completedAt?: string | null;
   reportVisibility?: { psych?: boolean; gto?: boolean; io?: boolean; to?: boolean };
@@ -264,6 +267,7 @@ export default function ProfileDashboardClient({
   const [hasCompletedTheory, setHasCompletedTheory] = useState(false);
   const [isRegisteringConsent, setIsRegisteringConsent] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [isLiveCallPending, setIsLiveCallPending] = useState(false);
   const piqInputRef = useRef<HTMLInputElement>(null);
   const dossierInputRef = useRef<HTMLInputElement>(null);
 
@@ -719,22 +723,50 @@ export default function ProfileDashboardClient({
   async function handleDossierFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files ? Array.from(e.target.files) : [];
     if (files.length === 0) return;
-    const maxLimit = 2 * 1024 * 1024;
-    const oversized = files.filter((f) => f.size > maxLimit);
-    if (oversized.length > 0) {
-      toast.error(`File size exceeds the 2 MB limit for: ${oversized.map((f) => f.name).join(", ")}`);
+
+    // Reject non-PDF files
+    const nonPdf = files.filter(
+      (f) => f.type !== "application/pdf" && !f.name.toLowerCase().endsWith(".pdf")
+    );
+    if (nonPdf.length > 0) {
+      toast.error("Only PDF files are accepted for dossiers. Images are not allowed.");
       e.target.value = "";
       return;
     }
-    const submissionId = activeSub?.id || activeSub?._id;
-    if (!submissionId) {
-      toast.error("No active session found to upload dossier.");
+
+    const maxLimit = 5 * 1024 * 1024; // 5 MB
+    const oversized = files.filter((f) => f.size > maxLimit);
+    if (oversized.length > 0) {
+      toast.error(`File size exceeds the 5 MB limit for: ${oversized.map((f) => f.name).join(", ")}`);
+      e.target.value = "";
       return;
     }
     setIsDossierUploading(true);
     try {
+      let submissionId = activeSub?.id || activeSub?._id;
+      if (!submissionId) {
+        const assessmentsRes = await fetch("/api/psych/assessments");
+        const assessments = await assessmentsRes.json();
+        const assessmentId = Array.isArray(assessments) && assessments.length > 0 ? assessments[0]._id || assessments[0].id : null;
+        if (!assessmentId) {
+          toast.error("No active psychological assessments found.");
+          return;
+        }
+        const subRes = await fetch("/api/psych/submissions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ assessmentId, testConductedVia: "LIVE_CALL", status: "PENDING_UPLOAD" }),
+        });
+        const sub = await subRes.json();
+        submissionId = sub.id || sub._id;
+      }
       const formData = new FormData();
       files.forEach((file) => formData.append("files", file));
+      if (activeSub?.testConductedVia) {
+        formData.append("testConductedVia", activeSub.testConductedVia);
+      } else {
+        formData.append("testConductedVia", "LIVE_CALL");
+      }
       const res = await fetch(`/api/psych/submissions/${submissionId}/upload`, { method: "POST", body: formData });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Upload failed");
@@ -745,6 +777,37 @@ export default function ProfileDashboardClient({
     } finally {
       setIsDossierUploading(false);
       e.target.value = "";
+    }
+  }
+
+  async function handleLiveCallSelection() {
+    const confirmed = window.confirm(
+      "Did you write your Psychology Test answers in a live meeting/call? This will enable direct Dossier upload for your answer sheets without taking the website's timed test."
+    );
+    if (!confirmed) return;
+
+    setIsLiveCallPending(true);
+    try {
+      const assessmentsRes = await fetch("/api/psych/assessments");
+      const assessments = await assessmentsRes.json();
+      const assessmentId = Array.isArray(assessments) && assessments.length > 0 ? assessments[0]._id || assessments[0].id : null;
+      if (!assessmentId) {
+        toast.error("No active psychological assessments found.");
+        return;
+      }
+      const subRes = await fetch("/api/psych/submissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assessmentId, testConductedVia: "LIVE_CALL", status: "PENDING_UPLOAD" }),
+      });
+      if (!subRes.ok) throw new Error("Failed to initialize live meeting submission");
+      await fetchSubmissions();
+      toast.success("Ready for Dossier Upload. Please upload your handwritten sheets.");
+      setEvalActiveStep(4);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update submission mode");
+    } finally {
+      setIsLiveCallPending(false);
     }
   }
 
@@ -790,12 +853,17 @@ export default function ProfileDashboardClient({
   // marks flips it to REVIEW_PENDING/COMPLETED even if the candidate never took
   // the timed test. So those two values must NOT count as "test taken" — only
   // signals that come from the candidate's own test/dossier flow do.
+  const isExternalTest =
+    activeSub?.testConductedVia === "LIVE_CALL" ||
+    activeSub?.testConductedVia === "DIRECT_UPLOAD";
+
   const isTestCompleted =
     activeSub?.workflowStage === "EVALUATION_COMPLETED" ||
     activeSub?.status === "PENDING_UPLOAD" ||
     activeSub?.status === "TEST_COMPLETED" ||
     !!activeSub?.completedAt ||
-    hasDossier;
+    hasDossier ||
+    isExternalTest;
   const hasBatch = selectedOrder ? !!selectedOrder.slotId?.batchNo : !!(userProfile?.batch && userProfile.batch.trim() !== "");
   const hasAssessor = selectedOrder
     ? !!(selectedOrder.assignedPsych || selectedOrder.assignedGTO || selectedOrder.assignedIO || selectedOrder.assignedTO)
@@ -1851,9 +1919,14 @@ export default function ProfileDashboardClient({
                                   </div>
 
                                   {isTestCompleted ? (
-                                    <button className={styles.stepActionButton} style={{ backgroundColor: "green", cursor: "not-allowed", opacity: 0.8 }} disabled type="button">
-                                      Evaluation Completed
-                                    </button>
+                                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                                      <button className={styles.stepActionButton} style={{ backgroundColor: "green", cursor: "not-allowed", opacity: 0.8 }} disabled type="button">
+                                        Evaluation Completed {activeSub?.testConductedVia === "LIVE_CALL" ? "(Live Meeting Test)" : activeSub?.testConductedVia === "DIRECT_UPLOAD" ? "(Direct Submission)" : ""}
+                                      </button>
+                                      <p style={{ margin: 0, fontSize: "0.85rem", color: "#aaa" }}>
+                                        Your evaluation test step is recorded. Proceed to Step 4 to view or upload your handwritten dossier.
+                                      </p>
+                                    </div>
                                   ) : (
                                     <div style={{ display: "flex", flexDirection: "column", gap: 15, width: "100%" }}>
                                       <div style={{ padding: 15, background: "rgba(210, 161, 0, 0.05)", border: "1px solid rgba(210, 161, 0, 0.2)", borderRadius: 12 }}>
@@ -1870,7 +1943,7 @@ export default function ProfileDashboardClient({
                                           </span>
                                         </label>
                                       </div>
-                                      <div>
+                                      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
                                         <button
                                           className={styles.stepActionButton}
                                           type="button"
@@ -1879,7 +1952,19 @@ export default function ProfileDashboardClient({
                                         >
                                           {isRegisteringConsent ? "Starting..." : "Start Candidate Evaluation"}
                                         </button>
+                                        <button
+                                          type="button"
+                                          className={styles.stepActionButton}
+                                          style={{ background: "rgba(210, 161, 0, 0.12)", border: "1px solid rgba(210, 161, 0, 0.35)", color: "#f5c518" }}
+                                          onClick={handleLiveCallSelection}
+                                          disabled={isLiveCallPending}
+                                        >
+                                          {isLiveCallPending ? "Updating..." : "Attended Live Call? Skip to Dossier Upload"}
+                                        </button>
                                       </div>
+                                      <p style={{ margin: "4px 0 0 0", fontSize: "0.8rem", color: "#888" }}>
+                                        * If you already wrote your answers during a live Zoom/Meet call with an instructor, select &ldquo;Attended Live Call&rdquo; to proceed directly to dossier upload.
+                                      </p>
                                     </div>
                                   )}
                                 </div>
@@ -1888,9 +1973,15 @@ export default function ProfileDashboardClient({
                               {evalActiveStep === 4 && hasFullOrPsych && (
                                 <div className={styles.evalStepCard}>
                                   <h5>Dossier Management</h5>
-                                  <p>Once the evaluation is completed, upload your handwritten dossier sheets here. (Max size: 2 MB per file)</p>
+                                  <p>Once the evaluation is completed, upload your handwritten dossier PDF here. (Max size: 5 MB, PDF only)</p>
 
-                                  {isTestCompleted && (
+                                  {activeSub?.testConductedVia && activeSub.testConductedVia !== "WEBSITE_TIMED" && (
+                                    <div style={{ margin: "10px 0 15px 0", display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 8, background: "rgba(56, 189, 248, 0.1)", border: "1px solid rgba(56, 189, 248, 0.3)", color: "#38bdf8", fontSize: "0.75rem", fontWeight: 700 }}>
+                                      {activeSub.testConductedVia === "LIVE_CALL" ? "Live Meeting / Call Submission" : "Direct / DM Submission"}
+                                    </div>
+                                  )}
+
+                                  {isTestCompleted ? (
                                     <div className={styles.evalStepActions} style={{ marginTop: 20 }}>
                                       {!hasDossier ? (
                                         <>
@@ -1898,8 +1989,7 @@ export default function ProfileDashboardClient({
                                             type="file"
                                             ref={dossierInputRef}
                                             style={{ display: "none" }}
-                                            accept="image/*,application/pdf"
-                                            multiple
+                                            accept="application/pdf"
                                             onChange={handleDossierFileSelected}
                                           />
                                           <button className={styles.stepActionButton} type="button" onClick={() => dossierInputRef.current?.click()} disabled={isDossierUploading}>
@@ -1911,6 +2001,12 @@ export default function ProfileDashboardClient({
                                           <FaCheckCircle /> Dossier uploaded successfully
                                         </div>
                                       )}
+                                    </div>
+                                  ) : (
+                                    <div style={{ marginTop: 15, padding: 12, background: "rgba(255,255,255,0.03)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)" }}>
+                                      <p style={{ margin: 0, fontSize: "0.85rem", color: "#aaa" }}>
+                                        To unlock dossier upload, please complete <strong>Step 3 (Candidate Evaluation)</strong> or select the <em>&ldquo;Attended Live Call&rdquo;</em> option if you took the test in a live meeting.
+                                      </p>
                                     </div>
                                   )}
 

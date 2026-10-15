@@ -498,7 +498,8 @@ export default function AssessorDashboardView() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
           {filteredSubmissions.map((sub, index) => {
-            const isAwaiting = sub.status === "PENDING" && activeAssessorType !== "GTO" && activeAssessorType !== "IO" && !sub.isOffline;
+            const hasUploadedDossier = !!(sub.uploadedFiles && sub.uploadedFiles.length > 0);
+            const isAwaiting = sub.status === "PENDING" && !hasUploadedDossier && activeAssessorType !== "GTO" && activeAssessorType !== "IO" && !sub.isOffline;
             const isCompletedForAssessor = isReviewCompleted(sub);
             const accent = isCompletedForAssessor ? STATUS_ACCENT.COMPLETED : (STATUS_ACCENT[sub.status] || DEFAULT_ACCENT);
             const courseLabel = (() => {
@@ -566,6 +567,14 @@ export default function AssessorDashboardView() {
                         title="In-person batch — only the Assessment tab applies, no PIQ/dossier"
                       >
                         Offline
+                      </span>
+                    )}
+                    {sub.testConductedVia && sub.testConductedVia !== "WEBSITE_TIMED" && (
+                      <span
+                        className="inline-flex items-center px-2 py-1 rounded-md bg-cyan-500/20 border border-cyan-400/40 text-[10px] font-bold text-cyan-200 uppercase tracking-wider"
+                        title={sub.testConductedVia === "LIVE_CALL" ? "Test conducted in live meeting/call (not website timed battery)" : "Dossier uploaded directly"}
+                      >
+                        {sub.testConductedVia === "LIVE_CALL" ? "Live Call Test" : "Direct Upload"}
                       </span>
                     )}
                   </div>

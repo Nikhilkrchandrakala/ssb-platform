@@ -232,11 +232,12 @@ export async function POST(req: NextRequest) {
     if (allotment.assignedTO) toStatus = "PENDING";
     if (allotment.assignedPsych) psychStatus = "PENDING";
 
+    const isLiveCall = body.testConductedVia === "LIVE_CALL";
     submission = new Submission({
       ...body,
       userId: uid,
       orderId: allotment.orderId,
-      startedAt: new Date(),
+      startedAt: isLiveCall ? (body.startedAt || null) : new Date(),
       psychStatus,
       gtoStatus,
       ioStatus,

@@ -35,6 +35,13 @@ const submissionSchema = new Schema(
     piq1UploadedAt: { type: Date, default: null },
     piq2UploadedAt: { type: Date, default: null },
     dossierUploadedAt: { type: Date, default: null },
+    testConductedVia: {
+      type: String,
+      enum: ["WEBSITE_TIMED", "LIVE_CALL", "DIRECT_UPLOAD"],
+      default: "WEBSITE_TIMED",
+    },
+    dossierUploadedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
+    dossierUploadNotes: { type: String, default: "" },
 
     assessorId: { type: Schema.Types.ObjectId, ref: "User" },
     assessorRemarks: String,

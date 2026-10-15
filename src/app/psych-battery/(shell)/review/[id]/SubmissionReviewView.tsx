@@ -10,7 +10,7 @@ import {
   User as UserIcon, Clock, ShieldCheck,
   CheckCircle2, Sparkles, AlertCircle, Maximize2,
   FileSearch, ChevronLeft, ChevronRight,
-  Loader2, Users, Zap,
+  Loader2, Users, Zap, Info, Video,
 } from "lucide-react";
 import { cn } from "@/app/psych-battery/lib/utils";
 import { AssessmentMiniViewer } from "./AssessmentMiniViewer";
@@ -830,6 +830,10 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
   // Feedback Scheduler tabs (and the dossier-upload gating below) don't
   // apply either. See src/server/psychAllotment.ts's ResolvedAllotment.
   const isOffline = !!(submission as unknown as Record<string, unknown>).isOffline;
+  const testConductedVia = (submission as unknown as { testConductedVia?: string })?.testConductedVia;
+  const isExternalTest = testConductedVia === "LIVE_CALL" || testConductedVia === "DIRECT_UPLOAD";
+  const dossierUploadNotes = (submission as unknown as { dossierUploadNotes?: string })?.dossierUploadNotes;
+
   // Derived at render time rather than via an effect+setState: an offline
   // submission's activeTab can still default to "dossier"/"meeting" (the
   // role-based effect above sets it before this component knows isOffline),
@@ -877,6 +881,11 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
                 <span className="px-2 py-0.5 rounded bg-app-accent/20 border border-app-accent/40 text-[9px] font-black text-app-accent-light uppercase tracking-[0.15em] leading-none">
                   {submission.status.replace(/_/g, " ")}
                 </span>
+                {isExternalTest && (
+                  <span className="px-2 py-0.5 rounded bg-cyan-500/20 border border-cyan-400/40 text-[9px] font-black text-cyan-300 uppercase tracking-[0.15em] leading-none">
+                    {testConductedVia === "LIVE_CALL" ? "Live Meeting Test" : "Direct / DM Upload"}
+                  </span>
+                )}
                 {studentEmail && <span className="sr-only">{studentEmail}</span>}
               </div>
             </div>
@@ -904,14 +913,27 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
 
           {/* Temporal Markers */}
           <div className="flex items-center sm:justify-end justify-between gap-3 sm:gap-4 text-[10px] font-black text-app-text-muted uppercase tracking-wider px-1 flex-wrap">
-            <div className="flex items-center gap-1.5">
-              <Clock size={12} className="text-app-text-muted/65" />
-              <span>Started: {submission?.startedAt || submission?.createdAt ? new Date((submission.startedAt || submission.createdAt) as string).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "N/A"}</span>
-            </div>
-            {!!submission?.completedAt && (
+            {isExternalTest ? (
+              <div className="flex items-center gap-1.5 text-cyan-300">
+                <Video size={12} className="text-cyan-400" />
+                <span>Mode: {testConductedVia === "LIVE_CALL" ? "Live Meeting / Call" : "Direct / DM Upload"}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <Clock size={12} className="text-app-text-muted/65" />
+                <span>Started: {submission?.startedAt || submission?.createdAt ? new Date((submission.startedAt || submission.createdAt) as string).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "N/A"}</span>
+              </div>
+            )}
+            {!!submission?.completedAt && !isExternalTest && (
               <div className="flex items-center gap-1.5 text-app-accent">
                 <ShieldCheck size={12} className="text-app-accent" />
                 <span>Sealed: {new Date(submission.completedAt as string).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+              </div>
+            )}
+            {isExternalTest && !!submission?.dossierUploadedAt && (
+              <div className="flex items-center gap-1.5 text-app-accent">
+                <ShieldCheck size={12} className="text-app-accent" />
+                <span>Uploaded: {new Date(submission.dossierUploadedAt as string).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
               </div>
             )}
           </div>
@@ -950,7 +972,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
           </div>
         </div>
 
-        {effectiveTab === "dossier" && viewerMode === "dossier" && (activeAssessorType === "Psych" || activeAssessorType === "TO") && assessment && (
+        {effectiveTab === "dossier" && viewerMode === "dossier" && (activeAssessorType === "Psych" || activeAssessorType === "TO") && assessment && !isExternalTest && (
           <button
             type="button"
             onClick={() => setShowSidebar(!showSidebar)}
@@ -965,13 +987,27 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
       {/* Main Content Area: 2-Column Layout */}
       <div className={cn(
         "grid gap-8 items-start",
-        (effectiveTab === "dossier" && viewerMode === "dossier" && (activeAssessorType === "Psych" || activeAssessorType === "TO") && assessment && showSidebar)
+        (effectiveTab === "dossier" && viewerMode === "dossier" && (activeAssessorType === "Psych" || activeAssessorType === "TO") && assessment && showSidebar && !isExternalTest)
           ? "grid-cols-1 lg:grid-cols-2"
           : "grid-cols-1"
       )}>
 
         {/* LEFT COLUMN: Tabs Content */}
         <div className="space-y-8 min-w-0">
+          {/* External Test / Live Call Banner */}
+          {isExternalTest && (
+            <div className="p-4 bg-cyan-500/15 border border-cyan-400/30 rounded-2xl text-cyan-200 text-xs font-medium flex items-center gap-3">
+              <Info size={18} className="shrink-0 text-cyan-300" />
+              <div>
+                <strong className="block text-cyan-100 font-bold mb-0.5">
+                  {testConductedVia === "LIVE_CALL" ? "Live Meeting / Call Test Submission" : "Direct / DM Submission"}
+                </strong>
+                Candidate completed their test during a live meeting session or provided their dossier directly to the team. Automated website test stimuli (TAT pictures/WAT words) are hidden as they were not administered on the website.
+                {dossierUploadNotes && <div className="mt-1 text-[11px] text-cyan-300/80">Reference / Notes: {dossierUploadNotes}</div>}
+              </div>
+            </div>
+          )}
+
           {/* Awaiting Dossier Warning Banner */}
           {!isOffline && ((activeAssessorType === "Psych" || activeAssessorType === "TO") && !isDossierUploaded) && (
             <div className="p-4 bg-amber-500/20 border border-amber-400/40 rounded-2xl text-amber-300 text-xs font-bold flex items-center gap-2">
@@ -1514,7 +1550,7 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
         </div>
 
         {/* RIGHT COLUMN: Presenter Sticky Panel */}
-        {effectiveTab === "dossier" && viewerMode === "dossier" && (activeAssessorType === "Psych" || activeAssessorType === "TO") && assessment && showSidebar && (
+        {effectiveTab === "dossier" && viewerMode === "dossier" && (activeAssessorType === "Psych" || activeAssessorType === "TO") && assessment && showSidebar && !isExternalTest && (
           <div className="flex flex-col w-full space-y-4">
             <div className="flex items-center gap-3 border-b border-app-border pb-3">
               <Sparkles className="text-app-accent animate-pulse" size={20} />

@@ -21,11 +21,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "No file uploaded" }, { status: 400 });
     }
 
-    // Limit checking based on role: 2MB limit for student dossier uploads.
+    // Limit checking based on role: 5MB limit for student dossier uploads.
     if (user.role === "student") {
-      const limit = 2 * 1024 * 1024;
+      const limit = 5 * 1024 * 1024;
       if (file.size > limit) {
-        return NextResponse.json({ message: "File size exceeds the 2MB limit for Dossier uploads" }, { status: 400 });
+        return NextResponse.json({ message: "File size exceeds the 5MB limit for Dossier uploads" }, { status: 400 });
       }
     }
 

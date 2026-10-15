@@ -94,6 +94,9 @@ export interface AssessmentSubmission {
   piq1UploadedAt?: unknown;
   piq2UploadedAt?: unknown;
   dossierUploadedAt?: unknown;
+  testConductedVia?: "WEBSITE_TIMED" | "LIVE_CALL" | "DIRECT_UPLOAD" | string;
+  dossierUploadedBy?: string;
+  dossierUploadNotes?: string;
   assessorId?: string;
   assessorRemarks?: string;
   psychStatus?: string;

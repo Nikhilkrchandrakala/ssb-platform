@@ -18,8 +18,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "No file uploaded" }, { status: 400 });
     }
 
-    if (user.role === "student" && file.size > 2 * 1024 * 1024) {
-      return NextResponse.json({ message: "File size exceeds the 2MB limit for Dossier uploads" }, { status: 400 });
+    if (user.role === "student" && file.size > 5 * 1024 * 1024) {
+      return NextResponse.json({ message: "File size exceeds the 5MB limit for Dossier uploads" }, { status: 400 });
     }
 
     const { url } = await uploadToR2("battery", file);

@@ -8,23 +8,28 @@ import { uploadToR2 } from "@/server/storage/r2";
 import { sendDossierUploadedEmail, sendDossierUploadedSms } from "@/server/integrations/msg91";
 import { resolveAllotmentForOrder } from "@/server/psychAllotment";
 
+import { resolvePendingSubmissionId } from "../../../_lib/pendingSubmission";
+
 type Params = { params: Promise<{ id: string }> };
 
 // POST /api/psych/submissions/:id/upload — candidate Dossier upload. Accepts
 // either a JSON body with pre-uploaded `fileUrls` (client uploaded directly),
-// or multipart `files` which are streamed to R2 here. Legacy forwarded raw
-// files to the main Express backend's /api/uploadBatteryImage over HTTP —
-// that hop is gone now that this is one app; we upload straight to R2.
-// Gemini/OCR parsing of the dossier (`runOCR`) was already a no-op in
-// production and is not ported.
+// or multipart `files` which are streamed to R2 here. Supports pending-*
+// pseudo-ids for unstarted candidates (e.g. when an admin uploads for them).
 export async function POST(req: NextRequest, { params }: Params) {
   await connectDB();
   const auth = await requireUser();
   if ("error" in auth) return auth.error;
   const { user } = auth;
-  const { id: submissionId } = await params;
+  const { id: rawId } = await params;
 
   try {
+    const resolved = await resolvePendingSubmissionId(rawId);
+    if ("error" in resolved) {
+      return NextResponse.json({ message: resolved.error.message }, { status: resolved.error.status });
+    }
+    const submissionId = resolved.id;
+
     const submission = await Submission.findById(submissionId).select("-piqFileData");
     if (!submission) return NextResponse.json({ message: "Submission not found" }, { status: 404 });
 
@@ -33,6 +38,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     }
 
     const filePaths: string[] = [];
+    let testConductedVia: string | undefined;
+    let notes: string | undefined;
 
     const contentType = req.headers.get("content-type") || "";
     if (contentType.includes("application/json")) {
@@ -40,12 +47,35 @@ export async function POST(req: NextRequest, { params }: Params) {
       if (body && Array.isArray(body.fileUrls)) {
         filePaths.push(...body.fileUrls);
       }
+      if (body?.testConductedVia) testConductedVia = body.testConductedVia;
+      if (body?.notes) notes = body.notes;
     } else {
       const formData = await req.formData();
       const files = formData.getAll("files").filter((f): f is File => f instanceof File);
+      testConductedVia = (formData.get("testConductedVia") as string) || undefined;
+      notes = (formData.get("notes") as string) || undefined;
+
       if (files.length === 0) {
         return NextResponse.json({ message: "No files uploaded" }, { status: 400 });
       }
+
+      const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+      for (const file of files) {
+        if (file.size > MAX_FILE_SIZE) {
+          return NextResponse.json(
+            { message: `File "${file.name}" exceeds the 5 MB limit for dossiers.` },
+            { status: 400 }
+          );
+        }
+        const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+        if (!isPdf) {
+          return NextResponse.json(
+            { message: `Dossiers must be in PDF format only. File "${file.name}" is not a PDF.` },
+            { status: 400 }
+          );
+        }
+      }
+
       for (const file of files) {
         const { url } = await uploadToR2("battery", file);
         filePaths.push(url);
@@ -56,10 +86,31 @@ export async function POST(req: NextRequest, { params }: Params) {
       return NextResponse.json({ message: "No files uploaded" }, { status: 400 });
     }
 
-    const submissionRecord = submission as unknown as { uploadedFiles?: string[]; status?: string; dossierUploadedAt?: Date };
+    const submissionRecord = submission as unknown as {
+      uploadedFiles?: string[];
+      status?: string;
+      dossierUploadedAt?: Date;
+      testConductedVia?: string;
+      dossierUploadedBy?: unknown;
+      dossierUploadNotes?: string;
+    };
     submissionRecord.uploadedFiles = [...(submissionRecord.uploadedFiles || []), ...filePaths];
     submissionRecord.status = "REVIEW_PENDING";
     submissionRecord.dossierUploadedAt = new Date();
+
+    if (testConductedVia) {
+      submissionRecord.testConductedVia = testConductedVia;
+    } else if (user.role !== "student") {
+      submissionRecord.testConductedVia = "DIRECT_UPLOAD";
+    }
+
+    if (notes) {
+      submissionRecord.dossierUploadNotes = notes;
+    }
+    if (user.role !== "student") {
+      submissionRecord.dossierUploadedBy = userId(user);
+    }
+
     await submission.save();
 
     try {
@@ -72,11 +123,24 @@ export async function POST(req: NextRequest, { params }: Params) {
         assignedPsych: allotment.assignedPsych,
       });
       const candidateName = student ? student.name : "Candidate";
+      const isLiveCall = submissionRecord.testConductedVia === "LIVE_CALL";
+      const isDirectUpload = submissionRecord.testConductedVia === "DIRECT_UPLOAD";
+      const notifTitle = isLiveCall
+        ? "Dossier Uploaded (Live Call)"
+        : isDirectUpload
+        ? "Dossier Uploaded (Direct/DM)"
+        : "Dossier Uploaded";
+      const notifMessage = isLiveCall
+        ? `Candidate ${candidateName} has uploaded their Dossier (Conducted via Live Call).`
+        : isDirectUpload
+        ? `A dossier for candidate ${candidateName} was uploaded directly by the team.`
+        : `Candidate ${candidateName} has uploaded their Dossier.`;
+
       await notifyRecipients(recipientIds, {
         studentId: submission.userId,
         submissionId: submission._id,
-        title: "Dossier Uploaded",
-        message: `Candidate ${candidateName} has uploaded their Dossier.`,
+        title: notifTitle,
+        message: notifMessage,
       });
 
       // Email + SMS only the assigned TO/Psych for this candidate —

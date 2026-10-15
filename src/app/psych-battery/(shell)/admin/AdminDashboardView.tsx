@@ -7,7 +7,7 @@ import { api } from "../../lib/api";
 import { UserProfile, Assessment, AssessmentSubmission } from "../../types";
 import { assessorLabel } from "@/lib/assessorLabels";
 import { latestDistinctValues } from "@/lib/latestValues";
-import { Plus, Trash2, Edit2, Database, Play, Eye, X, CheckCircle, Send, Copy } from "lucide-react";
+import { Plus, Trash2, Edit2, Database, Play, Eye, X, CheckCircle, Send, Copy, UploadCloud, FileUp, Video, MessageSquare, Loader2 } from "lucide-react";
 import {
   PageHeader, Badge, Card, GlassCard, Button, IconButton, TableShell, Th, Td, Tr, EmptyState,
   Reveal, Skeleton, staggerDelay, Dialog, DialogContent, DialogTitle, SegmentedControl,
@@ -142,6 +142,75 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
   // from the dot's onClick — see useDocumentPip's doc comment).
   const [pipTarget, setPipTarget] = useState<{ submission: SubmissionWithAssessorFields; step: "piq1" | "piq2" | "dossier" } | null>(null);
   const pip = useDocumentPip();
+
+  // Admin Direct Dossier Upload Modal State
+  const [uploadTarget, setUploadTarget] = useState<SubmissionWithAssessorFields | null>(null);
+  const [uploadMode, setUploadMode] = useState<"LIVE_CALL" | "DIRECT_UPLOAD">("LIVE_CALL");
+  const [uploadNotes, setUploadNotes] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadingDossier, setUploadingDossier] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleAdminDossierUpload = async () => {
+    if (!uploadTarget) return;
+    if (selectedFiles.length === 0) {
+      alert("Please select at least one file to upload.");
+      return;
+    }
+
+    const nonPdf = selectedFiles.filter(
+      (f) => f.type !== "application/pdf" && !f.name.toLowerCase().endsWith(".pdf")
+    );
+    if (nonPdf.length > 0) {
+      alert("Only PDF files are accepted for dossiers. Images are not allowed.");
+      return;
+    }
+
+    const maxLimit = 5 * 1024 * 1024;
+    const oversized = selectedFiles.filter((f) => f.size > maxLimit);
+    if (oversized.length > 0) {
+      alert(`File size exceeds 5 MB limit: ${oversized.map((f) => f.name).join(", ")}`);
+      return;
+    }
+
+    setUploadingDossier(true);
+    try {
+      const formData = new FormData();
+      selectedFiles.forEach((file) => formData.append("files", file));
+      formData.append("testConductedVia", uploadMode);
+      if (uploadNotes.trim()) {
+        formData.append("notes", uploadNotes.trim());
+      }
+
+      const subId = uploadTarget.id || (uploadTarget as unknown as { _id?: string })._id;
+      const res = await fetch(`/api/psych/submissions/${subId}/upload`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to upload dossier");
+
+      alert("Dossier uploaded successfully!");
+      setUploadTarget(null);
+      setSelectedFiles([]);
+      setUploadNotes("");
+
+      // Refresh data
+      const [usersList, assessmentsList, submissionsList] = await Promise.all([
+        api.users.list(),
+        api.assessments.list(),
+        api.submissions.list(),
+      ]);
+      setUsers(usersList);
+      setAssessments(assessmentsList);
+      setSubmissions(submissionsList);
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : "Failed to upload dossier.");
+    } finally {
+      setUploadingDossier(false);
+    }
+  };
 
   // Legacy gated this fetch behind `if (!isAdminUser) return;` inside the
   // effect — but that early return sat *before* the `finally` that clears
@@ -418,7 +487,17 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
                   return (
                     <Tr key={s.id}>
                       <Td>
-                        <div className="text-sm font-bold text-app-text-bright">{studentName}</div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-bold text-app-text-bright">{studentName}</span>
+                          {s.testConductedVia && s.testConductedVia !== "WEBSITE_TIMED" && (
+                            <span
+                              className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-400/30"
+                              title={s.testConductedVia === "LIVE_CALL" ? "Test conducted in live call/meeting" : "Dossier uploaded directly"}
+                            >
+                              {s.testConductedVia === "LIVE_CALL" ? "Live Call" : "Direct Upload"}
+                            </span>
+                          )}
+                        </div>
                         <div className="text-[11px] text-app-text-muted">{studentEmail}</div>
                       </Td>
                       <Td>
@@ -469,7 +548,20 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
                       <Td align="center">{renderAssessorDot(student?.assignedIO, s.ioStatus || "PENDING", assessorLabel("IO"))}</Td>
                       <Td align="center">{renderAssessorDot(student?.assignedTO, s.toStatus || "PENDING", assessorLabel("TO"))}</Td>
                       <Td align="right">
-                        <IconButton icon={Eye} size={16} onClick={() => setSelectedSubmission(s)} title="Audit Scorecard Details" />
+                        <div className="flex items-center justify-end gap-1.5">
+                          <IconButton
+                            icon={UploadCloud}
+                            size={16}
+                            onClick={() => {
+                              setUploadTarget(s);
+                              setUploadMode("LIVE_CALL");
+                              setUploadNotes("");
+                              setSelectedFiles([]);
+                            }}
+                            title="Upload Dossier for Candidate (Live Call / DM)"
+                          />
+                          <IconButton icon={Eye} size={16} onClick={() => setSelectedSubmission(s)} title="Audit Scorecard Details" />
+                        </div>
                       </Td>
                     </Tr>
                   );
@@ -658,6 +750,211 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
                       </Button>
                     )}
                   </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          );
+        })()}
+
+      {/* ── ADMIN DOSSIER UPLOAD MODAL ────────────────────────────────────────── */}
+      {uploadTarget &&
+        (() => {
+          const s = uploadTarget;
+          const student = (s.student as UserProfile | undefined) || users.find((u) => u.uid === s.userId) || users.find((u) => u.id === s.userId);
+          const studentName = student?.name || "Candidate";
+          const studentBatch = student?.batch || "--";
+          const studentChest = student?.chestNo || "--";
+
+          return (
+            <Dialog open={!!uploadTarget} onOpenChange={(open) => !open && !uploadingDossier && setUploadTarget(null)}>
+              <DialogContent maxWidth="max-w-xl" className="p-6 sm:p-8 space-y-6">
+                <div className="flex items-start justify-between gap-4 border-b border-app-border pb-4">
+                  <div className="space-y-1">
+                    <DialogTitle className="text-lg font-black text-app-text-bright tracking-tight flex items-center gap-2">
+                      <UploadCloud size={20} className="text-app-accent" />
+                      Upload Candidate Dossier
+                    </DialogTitle>
+                    <p className="text-xs text-app-text-muted">
+                      Upload handwritten sheets for candidates who tested via live meeting or sent dossiers via DMs.
+                    </p>
+                  </div>
+                  <IconButton
+                    icon={X}
+                    size={16}
+                    onClick={() => !uploadingDossier && setUploadTarget(null)}
+                    disabled={uploadingDossier}
+                    title="Close"
+                  />
+                </div>
+
+                {/* Candidate Info Summary */}
+                <div className="p-3.5 bg-black/30 border border-app-border rounded-2xl flex items-center justify-between gap-3 flex-wrap">
+                  <div>
+                    <div className="text-sm font-bold text-app-text-bright">{studentName}</div>
+                    <div className="text-[11px] text-app-text-muted">{student?.email || "No email"}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded bg-app-card border border-app-border text-[10px] font-bold text-app-text-muted">
+                      Batch: {studentBatch}
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-app-card border border-app-border text-[10px] font-bold text-app-text-muted">
+                      Chest: {studentChest}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Test Origin / Mode Selection */}
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-app-text-muted">
+                    Submission Source
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setUploadMode("LIVE_CALL")}
+                      className={cn(
+                        "p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3",
+                        uploadMode === "LIVE_CALL"
+                          ? "bg-app-accent/15 border-app-accent text-app-text-bright ring-1 ring-app-accent/40"
+                          : "bg-app-card/40 border-app-border text-app-text-muted hover:border-app-accent/30"
+                      )}
+                    >
+                      <Video size={18} className={uploadMode === "LIVE_CALL" ? "text-app-accent" : "text-app-text-muted"} />
+                      <div>
+                        <div className="text-xs font-bold text-app-text-bright">Live Meeting / Call</div>
+                        <div className="text-[10px] text-app-text-muted leading-tight mt-0.5">
+                          Candidate wrote test in a live Google Meet/Zoom session.
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setUploadMode("DIRECT_UPLOAD")}
+                      className={cn(
+                        "p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3",
+                        uploadMode === "DIRECT_UPLOAD"
+                          ? "bg-app-accent/15 border-app-accent text-app-text-bright ring-1 ring-app-accent/40"
+                          : "bg-app-card/40 border-app-border text-app-text-muted hover:border-app-accent/30"
+                      )}
+                    >
+                      <MessageSquare size={18} className={uploadMode === "DIRECT_UPLOAD" ? "text-app-accent" : "text-app-text-muted"} />
+                      <div>
+                        <div className="text-xs font-bold text-app-text-bright">Direct DM / WhatsApp</div>
+                        <div className="text-[10px] text-app-text-muted leading-tight mt-0.5">
+                          Candidate sent dossier directly to team via WhatsApp/email.
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Optional Admin Note */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-app-text-muted">
+                    Internal Notes / Reference (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={uploadNotes}
+                    onChange={(e) => setUploadNotes(e.target.value)}
+                    placeholder="e.g. Conducted by Col. Sharma on 14 Oct live call"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-app-card border border-app-border text-xs text-app-text-bright placeholder:text-app-text-muted/60 focus:outline-none focus:border-app-accent"
+                  />
+                </div>
+
+                {/* File Upload Box */}
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-app-text-muted">
+                    Dossier PDF ({selectedFiles.length} file{selectedFiles.length === 1 ? "" : "s"} selected)
+                  </label>
+
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    multiple
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files) {
+                        const newFiles = Array.from(e.target.files);
+                        const nonPdf = newFiles.filter(
+                          (f) => f.type !== "application/pdf" && !f.name.toLowerCase().endsWith(".pdf")
+                        );
+                        if (nonPdf.length > 0) {
+                          alert("Only PDF files are accepted for candidate dossiers. Images are not allowed.");
+                          e.target.value = "";
+                          return;
+                        }
+                        const maxLimit = 5 * 1024 * 1024;
+                        const oversized = newFiles.filter((f) => f.size > maxLimit);
+                        if (oversized.length > 0) {
+                          alert(`File size exceeds 5 MB limit: ${oversized.map((f) => f.name).join(", ")}`);
+                          e.target.value = "";
+                          return;
+                        }
+                        setSelectedFiles((prev) => [...prev, ...newFiles]);
+                      }
+                      e.target.value = "";
+                    }}
+                  />
+
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-app-border hover:border-app-accent/50 rounded-2xl p-6 text-center cursor-pointer bg-black/20 hover:bg-black/30 transition-all flex flex-col items-center justify-center gap-2"
+                  >
+                    <FileUp size={24} className="text-app-accent" />
+                    <div className="text-xs font-bold text-app-text-bright">
+                      Click to browse or drop dossier PDF here
+                    </div>
+                    <div className="text-[10px] text-app-text-muted">
+                      Supports PDF files only (Max 5MB per file)
+                    </div>
+                  </div>
+
+                  {/* Selected Files List */}
+                  {selectedFiles.length > 0 && (
+                    <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+                      {selectedFiles.map((f, idx) => (
+                        <div
+                          key={`${f.name}-${idx}`}
+                          className="flex items-center justify-between p-2 rounded-xl bg-app-card border border-app-border text-xs"
+                        >
+                          <span className="truncate max-w-[80%] text-app-text-bright font-medium">
+                            {f.name} <span className="text-[10px] text-app-text-muted">({(f.size / 1024).toFixed(0)} KB)</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedFiles((prev) => prev.filter((_, i) => i !== idx))}
+                            className="text-app-text-muted hover:text-red-400 p-1"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer Buttons */}
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-app-border">
+                  <Button
+                    variant="ghost"
+                    size="md"
+                    onClick={() => setUploadTarget(null)}
+                    disabled={uploadingDossier}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="md"
+                    icon={uploadingDossier ? Loader2 : UploadCloud}
+                    onClick={handleAdminDossierUpload}
+                    disabled={uploadingDossier || selectedFiles.length === 0}
+                  >
+                    {uploadingDossier ? "Uploading to Cloud..." : "Upload & Transmit Dossier"}
+                  </Button>
                 </div>
               </DialogContent>
             </Dialog>
