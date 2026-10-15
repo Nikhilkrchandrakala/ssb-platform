@@ -887,7 +887,7 @@ export default function AllUsersView() {
                                   <div className="course-item-left">
                                     <h6 className="d-flex align-items-center gap-2 flex-wrap">
                                       {slotTitle}
-                                      <EnrollmentModeBadge mode={o.slotId?.mode} />
+                                      <EnrollmentModeBadge mode={o.slotId?.mode} price={o.price} />
                                     </h6>
                                     <p>
                                       <code style={{ color: "var(--primary-gold)" }}>#{(o.orderId || o._id).substring(0, 10)}</code> &nbsp;|&nbsp; {batchNo}

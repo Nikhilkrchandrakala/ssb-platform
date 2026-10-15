@@ -906,7 +906,7 @@ export default function StudentRosterView() {
                         </span>
                       </td>
                       <td>
-                        <EnrollmentModeBadge mode={o?.slotId?.mode || s.enrollmentMode} />
+                        <EnrollmentModeBadge mode={o?.slotId?.mode || s.enrollmentMode} price={o?.price} />
                       </td>
                       <td>
                         <span style={{ fontSize: "0.85rem", opacity: 0.7 }}>{formatDate(o?.createdAt || s.createdAt)}</span>
@@ -1151,7 +1151,7 @@ export default function StudentRosterView() {
                               <div className="course-item-left">
                                 <h6 className="d-flex align-items-center gap-2 flex-wrap">
                                   {o.slotId?.title || "Purchased Course Registration"}
-                                  <EnrollmentModeBadge mode={o.slotId?.mode} />
+                                  <EnrollmentModeBadge mode={o.slotId?.mode} price={o.price} />
                                 </h6>
                                 <p className="mb-1">
                                   <code style={{ color: "var(--primary-gold)" }}>#{(o.orderId || o._id).substring(0, 10)}</code> &nbsp;|&nbsp;{" "}

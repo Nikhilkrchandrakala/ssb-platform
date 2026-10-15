@@ -13,10 +13,11 @@ interface SubmittedInstallment {
   dueDate: string;
 }
 
-// Mirrors /api/createOfflineOrder's flat fee exactly (the slot's own price,
-// no GST, no installment plan) — an offline batch is a one-time registration
-// deposit collected up front, not a full-course purchase billed over time.
+// Mirrors /api/createOfflineOrder's flat fee and full fee (no GST, no installment plan).
+// An offline batch can be enrolled via either the one-time registration deposit (₹5,000)
+// or the full course fee (₹21,000) in one go.
 const OFFLINE_REGISTRATION_FEE = 5000;
+const OFFLINE_TOTAL_FEE = 21000;
 
 // Creates a not-yet-a-student User + Order + InstallmentPlan, then a real
 // Razorpay Payment Link for just the initial amount (salesimplementation.md
@@ -86,16 +87,24 @@ export async function POST(req: NextRequest) {
     let effectiveSelectedModules: string[] = selectedModules;
 
     if (isOfflineSlot) {
-      finalPriceInclGST = slot.price || OFFLINE_REGISTRATION_FEE;
-      originalAmount = finalPriceInclGST;
-      effectiveInstallments = [];
-      effectiveSelectedModules = [];
-      if (typeof initialAmount !== "number" || Math.abs(initialAmount - finalPriceInclGST) > 0.01) {
+      const regFee = slot.price || OFFLINE_REGISTRATION_FEE;
+      const fullFee = OFFLINE_TOTAL_FEE;
+      const isFull = typeof initialAmount === "number" && Math.abs(initialAmount - fullFee) < 0.01;
+      const isReg = typeof initialAmount === "number" && Math.abs(initialAmount - regFee) < 0.01;
+
+      if (!isFull && !isReg) {
         return NextResponse.json(
-          { message: `initialAmount must equal the registration fee (₹${finalPriceInclGST}) for an offline batch` },
+          { message: `initialAmount for an offline batch must be either the registration fee (₹${regFee}) or the full fee (₹${fullFee})` },
           { status: 400 }
         );
       }
+
+      finalPriceInclGST = isFull ? fullFee : regFee;
+      originalAmount = finalPriceInclGST;
+      discount = 0;
+      appliedCouponCode = null; // Strictly no coupons for offline batches
+      effectiveInstallments = [];
+      effectiveSelectedModules = [];
     } else {
       // Re-look-up the true price and re-validate — never trust a client-submitted total.
       const baseAmount = await getSlotBasePrice(slot, selectedModules);
@@ -276,8 +285,11 @@ export async function POST(req: NextRequest) {
     const batchLabel = `${slot.title}${slot.batchNo ? ` (#${slot.batchNo})` : ""}`;
     const moduleLabel = describeSelectedModules(order.selectedModules || []);
     const isFullPayment = remaining <= 0;
+    const isOfflineFull = isOfflineSlot && Math.abs(initialAmount - OFFLINE_TOTAL_FEE) < 0.01;
     const description = isOfflineSlot
-      ? `Registration Fee — ${batchLabel}`
+      ? isOfflineFull
+        ? `Full Course Fee — ${batchLabel}`
+        : `Registration Fee — ${batchLabel}`
       : isFullPayment
         ? `${moduleLabel} Fee — ${batchLabel} — ${formatRealStartTime(slot)}`
         : `${moduleLabel} — Registration Fee — ${batchLabel} — ${formatRealStartTime(slot)}`;
@@ -293,7 +305,12 @@ export async function POST(req: NextRequest) {
       customerEmail: studentEmail,
       ...(student.phone || studentPhone ? { customerPhone: student.phone || studentPhone } : {}),
       description,
-      notes: { orderId: String(order._id), installmentPlanId: String(plan._id), seq: "1" },
+      notes: {
+        orderId: String(order._id),
+        installmentPlanId: String(plan._id),
+        seq: "1",
+        ...(isOfflineSlot ? { offlinePaymentType: isOfflineFull ? "full" : "registration" } : {}),
+      },
       expireBy,
     });
 

@@ -2,7 +2,8 @@ import crypto from "node:crypto";
 import { connectDB } from "@/server/db";
 import { InstallmentPlan, Order, Slot, User, Coupon, Lead } from "@/server/models";
 import { sendCredentialsEmail, sendSalesNotificationEmail, sendOfflineBookingConfirmationEmail } from "@/server/integrations/msg91";
-import { resolveClinicalStageFromModules } from "@/server/clinicalStageSync";
+import { resolveClinicalStageFromModules, syncClinicalStageForUser } from "@/server/clinicalStageSync";
+import { syncEnrollmentModeForUser } from "@/server/enrollmentModeSync";
 import { formatRealStartDate } from "@/lib/batchTiming";
 
 interface InstallmentSubdoc {
@@ -96,8 +97,10 @@ export async function markInstallmentPaid(opts: {
 
   student.role = "student";
   if (slot?.batchNo) student.batch = slot.batchNo.trim();
-  const bookedModules: string[] = order.selectedModules || [];
-  student.clinicalStage = resolveClinicalStageFromModules(bookedModules);
+  if (slot?.mode !== "offline") {
+    const bookedModules: string[] = order.selectedModules || [];
+    student.clinicalStage = resolveClinicalStageFromModules(bookedModules);
+  }
 
   if (!student.phone) {
     const fallbackPhone = (order as unknown as { buyerPhone?: string })?.buyerPhone;
@@ -136,6 +139,9 @@ export async function markInstallmentPaid(opts: {
   const plainPassword = isNewAccount ? crypto.randomBytes(9).toString("base64url") : null;
   if (plainPassword) student.password = plainPassword;
   await student.save();
+
+  await syncEnrollmentModeForUser(String(order.userId));
+  await syncClinicalStageForUser(String(order.userId));
 
   let studentCredentials: { email: string; password: string; emailDelivered: boolean } | undefined;
   if (plainPassword) {

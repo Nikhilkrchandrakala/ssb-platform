@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
           .populate("assignedTO", "name")
           .populate("assignedPsych", "name")
           .populate("assignedIO", "name")
-          .select("slotId selectedModules assignedGTO assignedTO assignedPsych assignedIO assignedAssessments createdAt")
+          .select("slotId selectedModules assignedGTO assignedTO assignedPsych assignedIO assignedAssessments price createdAt")
           .sort({ createdAt: -1 });
 
         if (!student.batch && paidOrders.length > 0 && paidOrders[0].slotId?.batchNo) {

@@ -133,9 +133,10 @@ const MODULES = [
 const FULL_COURSE_MODULE = { id: "full_course", label: "Full 12-day SSB Hackathon", defaultPrice: 12499 };
 
 // Mirrors /api/createOfflineOrder and /api/sales/enrollStudent's own
-// fallback — an offline batch is a flat one-time registration deposit, no
-// GST, no installment plan.
+// fallback — an offline batch can be enrolled via the registration deposit (₹5,000)
+// or the full course fee (₹21,000) in one go.
 const OFFLINE_REGISTRATION_FEE = 5000;
+const OFFLINE_TOTAL_FEE = 21000;
 
 interface AuditLogEntry {
   _id: string;
@@ -929,6 +930,7 @@ export default function SalesDashboardView() {
   const [numberOfInstallments, setNumberOfInstallments] = useState<number>(1);
   const [finalDueDate, setFinalDueDate] = useState("");
   const [finalPriceInclGST, setFinalPriceInclGST] = useState<number | null>(null);
+  const [offlinePaymentPlan, setOfflinePaymentPlan] = useState<"registration" | "full">("registration");
   const [installmentRows, setInstallmentRows] = useState<SuggestedInstallment[]>([]);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
@@ -969,8 +971,7 @@ export default function SalesDashboardView() {
     setAppliedCoupon(null);
 
     if (resolveEnrollmentMode(slot.mode) === "offline") {
-      // Flat registration-fee deposit — nothing to preview, no installments,
-      // no type to choose. Ready to submit as soon as name/email are filled.
+      setOfflinePaymentPlan("registration");
       const fee = slot.price || OFFLINE_REGISTRATION_FEE;
       setInitialAmount(fee);
       setFinalPriceInclGST(fee);
@@ -1759,7 +1760,10 @@ export default function SalesDashboardView() {
                         <td>
                           {/* This order's own slot, not the buyer's global enrollmentMode —
                               a student can have both an online and offline batch. */}
-                          <EnrollmentModeBadge mode={order.slotId?.mode || order.userId?.enrollmentMode} />
+                          <EnrollmentModeBadge
+                            mode={order.slotId?.mode || order.userId?.enrollmentMode}
+                            price={order.price || order.installmentPlanId?.totalAmount}
+                          />
                         </td>
                         <td>
                           {order.slotId?.title} {order.slotId?.batchNo ? `(#${order.slotId.batchNo})` : ""}
@@ -2035,7 +2039,10 @@ export default function SalesDashboardView() {
                             )}
                           </td>
                           <td>
-                            <EnrollmentModeBadge mode={order.slotId?.mode || order.userId?.enrollmentMode} />
+                            <EnrollmentModeBadge
+                              mode={order.slotId?.mode || order.userId?.enrollmentMode}
+                              price={order.price || order.installmentPlanId?.totalAmount}
+                            />
                           </td>
                           <td>
                             {order.slotId?.title} {order.slotId?.batchNo ? `(#${order.slotId.batchNo})` : ""}
@@ -2278,10 +2285,74 @@ export default function SalesDashboardView() {
                     <div className="col-md-6">
                       {isOfflineSlot ? (
                         <div className="admin-form-group">
-                          <label className="admin-form-label">Registration Fee (₹)</label>
-                          <input type="number" className="admin-input" value={initialAmount} disabled style={{ opacity: 0.7 }} />
-                          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: 4 }}>
-                            Paid in full now as a one-time deposit. No installments — the remaining course fee is collected in person.
+                          <label className="admin-form-label mb-2">Offline Payment Plan</label>
+                          <div className="d-flex flex-column gap-2">
+                            <label
+                              style={{
+                                display: "flex",
+                                alignItems: "flex-start",
+                                gap: 10,
+                                padding: "10px 12px",
+                                borderRadius: 6,
+                                background: offlinePaymentPlan === "registration" ? "rgba(224,194,20,0.12)" : "rgba(255,255,255,0.03)",
+                                border: `1px solid ${offlinePaymentPlan === "registration" ? "var(--primary-gold)" : "#333"}`,
+                                cursor: "pointer",
+                              }}
+                            >
+                              <input
+                                type="radio"
+                                name="offlinePaymentPlan"
+                                checked={offlinePaymentPlan === "registration"}
+                                onChange={() => {
+                                  setOfflinePaymentPlan("registration");
+                                  const fee = selectedSlot.price || OFFLINE_REGISTRATION_FEE;
+                                  setInitialAmount(fee);
+                                  setFinalPriceInclGST(fee);
+                                }}
+                                style={{ marginTop: 3 }}
+                              />
+                              <div>
+                                <div style={{ fontWeight: 600, color: "#fff", fontSize: "0.88rem" }}>
+                                  Registration Deposit Only — ₹{(selectedSlot.price || OFFLINE_REGISTRATION_FEE).toLocaleString("en-IN")}
+                                </div>
+                                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                                  Candidate pays deposit online now. Remaining ₹16,000 balance collected in person at campus.
+                                </div>
+                              </div>
+                            </label>
+
+                            <label
+                              style={{
+                                display: "flex",
+                                alignItems: "flex-start",
+                                gap: 10,
+                                padding: "10px 12px",
+                                borderRadius: 6,
+                                background: offlinePaymentPlan === "full" ? "rgba(46,204,113,0.12)" : "rgba(255,255,255,0.03)",
+                                border: `1px solid ${offlinePaymentPlan === "full" ? "#2ecc71" : "#333"}`,
+                                cursor: "pointer",
+                              }}
+                            >
+                              <input
+                                type="radio"
+                                name="offlinePaymentPlan"
+                                checked={offlinePaymentPlan === "full"}
+                                onChange={() => {
+                                  setOfflinePaymentPlan("full");
+                                  setInitialAmount(OFFLINE_TOTAL_FEE);
+                                  setFinalPriceInclGST(OFFLINE_TOTAL_FEE);
+                                }}
+                                style={{ marginTop: 3 }}
+                              />
+                              <div>
+                                <div style={{ fontWeight: 600, color: "#2ecc71", fontSize: "0.88rem" }}>
+                                  Full Payment in One Go — ₹{OFFLINE_TOTAL_FEE.toLocaleString("en-IN")}
+                                </div>
+                                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                                  Candidate pays the entire offline course fee upfront. ₹0 remaining at campus.
+                                </div>
+                              </div>
+                            </label>
                           </div>
                         </div>
                       ) : (
@@ -2375,9 +2446,21 @@ export default function SalesDashboardView() {
 
                   {finalPriceInclGST !== null && resolveEnrollmentMode(selectedSlot.mode) === "offline" && (
                     <div style={{ background: "rgba(255,255,255,0.03)", padding: 14, borderRadius: 6, marginBottom: 16 }}>
+                      <div className="sales-price-summary-row" style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: "0.85rem" }}>
+                        <span className="text-muted">Total Offline Course Fee</span>
+                        <strong style={{ color: "#fff" }}>₹{OFFLINE_TOTAL_FEE.toLocaleString("en-IN")}</strong>
+                      </div>
+                      <div className="sales-price-summary-row" style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: "0.85rem" }}>
+                        <span className="text-muted">Payment Link Amount (charged now)</span>
+                        <strong style={{ color: offlinePaymentPlan === "full" ? "#2ecc71" : "var(--primary-gold)" }}>
+                          ₹{finalPriceInclGST.toLocaleString("en-IN")}
+                        </strong>
+                      </div>
                       <div className="sales-price-summary-row" style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
-                        <span className="text-muted">Registration Fee (paid now — link generated on Enroll)</span>
-                        <strong style={{ color: "var(--primary-gold)" }}>₹{finalPriceInclGST.toFixed(2)}</strong>
+                        <span className="text-muted">Balance to collect at campus</span>
+                        <strong style={{ color: offlinePaymentPlan === "full" ? "#2ecc71" : "#f39c12" }}>
+                          {offlinePaymentPlan === "full" ? "₹0.00 (Fully Settled)" : "₹16,000.00 (Due at Campus)"}
+                        </strong>
                       </div>
                     </div>
                   )}
@@ -2442,7 +2525,7 @@ export default function SalesDashboardView() {
                       Cancel
                     </button>
                     <button type="button" className="thm-btn flex-grow-1" onClick={submitEnroll} disabled={isEnrolling || finalPriceInclGST === null}>
-                      {isEnrolling ? "Enrolling…" : "Enroll & Generate Link"}
+                      {isEnrolling ? "Enrolling…" : `Enroll & Generate Link (₹${finalPriceInclGST?.toLocaleString("en-IN")})`}
                     </button>
                   </div>
                 </>
@@ -2549,27 +2632,61 @@ export default function SalesDashboardView() {
                 )}
               </div>
 
-              <div className="row g-2" style={{ marginBottom: 16 }}>
-                {[
-                  ...(isExecutive ? [] : [{ label: "Total Amount", value: `₹${detailsSummary.total.toFixed(2)}`, color: "#fff" }]),
-                  { label: "Paid So Far", value: `₹${detailsSummary.paid.toFixed(2)}`, color: "#2ecc71" },
-                  { label: "Remaining", value: `₹${detailsSummary.remaining.toFixed(2)}`, color: detailsSummary.remaining > 0 ? "#f39c12" : "#2ecc71" },
-                ].map((card) => (
-                  <div className={isExecutive ? "col-sm-6 col-12" : "col-sm-4 col-12"} key={card.label}>
-                    <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #333", borderRadius: 6, padding: "10px 12px", textAlign: "center" }}>
-                      <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>
-                        {card.label}
-                      </div>
-                      <div style={{ fontSize: "1rem", fontWeight: 700, color: card.color }}>{card.value}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {(() => {
+                const isOfflineDetails = detailsOrder.slotId?.mode === "offline";
+                const offlineTotal = OFFLINE_TOTAL_FEE;
+                const offlinePaid = detailsSummary.paid;
+                const offlineRemainingAtCampus = Math.max(0, offlineTotal - offlinePaid);
 
-              <div className="sales-installment-schedule-header d-flex justify-content-between align-items-center" style={{ marginBottom: 8 }}>
-                <span className="text-muted small">FULL INSTALLMENT SCHEDULE</span>
-                {planStatusChip(detailsOrder)}
-              </div>
+                const summaryCards = isOfflineDetails
+                  ? [
+                      ...(isExecutive ? [] : [{ label: "Course Total", value: `₹${offlineTotal.toFixed(2)}`, color: "#fff" }]),
+                      { label: "Paid Online", value: `₹${offlinePaid.toFixed(2)}`, color: "#2ecc71" },
+                      {
+                        label: "Campus Balance",
+                        value: offlineRemainingAtCampus > 0 ? `₹${offlineRemainingAtCampus.toFixed(2)}` : "₹0.00",
+                        color: offlineRemainingAtCampus > 0 ? "#f39c12" : "#2ecc71",
+                      },
+                    ]
+                  : [
+                      ...(isExecutive ? [] : [{ label: "Total Amount", value: `₹${detailsSummary.total.toFixed(2)}`, color: "#fff" }]),
+                      { label: "Paid So Far", value: `₹${detailsSummary.paid.toFixed(2)}`, color: "#2ecc71" },
+                      { label: "Remaining", value: `₹${detailsSummary.remaining.toFixed(2)}`, color: detailsSummary.remaining > 0 ? "#f39c12" : "#2ecc71" },
+                    ];
+
+                return (
+                  <>
+                    <div className="row g-2" style={{ marginBottom: 16 }}>
+                      {summaryCards.map((card) => (
+                        <div className={isExecutive ? "col-sm-6 col-12" : "col-sm-4 col-12"} key={card.label}>
+                          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #333", borderRadius: 6, padding: "10px 12px", textAlign: "center" }}>
+                            <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>
+                              {card.label}
+                            </div>
+                            <div style={{ fontSize: "1rem", fontWeight: 700, color: card.color }}>{card.value}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="sales-installment-schedule-header d-flex justify-content-between align-items-center" style={{ marginBottom: 8 }}>
+                      <span className="text-muted small">
+                        {isOfflineDetails ? "OFFLINE PAYMENT RECORD" : "FULL INSTALLMENT SCHEDULE"}
+                      </span>
+                      <div className="d-flex align-items-center gap-2">
+                        {planStatusChip(detailsOrder)}
+                        {isOfflineDetails && (
+                          offlineRemainingAtCampus === 0 ? (
+                            <span className="badge bg-success" style={{ fontSize: "0.7rem", padding: "3px 8px" }}>Paid in Full</span>
+                          ) : (
+                            <span className="badge bg-warning text-dark" style={{ fontSize: "0.7rem", padding: "3px 8px" }}>₹16,000 Balance Due</span>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
 
               <div className="admin-table-container" style={{ marginBottom: 16 }}>
                 <table className="admin-table">
