@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import TurnstileWidget from "@/components/TurnstileWidget";
+import { formatPhoneWithCountryCode } from "@/lib/phone";
 
 // This is the client's exact Zoho Web-to-Contact embed ("Website Booking ONLINE"
 // lead source), styled for this app's dark modal so it's legible and matches
@@ -440,7 +441,20 @@ const ZOHO_FORM_HTML = `
 					if(typeof _wfa_track !== 'undefined' && _wfa_track.wfa_submit) {
 						_wfa_track.wfa_submit(e);
 					}
+					var mobFld = this.elements['Mobile'];
+					if (mobFld) {
+						var mobVal = (mobFld.value || '').trim();
+						var mobDigits = mobVal.replace(/\D/g, '');
+						if (mobDigits.length === 11 && mobDigits.startsWith('0')) { mobDigits = mobDigits.slice(1); }
+						if (mobDigits.length === 10) { mobFld.value = '+91' + mobDigits; }
+						else if (mobDigits.length === 12 && mobDigits.startsWith('91')) { mobFld.value = '+' + mobDigits; }
+						else if (mobVal.startsWith('+')) { mobFld.value = '+' + mobDigits; }
+						else if (mobDigits.length > 0) { mobFld.value = '+91' + mobDigits; }
+					}
 					var formData = new FormData(this);
+					if (mobFld && mobFld.value) {
+						formData.set('Mobile', mobFld.value);
+					}
 					fetch('https://crm.zoho.in/crm/WebToContactForm', {
 						method: 'POST',
 						body: formData,
@@ -658,7 +672,8 @@ export default function ZohoQuickJoinForm({
       const firstName = getVal("First Name");
       const lastName = getVal("Last Name");
       const email = getVal("Email");
-      const phone = getVal("Mobile");
+      const rawPhone = getVal("Mobile");
+      const phone = formatPhoneWithCountryCode(rawPhone);
       if (!firstName || !lastName || !email || !phone) return; // the pasted script's own alert() already covers this
       if (!turnstileTokenRef.current) return; // submit button is disabled until this is set — belt and suspenders
       onSubmitAttempt({ name: `${firstName} ${lastName}`.trim(), email, phone, turnstileToken: turnstileTokenRef.current });

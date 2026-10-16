@@ -1,4 +1,5 @@
 import axios from "axios";
+import { formatPhoneWithCountryCode } from "@/lib/phone";
 
 // Zoho CRM Web-to-Lead form submission — ported as-is from the legacy
 // zohoService.js, same form/field IDs (these are tied to a specific Zoho
@@ -58,8 +59,7 @@ export async function submitSignupLead(user: ZohoLeadUser): Promise<boolean> {
   try {
     const { firstName, lastName } = splitName(user.name || "");
     const email = (user.email || "").trim();
-    let phone = (user.phone || "").trim();
-    if (phone.length === 10) phone = `+91${phone}`;
+    const phone = formatPhoneWithCountryCode(user.phone);
 
     const params = new URLSearchParams();
     params.append("xnQsjsdp", MAGAZINE_FORM_xnQsjsdp);
@@ -104,8 +104,7 @@ export async function submitOfflineJoinContact(name: string, email: string, phon
   try {
     const { firstName, lastName } = splitName(name || "");
     const cleanEmail = (email || "").trim();
-    let cleanPhone = (phone || "").trim();
-    if (cleanPhone.length === 10) cleanPhone = `+91${cleanPhone}`;
+    const cleanPhone = formatPhoneWithCountryCode(phone);
 
     const params = new URLSearchParams();
     params.append("xnQsjsdp", OFFLINE_JOIN_FORM_xnQsjsdp);
@@ -137,8 +136,7 @@ export async function submitOnlineJoinContact(name: string, email: string, phone
   try {
     const { firstName, lastName } = splitName(name || "");
     const cleanEmail = (email || "").trim();
-    let cleanPhone = (phone || "").trim();
-    if (cleanPhone.length === 10) cleanPhone = `+91${cleanPhone}`;
+    const cleanPhone = formatPhoneWithCountryCode(phone);
 
     const params = new URLSearchParams();
     params.append("xnQsjsdp", ONLINE_JOIN_FORM_xnQsjsdp);

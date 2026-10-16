@@ -373,7 +373,16 @@ export default function EnquiryForm({ isModal = false }: { isModal?: boolean } =
 
     // React-controlled hidden inputs may not flush their value to the real DOM
     // before FormData reads it, so set Mobile explicitly from state.
-    bodyFormData.set("Mobile", `${formData.countryCode}${formData.phone}`);
+    let cleanPhoneDigits = formData.phone.replace(/\D/g, "");
+    if (formData.countryCode === "+91") {
+      if (cleanPhoneDigits.length === 12 && cleanPhoneDigits.startsWith("91")) {
+        cleanPhoneDigits = cleanPhoneDigits.slice(2);
+      } else if (cleanPhoneDigits.length === 11 && cleanPhoneDigits.startsWith("0")) {
+        cleanPhoneDigits = cleanPhoneDigits.slice(1);
+      }
+    }
+    const finalMobile = cleanPhoneDigits ? `${formData.countryCode}${cleanPhoneDigits}` : "";
+    bodyFormData.set("Mobile", finalMobile);
 
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has("service") && urlParams.get("service") === "smarturl") {
@@ -634,7 +643,11 @@ export default function EnquiryForm({ isModal = false }: { isModal?: boolean } =
                           placeholder="Enter your mobile number"
                           value={formData.phone}
                           onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, "");
+                            let val = e.target.value.replace(/\D/g, "");
+                            if (formData.countryCode === "+91") {
+                              if (val.length === 12 && val.startsWith("91")) val = val.slice(2);
+                              else if (val.length === 11 && val.startsWith("0")) val = val.slice(1);
+                            }
                             setFormData((prev) => ({ ...prev, phone: val }));
                             if (errors.phone) {
                               setErrors((prev) => {
@@ -651,7 +664,7 @@ export default function EnquiryForm({ isModal = false }: { isModal?: boolean } =
                           style={{ flexGrow: 1 }}
                         />
                       </div>
-                      <input type="hidden" name="Mobile" value={`${formData.countryCode}${formData.phone}`} readOnly />
+                      <input type="hidden" name="Mobile" value={formData.phone ? `${formData.countryCode}${formData.phone}` : ""} readOnly />
                       {hasError("phone") && (
                         <div className="error-message" style={{ color: "#ff4d4d", fontSize: "13px", marginTop: "5px" }}>
                           {errors.phone}

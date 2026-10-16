@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import Button from "./Button";
+import { formatPhoneWithCountryCode } from "@/lib/phone";
 
 // This specific webform's analytics servlet URL, copied verbatim from
 // Zoho's source — it's tied to this form's rid/tw pair (different from
@@ -104,6 +105,20 @@ export default function LeadForm() {
       return;
     }
 
+    const mobileInput = form.elements.namedItem("Mobile") as HTMLInputElement | null;
+    const rawMobile = mobileInput?.value ?? "";
+    const cleanDigits = rawMobile.replace(/\D/g, "");
+    if (!cleanDigits || (cleanDigits.length < 10 && !rawMobile.startsWith("+"))) {
+      e.preventDefault();
+      alert("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    const formattedMobile = formatPhoneWithCountryCode(rawMobile);
+    if (mobileInput) {
+      mobileInput.value = formattedMobile;
+    }
+
     // Let Zoho's own analytics servlet (loaded above) populate its hidden
     // tracking inputs on the form before it POSTs — mirrors the sibling
     // CRA site's proven From.jsx pattern for this exact servlet.
@@ -136,7 +151,7 @@ export default function LeadForm() {
     try {
       const firstName = (form.elements.namedItem("First Name") as HTMLInputElement | null)?.value ?? "";
       const lastName = (form.elements.namedItem("Last Name") as HTMLInputElement | null)?.value ?? "";
-      const mobile = (form.elements.namedItem("Mobile") as HTMLInputElement | null)?.value ?? "";
+      const mobile = formattedMobile;
       const ssbExperience = (form.elements.namedItem("CONTACTCF11") as HTMLSelectElement | null)?.value ?? "";
       fetch("/api/addLead", {
         method: "POST",
