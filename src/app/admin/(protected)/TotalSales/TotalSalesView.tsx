@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { ENROLLMENT_MODE_OPTIONS, resolveEnrollmentMode } from "@/lib/enrollmentMode";
 import EnrollmentModeBadge from "@/components/admin/EnrollmentModeBadge";
+import { useAdminUser } from "@/components/admin/AdminUserProvider";
 import "@/app/admin/styles/legacy-total-sales.css";
 
 const ICON_STYLE = { verticalAlign: -2 };
@@ -160,6 +161,9 @@ const METHOD_DISPLAY_LABELS: Record<BookingMethod, (o: OrderItem) => string> = {
 };
 
 export default function TotalSalesView() {
+  const { user } = useAdminUser();
+  const isOwner = user?.role === "owner";
+
   const [allOrders, setAllOrders] = useState<OrderItem[]>([]);
   const [franchises, setFranchises] = useState<FranchisePartner[]>([]);
   const [loading, setLoading] = useState(true);
@@ -420,29 +424,31 @@ export default function TotalSalesView() {
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="stat-grid">
-        <div className="stat-card">
-          <Receipt size={28} style={{ color: "var(--primary-gold)", marginBottom: 12, opacity: 0.8 }} />
-          <div className="val">{stats.total}</div>
-          <div className="lab">Total Transactions</div>
+      {/* KPI Cards (Owner Only) */}
+      {isOwner && (
+        <div className="stat-grid">
+          <div className="stat-card">
+            <Receipt size={28} style={{ color: "var(--primary-gold)", marginBottom: 12, opacity: 0.8 }} />
+            <div className="val">{stats.total}</div>
+            <div className="lab">Total Transactions</div>
+          </div>
+          <div className="stat-card">
+            <Wallet size={28} style={{ color: "var(--primary-gold)", marginBottom: 12, opacity: 0.8 }} />
+            <div className="val">₹{stats.revenue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+            <div className="lab">Total Gross Revenue</div>
+          </div>
+          <div className="stat-card">
+            <Store size={28} style={{ color: "var(--primary-gold)", marginBottom: 12, opacity: 0.8 }} />
+            <div className="val">{stats.franchiseCount}</div>
+            <div className="lab">Partner Referrals</div>
+          </div>
+          <div className="stat-card">
+            <UserCheck size={28} style={{ color: "var(--primary-gold)", marginBottom: 12, opacity: 0.8 }} />
+            <div className="val">{stats.directCount}</div>
+            <div className="lab">Direct Conversions</div>
+          </div>
         </div>
-        <div className="stat-card">
-          <Wallet size={28} style={{ color: "var(--primary-gold)", marginBottom: 12, opacity: 0.8 }} />
-          <div className="val">₹{stats.revenue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
-          <div className="lab">Total Gross Revenue</div>
-        </div>
-        <div className="stat-card">
-          <Store size={28} style={{ color: "var(--primary-gold)", marginBottom: 12, opacity: 0.8 }} />
-          <div className="val">{stats.franchiseCount}</div>
-          <div className="lab">Partner Referrals</div>
-        </div>
-        <div className="stat-card">
-          <UserCheck size={28} style={{ color: "var(--primary-gold)", marginBottom: 12, opacity: 0.8 }} />
-          <div className="val">{stats.directCount}</div>
-          <div className="lab">Direct Conversions</div>
-        </div>
-      </div>
+      )}
 
       {/* Filtering System */}
       <div className="filter-panel">
