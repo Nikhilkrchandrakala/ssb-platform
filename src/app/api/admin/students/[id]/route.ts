@@ -125,7 +125,18 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     if (name) student.name = name.trim();
     if (email) student.email = email.toLowerCase().trim();
-    if (phone) student.phone = phone.trim();
+    if (phone !== undefined) {
+      const cleanPhone = phone && typeof phone === "string" && phone.trim() ? phone.trim() : null;
+      if (cleanPhone) {
+        const phoneConflict = await User.findOne({ phone: cleanPhone, _id: { $ne: student._id } });
+        if (phoneConflict) {
+          return NextResponse.json({ error: "Phone number is already in use by another user" }, { status: 400 });
+        }
+        student.phone = cleanPhone;
+      } else {
+        student.phone = undefined;
+      }
+    }
     if (batch !== undefined) student.batch = (batch || "").trim();
     if (chestNo !== undefined) student.chestNo = (chestNo || "").trim();
     if (enrollmentMode !== undefined) student.enrollmentMode = enrollmentMode;

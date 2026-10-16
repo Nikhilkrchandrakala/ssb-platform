@@ -154,6 +154,7 @@ interface AddFormState {
   chestNo: string;
   clinicalStage: string;
   enrollmentMode: string;
+  sendCredentials: boolean;
 }
 
 const ALL_MODULES = ["full_course", "ssb_ppdt", "psych", "interview", "group_testing"];
@@ -191,6 +192,7 @@ const EMPTY_ADD_FORM: AddFormState = {
   chestNo: "",
   clinicalStage: "full_course",
   enrollmentMode: "online",
+  sendCredentials: true,
 };
 
 const ITEMS_PER_PAGE = 10;
@@ -259,6 +261,7 @@ export default function StudentRosterView() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [addForm, setAddForm] = useState<AddFormState>(EMPTY_ADD_FORM);
   const [addSubmitting, setAddSubmitting] = useState(false);
+  const [isCustomBatch, setIsCustomBatch] = useState(false);
 
   // Recent Deletes modal state — DELETE /api/admin/students/[id] now purges
   // the account plus every record that referenced it, so this log (backed by
@@ -316,6 +319,14 @@ export default function StudentRosterView() {
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
+
+    fetch("/api/allSlots")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (!cancelled && Array.isArray(data)) setAvailableSlots(data);
+      })
+      .catch(() => {});
+
     return () => {
       cancelled = true;
     };
@@ -323,6 +334,9 @@ export default function StudentRosterView() {
 
   const batches = useMemo(() => {
     const vals = new Set<string>();
+    for (const slot of availableSlots) {
+      if (slot.batchNo && slot.batchNo.trim()) vals.add(slot.batchNo.trim());
+    }
     for (const s of students) {
       if (s.orders && s.orders.length > 0) {
         for (const o of s.orders) if (o.slotId?.batchNo) vals.add(o.slotId.batchNo);
@@ -330,8 +344,8 @@ export default function StudentRosterView() {
         vals.add(s.batch);
       }
     }
-    return [...vals].sort();
-  }, [students]);
+    return [...vals].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
+  }, [availableSlots, students]);
 
   const rosterRows = useMemo<RosterRow[]>(
     () =>
@@ -524,6 +538,7 @@ export default function StudentRosterView() {
 
   const openAddModal = () => {
     setAddForm(EMPTY_ADD_FORM);
+    setIsCustomBatch(false);
     setIsAddOpen(true);
   };
 
@@ -554,6 +569,7 @@ export default function StudentRosterView() {
           clinicalStage: addForm.clinicalStage,
           chestNo: addForm.chestNo.trim(),
           enrollmentMode: addForm.enrollmentMode,
+          sendCredentials: addForm.sendCredentials,
         }),
       });
       const result = await response.json();
@@ -562,10 +578,12 @@ export default function StudentRosterView() {
       window.Swal?.fire({
         icon: "success",
         title: "Candidate Added!",
-        text: "The trainee record has been saved successfully in the database.",
+        text: result.emailSent
+          ? "The trainee record has been saved and credentials have been emailed to the candidate."
+          : "The trainee record has been saved successfully in the database.",
         background: "#1a1a1a",
         color: "#fff",
-        timer: 2000,
+        timer: 2500,
         showConfirmButton: false,
       });
 
@@ -1349,12 +1367,11 @@ export default function StudentRosterView() {
                 />
               </div>
               <div className="mb-3">
-                <label className="admin-form-label">Phone Number</label>
+                <label className="admin-form-label">Phone Number (Optional)</label>
                 <input
                   type="text"
                   className="admin-input"
-                  placeholder="e.g. 9876543210"
-                  required
+                  placeholder="e.g. 9876543210 (leave empty if none)"
                   value={addForm.phone}
                   onChange={(e) => setAddForm((f) => ({ ...f, phone: e.target.value }))}
                 />
@@ -1370,16 +1387,64 @@ export default function StudentRosterView() {
                   onChange={(e) => setAddForm((f) => ({ ...f, password: e.target.value }))}
                 />
               </div>
+              <div className="form-check mb-3">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="sendCredentialsRoster"
+                  checked={addForm.sendCredentials}
+                  onChange={(e) => setAddForm((f) => ({ ...f, sendCredentials: e.target.checked }))}
+                />
+                <label className="form-check-label text-white small" htmlFor="sendCredentialsRoster">
+                  Email login credentials to candidate
+                </label>
+              </div>
               <div className="row mb-3">
                 <div className="col-4">
-                  <label className="admin-form-label">Batch No.</label>
-                  <input
-                    type="text"
-                    className="admin-input"
-                    placeholder="e.g. B2405"
-                    value={addForm.batch}
-                    onChange={(e) => setAddForm((f) => ({ ...f, batch: e.target.value }))}
-                  />
+                  <div className="d-flex justify-content-between align-items-center mb-1">
+                    <label className="admin-form-label mb-0">Batch No.</label>
+                    <button
+                      type="button"
+                      className="btn btn-link p-0 text-warning"
+                      style={{ fontSize: "0.72rem", textDecoration: "none" }}
+                      onClick={() => {
+                        setIsCustomBatch(!isCustomBatch);
+                        if (!isCustomBatch) setAddForm((f) => ({ ...f, batch: "" }));
+                      }}
+                    >
+                      {isCustomBatch ? "← Pick from list" : "+ Custom"}
+                    </button>
+                  </div>
+                  {isCustomBatch ? (
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="e.g. 75-SSBijapur"
+                      value={addForm.batch}
+                      onChange={(e) => setAddForm((f) => ({ ...f, batch: e.target.value }))}
+                    />
+                  ) : (
+                    <select
+                      className="admin-input"
+                      value={addForm.batch}
+                      onChange={(e) => {
+                        if (e.target.value === "__custom__") {
+                          setIsCustomBatch(true);
+                          setAddForm((f) => ({ ...f, batch: "" }));
+                        } else {
+                          setAddForm((f) => ({ ...f, batch: e.target.value }));
+                        }
+                      }}
+                    >
+                      <option value="">Select Batch...</option>
+                      {batches.map((b) => (
+                        <option key={b} value={b}>
+                          {b.startsWith("Batch ") ? b : `Batch ${b}`}
+                        </option>
+                      ))}
+                      <option value="__custom__">+ Enter Custom Batch...</option>
+                    </select>
+                  )}
                 </div>
                 <div className="col-4">
                   <label className="admin-form-label">Chest No.</label>

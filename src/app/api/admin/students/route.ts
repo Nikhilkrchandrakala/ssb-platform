@@ -4,6 +4,7 @@ import { connectDB } from "@/server/db";
 import { getCurrentUser, hasRole } from "@/server/auth";
 import { User, Order } from "@/server/models";
 import { resolveClinicalStageFromModules } from "@/server/clinicalStageSync";
+import { sendCredentialsEmail } from "@/server/integrations/msg91";
 
 /**
  * GET /api/admin/students
@@ -130,10 +131,10 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const { name, email, phone, password, batch, clinicalStage, chestNo, enrollmentMode } = await req.json();
+    const { name, email, phone, password, batch, clinicalStage, chestNo, enrollmentMode, sendCredentials } = await req.json();
 
-    if (!name || !email || !phone || !password) {
-      return NextResponse.json({ error: "Name, email, phone, and password are required" }, { status: 400 });
+    if (!name || !email || !password) {
+      return NextResponse.json({ error: "Name, email, and password are required" }, { status: 400 });
     }
 
     if (enrollmentMode !== "online" && enrollmentMode !== "offline") {
@@ -141,9 +142,15 @@ export async function POST(req: NextRequest) {
     }
 
     const emailLower = email.toLowerCase().trim();
+    const cleanPhone = phone && typeof phone === "string" && phone.trim() ? phone.trim() : null;
+
+    const duplicateChecks: Array<Record<string, unknown>> = [{ email: emailLower }];
+    if (cleanPhone) {
+      duplicateChecks.push({ phone: cleanPhone });
+    }
 
     const existingUser = await User.findOne({
-      $or: [{ email: emailLower }, { phone: phone.trim() }],
+      $or: duplicateChecks,
     });
 
     if (existingUser) {
@@ -153,7 +160,7 @@ export async function POST(req: NextRequest) {
     const newUser = new User({
       name: name.trim(),
       email: emailLower,
-      phone: phone.trim(),
+      ...(cleanPhone ? { phone: cleanPhone } : {}),
       password,
       batch: (batch || "").trim(),
       chestNo: (chestNo || "").trim(),
@@ -165,7 +172,32 @@ export async function POST(req: NextRequest) {
 
     await newUser.save();
 
-    return NextResponse.json({ status: "ok", message: "Student created successfully in the database", student: newUser }, { status: 201 });
+    let emailSent = false;
+    if (sendCredentials !== false) {
+      try {
+        const mailRes = await sendCredentialsEmail({
+          to: emailLower,
+          name: name.trim(),
+          username: emailLower,
+          password: password,
+        });
+        emailSent = Boolean(mailRes?.delivered);
+      } catch (mailErr) {
+        console.error("Failed to send credentials email:", mailErr);
+      }
+    }
+
+    return NextResponse.json(
+      {
+        status: "ok",
+        message: emailSent
+          ? "Student created and credentials emailed successfully"
+          : "Student created successfully in the database",
+        emailSent,
+        student: newUser,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("POST /api/admin/students error:", error);
     return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to create student" }, { status: 500 });
