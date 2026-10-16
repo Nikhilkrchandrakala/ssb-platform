@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { escapeRegExp } from "@/server/escapeRegExp";
 import { connectDB } from "@/server/db";
 import { getCurrentUser, hasRole } from "@/server/auth";
-import { User, Order } from "@/server/models";
+import { User, Order, Slot } from "@/server/models";
 import { resolveClinicalStageFromModules } from "@/server/clinicalStageSync";
 import { sendCredentialsEmail } from "@/server/integrations/msg91";
 
@@ -171,6 +171,68 @@ export async function POST(req: NextRequest) {
     });
 
     await newUser.save();
+
+    // Automatically book the candidate into the slot and create a paid manual order
+    // so their dashboard (/ProfileDashboard) immediately displays the purchased batch
+    // and they appear in Admin > Assessor Allotment.
+    const cleanBatch = (batch || "").trim();
+    if (cleanBatch) {
+      try {
+        let slot = await Slot.findOne({
+          batchNo: cleanBatch,
+          ...(enrollmentMode ? { mode: enrollmentMode } : {}),
+          isCancelled: { $ne: true },
+        });
+        if (!slot) {
+          slot = await Slot.findOne({
+            batchNo: cleanBatch,
+            isCancelled: { $ne: true },
+          });
+        }
+
+        if (!slot) {
+          slot = new Slot({
+            title: `${cleanBatch} Batch`,
+            batchNo: cleanBatch,
+            startTime: new Date().toISOString(),
+            endTime: new Date(Date.now() + 86400000 * 14).toISOString(),
+            maxStudents: 50,
+            price: 0,
+            mode: enrollmentMode || "online",
+            isFullCourse: clinicalStage === "full_course",
+          });
+          await slot.save();
+        }
+
+        if (slot) {
+          if (!slot.bookedStudents.some((id: unknown) => String(id) === String(newUser._id))) {
+            slot.bookedStudents.push(newUser._id);
+            await slot.save();
+          }
+
+          const selectedMods = clinicalStage
+            ? clinicalStage.split(",").map((s: string) => s.trim()).filter(Boolean)
+            : ["full_course"];
+
+          const order = new Order({
+            userId: newUser._id,
+            buyerName: newUser.name,
+            buyerEmail: newUser.email,
+            buyerPhone: cleanPhone || null,
+            slotId: slot._id,
+            price: 0,
+            originalAmount: slot.price || 0,
+            discount: slot.price || 0,
+            status: "paid",
+            selectedModules: selectedMods,
+            bookingMethod: "manual",
+          });
+          await order.save();
+        }
+      } catch (orderErr) {
+        console.error("Failed to automatically create slot order for trainee:", orderErr);
+      }
+    }
 
     let emailSent = false;
     if (sendCredentials !== false) {
