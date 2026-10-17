@@ -14,6 +14,9 @@ const DEFAULT_PRICES: Record<string, number> = {
   full_course: 12499,
 };
 
+const OFFLINE_REGISTRATION_FEE = 5000;
+const OFFLINE_TOTAL_FEE = 21000;
+
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -21,7 +24,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   try {
     const { id } = await params;
-    const { email, selectedModules, discountType, discountValue } = await req.json();
+    const { email, selectedModules, discountType, discountValue, offlinePaymentPlan } = await req.json();
 
     if (!email) {
       return NextResponse.json({ message: "Email is required" }, { status: 400 });
@@ -83,10 +86,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const getPrice = (cid: string) => (courseMap[cid] !== undefined ? courseMap[cid] : DEFAULT_PRICES[cid]);
 
+    const isOfflineSlot = slot.mode === "offline";
     let calculatedBaseAmount = 0;
     const modules: string[] = selectedModules || [];
 
-    if (slot.isFullCourse) {
+    if (isOfflineSlot) {
+      if (offlinePaymentPlan === "full") {
+        calculatedBaseAmount = OFFLINE_TOTAL_FEE;
+      } else {
+        calculatedBaseAmount = slot.price || OFFLINE_REGISTRATION_FEE;
+      }
+    } else if (slot.isFullCourse) {
       if (modules.length === 0) {
         calculatedBaseAmount = getPrice("full_course");
       } else if (modules.includes("full_course")) {
@@ -108,7 +118,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const baseAmount = calculatedBaseAmount;
-    const originalAmount = baseAmount * 1.18;
 
     if (discountValue) {
       discount = discountType === "percent" ? (baseAmount * discountValue) / 100 : discountValue;
@@ -119,21 +128,33 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const netBaseAmount = baseAmount - discount;
-    const totalWithGst = Math.round(netBaseAmount * 1.18 * 100) / 100;
+
+    let originalAmount: number;
+    let finalPrice: number;
+
+    if (isOfflineSlot) {
+      // Offline registrations and full course fees have no GST
+      originalAmount = baseAmount;
+      finalPrice = Math.max(netBaseAmount, 0);
+    } else {
+      // Online courses have 18% GST
+      originalAmount = Math.round(baseAmount * 1.18 * 100) / 100;
+      finalPrice = Math.round(netBaseAmount * 1.18 * 100) / 100;
+    }
 
     // add user (same as payment logic)
     slot.bookedStudents.push(userId);
     await slot.save();
 
     // ALSO CREATE ORDER
-    const selectedModulesFinal = slot.isFullCourse ? (modules.length > 0 ? modules : ["full_course"]) : [];
+    const selectedModulesFinal = isOfflineSlot ? [] : (slot.isFullCourse ? (modules.length > 0 ? modules : ["full_course"]) : []);
 
     const order = new Order({
       userId,
       buyerName: targetUser.name,
       buyerEmail: targetUser.email,
       slotId: slot._id,
-      price: totalWithGst,
+      price: finalPrice,
       originalAmount,
       discount,
       referralCode: null,
@@ -153,8 +174,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       targetUser.batch = slot.batchNo.trim();
     }
 
-    const bookedModules: string[] = order.selectedModules || [];
-    targetUser.clinicalStage = resolveClinicalStageFromModules(bookedModules);
+    if (!isOfflineSlot) {
+      const bookedModules: string[] = order.selectedModules || [];
+      targetUser.clinicalStage = resolveClinicalStageFromModules(bookedModules);
+    }
 
     // Forcefully save to trigger Mongoose `updatedAt` update even if nothing
     // strictly changed, so the student jumps to the top of the Student Roster

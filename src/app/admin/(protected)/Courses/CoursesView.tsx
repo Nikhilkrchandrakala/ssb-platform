@@ -51,6 +51,7 @@ interface Slot {
 }
 
 const OFFLINE_REGISTRATION_FEE = 5000;
+const OFFLINE_TOTAL_FEE = 21000;
 
 interface Course {
   _id: string;
@@ -194,6 +195,9 @@ export default function CoursesView() {
     "flat" | "percent"
   >("flat");
   const [manualDiscountValue, setManualDiscountValue] = useState<number>(0);
+  const [manualOfflinePaymentPlan, setManualOfflinePaymentPlan] = useState<
+    "registration" | "full"
+  >("registration");
 
   // Consolidate Modal State
   const [consolidateModalOpen, setConsolidateModalOpen] = useState(false);
@@ -631,6 +635,7 @@ export default function CoursesView() {
     });
     setManualDiscountType("flat");
     setManualDiscountValue(0);
+    setManualOfflinePaymentPlan("registration");
     setBookModalOpen(true);
   };
 
@@ -657,6 +662,22 @@ export default function CoursesView() {
     if (!bookingSlot)
       return { base: 0, discount: 0, netBase: 0, gst: 0, total: 0 };
     let basePrice = 0;
+    const isOffline = bookingSlot.mode === "offline";
+
+    if (isOffline) {
+      basePrice =
+        manualOfflinePaymentPlan === "full"
+          ? OFFLINE_TOTAL_FEE
+          : (bookingSlot.price || OFFLINE_REGISTRATION_FEE);
+      const rawDiscount =
+        manualDiscountType === "percent"
+          ? (basePrice * manualDiscountValue) / 100
+          : manualDiscountValue;
+      const discount = Math.min(Math.max(rawDiscount, 0), basePrice);
+      const netBase = basePrice - discount;
+      return { base: basePrice, discount, netBase, gst: 0, total: netBase };
+    }
+
     if (bookingSlot.isFullCourse) {
       const checkedOthers = MODULES.filter((m) => manualChecks[m.id]);
       if (manualChecks.full_course) {
@@ -731,6 +752,10 @@ export default function CoursesView() {
         body: JSON.stringify({
           email: identifier,
           selectedModules,
+          offlinePaymentPlan:
+            bookingSlot?.mode === "offline"
+              ? manualOfflinePaymentPlan
+              : undefined,
           discountType:
             manualDiscountValue > 0 ? manualDiscountType : undefined,
           discountValue:
@@ -1941,6 +1966,128 @@ export default function CoursesView() {
                 </small>
               </div>
 
+              {bookingSlot?.mode === "offline" && (
+                <div
+                  className="mb-3"
+                  style={{
+                    borderLeft: "3px solid var(--primary-gold)",
+                    paddingLeft: 15,
+                    marginTop: 15,
+                  }}
+                >
+                  <label className="admin-form-label mb-2">
+                    <MapPin
+                      size={14}
+                      className="me-1"
+                      style={{ ...ICON_STYLE, color: "var(--primary-gold)" }}
+                    />{" "}
+                    Offline Payment Plan
+                  </label>
+                  <div className="d-flex flex-column gap-2">
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 10,
+                        padding: "10px 12px",
+                        borderRadius: 6,
+                        background:
+                          manualOfflinePaymentPlan === "registration"
+                            ? "rgba(218, 165, 32, 0.12)"
+                            : "rgba(255, 255, 255, 0.03)",
+                        border: `1px solid ${
+                          manualOfflinePaymentPlan === "registration"
+                            ? "var(--primary-gold)"
+                            : "rgba(255, 255, 255, 0.1)"
+                        }`,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="manualOfflinePaymentPlan"
+                        checked={manualOfflinePaymentPlan === "registration"}
+                        onChange={() => setManualOfflinePaymentPlan("registration")}
+                        style={{ marginTop: 3 }}
+                      />
+                      <div>
+                        <div
+                          style={{
+                            fontWeight: 600,
+                            color: "#fff",
+                            fontSize: "0.85rem",
+                          }}
+                        >
+                          Registration Deposit Only — ₹
+                          {(
+                            bookingSlot.price || OFFLINE_REGISTRATION_FEE
+                          ).toLocaleString("en-IN")}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "0.75rem",
+                            color: "var(--text-muted)",
+                          }}
+                        >
+                          Candidate paid deposit. Remaining ₹16,000 to be paid
+                          at campus.
+                        </div>
+                      </div>
+                    </label>
+
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 10,
+                        padding: "10px 12px",
+                        borderRadius: 6,
+                        background:
+                          manualOfflinePaymentPlan === "full"
+                            ? "rgba(46, 204, 113, 0.12)"
+                            : "rgba(255, 255, 255, 0.03)",
+                        border: `1px solid ${
+                          manualOfflinePaymentPlan === "full"
+                            ? "#2ecc71"
+                            : "rgba(255, 255, 255, 0.1)"
+                        }`,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="manualOfflinePaymentPlan"
+                        checked={manualOfflinePaymentPlan === "full"}
+                        onChange={() => setManualOfflinePaymentPlan("full")}
+                        style={{ marginTop: 3 }}
+                      />
+                      <div>
+                        <div
+                          style={{
+                            fontWeight: 600,
+                            color: "#fff",
+                            fontSize: "0.85rem",
+                          }}
+                        >
+                          Full Course Fee — ₹
+                          {OFFLINE_TOTAL_FEE.toLocaleString("en-IN")}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "0.75rem",
+                            color: "var(--text-muted)",
+                          }}
+                        >
+                          Candidate paid full ₹
+                          {OFFLINE_TOTAL_FEE.toLocaleString("en-IN")} offline fee
+                          upfront in one go (no balance).
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              )}
+
               {bookingSlot?.isFullCourse && (
                 <div
                   className="mb-3"
@@ -2061,13 +2208,23 @@ export default function CoursesView() {
                     <span>− {fmtInr(manualPricing.discount)}</span>
                   </div>
                 )}
-                <div
-                  className="d-flex justify-content-between mb-1"
-                  style={{ fontSize: "0.8rem", opacity: 0.8, color: "#fff" }}
-                >
-                  <span>GST (18%):</span>
-                  <span>{fmtInr(manualPricing.gst)}</span>
-                </div>
+                {bookingSlot?.mode === "offline" ? (
+                  <div
+                    className="d-flex justify-content-between mb-1"
+                    style={{ fontSize: "0.8rem", color: "#2ecc71" }}
+                  >
+                    <span>GST:</span>
+                    <span>Exempt / Included (₹0.00)</span>
+                  </div>
+                ) : (
+                  <div
+                    className="d-flex justify-content-between mb-1"
+                    style={{ fontSize: "0.8rem", opacity: 0.8, color: "#fff" }}
+                  >
+                    <span>GST (18%):</span>
+                    <span>{fmtInr(manualPricing.gst)}</span>
+                  </div>
+                )}
                 <div
                   className="d-flex justify-content-between pt-2 border-top"
                   style={{
