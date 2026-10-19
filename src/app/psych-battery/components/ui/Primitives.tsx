@@ -443,10 +443,17 @@ export function Avatar({
 }
 
 // ── Segmented control (role toggles, view-mode switches, etc.) ─────────────
-// The active option is a motion element carrying a shared layoutId, so
-// switching options slides the highlight pill instead of just swapping
-// colors — the little detail that makes tab switches like this feel like
-// Linear/Vercel rather than a plain button group.
+// Animation approach: each button always renders its own pill span so the DOM
+// node is persistent. The active pill is opaque (opacity 1), inactive ones are
+// fully transparent (opacity 0, pointer-events none). Framer Motion's layoutId
+// shared-layout animation then has two mounted elements to tween between, which
+// produces a smooth slide. The previous approach conditionally mounted/unmounted
+// the pill — React removed the old node and added a new one in the same render
+// cycle, so Framer Motion had no "from" position to animate from, causing the
+// snap/teleport glitch.
+//
+// isolate on the container creates a stacking context so the pill's -z-10 is
+// scoped inside the component and never bleeds behind the page background.
 export function SegmentedControl<T extends string>({
   options,
   value,
@@ -459,8 +466,10 @@ export function SegmentedControl<T extends string>({
   className?: string;
 }) {
   const layoutId = React.useId();
+  const reduceMotion = useReducedMotion();
+
   return (
-    <div className={cn("inline-flex gap-1 p-1 bg-app-card border border-app-border rounded-xl", className)}>
+    <div className={cn("isolate inline-flex gap-1 p-1 bg-app-card border border-app-border rounded-xl", className)}>
       {options.map((opt) => {
         const isActive = value === opt.value;
         return (
@@ -469,18 +478,27 @@ export function SegmentedControl<T extends string>({
             type="button"
             onClick={() => onChange(opt.value)}
             className={cn(
-              "relative px-3.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer",
+              "relative px-3.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer",
+              // Text color transitions on its own via CSS, independent of the pill animation
+              "transition-colors duration-150",
               isActive ? "text-app-on-accent" : "text-app-text-muted hover:text-app-text-bright"
             )}
           >
-            {isActive && (
-              <motion.span
-                layoutId={`segmented-${layoutId}`}
-                className="absolute inset-0 bg-app-accent rounded-lg -z-10"
-                transition={{ type: "spring", stiffness: 500, damping: 35 }}
-              />
-            )}
-            {opt.label}
+            {/* Pill is always mounted — opacity drives visibility so layoutId
+                always has a persistent node in each button to animate between */}
+            <motion.span
+              layoutId={reduceMotion ? undefined : `pill-${layoutId}`}
+              aria-hidden
+              className="absolute inset-0 bg-app-accent rounded-lg -z-10"
+              animate={{ opacity: isActive ? 1 : 0 }}
+              transition={
+                reduceMotion
+                  ? { duration: 0 }
+                  : { type: "spring", stiffness: 380, damping: 30, mass: 0.8 }
+              }
+            />
+            {/* Label sits above the pill in the stacking context */}
+            <span className="relative z-10">{opt.label}</span>
           </button>
         );
       })}
