@@ -222,20 +222,32 @@ export const OLQ_KEYS_ORDER = [
 ] as const;
 
 export function scoresToShade(scores: Record<string, number | string | undefined>): string {
+  const hasAnyOlq = OLQ_KEYS_ORDER.some((item) => {
+    const val = scores[item.id];
+    return val !== undefined && val !== null && val !== "";
+  });
+  if (!hasAnyOlq) return "";
+
   return OLQ_KEYS_ORDER.map((item) => {
     const val = scores[item.id];
     if (val !== undefined && val !== null && val !== "") {
       const num = Number(val);
       if (!isNaN(num) && num >= 1 && num <= 9) return String(num);
     }
-    return "7"; // Reasonable fallback default
+    return "";
   }).join("");
 }
 
 export function formatShade(shade: string): string {
-  const digits = shade.replace(/[^0-9]/g, "");
-  if (digits.length !== 15) return digits;
-  return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 12)} ${digits.slice(12, 15)}`;
+  const digits = String(shade || "").replace(/[^0-9]/g, "").slice(0, 15);
+  if (!digits) return "";
+
+  const part1 = digits.slice(0, 4);
+  const part2 = digits.slice(4, 7);
+  const part3 = digits.slice(7, 12);
+  const part4 = digits.slice(12, 15);
+
+  return [part1, part2, part3, part4].filter(Boolean).join(" ");
 }
 
 export function shadeToScores(shade: string, existingScores?: Record<string, number | string>): Record<string, number | string> {

@@ -174,10 +174,16 @@ export default function RapidAssessmentEngineView({
   );
 
   const handleShadeChange = (val: string) => {
-    setShadeInput(val);
-    const digits = val.replace(/[^0-9]/g, "");
-    if (digits.length === 15) {
-      syncToParentScores(digits, marksInput);
+    let digits = val.replace(/[^0-9]/g, "");
+    // If the user hit backspace on a formatting space, remove the digit before it
+    if (val.length < shadeInput.length && digits.length === cleanDigits.length) {
+      digits = digits.slice(0, -1);
+    }
+    const formatted = formatShade(digits);
+    setShadeInput(formatted);
+    const clean = formatted.replace(/[^0-9]/g, "");
+    if (clean.length === 15) {
+      syncToParentScores(clean, marksInput);
     }
   };
 
@@ -471,7 +477,8 @@ export default function RapidAssessmentEngineView({
                 value={shadeInput}
                 onChange={(e) => handleShadeChange(e.target.value)}
                 disabled={isAssessorCompleted}
-                placeholder="8787 777 88887 878"
+                placeholder="7777 777 77777 777"
+                maxLength={18}
                 className="w-full bg-black/40 border border-app-border focus:border-app-accent rounded-2xl p-3.5 text-center font-mono text-xl font-black tracking-widest text-app-text-bright focus:outline-none transition-all placeholder:text-app-text-muted/30"
               />
               <p className="text-[10px] text-app-text-muted/80 leading-relaxed">
