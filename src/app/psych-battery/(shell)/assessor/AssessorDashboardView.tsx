@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { api } from "@/app/psych-battery/lib/api";
 import { AssessmentSubmission, UserProfile } from "@/app/psych-battery/types";
 import { usePsychUser } from "@/components/psych/PsychUserProvider";
-import { Users, User as UserIcon, Bell, Check, Eye, FileCheck, GraduationCap, Clock3, CheckCircle2, ClipboardList, RotateCcw } from "lucide-react";
+import { Users, User as UserIcon, Bell, Check, Eye, FileCheck, GraduationCap, Clock3, CheckCircle2, ClipboardList, RotateCcw, X } from "lucide-react";
 import { cn } from "@/app/psych-battery/lib/utils";
 import { assessorLabel } from "@/lib/assessorLabels";
 import {
@@ -145,6 +146,25 @@ export default function AssessorDashboardView() {
     return false;
   };
 
+  const bellRef = useRef<HTMLButtonElement>(null);
+
+  // Close on outside click / touch
+  useEffect(() => {
+    if (!showNotifications) return;
+    const handler = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node;
+      if (bellRef.current?.contains(target)) return;
+      if ((target as Element).closest("[data-notif-panel]")) return;
+      setShowNotifications(false);
+    };
+    document.addEventListener("mousedown", handler);
+    document.addEventListener("touchstart", handler);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("touchstart", handler);
+    };
+  }, [showNotifications]);
+
   const unreadCount = notifications.filter((n) => !n.isRead).length;
   const completedCount = useMemo(
     () => submissions.filter((s) => isReviewCompleted(s)).length,
@@ -235,6 +255,7 @@ export default function AssessorDashboardView() {
 
             <div className="relative shrink-0">
               <IconButton
+                ref={bellRef}
                 icon={Bell}
                 active={showNotifications}
                 onClick={() => {
@@ -248,30 +269,135 @@ export default function AssessorDashboardView() {
                 }}
               />
               {unreadCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-black w-[18px] h-[18px] flex items-center justify-center rounded-full border-2 border-app-bg">
+                <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-black w-[18px] h-[18px] flex items-center justify-center rounded-full border-2 border-app-bg pointer-events-none">
                   {unreadCount}
                 </span>
               )}
+            </div>
 
-              {showNotifications && (
-                // Fix #2: notification card was w-80 (320px) absolutely anchored
-                // right-0, which clips off the left edge on phones narrower than
-                // ~380px. Clamp it to at most (100vw - 2rem) so it always fits
-                // within the viewport. On sm+ screens the w-80 cap kicks in.
-                <Card className="absolute top-full mt-2 right-0 w-[min(320px,calc(100vw-2rem))] shadow-2xl z-50 overflow-hidden py-0">
-                  <div className="p-3.5 border-b border-app-border flex justify-between items-center">
-                    <h3 className="text-[11px] font-bold uppercase tracking-widest text-app-text-bright">Notifications</h3>
+            {/* ── Notification panel ──────────────────────────────────────────
+                Two layouts driven purely by CSS — no JS measurement needed:
+
+                MOBILE  (< sm, i.e. < 640 px)
+                  A full-screen backdrop + bottom sheet that slides up from the
+                  bottom of the viewport. The sheet takes up to 70 vh so there
+                  is always space to tap the backdrop above to dismiss.
+                  Safe-area-inset-bottom padding ensures content is never hidden
+                  behind the iPhone home bar.
+
+                DESKTOP (≥ sm)
+                  A dropdown anchored to the right edge of the bell button via
+                  `absolute right-0 top-full`. The parent wrapper is
+                  `relative` and sits outside any overflow-hidden ancestor,
+                  so nothing clips the panel.
+            ─────────────────────────────────────────────────────────────── */}
+            {showNotifications && typeof document !== "undefined" && createPortal(
+              <>
+                {/* ── Mobile: full-screen backdrop + bottom sheet ── */}
+                <div className="sm:hidden fixed inset-0 z-[9998] flex flex-col justify-end">
+                  {/* Backdrop — tap to close */}
+                  <div
+                    className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                    onClick={() => setShowNotifications(false)}
+                  />
+                  {/* Sheet */}
+                  <div
+                    data-notif-panel
+                    className="relative z-10 w-full bg-app-sidebar border-t border-app-border rounded-t-3xl flex flex-col shadow-2xl"
+                    style={{ maxHeight: "70dvh" }}
+                  >
+                    {/* Drag handle hint */}
+                    <div className="flex justify-center pt-3 pb-1 shrink-0">
+                      <div className="w-10 h-1 rounded-full bg-app-border" />
+                    </div>
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-5 py-3 border-b border-app-border shrink-0">
+                      <h3 className="text-[11px] font-bold uppercase tracking-widest text-app-text-bright">Notifications</h3>
+                      <button
+                        onClick={() => setShowNotifications(false)}
+                        className="p-1.5 rounded-lg text-app-text-muted hover:text-app-text-bright hover:bg-white/5 transition-colors cursor-pointer"
+                        aria-label="Close notifications"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                    {/* List */}
+                    <div
+                      className="overflow-y-auto custom-scrollbar flex-1"
+                      style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+                    >
+                      {notifications.length === 0 ? (
+                        <div className="py-12 text-center text-app-text-muted text-sm">No notifications</div>
+                      ) : (
+                        notifications.map((n) => (
+                          <div
+                            key={n.id}
+                            className={cn(
+                              "px-5 py-4 border-b border-app-border last:border-0 hover:bg-app-card transition-colors",
+                              !n.isRead && "bg-app-accent/10"
+                            )}
+                          >
+                            <div className="flex justify-between items-start gap-3 mb-1">
+                              <h4 className={cn("text-xs font-bold leading-snug", !n.isRead ? "text-app-text-bright" : "text-app-text-muted")}>
+                                {n.title}
+                              </h4>
+                              {!n.isRead && (
+                                <button onClick={() => handleMarkAsRead(n.id)} className="shrink-0 text-app-accent hover:text-app-accent-light cursor-pointer" title="Mark as read">
+                                  <Check size={14} />
+                                </button>
+                              )}
+                            </div>
+                            <p className="text-xs text-app-text-muted leading-relaxed">{n.message}</p>
+                            <span className="text-[11px] text-app-text-muted/60 mt-2 block">{new Date(n.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </div>
-                  <div className="max-h-80 overflow-y-auto custom-scrollbar">
+                </div>
+
+                {/* ── Desktop: dropdown anchored under the bell ── */}
+                <div
+                  data-notif-panel
+                  className="hidden sm:flex fixed z-[9998] flex-col bg-app-sidebar border border-app-border rounded-2xl shadow-2xl overflow-hidden"
+                  style={{
+                    width: 320,
+                    maxHeight: "min(480px, 70dvh)",
+                    // Position is set via inline style using the bell button ref
+                    top: bellRef.current ? bellRef.current.getBoundingClientRect().bottom + 8 : 64,
+                    right: bellRef.current
+                      ? Math.max(12, window.innerWidth - bellRef.current.getBoundingClientRect().right)
+                      : 16,
+                  }}
+                >
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-app-border shrink-0">
+                    <h3 className="text-[11px] font-bold uppercase tracking-widest text-app-text-bright">Notifications</h3>
+                    <button
+                      onClick={() => setShowNotifications(false)}
+                      className="p-1 rounded-lg text-app-text-muted hover:text-app-text-bright hover:bg-white/5 transition-colors cursor-pointer"
+                      aria-label="Close notifications"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                  <div className="overflow-y-auto custom-scrollbar flex-1">
                     {notifications.length === 0 ? (
-                      <div className="p-6 text-center text-app-text-muted text-xs">No notifications</div>
+                      <div className="p-8 text-center text-app-text-muted text-xs">No notifications</div>
                     ) : (
                       notifications.map((n) => (
-                        <div key={n.id} className={cn("p-3.5 border-b border-app-border last:border-0 hover:bg-app-card transition-colors", !n.isRead && "bg-app-accent/12")}>
+                        <div
+                          key={n.id}
+                          className={cn(
+                            "px-4 py-3.5 border-b border-app-border last:border-0 hover:bg-app-card transition-colors",
+                            !n.isRead && "bg-app-accent/10"
+                          )}
+                        >
                           <div className="flex justify-between items-start gap-2 mb-1">
-                            <h4 className={cn("text-[11px] font-bold", !n.isRead ? "text-app-text-bright" : "text-app-text-muted")}>{n.title}</h4>
+                            <h4 className={cn("text-[11px] font-bold leading-snug", !n.isRead ? "text-app-text-bright" : "text-app-text-muted")}>
+                              {n.title}
+                            </h4>
                             {!n.isRead && (
-                              <button onClick={() => handleMarkAsRead(n.id)} className="text-app-accent hover:text-app-accent-light shrink-0 cursor-pointer" title="Mark as read">
+                              <button onClick={() => handleMarkAsRead(n.id)} className="shrink-0 text-app-accent hover:text-app-accent-light cursor-pointer" title="Mark as read">
                                 <Check size={13} />
                               </button>
                             )}
@@ -282,9 +408,10 @@ export default function AssessorDashboardView() {
                       ))
                     )}
                   </div>
-                </Card>
-              )}
-            </div>
+                </div>
+              </>,
+              document.body
+            )}
           </>
         }
       />

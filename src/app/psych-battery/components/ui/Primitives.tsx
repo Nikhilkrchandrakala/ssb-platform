@@ -299,21 +299,19 @@ export function Button({ variant = "secondary", size = "md", icon: Icon, classNa
   );
 }
 
-export function IconButton({
-  icon: Icon,
-  className,
-  active,
-  size = 18,
-  title,
-  ...props
-}: Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "onDrag" | "onDragStart" | "onDragEnd" | "onAnimationStart"> & {
-  icon: LucideIcon;
-  active?: boolean;
-  size?: number;
-}) {
+export const IconButton = React.forwardRef<
+  HTMLButtonElement,
+  Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "onDrag" | "onDragStart" | "onDragEnd" | "onAnimationStart"> & {
+    icon: LucideIcon;
+    active?: boolean;
+    size?: number;
+    title?: string;
+  }
+>(function IconButton({ icon: Icon, className, active, size = 18, title, ...props }, ref) {
   const reduceMotion = useReducedMotion();
   const button = (
     <motion.button
+      ref={ref}
       whileHover={!reduceMotion ? { y: -1.5 } : undefined}
       whileTap={!reduceMotion ? { scale: 0.94 } : undefined}
       transition={{ duration: 0.15, ease: "easeOut" }}
@@ -332,7 +330,7 @@ export function IconButton({
 
   if (!title) return button;
   return <Tooltip label={title}>{button}</Tooltip>;
-}
+});
 
 // ── Tooltip ──────────────────────────────────────────────────────────────
 export function Tooltip({ children, label }: { children: React.ReactElement; label: string }) {
