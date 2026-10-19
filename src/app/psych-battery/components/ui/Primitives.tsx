@@ -467,7 +467,7 @@ export function SegmentedControl<T extends string>({
   const reduceMotion = useReducedMotion();
 
   return (
-    <div className={cn("isolate inline-flex gap-1 p-1 bg-app-card border border-app-border rounded-xl", className)}>
+    <div className={cn("inline-flex gap-1 p-1 bg-app-card border border-app-border rounded-xl overflow-hidden", className)}>
       {options.map((opt) => {
         const isActive = value === opt.value;
         return (
@@ -476,27 +476,27 @@ export function SegmentedControl<T extends string>({
             type="button"
             onClick={() => onChange(opt.value)}
             className={cn(
-              "relative px-3.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer",
-              // Text color transitions on its own via CSS, independent of the pill animation
+              "relative px-3.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer select-none",
               "transition-colors duration-150",
               isActive ? "text-app-on-accent" : "text-app-text-muted hover:text-app-text-bright"
             )}
           >
-            {/* Pill is always mounted — opacity drives visibility so layoutId
-                always has a persistent node in each button to animate between */}
-            <motion.span
-              layoutId={reduceMotion ? undefined : `pill-${layoutId}`}
-              aria-hidden
-              className="absolute inset-0 bg-app-accent rounded-lg -z-10"
-              animate={{ opacity: isActive ? 1 : 0 }}
-              transition={
-                reduceMotion
-                  ? { duration: 0 }
-                  : { type: "spring", stiffness: 380, damping: 30, mass: 0.8 }
-              }
-            />
+            {isActive && (
+              <motion.span
+                layoutId={reduceMotion ? undefined : `pill-${layoutId}`}
+                initial={false}
+                aria-hidden
+                style={{ borderRadius: 8 }}
+                className="absolute inset-0 bg-app-accent shadow-sm"
+                transition={
+                  reduceMotion
+                    ? { duration: 0 }
+                    : { type: "spring", stiffness: 420, damping: 38, mass: 0.5 }
+                }
+              />
+            )}
             {/* Label sits above the pill in the stacking context */}
-            <span className="relative z-10">{opt.label}</span>
+            <span className="relative z-10 whitespace-nowrap">{opt.label}</span>
           </button>
         );
       })}

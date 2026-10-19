@@ -6,7 +6,7 @@ import Link from "next/link";
 import { api } from "@/app/psych-battery/lib/api";
 import { AssessmentSubmission, UserProfile } from "@/app/psych-battery/types";
 import { usePsychUser } from "@/components/psych/PsychUserProvider";
-import { Users, User as UserIcon, Bell, Check, Eye, FileCheck, GraduationCap, Clock3, CheckCircle2, ClipboardList, RotateCcw, X } from "lucide-react";
+import { Users, User as UserIcon, Bell, Check, Eye, FileCheck, GraduationCap, Clock3, CheckCircle2, ClipboardList, RotateCcw, X, ChevronDown, Search } from "lucide-react";
 import { cn } from "@/app/psych-battery/lib/utils";
 import { assessorLabel } from "@/lib/assessorLabels";
 import {
@@ -64,6 +64,13 @@ const STATUS_ACCENT: Record<string, { bar: string; ring: string }> = {
 };
 const DEFAULT_ACCENT = { bar: "bg-app-border", ring: "ring-app-border" };
 
+function formatBatchLabel(batch: string) {
+  const trimmed = batch.trim();
+  if (!trimmed) return "";
+  if (trimmed.toLowerCase().startsWith("batch")) return trimmed;
+  return `Batch ${trimmed}`;
+}
+
 export default function AssessorDashboardView() {
   const { user } = usePsychUser();
   const [submissions, setSubmissions] = useState<(AssessmentSubmission & { student?: UserProfile; isOffline?: boolean })[]>([]);
@@ -73,6 +80,8 @@ export default function AssessorDashboardView() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [search, setSearch] = useState("");
   const [batchFilter, setBatchFilter] = useState("");
+  const [isCustomBatch, setIsCustomBatch] = useState(false);
+  const customBatchInputRef = useRef<HTMLInputElement>(null);
   const [chestNoFilter, setChestNoFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "PENDING" | "COMPLETED">("ALL");
   // Fix #5: default to grid view — on mobile the table requires horizontal
@@ -182,19 +191,30 @@ export default function AssessorDashboardView() {
         s.student?.chestNo?.toLowerCase?.().includes(q);
       if (!matches) return false;
     }
-    if (batchFilter.trim() && !(s.student?.batch || "").toLowerCase().includes(batchFilter.trim().toLowerCase())) return false;
+    if (batchFilter.trim()) {
+      const studentBatch = (s.student?.batch || "").trim().toLowerCase();
+      const filter = batchFilter.trim().toLowerCase();
+      if (isCustomBatch) {
+        if (!studentBatch.includes(filter)) return false;
+      } else {
+        const normStudent = studentBatch.replace(/^batch\s*/, "");
+        const normFilter = filter.replace(/^batch\s*/, "");
+        if (normStudent !== normFilter && studentBatch !== filter) return false;
+      }
+    }
     if (chestNoFilter.trim() && !(s.student?.chestNo || "").toLowerCase().includes(chestNoFilter.trim().toLowerCase())) return false;
     if (statusFilter === "PENDING" && isReviewCompleted(s)) return false;
     if (statusFilter === "COMPLETED" && !isReviewCompleted(s)) return false;
     return true;
   });
-  const hasActiveFilter = Boolean(search.trim() || batchFilter.trim() || chestNoFilter.trim() || statusFilter !== "ALL");
+  const hasActiveFilter = Boolean(search.trim() || batchFilter.trim() || chestNoFilter.trim() || statusFilter !== "ALL" || isCustomBatch);
 
   const resetFilters = () => {
     setSearch("");
     setBatchFilter("");
     setChestNoFilter("");
     setStatusFilter("ALL");
+    setIsCustomBatch(false);
   };
 
   const candidateNameOptions = useMemo(
@@ -205,6 +225,11 @@ export default function AssessorDashboardView() {
     () => latestDistinctValues(submissions, (s) => s.student?.batch, (s) => s.student?.createdAt as string | undefined),
     [submissions]
   );
+  const sortedBatchOptions = useMemo(() => {
+    return [...batchOptions].sort((a, b) =>
+      b.localeCompare(a, undefined, { numeric: true, sensitivity: "base" })
+    );
+  }, [batchOptions]);
   const chestNoOptions = useMemo(
     () => latestDistinctValues(submissions, (s) => s.student?.chestNo, (s) => s.student?.createdAt as string | undefined),
     [submissions]
@@ -450,7 +475,82 @@ export default function AssessorDashboardView() {
       <Reveal delay={0.1} className="flex flex-col gap-3">
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
           <SearchCombobox placeholder="Search by name, email, or chest number" value={search} onChange={setSearch} options={candidateNameOptions} />
-          <SearchCombobox placeholder="Filter by batch no" value={batchFilter} onChange={setBatchFilter} options={batchOptions} containerClassName="sm:max-w-[200px] flex-none" />
+
+          {/* Batch Dropdown with Custom option */}
+          {!isCustomBatch ? (
+            <div className="relative sm:w-[200px] flex-none">
+              <select
+                aria-label="Filter by batch number"
+                value={batchFilter}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "__custom__") {
+                    setIsCustomBatch(true);
+                    setBatchFilter("");
+                    setTimeout(() => customBatchInputRef.current?.focus(), 50);
+                  } else {
+                    setBatchFilter(val);
+                  }
+                }}
+                className={cn(
+                  "w-full bg-app-card border border-app-border rounded-xl py-2.5 pl-3.5 pr-8 text-xs font-medium text-app-text-bright cursor-pointer",
+                  "focus:outline-none focus:border-app-accent/50 focus:ring-2 focus:ring-app-accent/15 transition-all appearance-none",
+                  batchFilter && "border-app-accent/40 text-app-accent-light font-semibold"
+                )}
+                style={{ colorScheme: "dark" }}
+              >
+                <option value="" className="bg-[#18181b] text-app-text-bright">
+                  All Batches
+                </option>
+                {sortedBatchOptions.map((b) => (
+                  <option key={b} value={b} className="bg-[#18181b] text-app-text-bright">
+                    {formatBatchLabel(b)}
+                  </option>
+                ))}
+                <option value="__custom__" className="bg-[#18181b] text-app-accent-light font-bold">
+                  + Custom Batch...
+                </option>
+              </select>
+              <ChevronDown
+                size={14}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-app-text-muted pointer-events-none"
+              />
+            </div>
+          ) : (
+            <div className="relative sm:w-[220px] flex-none">
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-muted pointer-events-none"
+              />
+              <input
+                ref={customBatchInputRef}
+                type="text"
+                autoFocus
+                placeholder="Enter custom batch..."
+                value={batchFilter}
+                onChange={(e) => setBatchFilter(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    setIsCustomBatch(false);
+                    setBatchFilter("");
+                  }
+                }}
+                className="w-full bg-app-card border border-app-accent/50 rounded-xl py-2.5 pl-8 pr-14 text-xs font-medium text-app-text-bright placeholder-app-text-muted focus:outline-none focus:ring-2 focus:ring-app-accent/20 transition-all"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCustomBatch(false);
+                  setBatchFilter("");
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded-md text-[10px] font-bold text-app-accent-light hover:text-white bg-app-accent/15 hover:bg-app-accent/25 border border-app-accent/30 transition-all cursor-pointer"
+                title="Switch back to batch dropdown"
+              >
+                List
+              </button>
+            </div>
+          )}
+
           <SearchCombobox placeholder="Filter by chest no" value={chestNoFilter} onChange={setChestNoFilter} options={chestNoOptions} containerClassName="sm:max-w-[200px] flex-none" />
         </div>
         {/* Fix #4: split into two rows on mobile so the long status labels and the
@@ -459,8 +559,8 @@ export default function AssessorDashboardView() {
             The SegmentedControl status options use abbreviated labels on mobile
             (<span className="sm:hidden">) and full labels on larger screens
             (<span className="hidden sm:inline">) to stay legible at any width. */}
-        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 sm:gap-3">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3">
+          <div className="flex items-center gap-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-app-text-muted">Status:</span>
             <SegmentedControl
               value={statusFilter}
@@ -480,6 +580,17 @@ export default function AssessorDashboardView() {
                 },
               ]}
             />
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <SegmentedControl
+              value={viewMode}
+              onChange={setViewMode}
+              options={[
+                { value: "grid", label: "Grid" },
+                { value: "list", label: "List" },
+              ]}
+            />
             {hasActiveFilter && (
               <button
                 type="button"
@@ -492,15 +603,6 @@ export default function AssessorDashboardView() {
               </button>
             )}
           </div>
-          <SegmentedControl
-            value={viewMode}
-            onChange={setViewMode}
-            options={[
-              { value: "grid", label: "Grid" },
-              { value: "list", label: "List" },
-            ]}
-            className="self-start sm:self-auto"
-          />
         </div>
       </Reveal>
 
