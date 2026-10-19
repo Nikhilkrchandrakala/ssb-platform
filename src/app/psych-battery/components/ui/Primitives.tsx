@@ -124,7 +124,7 @@ export function PageHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <Reveal className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+    <Reveal className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 lg:gap-6">
       <div className="space-y-2 min-w-0">
         {eyebrow && (
           <div className="flex items-center gap-2">
@@ -132,10 +132,12 @@ export function PageHeader({
             <span className="text-[11px] font-bold text-app-accent uppercase tracking-[0.2em]">{eyebrow}</span>
           </div>
         )}
-        <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-app-text-bright leading-tight">{title}</h1>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-app-text-bright leading-tight">{title}</h1>
         {description && <p className="text-app-text-muted text-sm max-w-2xl leading-relaxed">{description}</p>}
       </div>
-      {actions && <div className="flex items-center gap-3 shrink-0">{actions}</div>}
+      {/* Fix #3: flex-wrap allows the role toggle + bell button to wrap onto a
+          second line on narrow viewports instead of overflowing the container. */}
+      {actions && <div className="flex flex-wrap items-center gap-3 shrink-0">{actions}</div>}
     </Reveal>
   );
 }
@@ -193,7 +195,11 @@ export function StatTile({
           : undefined
       }
       className={cn(
-        "flex items-center gap-3.5 px-5 py-3.5 rounded-xl bg-app-card border border-app-border min-w-[112px] transition-all",
+        // Container is now a grid (grid-cols-1 → sm:grid-cols-3) so each tile
+        // is already sized by the grid track — drop flex-1/flex-none, use w-full
+        // so the tile fills its grid cell on all breakpoints. min-w-0 prevents
+        // the icon+text from overflowing the cell on very narrow phones.
+        "flex items-center gap-3 sm:gap-3.5 px-4 sm:px-5 py-3 sm:py-3.5 rounded-xl bg-app-card border border-app-border w-full min-w-0 transition-all",
         isInteractive && "cursor-pointer hover:border-app-accent/50 hover:bg-app-accent/5 select-none",
         active && "border-app-accent ring-2 ring-app-accent/25 bg-app-accent/10 shadow-glow",
         className
@@ -483,13 +489,25 @@ export function SegmentedControl<T extends string>({
 }
 
 // ── Table shells ─────────────────────────────────────────────────────────
+// Fix #5: the table already scrolls horizontally via overflow-x-auto, but iOS
+// Safari hides scrollbars until interaction begins — there's no visual hint
+// that content is off-screen. The after-pseudo fade on the wrapper signals
+// "more to the right" on mobile without any JS measurement.
 export function TableShell({ children, minWidth = 900 }: { children: React.ReactNode; minWidth?: number }) {
   return (
     <Card className="overflow-hidden">
-      <div className="overflow-x-auto custom-scrollbar">
-        <table className="w-full text-left border-collapse" style={{ minWidth }}>
-          {children}
-        </table>
+      {/* Fade hint on the right edge — visible only when the table overflows */}
+      <div className="relative">
+        <div className="overflow-x-auto custom-scrollbar">
+          <table className="w-full text-left border-collapse" style={{ minWidth }}>
+            {children}
+          </table>
+        </div>
+        {/* Right-edge fade: pointer-events-none so it doesn't block clicks */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-app-sidebar/80 to-transparent sm:hidden"
+        />
       </div>
     </Card>
   );

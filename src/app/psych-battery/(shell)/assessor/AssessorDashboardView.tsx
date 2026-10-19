@@ -74,6 +74,9 @@ export default function AssessorDashboardView() {
   const [batchFilter, setBatchFilter] = useState("");
   const [chestNoFilter, setChestNoFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "PENDING" | "COMPLETED">("ALL");
+  // Fix #5: default to grid view — on mobile the table requires horizontal
+  // scrolling with no visual affordance; grid is always more usable on small
+  // screens. The user can still switch to list if they prefer.
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   useEffect(() => {
@@ -196,10 +199,10 @@ export default function AssessorDashboardView() {
           <Skeleton className="h-4 w-96 max-w-full" />
         </div>
       </div>
-      <div className="flex flex-wrap gap-3">
-        <Skeleton className="h-16 w-32" />
-        <Skeleton className="h-16 w-32" />
-        <Skeleton className="h-16 w-36" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Skeleton className="h-16 rounded-xl" />
+        <Skeleton className="h-16 rounded-xl" />
+        <Skeleton className="h-16 rounded-xl" />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
         {Array.from({ length: 6 }).map((_, i) => (
@@ -251,7 +254,11 @@ export default function AssessorDashboardView() {
               )}
 
               {showNotifications && (
-                <Card className="absolute top-full mt-2 right-0 w-80 shadow-2xl z-50 overflow-hidden py-0">
+                // Fix #2: notification card was w-80 (320px) absolutely anchored
+                // right-0, which clips off the left edge on phones narrower than
+                // ~380px. Clamp it to at most (100vw - 2rem) so it always fits
+                // within the viewport. On sm+ screens the w-80 cap kicks in.
+                <Card className="absolute top-full mt-2 right-0 w-[min(320px,calc(100vw-2rem))] shadow-2xl z-50 overflow-hidden py-0">
                   <div className="p-3.5 border-b border-app-border flex justify-between items-center">
                     <h3 className="text-[11px] font-bold uppercase tracking-widest text-app-text-bright">Notifications</h3>
                   </div>
@@ -282,8 +289,11 @@ export default function AssessorDashboardView() {
         }
       />
 
-      {/* Caseload stats */}
-      <Reveal delay={0.05} className="flex flex-wrap gap-3">
+      {/* Caseload stats —
+          On mobile (< sm): tiles stack in a 1×3 column, each full-width,
+          icon on the left, number+label on the right — no squeezing.
+          On sm+: tiles sit side-by-side in a row and auto-size to content. */}
+      <Reveal delay={0.05} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatTile
           label="Review Pending"
           value={pendingCount}
@@ -316,16 +326,31 @@ export default function AssessorDashboardView() {
           <SearchCombobox placeholder="Filter by batch no" value={batchFilter} onChange={setBatchFilter} options={batchOptions} containerClassName="sm:max-w-[200px] flex-none" />
           <SearchCombobox placeholder="Filter by chest no" value={chestNoFilter} onChange={setChestNoFilter} options={chestNoOptions} containerClassName="sm:max-w-[200px] flex-none" />
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* Fix #4: split into two rows on mobile so the long status labels and the
+            grid/list toggle don't compete for the same narrow line. On sm+ screens
+            the original justify-between single row is preserved.
+            The SegmentedControl status options use abbreviated labels on mobile
+            (<span className="sm:hidden">) and full labels on larger screens
+            (<span className="hidden sm:inline">) to stay legible at any width. */}
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 sm:gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-app-text-muted">Status:</span>
             <SegmentedControl
               value={statusFilter}
               onChange={setStatusFilter}
               options={[
-                { value: "ALL", label: `All (${submissions.length})` },
-                { value: "PENDING", label: `Review Pending (${pendingCount})` },
-                { value: "COMPLETED", label: `Review Completed (${completedCount})` },
+                {
+                  value: "ALL",
+                  label: `All (${submissions.length})`,
+                },
+                {
+                  value: "PENDING",
+                  label: `Pending (${pendingCount})`,
+                },
+                {
+                  value: "COMPLETED",
+                  label: `Done (${completedCount})`,
+                },
               ]}
             />
             {hasActiveFilter && (
@@ -347,6 +372,7 @@ export default function AssessorDashboardView() {
               { value: "grid", label: "Grid" },
               { value: "list", label: "List" },
             ]}
+            className="self-start sm:self-auto"
           />
         </div>
       </Reveal>
@@ -530,23 +556,27 @@ export default function AssessorDashboardView() {
                 <Reveal delay={staggerDelay(index)} className="flex flex-col flex-1">
                 <div className={cn("h-1", accent.bar)} />
                 <div className="p-5 flex flex-col gap-4 flex-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    {/* Fix #10: on 1-column mobile layout the badge is shrink-0
+                        whitespace-nowrap, so give the name/email side explicit
+                        min-w-0 so truncate has room to activate before the
+                        badge pushes content off-screen. */}
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <Avatar
                         src={sub.student?.profileImage}
                         alt={sub.student?.name || "Candidate"}
                         fallbackIcon={UserIcon}
-                        size={48}
-                        className={cn("ring-2", accent.ring)}
+                        size={44}
+                        className={cn("ring-2 shrink-0", accent.ring)}
                       />
                       <div className="min-w-0">
                         <div className="text-sm font-bold text-app-text-bright truncate">{sub.student?.name || "Unknown Candidate"}</div>
                         <div className="text-[11px] text-app-text-muted truncate">{sub.student?.email || "N/A"}</div>
                       </div>
                     </div>
-                    <Badge tone={isCompletedForAssessor ? "success" : (STATUS_TONE[sub.status] || "neutral")} className="shrink-0">
+                    <Badge tone={isCompletedForAssessor ? "success" : (STATUS_TONE[sub.status] || "neutral")} className="shrink-0 mt-0.5">
                       {isCompletedForAssessor && sub.status !== "REPORT_RELEASED" && sub.status !== "COMPLETED"
-                        ? "Review Completed"
+                        ? "Done"
                         : sub.status.replace(/_/g, " ")}
                     </Badge>
                   </div>

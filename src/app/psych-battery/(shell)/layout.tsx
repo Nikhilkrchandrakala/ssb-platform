@@ -95,7 +95,13 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen app-mesh-bg text-app-text-main relative font-sans">
       <AmbientBackground />
 
-      <div className="relative z-10 flex h-screen h-[100dvh] pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] p-3 sm:p-4 gap-3 sm:gap-4 overflow-hidden">
+      {/* Fix #1: removed overflow-hidden from the outer shell — it was clipping
+          content when the iOS Safari URL bar animated in/out on 100dvh.
+          Scroll containment is handled exclusively by the <main> overflow-y-auto
+          below. min-h-0 on the inner flex column ensures proper shrink behaviour.
+          Increased base padding from p-3 → p-4 for better breathing room on
+          small-phone form factors (SE/mini). */}
+      <div className="relative z-10 flex h-[100dvh] pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] p-4 sm:p-4 gap-3 sm:gap-4">
       {/* Sidebar - Desktop */}
       <aside
         className={cn(
@@ -179,54 +185,79 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <div className="flex-grow flex flex-col min-w-0 relative gap-3 sm:gap-4 overflow-hidden">
-        {/* Header */}
-        <header className="h-16 shrink-0 glass-card shadow-glow rounded-2xl flex items-center justify-between px-6 sm:px-8 z-40">
-          <div className="flex items-center gap-4">
-            {/* Mobile Menu Toggle */}
-            <button className="md:hidden p-2 text-app-text-muted hover:bg-white/5 rounded-lg cursor-pointer" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              <Menu size={22} />
-            </button>
-            {/* Desktop Sidebar Toggle */}
+      {/* Main Content Area — min-h-0 is required for the nested overflow-y-auto
+          <main> to shrink within this flex column; without it the column refuses
+          to shrink below its content height and the inner scroll never activates. */}
+      <div className="flex-grow flex flex-col min-w-0 min-h-0 relative gap-3 sm:gap-4">
+        {/* Header
+            Layout contract on mobile:
+            - Left side: hamburger (fixed 36px) + breadcrumb (flex-1, truncates)
+            - Right side: avatar pill (shrink-0, fixed max-width)
+            Both sides are capped so they never push each other off-screen.
+            On desktop the sidebar-collapse button replaces the hamburger. */}
+        <header className="h-14 sm:h-16 shrink-0 glass-card shadow-glow rounded-2xl flex items-center justify-between gap-2 px-3 sm:px-5 md:px-6 z-40">
+          {/* ── Left: toggle + breadcrumb ── */}
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            {/* Mobile hamburger */}
             <button
-              className="hidden md:block p-2 text-app-text-muted hover:bg-white/5 hover:text-app-text-bright rounded-lg transition-colors cursor-pointer"
+              className="md:hidden shrink-0 p-2 text-app-text-muted hover:bg-white/5 rounded-lg cursor-pointer"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="Open navigation menu"
+            >
+              <Menu size={20} />
+            </button>
+            {/* Desktop sidebar-collapse toggle */}
+            <button
+              className="hidden md:flex shrink-0 p-2 text-app-text-muted hover:bg-white/5 hover:text-app-text-bright rounded-lg transition-colors cursor-pointer"
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
               title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
             >
-              {isSidebarCollapsed ? <PanelLeft size={19} /> : <PanelLeftClose size={19} />}
+              {isSidebarCollapsed ? <PanelLeft size={18} /> : <PanelLeftClose size={18} />}
             </button>
-            <h1 className="text-xs font-bold text-app-text-bright flex items-center gap-1.5 uppercase tracking-[0.14em]">
-              <span className="text-app-text-muted font-medium">Section /</span> {activeItem?.label || "Overview"}
+
+            {/* Breadcrumb — min-w-0 + truncate so it yields space to the pill */}
+            <h1 className="min-w-0 flex items-center gap-1 text-[11px] sm:text-xs font-bold text-app-text-bright uppercase tracking-[0.12em] truncate">
+              <span className="text-app-text-muted font-medium shrink-0">Section&nbsp;/</span>
+              <span className="truncate">{activeItem?.label || "Overview"}</span>
             </h1>
           </div>
 
-          <div className="flex items-center gap-4 text-xs font-bold text-app-text-muted">
+          {/* ── Right: user identity pill ── shrink-0 so it never collapses */}
+          <div className="shrink-0">
             {isStaff ? (
-              <div className="flex items-center gap-3 py-1.5 pl-3 pr-1.5 bg-app-card rounded-full border border-app-border">
-                <div className="text-right">
-                  <div className="text-xs font-bold text-app-text-bright leading-tight">{user?.name}</div>
-                  <div className="text-[9px] text-app-accent font-bold uppercase tracking-widest leading-none mt-1">
+              /* Staff pill: avatar + name/role text.
+                 On xs phones (< sm) we hide the text and show only the avatar
+                 so the header never gets squashed — the name is visible in the
+                 mobile drawer anyway. */
+              <div className="flex items-center gap-2 py-1 pl-1 pr-1 sm:pl-2.5 sm:pr-1.5 bg-app-card rounded-full border border-app-border">
+                {/* Name + role — hidden on xs, visible sm+ */}
+                <div className="hidden sm:block text-right min-w-0 max-w-[130px] md:max-w-[180px] overflow-hidden">
+                  <div className="text-xs font-bold text-app-text-bright leading-tight truncate">{user?.name}</div>
+                  <div className="text-[9px] text-app-accent font-bold uppercase tracking-widest leading-none mt-0.5 truncate">
                     {user?.assessorType ? `${user.assessorType} Assessor` : user?.role === "owner" ? "OWNER" : user?.role === "admin" ? "SUPER ADMIN" : "Assessor"}
                   </div>
                 </div>
                 <div className="w-8 h-8 rounded-full bg-app-sidebar border border-app-border flex items-center justify-center overflow-hidden shrink-0">
                   {user?.profileImage ? (
-                    <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover" />
+                    <img src={user.profileImage} alt={user?.name ?? "User"} className="w-full h-full object-cover" />
                   ) : (
                     <User size={16} className="text-app-text-muted" />
                   )}
                 </div>
               </div>
             ) : (
-              <span className="hidden sm:inline bg-app-card px-3 py-1 rounded-full border border-app-border shadow-inner">SESSION: 2026 Q2</span>
+              <span className="hidden sm:inline bg-app-card px-3 py-1 rounded-full border border-app-border shadow-inner text-xs font-bold text-app-text-muted">
+                SESSION: 2026 Q2
+              </span>
             )}
           </div>
         </header>
 
-        {/* Scrollable Content */}
-        <main className="flex-grow overflow-y-auto">
-          <div className="max-w-7xl mx-auto p-4 sm:p-6 h-full">{children}</div>
+        {/* Scrollable Content — flex-grow + min-h-0 required together so the
+            browser correctly resolves the available height within the parent
+            flex column before allowing overflow-y-auto to activate. */}
+        <main className="flex-grow min-h-0 overflow-y-auto custom-scrollbar">
+          <div className="max-w-7xl mx-auto p-4 sm:p-6">{children}</div>
         </main>
       </div>
       </div>
@@ -235,7 +266,9 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
       {isMenuOpen && (
         <div className="fixed inset-0 z-[100] md:hidden">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsMenuOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 w-72 bg-app-sidebar pt-[max(1.5rem,calc(env(safe-area-inset-top)+1rem))] pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] px-6 flex flex-col animate-in slide-in-from-left duration-300">
+          {/* Fix #6: max-w-[85vw] caps the drawer on 320px devices so the
+              backdrop close-tap area is never smaller than ~15vw. */}
+          <aside className="absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-app-sidebar pt-[max(1.5rem,calc(env(safe-area-inset-top)+1rem))] pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] px-6 flex flex-col animate-in slide-in-from-left duration-300">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-2">
                 <img src="/assets/logo/ISV2.png" alt="Logo" className="w-8 h-8 object-contain rounded-full" />

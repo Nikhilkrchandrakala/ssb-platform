@@ -109,7 +109,18 @@
       radial-gradient(ellipse 900px 650px at 12% -8%, rgba(197, 160, 40, 0.16), transparent 60%),
       radial-gradient(ellipse 750px 750px at 108% 8%, rgba(140, 106, 15, 0.14), transparent 62%),
       radial-gradient(ellipse 650px 550px at 45% 115%, rgba(197, 160, 40, 0.08), transparent 60%);
-    background-attachment: fixed;
+    /* Fix #9: background-attachment: fixed is broken on iOS Safari and Android
+       Chrome — it causes the background to not render (or flicker) inside
+       composited/overflow layers. Since the mesh is purely decorative, scroll
+       is the safe cross-platform default. Fixed is re-applied only for
+       pointer devices (typically desktop) where it works correctly. */
+    background-attachment: scroll;
+  }
+
+  @media (pointer: fine) {
+    .app-mesh-bg {
+      background-attachment: fixed;
+    }
   }
 
   /* Fractal-noise grain overlay, very low opacity, screen-blended so it adds
