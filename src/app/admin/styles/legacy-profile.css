@@ -9,8 +9,17 @@
 
 .profile-container {
   max-width: 1040px;
+  /* Issue 3: reduce top margin on mobile so content isn't pushed too far down */
   margin: 36px auto;
   padding: 0 24px;
+}
+
+/* ── Mobile: tighten container padding so banner/cards have more room ── */
+@media (max-width: 768px) {
+  .profile-container {
+    margin: 20px auto;
+    padding: 0 12px;
+  }
 }
 
 .profile-grid {
@@ -37,12 +46,19 @@
   box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6), 0 0 22px rgba(224, 194, 20, 0.12);
 }
 
+/* Issue 2: shrink the banner on phones so the avatar overlap still works */
 .profile-banner {
   height: 170px;
   background: linear-gradient(135deg, #070707 0%, #181818 45%, #2a2504 100%);
   position: relative;
   overflow: hidden;
   border-bottom: 1px solid rgba(224, 194, 20, 0.18);
+}
+
+@media (max-width: 480px) {
+  .profile-banner {
+    height: 120px;
+  }
 }
 
 .profile-banner::after {
@@ -55,6 +71,9 @@
   background: radial-gradient(circle at 75% 30%, rgba(224, 194, 20, 0.12) 0%, transparent 65%);
 }
 
+/* Issues 1 & 4: the 36px horizontal padding + 120px avatar leaves only ~111px
+   for the name on a 375px phone. Scale padding down on mobile and allow the
+   avatar to shrink slightly so the text area has at least 160px to work with. */
 .profile-header-content {
   display: flex;
   align-items: flex-end;
@@ -65,11 +84,32 @@
   z-index: 10;
 }
 
+@media (max-width: 600px) {
+  .profile-header-content {
+    padding: 0 16px 20px 16px;
+    gap: 16px;
+    margin-top: -48px;
+    align-items: flex-end;
+  }
+}
+
+@media (max-width: 400px) {
+  .profile-header-content {
+    padding: 0 12px 16px 12px;
+    gap: 12px;
+    /* Stack avatar above text on very small phones */
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: -36px;
+  }
+}
+
 .profile-avatar-container {
   position: relative;
   flex-shrink: 0;
 }
 
+/* Issue 1: scale the avatar down on small phones to free up text space */
 .profile-avatar-wrapper {
   width: 120px;
   height: 120px;
@@ -81,6 +121,21 @@
   background: #222;
 }
 
+@media (max-width: 600px) {
+  .profile-avatar-wrapper {
+    width: 90px;
+    height: 90px;
+    border-width: 3px;
+  }
+}
+
+@media (max-width: 400px) {
+  .profile-avatar-wrapper {
+    width: 80px;
+    height: 80px;
+  }
+}
+
 .profile-avatar-img {
   width: 100%;
   height: 100%;
@@ -88,7 +143,17 @@
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Issue 9: touch devices have no :hover — always show a subtle camera hint
+   via :focus-within and :active so users can discover the upload tap target.
+   The overlay stays dimmed by default (opacity: 0.25 instead of 0) on touch
+   so there's a visual affordance without obscuring the photo. */
 .profile-avatar-overlay {
+  /* Reset button defaults — this element is now a <button> for accessibility */
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+  outline: none;
+  width: 100%;
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.75);
@@ -105,10 +170,29 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  /* Ensure it's always tappable even when invisible */
+  -webkit-tap-highlight-color: rgba(224, 194, 20, 0.2);
+  border-radius: 50%;
 }
 
-.profile-avatar-wrapper:hover .profile-avatar-overlay {
+.profile-avatar-wrapper:hover .profile-avatar-overlay,
+.profile-avatar-overlay:focus-visible,
+.profile-avatar-wrapper:active .profile-avatar-overlay {
   opacity: 1;
+}
+
+/* On coarse-pointer (touch) devices, show a permanent camera icon hint
+   at low opacity so users know this area is tappable */
+@media (pointer: coarse) {
+  .profile-avatar-overlay {
+    opacity: 0.55;
+    background: rgba(0, 0, 0, 0.45);
+  }
+  .profile-avatar-wrapper:active .profile-avatar-overlay,
+  .profile-avatar-overlay:active {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.75);
+  }
 }
 
 .profile-avatar-wrapper:hover .profile-avatar-img {
@@ -126,6 +210,17 @@
   border: 3px solid #141414;
   box-shadow: 0 0 10px rgba(46, 213, 115, 0.7);
   animation: pulseActive 2s infinite;
+}
+
+/* Scale the status dot proportionally with the smaller avatar */
+@media (max-width: 600px) {
+  .profile-status-badge {
+    width: 14px;
+    height: 14px;
+    bottom: 4px;
+    right: 4px;
+    border-width: 2px;
+  }
 }
 
 @keyframes pulseActive {
@@ -147,6 +242,7 @@
   margin-bottom: 4px;
 }
 
+/* Issue 1: scale down the display name on mobile so it wraps cleanly */
 .profile-display-name {
   font-size: 1.35rem;
   font-weight: 700;
@@ -154,6 +250,21 @@
   margin: 0;
   letter-spacing: -0.2px;
   line-height: 1.2;
+  /* Allow long names to wrap rather than overflow */
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+@media (max-width: 600px) {
+  .profile-display-name {
+    font-size: 1.15rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .profile-display-name {
+    font-size: 1.05rem;
+  }
 }
 
 .profile-verified-icon {
@@ -221,6 +332,14 @@
   transition: all 0.25s ease;
 }
 
+/* Issue 7: reduce card inner padding on phones so form inputs have more room */
+@media (max-width: 600px) {
+  .admin-card.profile-details-card,
+  .admin-card.profile-security-card {
+    padding: 18px 14px;
+  }
+}
+
 .admin-card.profile-details-card:hover,
 .admin-card.profile-security-card:hover {
   border-color: rgba(224, 194, 20, 0.25);
@@ -278,14 +397,54 @@
   border-radius: 10px;
 }
 
+/* Issue 8: security icon is 48px (Lucide size prop) — shrink on mobile so
+   the text beside it isn't squeezed to nothing on narrow cards */
 .security-big-icon {
   font-size: 2rem;
   color: var(--primary-gold, #e0c214);
   filter: drop-shadow(0 0 8px rgba(224, 194, 20, 0.3));
+  flex-shrink: 0;
 }
 
+@media (max-width: 600px) {
+  .security-status-box {
+    gap: 12px;
+    padding: 14px 12px;
+  }
+  /* The Lucide icon size is set via the `size` prop in JSX (48px),
+     but we can constrain the rendered SVG via CSS */
+  .security-status-box svg {
+    width: 32px !important;
+    height: 32px !important;
+    flex-shrink: 0;
+  }
+}
+
+/* Issue 2: single-column grid already handled at 992px.
+   On very small phones (< 480px), also tighten the banner height
+   so the avatar overlap ratio stays visually proportional. */
 @media (max-width: 992px) {
   .profile-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Ensure the profile-role-sub row wraps cleanly on narrow phones */
+@media (max-width: 480px) {
+  .profile-role-sub {
+    font-size: 0.78rem;
+    gap: 6px;
+  }
+  .profile-name-row {
+    gap: 8px;
+  }
+  /* profile-banner height already reduced via banner rule above */
+}
+
+/* Ensure inputs never clip their placeholder text on tiny screens */
+@media (max-width: 360px) {
+  .profile-form .admin-input {
+    padding: 10px 12px;
+    font-size: 16px; /* prevents iOS auto-zoom */
   }
 }

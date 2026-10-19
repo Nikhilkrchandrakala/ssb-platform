@@ -28,12 +28,16 @@
     width: calc(100% - 78px);
 }
 
+/* Issue 10: main content column needs bottom safe-area padding so content
+   on Face ID iPhones (home-indicator devices) is never obscured by the
+   gesture area at the bottom of the screen. */
 .admin-shell-content {
     flex: 1;
     min-height: calc(100vh - 72px);
     min-height: calc(100dvh - 72px);
     position: relative;
     z-index: 1;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* --------------------------------------------------------------------------
@@ -546,10 +550,16 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
 }
 
+/* Issue 5: enforce a width contract on the header so neither side can push
+   the other off screen. Left side gets flex:1 + min-width:0 + overflow so
+   long names truncate. Right side stays shrink-0. */
 .admin-header-left {
     display: flex;
     align-items: center;
     gap: 16px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .admin-sidebar-toggle-btn {
@@ -576,6 +586,9 @@
     box-shadow: 0 4px 15px rgba(224, 194, 20, 0.25);
 }
 
+/* Issue 5: header title must truncate rather than push the bell off screen.
+   flex:1 + min-width:0 makes it yield space; overflow:hidden + text-overflow
+   on the inner span clips the name cleanly. */
 .admin-header-title {
     font-weight: 700;
     font-size: 1.08rem;
@@ -584,6 +597,19 @@
     align-items: center;
     gap: 12px;
     margin: 0;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* The "Welcome, Name" text node itself needs a wrapper that can truncate —
+   handled in AdminShell JSX via the .admin-header-title-text class below */
+.admin-header-title-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
 }
 
 .admin-header-badge {
@@ -599,10 +625,13 @@
     box-shadow: 0 0 10px rgba(224, 194, 20, 0.15);
 }
 
+/* Issue 5: right side must never shrink — the bell button must always be
+   reachable regardless of how long the left-side title is */
 .admin-header-right {
     display: flex;
     align-items: center;
     gap: 16px;
+    flex-shrink: 0;
 }
 
 /* Notification Bell Dropdown */
@@ -788,11 +817,26 @@
         display: none;
     }
 
+    /* Issue 6: anchor dropdown to fixed viewport coordinates so it's always
+       fully visible. Cap max-height to the remaining viewport below the header
+       minus the bottom safe-area inset so it never runs under the home bar. */
     .dropdown-menu {
         position: fixed !important;
         top: calc(68px + env(safe-area-inset-top, 0px)) !important;
         left: max(16px, env(safe-area-inset-left, 16px)) !important;
         right: max(16px, env(safe-area-inset-right, 16px)) !important;
-        width: calc(100% - 32px) !important;
+        width: auto !important;
+        /* Clamp height: full viewport minus header, gutters, and home-bar */
+        max-height: calc(
+            100dvh
+            - 68px
+            - env(safe-area-inset-top, 0px)
+            - env(safe-area-inset-bottom, 0px)
+            - 24px
+        ) !important;
+        overflow-y: auto !important;
+        /* Round the top corners to echo the banner shape; bottom corners stay
+           sharp so the sheet reads as emerging from the header zone */
+        border-radius: 0 0 12px 12px !important;
     }
 }

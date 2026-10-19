@@ -484,8 +484,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               {mobileOpen ? <X size={18} /> : isCollapsed ? <Indent size={18} /> : <Outdent size={18} />}
             </button>
             <div className="admin-header-title">
-              <span>Welcome, {displayName}</span>
-              <span className="admin-header-badge" style={{ borderColor: roleLabel.color, color: roleLabel.color }}>
+              <span className="admin-header-title-text">Welcome, {displayName}</span>
+              <span className="admin-header-badge" style={{ borderColor: roleLabel.color, color: roleLabel.color, flexShrink: 0 }}>
                 {roleLabel.text}
               </span>
             </div>

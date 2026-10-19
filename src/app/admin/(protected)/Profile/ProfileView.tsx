@@ -143,10 +143,19 @@ export default function ProfileView() {
                   (e.target as HTMLImageElement).src = "https://via.placeholder.com/120";
                 }}
               />
-              <div className="profile-avatar-overlay" onClick={() => avatarFileInputRef.current?.click()}>
+              {/* Issue 9: render as a <button> instead of a plain <div> so it
+                  gets a native tap target on mobile. The CSS shows the overlay
+                  at half-opacity on touch devices (pointer:coarse) so users
+                  always see the camera icon rather than needing a hover. */}
+              <button
+                type="button"
+                className="profile-avatar-overlay"
+                onClick={() => avatarFileInputRef.current?.click()}
+                aria-label="Upload profile picture"
+              >
                 <Camera size={18} className="mb-1" />
-                <span>Upload Image</span>
-              </div>
+                <span>Upload</span>
+              </button>
             </div>
             <div className="profile-status-badge" title="Active Staff Online"></div>
             <input
