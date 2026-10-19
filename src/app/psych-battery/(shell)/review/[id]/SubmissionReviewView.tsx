@@ -17,6 +17,7 @@ import { AssessmentMiniViewer } from "./AssessmentMiniViewer";
 import RapidAssessmentEngineView from "./RapidAssessmentEngineView";
 import { Reveal, Skeleton, Button } from "@/app/psych-battery/components/ui/Primitives";
 import { assessorLabel } from "@/lib/assessorLabels";
+import { safeBack } from "@/lib/safeBack";
 
 // Ported from psych_battery/src/pages/SubmissionReview.tsx.
 //
@@ -852,8 +853,9 @@ export default function SubmissionReviewView({ submissionId }: SubmissionReviewV
       <Reveal className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-4">
           <button
-            onClick={() => router.push("/psych-battery/assessor")}
-            className="text-[10px] font-black text-app-text-muted hover:text-app-text-bright flex items-center gap-2 transition-colors uppercase tracking-[0.2em]"
+            type="button"
+            onClick={() => safeBack(router, "/psych-battery/assessor")}
+            className="text-[10px] font-black text-app-text-muted hover:text-app-text-bright flex items-center gap-2 transition-colors uppercase tracking-[0.2em] cursor-pointer"
           >
             <ArrowLeft size={14} /> Back to Candidates
           </button>

@@ -64,6 +64,8 @@ const STATUS_ACCENT: Record<string, { bar: string; ring: string }> = {
 };
 const DEFAULT_ACCENT = { bar: "bg-app-border", ring: "ring-app-border" };
 
+const FILTERS_STORAGE_KEY = "ssb_assessor_dashboard_filters";
+
 function formatBatchLabel(batch: string) {
   const trimmed = batch.trim();
   if (!trimmed) return "";
@@ -89,6 +91,8 @@ export default function AssessorDashboardView() {
   // screens. The user can still switch to list if they prefer.
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
+  const [isHydrated, setIsHydrated] = useState(false);
+
   useEffect(() => {
     if (user?.assessorType) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -97,6 +101,113 @@ export default function AssessorDashboardView() {
   }, [user]);
 
   const showRoleToggle = !user?.assessorType;
+
+  // Restore saved filters from URL query parameters (primary) or sessionStorage (fallback) on mount
+  useEffect(() => {
+    try {
+      let restoredSearch = "";
+      let restoredBatch = "";
+      let restoredIsCustom = false;
+      let restoredChest = "";
+      let restoredStatus: "ALL" | "PENDING" | "COMPLETED" = "ALL";
+      let restoredView: "grid" | "list" = "grid";
+      let restoredRole: "Psych" | "GTO" | "IO" | "TO" | null = null;
+      let hasUrlFilters = false;
+
+      // 1. Check URL query parameters
+      if (typeof window !== "undefined" && window.location.search) {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has("search")) {
+          restoredSearch = params.get("search") || "";
+          hasUrlFilters = true;
+        }
+        if (params.has("batch")) {
+          restoredBatch = params.get("batch") || "";
+          hasUrlFilters = true;
+        }
+        if (params.get("customBatch") === "1") {
+          restoredIsCustom = true;
+          hasUrlFilters = true;
+        }
+        if (params.has("chest")) {
+          restoredChest = params.get("chest") || "";
+          hasUrlFilters = true;
+        }
+        const s = params.get("status");
+        if (s === "ALL" || s === "PENDING" || s === "COMPLETED") {
+          restoredStatus = s;
+          hasUrlFilters = true;
+        }
+        const v = params.get("view");
+        if (v === "grid" || v === "list") {
+          restoredView = v;
+          hasUrlFilters = true;
+        }
+      }
+
+      // 2. Fall back to sessionStorage if URL has no filter params
+      if (!hasUrlFilters) {
+        const saved = sessionStorage.getItem(FILTERS_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (typeof parsed.search === "string") restoredSearch = parsed.search;
+          if (typeof parsed.batchFilter === "string") restoredBatch = parsed.batchFilter;
+          if (typeof parsed.isCustomBatch === "boolean") restoredIsCustom = parsed.isCustomBatch;
+          if (typeof parsed.chestNoFilter === "string") restoredChest = parsed.chestNoFilter;
+          if (parsed.statusFilter === "ALL" || parsed.statusFilter === "PENDING" || parsed.statusFilter === "COMPLETED") {
+            restoredStatus = parsed.statusFilter;
+          }
+          if (parsed.viewMode === "grid" || parsed.viewMode === "list") {
+            restoredView = parsed.viewMode;
+          }
+          if (showRoleToggle && (parsed.activeAssessorType === "Psych" || parsed.activeAssessorType === "GTO" || parsed.activeAssessorType === "IO" || parsed.activeAssessorType === "TO")) {
+            restoredRole = parsed.activeAssessorType;
+          }
+        }
+      }
+
+      if (restoredSearch) setSearch(restoredSearch);
+      if (restoredBatch) setBatchFilter(restoredBatch);
+      if (restoredIsCustom) setIsCustomBatch(restoredIsCustom);
+      if (restoredChest) setChestNoFilter(restoredChest);
+      if (restoredStatus !== "ALL") setStatusFilter(restoredStatus);
+      if (restoredView !== "grid") setViewMode(restoredView);
+      if (restoredRole) setActiveAssessorType(restoredRole);
+    } catch {}
+
+    // Mark hydration complete so subsequent state renders can safely persist
+    setIsHydrated(true);
+  }, [showRoleToggle]);
+
+  // Persist filter changes into sessionStorage and URL query parameters once hydrated
+  useEffect(() => {
+    if (!isHydrated) return;
+    try {
+      const stateToSave = {
+        search,
+        batchFilter,
+        isCustomBatch,
+        chestNoFilter,
+        statusFilter,
+        viewMode,
+        activeAssessorType,
+      };
+      sessionStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(stateToSave));
+
+      // Synchronize to URL search parameters with replaceState (no router refresh or flicker)
+      const params = new URLSearchParams();
+      if (search.trim()) params.set("search", search.trim());
+      if (batchFilter.trim()) params.set("batch", batchFilter.trim());
+      if (isCustomBatch) params.set("customBatch", "1");
+      if (chestNoFilter.trim()) params.set("chest", chestNoFilter.trim());
+      if (statusFilter !== "ALL") params.set("status", statusFilter);
+      if (viewMode !== "grid") params.set("view", viewMode);
+
+      const qs = params.toString();
+      const targetUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+      window.history.replaceState(null, "", targetUrl);
+    } catch {}
+  }, [isHydrated, search, batchFilter, isCustomBatch, chestNoFilter, statusFilter, viewMode, activeAssessorType]);
 
   const headerTitle =
     activeAssessorType === "Psych" ? `${assessorLabel("Psych")} Terminal` :
@@ -215,6 +326,10 @@ export default function AssessorDashboardView() {
     setChestNoFilter("");
     setStatusFilter("ALL");
     setIsCustomBatch(false);
+    try {
+      sessionStorage.removeItem(FILTERS_STORAGE_KEY);
+      window.history.replaceState(null, "", window.location.pathname);
+    } catch {}
   };
 
   const candidateNameOptions = useMemo(
@@ -502,6 +617,12 @@ export default function AssessorDashboardView() {
                 <option value="" className="bg-[#18181b] text-app-text-bright">
                   All Batches
                 </option>
+                {/* Ensure selected batch is always present even while submissions are loading */}
+                {batchFilter && !sortedBatchOptions.includes(batchFilter) && (
+                  <option value={batchFilter} className="bg-[#18181b] text-app-text-bright">
+                    {formatBatchLabel(batchFilter)}
+                  </option>
+                )}
                 {sortedBatchOptions.map((b) => (
                   <option key={b} value={b} className="bg-[#18181b] text-app-text-bright">
                     {formatBatchLabel(b)}
