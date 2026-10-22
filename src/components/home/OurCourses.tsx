@@ -107,7 +107,10 @@ const OurCourses = () => {
               <span className={styles.card3dNumber}>{course.number}</span>
               <h3 className={styles.card3dTitle}>{course.title}</h3>
               <p className={styles.card3dSubtitle}>
-                {course.subtitle || `${course.sessions} Sessions · ${course.hours} Hours`}
+                {course.subtitle ||
+                  (course.hours
+                    ? `${course.sessions} Sessions · ${course.hours} Hours`
+                    : `${course.sessions} Sessions`)}
               </p>
             </div>
           </div>
@@ -174,14 +177,18 @@ const OurCourses = () => {
                   </div>
                 ) : (
                   <>
-                    <div className={styles.detailStat}>
-                      <strong>{detailCourse.sessions}</strong>
-                      <span>Sessions</span>
-                    </div>
-                    <div className={styles.detailStat}>
-                      <strong>{detailCourse.hours}</strong>
-                      <span>Learning Hours</span>
-                    </div>
+                    {detailCourse.sessions && (
+                      <div className={styles.detailStat}>
+                        <strong>{detailCourse.sessions}</strong>
+                        <span>Sessions</span>
+                      </div>
+                    )}
+                    {detailCourse.hours && (
+                      <div className={styles.detailStat}>
+                        <strong>{detailCourse.hours}</strong>
+                        <span>Learning Hours</span>
+                      </div>
+                    )}
                   </>
                 )}
                 <div className={styles.detailStat}>
@@ -190,8 +197,22 @@ const OurCourses = () => {
                 </div>
               </div>
               <CustomButton
-                text={detailCourse.isOffline ? "Know More" : "Enroll Now"}
-                onClick={() => router.push(detailCourse.isOffline ? "/CoursesOffline" : "/Batches")}
+                text={
+                  detailCourse.href
+                    ? "Explore & Enrol"
+                    : detailCourse.isOffline
+                    ? "Know More"
+                    : "Enroll Now"
+                }
+                onClick={() =>
+                  router.push(
+                    detailCourse.href
+                      ? detailCourse.href
+                      : detailCourse.isOffline
+                      ? "/CoursesOffline"
+                      : "/Batches"
+                  )
+                }
               />
             </div>
           </div>

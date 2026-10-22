@@ -7,6 +7,7 @@ import OurMentor from "@/components/home/OurMentor";
 import Philosophy from "@/components/home/Philosophy";
 import OurCourses from "@/components/home/OurCourses";
 import UniquePedagogy from "@/components/home/UniquePedagogy";
+import CommunicationSection from "@/components/home/CommunicationSection";
 import Resources from "@/components/home/Resources";
 import RogerThat from "@/components/home/RogerThat";
 import AllYouNeed from "@/components/home/AllYouNeed";
@@ -211,6 +212,7 @@ export default function HomePage() {
       <Philosophy />
       <OurCourses />
       <UniquePedagogy />
+      <CommunicationSection />
       <Resources />
       <RogerThat />
       <AllYouNeed />

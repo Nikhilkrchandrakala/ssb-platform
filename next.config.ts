@@ -90,6 +90,11 @@ const nextConfig: NextConfig = {
         destination: "/ssb-online-coaching",
         permanent: true,
       },
+      {
+        source: "/CommunicationBootcamp",
+        destination: "/SoftskillBootcamp",
+        permanent: true,
+      },
     ];
   },
   // PWA-specific response headers: the service worker file must never be

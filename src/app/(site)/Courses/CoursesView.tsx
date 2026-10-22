@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { IoChevronBack, IoChevronForward, IoGridOutline } from "react-icons/io5";
 import { BsTable } from "react-icons/bs";
 import CustomHeader from "@/components/site/CustomHeader";
+import CustomButton from "@/components/site/CustomButton";
 import Faq from "@/components/site/Faq";
 import EnquiryForm from "@/components/site/EnquiryForm";
 import { CoursesfaqData, scheduleData, CoursesModuleOne, tabs } from "@/util/data";
@@ -20,11 +22,58 @@ const headerData = {
   banner: "/assets/website/courses_banner.webp",
 };
 
+const BOOTCAMP_WEEKS = [
+  {
+    week: "WEEK 01",
+    title: "Communication Theory, Grammar & Phonetics",
+    highlight: "Entry Milestone: Diagnostic Baseline Video Recording & Assessor Analysis",
+    topics: [
+      "The Physiology of Speech: Jaw Relaxation, Breath Support & Pitch Control",
+      "Vowel, Consonant and Syllable Stress Drills (IPA Pronunciation)",
+      "Diaphragmatic Breathing, Voice Projection & Articulation Conditioning",
+    ],
+  },
+  {
+    week: "WEEK 02",
+    title: "Impromptu Speech, Storytelling & Accent Neutralization",
+    highlight: "Live Saturday Drill 01: 90-Minute Impromptu Speech & Story Circle",
+    topics: [
+      "Structuring Instant Responses: The PREP, STAR & CAR Frameworks",
+      "Accent Neutralization & International Phonetic Intelligibility",
+      "The Narrative Arc: Crafting Authentic 2-Minute Stories that Hook Audiences",
+    ],
+  },
+  {
+    week: "WEEK 03",
+    title: "Professional Presence, Interviews & Hierarchy Navigation",
+    highlight: "Live Mock Interview: Real-Time 1:1 Evaluation with Assessor Rubric",
+    topics: [
+      "Body Language, Eye Contact & Posture Under Cognitive Stress",
+      "Mastering Panel & 1:1 Behavioral Interviews with Structured Delivery",
+      "Delivering Constructive Feedback & Graceful Response to Critique",
+      "Hierarchy Navigation: Addressing Senior Officers, Executives, Peers & Juniors",
+    ],
+  },
+  {
+    week: "WEEK 04",
+    title: "Public Address, Debate & Graded Capstone Delivery",
+    highlight: "Exit Milestone: Graded Capstone Showcase & Certificate of Completion",
+    topics: [
+      "Stage Command, Mic Technique & Rhetorical Persuasion Devices",
+      "Handling Q&A Under Pressure: Disarming Hostile Objections with Poise",
+      "Crisis Communication: De-escalating Tension & Handling Hostile Questions",
+      "Final Capstone Delivery: Graded 5-Minute Keynote Address",
+    ],
+  },
+];
+
 export default function CoursesView() {
+  const router = useRouter();
   const [dbCourses, setDbCourses] = useState<DbCourse[] | null>(null);
   const [activeTab, setActiveTab] = useState("c1");
   const [scheduleTab, setScheduleTab] = useState<"morning" | "evening">("morning");
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [openBootcampIndex, setOpenBootcampIndex] = useState<number | null>(null);
 
   // Responsive tabs scroll tracking
   const tabsContainerRef = useRef<HTMLUListElement | null>(null);
@@ -244,21 +293,60 @@ export default function CoursesView() {
               </div>
             )}
 
-            {activeTab === "c2" && (
+            {activeTab === "c_softskill" && (
               <div className="course-tab-card">
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-                  <h3 className="course-tab-card-title">Introduction to SSB & PPDT</h3>
+                  <h2 className="course-tab-card-title">4 Weeks Soft Skills Bootcamp</h2>
 
                   <p className="title-gtx shimmerText_sec course-tab-card-title">
-                    Price - ₹{getPrice("ssb_ppdt", 1999).toLocaleString("en-IN")} + 18% GST
+                    Price - ₹5,999 + 18% GST
                   </p>
                 </div>
-                <ul>
-                  <li>Introduction to SSB</li>
-                  <li>Genesis of SSB procedure and breaking of myths around SSB</li>
-                  <li>Stage 1 Testing – OIR Test</li>
-                  <li>Picture Perception & Description Test</li>
-                </ul>
+
+                <h3 className="course-tab-card-hours">
+                  <strong>Total Duration:</strong> 4 Weeks | <strong>Batch Timings:</strong> 9:30 AM – 10:30 AM (Mon – Fri) | <strong>Mentored by:</strong> Lt. Commander Niati Hirway (Retd.)
+                </h3>
+
+                <p>
+                  A structured, four-week online program in disciplined, confident speech for classrooms, interviews, boardrooms, and the workplace. Led by Voice of the Navy, Lt. Commander Niati Hirway (Retd.), ex-Naval Air Traffic Controller. Training runs 5 days a week from 9:30 AM to 10:30 AM (1 hour a day), with extended Saturday drills on alternate weekends. Built on repetition, live correction, and daily speaking drills rather than passive lectures.
+                </p>
+
+                <h3 className="m-0 fs-4">Syllabus &amp; Weekly Milestones:</h3>
+
+                <div className="ssb-accordion">
+                  {BOOTCAMP_WEEKS.map((item, index) => (
+                    <div key={index} className="ssb-accordion-item">
+                      <div
+                        className="ssb-accordion-title"
+                        onClick={() => setOpenBootcampIndex(openBootcampIndex === index ? null : index)}
+                      >
+                        <span><strong>{item.week}:</strong> {item.title}</span>
+                        <span>{openBootcampIndex === index ? "-" : "+"}</span>
+                      </div>
+
+                      {openBootcampIndex === index && (
+                        <div className="ssb-accordion-content">
+                          <p style={{ color: "var(--theme-color)", fontWeight: 600 }}>{item.highlight}</p>
+                          <ul>
+                            {item.topics.map((topic, i) => (
+                              <li key={i}>{topic}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-4 pt-2">
+                  <button
+                    type="button"
+                    className={styles.bootcampCtaBtn}
+                    onClick={() => router.push("/SoftskillBootcamp")}
+                  >
+                    Explore Bootcamp &amp; Enrol Now
+                  </button>
+                </div>
               </div>
             )}
 
@@ -320,6 +408,24 @@ export default function CoursesView() {
                   <li>Genesis of the Group Testing Technique and what GTO looks at during the Group Testing.</li>
                   <li>Feedback by a DIPR certified Group Testing Officer.</li>
                   <li>The entire course is covered through VTX<sup>TM</sup> (Virtual Training Xperience) - India’s first virtual GTO ground.</li>
+                </ul>
+              </div>
+            )}
+
+            {activeTab === "c2" && (
+              <div className="course-tab-card">
+                <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+                  <h3 className="course-tab-card-title">Introduction to SSB & PPDT</h3>
+
+                  <p className="title-gtx shimmerText_sec course-tab-card-title">
+                    Price - ₹{getPrice("ssb_ppdt", 1999).toLocaleString("en-IN")} + 18% GST
+                  </p>
+                </div>
+                <ul>
+                  <li>Introduction to SSB</li>
+                  <li>Genesis of SSB procedure and breaking of myths around SSB</li>
+                  <li>Stage 1 Testing – OIR Test</li>
+                  <li>Picture Perception & Description Test</li>
                 </ul>
               </div>
             )}

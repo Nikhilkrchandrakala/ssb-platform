@@ -225,6 +225,19 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
               )}
             </div>
 
+            <Link
+              href="/SoftskillBootcamp"
+              onClick={onClose}
+              className={`${styles.coursesTrigger} ${pathname === "/SoftskillBootcamp" ? styles.active : ""}`}
+              prefetch={false}
+              style={{ textDecoration: "none" }}
+            >
+              <span className={styles.coursesTriggerLabel}>
+                <span>4 Weeks Soft Skills Bootcamp</span>
+                <span className={styles.newBadge}>NEW</span>
+              </span>
+            </Link>
+
             {NAV_LINKS.map((link) => (
               <Link key={link.href} href={link.href} prefetch={false} onClick={onClose} className={pathname === link.href ? styles.active : ""}>
                 <span dangerouslySetInnerHTML={{ __html: link.label }} />

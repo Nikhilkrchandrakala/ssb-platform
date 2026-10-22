@@ -7,6 +7,10 @@ import HeadingTwo from "@/components/site/HeadingTwo";
 
 const OurMentor = () => {
   const [selectedMentor, setSelectedMentor] = useState<any>(null);
+  const [isTouchPaused, setIsTouchPaused] = useState(false);
+
+  // Triple repeat ensures the seamless loop exceeds even 4K viewports without empty space
+  const mentorsLoop = [...mentorsData, ...mentorsData, ...mentorsData];
 
   const openBiodata = (e: React.MouseEvent, mentor: any) => {
     e.preventDefault();
@@ -39,66 +43,83 @@ const OurMentor = () => {
     return val;
   };
 
+  const renderCard = (mentor: (typeof mentorsData)[0], keyPrefix: string, index: number) => (
+    <div key={`${keyPrefix}-${mentor.id}-${index}`} className={styles.mentorCard}>
+      <div className={styles.imageWrapper}>
+        <div className={styles.imageMask}>
+          <img
+            src={mentor.image}
+            alt={`${mentor.name} - ${mentor.role} - SSB with ISV`}
+            className={styles.mentorImage}
+            loading="lazy"
+          />
+        </div>
+      </div>
+
+      <p className={styles.role}>{mentor.role}</p>
+      <h2 className={styles.name}>{mentor.name}</h2>
+
+      <ul className={styles.description}>
+        {mentor.description.map((line, i) => (
+          <li key={i}>{line}</li>
+        ))}
+      </ul>
+
+      <div className={styles.cardBottom}>
+        {mentor.fullBiodata && (
+          <button
+            type="button"
+            onClick={(e) => openBiodata(e, mentor)}
+            className={styles.biodataBtn}
+          >
+            Biodata
+          </button>
+        )}
+
+        <div className="d-flex gap-3 justify-content-center">
+          {mentor.instagram && (
+            <a href={mentor.instagram} target="_blank" rel="noopener noreferrer" className="bottom-contact-box">
+              <i className="fa fa-instagram"></i>
+            </a>
+          )}
+
+          {mentor.linkedin && (
+            <a href={mentor.linkedin} target="_blank" rel="noopener noreferrer" className="bottom-contact-box">
+              <i className="fa fa-linkedin"></i>
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <section className={styles.mentorsSection}>
       <div className="">
         <div className={styles.headingContainer}>
           <HeadingTwo h1="Our" t1="mentors" />
-          <div className={styles.headingContainerImg}>
-            <img src="/assets/Group16.png" alt="Decoration" loading="lazy" />
+          <div className={styles.headerRight}>
+            <div className={styles.headingContainerImg}>
+              <img src="/assets/Group16.png" alt="Decoration" loading="lazy" />
+            </div>
           </div>
         </div>
 
-        <div className={styles.cardsWrapper}>
-          {mentorsData.map((mentor) => (
-            <div key={mentor.id} className={styles.mentorCard}>
-              <div className={styles.imageWrapper}>
-                <div className={styles.imageMask}>
-                  <img
-                    src={mentor.image}
-                    alt={`${mentor.name} - ${mentor.role} - SSB with ISV`}
-                    className={styles.mentorImage}
-                    loading="lazy"
-                  />
-                </div>
-              </div>
-
-              <p className={styles.role}>{mentor.role}</p>
-              <h2 className={styles.name}>{mentor.name}</h2>
-
-              <ul className={styles.description}>
-                {mentor.description.map((line, i) => (
-                  <li key={i}>{line}</li>
-                ))}
-              </ul>
-
-              <div className={styles.cardBottom}>
-                {mentor.fullBiodata && (
-                  <button
-                    type="button"
-                    onClick={(e) => openBiodata(e, mentor)}
-                    className={styles.biodataBtn}
-                  >
-                    Biodata
-                  </button>
-                )}
-
-                <div className="d-flex gap-3 justify-content-center">
-                  {mentor.instagram && (
-                    <a href={mentor.instagram} target="_blank" rel="noopener noreferrer" className="bottom-contact-box">
-                      <i className="fa fa-instagram"></i>
-                    </a>
-                  )}
-
-                  {mentor.linkedin && (
-                    <a href={mentor.linkedin} target="_blank" rel="noopener noreferrer" className="bottom-contact-box">
-                      <i className="fa fa-linkedin"></i>
-                    </a>
-                  )}
-                </div>
-              </div>
+        <div
+          className={styles.marqueeContainer}
+          onTouchStart={() => setIsTouchPaused(true)}
+          onTouchEnd={() => setIsTouchPaused(false)}
+        >
+          <div
+            className={`${styles.marqueeTrack} ${selectedMentor || isTouchPaused ? styles.paused : ""}`}
+          >
+            <div className={styles.marqueeGroup}>
+              {mentorsLoop.map((mentor, idx) => renderCard(mentor, "grp-1", idx))}
             </div>
-          ))}
+            <div className={styles.marqueeGroup} aria-hidden="true">
+              {mentorsLoop.map((mentor, idx) => renderCard(mentor, "grp-2", idx))}
+            </div>
+          </div>
         </div>
       </div>
 

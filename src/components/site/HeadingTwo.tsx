@@ -7,10 +7,12 @@ export default function HeadingTwo({
   h1,
   t1,
   style,
+  className,
 }: {
   h1?: string;
   t1?: string;
   style?: React.CSSProperties;
+  className?: string;
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const [hasAnimated, setHasAnimated] = useState(false);
@@ -52,7 +54,11 @@ export default function HeadingTwo({
   const activeClass = isActive ? "active" : "";
 
   return (
-    <h2 ref={headingRef} className={`headingOfSSb ${statusClass} ${activeClass}`} style={style}>
+    <h2
+      ref={headingRef}
+      className={`headingOfSSb ${statusClass} ${activeClass} ${className || ""}`.trim()}
+      style={style}
+    >
       <span className="word highlight">
         <span className="second-part">{h1}</span>{" "}
         {t1 && <span className="first-part">{t1}</span>}

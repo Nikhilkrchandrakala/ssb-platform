@@ -53,10 +53,8 @@
   background: linear-gradient(to left, rgba(11, 11, 11, 0.95), transparent);
 }
 
-@media (max-width: 991px) {
-  .fadeMaskVisible {
-    display: block;
-  }
+.fadeMaskVisible {
+  display: block;
 }
 
 /* Scroll Arrow Buttons for effortless slide navigation */
@@ -65,8 +63,8 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: rgba(22, 22, 22, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.25);
@@ -86,17 +84,15 @@
 }
 
 .scrollBtnLeft {
-  left: -10px;
+  left: -12px;
 }
 
 .scrollBtnRight {
-  right: -10px;
+  right: -12px;
 }
 
-@media (max-width: 991px) {
-  .scrollBtnVisible {
-    display: flex;
-  }
+.scrollBtnVisible {
+  display: flex;
 }
 
 /* Tab list */
@@ -109,18 +105,29 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-/* --- LAPTOP / DESKTOP (>= 992px): IDENTICAL TO ORIGINAL PERFECT LAYOUT --- */
+/* --- LAPTOP / DESKTOP (>= 992px): CLEAN LAYOUT WITH HORIZONTAL SCROLL WHEN OVERFLOWING --- */
 @media (min-width: 992px) {
   .courseNavTabs {
     flex-wrap: nowrap;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: stretch;
     padding-top: 10px;
-    overflow: hidden;
+    padding-bottom: 2px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .courseNavTabs::-webkit-scrollbar {
+    display: none;
   }
 
   .navItem {
-    flex: 1 1 0%;
+    flex: 1 0 170px;
+    min-width: 170px;
     text-align: center;
     display: flex;
     justify-content: center;
@@ -365,3 +372,31 @@
 .detailVal {
   color: rgba(255, 255, 255, 0.9);
 }
+
+.bootcampCtaBtn {
+  padding: 10px 26px;
+  border: 1px solid #d2a100;
+  background: #d2a100;
+  color: #000;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.bootcampCtaBtn:hover {
+  background: #f0be1a;
+  border-color: #f0be1a;
+  color: #000;
+  transform: translateY(-1px);
+}
+
+.bootcampCtaBtn:active {
+  transform: translateY(0);
+}
+
