@@ -78,6 +78,7 @@ interface Student {
   assignedPsych?: AssessorRef | null;
   assignedIO?: AssessorRef | null;
   assignedAssessments?: string[];
+  enrolledPrograms?: string[];
   orders?: OrderItem[];
 }
 
@@ -89,7 +90,11 @@ interface OrderItem {
   createdAt: string;
   referralCode?: string;
   selectedModules?: string[];
-  slotId?: { _id?: string; title?: string; batchNo?: string; mode?: string; isFullCourse?: boolean } | null;
+  slotId?: { _id?: string; title?: string; batchNo?: string; mode?: string; isFullCourse?: boolean; programType?: string } | null;
+  programType?: string;
+  paymentMethod?: string;
+  transactionRef?: string;
+  bookingMethod?: string;
   assignedGTO?: AssessorRef | null;
   assignedTO?: AssessorRef | null;
   assignedPsych?: AssessorRef | null;
@@ -904,8 +909,9 @@ export default function StudentRosterView() {
                         <div className="d-flex align-items-center gap-3">
                           {renderAvatar(s._id, s.profileImage, s.name)}
                           <div>
-                            <strong style={{ color: "#fff", fontSize: "0.95rem" }}>{s.name}</strong>
-                            <br />
+                            <div className="d-flex align-items-center gap-2 flex-wrap">
+                              <strong style={{ color: "#fff", fontSize: "0.95rem" }}>{s.name}</strong>
+                            </div>
                             <span className="small opacity-50">{s.email}</span>
                           </div>
                         </div>
@@ -924,17 +930,34 @@ export default function StudentRosterView() {
                         </span>
                       </td>
                       <td>
-                        <EnrollmentModeBadge mode={o?.slotId?.mode || s.enrollmentMode} price={o?.price} />
+                        {o?.programType === "soft_skills" || o?.slotId?.programType === "soft_skills" ? (
+                          <span
+                            className="badge"
+                            style={{
+                              background: "rgba(16, 185, 129, 0.15)",
+                              color: "#10b981",
+                              border: "1px solid rgba(16, 185, 129, 0.4)",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                            }}
+                          >
+                            Online Bootcamp
+                          </span>
+                        ) : (
+                          <EnrollmentModeBadge mode={o?.slotId?.mode || s.enrollmentMode} price={o?.price} />
+                        )}
                       </td>
                       <td>
                         <span style={{ fontSize: "0.85rem", opacity: 0.7 }}>{formatDate(o?.createdAt || s.createdAt)}</span>
                       </td>
                       <td>
-                        {stages.map((st) => (
+                        {o?.programType === "soft_skills" || o?.slotId?.programType === "soft_skills" ? (
                           <span
-                            key={st}
-                            className={`stage-select-inline ${STAGE_CLASS[st] || "stage-val-full_course"}`}
+                            className="badge"
                             style={{
+                              background: "rgba(16, 185, 129, 0.15)",
+                              color: "#10b981",
+                              border: "1px solid rgba(16, 185, 129, 0.4)",
                               padding: "4px 10px",
                               borderRadius: 50,
                               fontSize: 10,
@@ -942,13 +965,31 @@ export default function StudentRosterView() {
                               fontWeight: 700,
                               textTransform: "uppercase",
                               cursor: "default",
-                              marginRight: 4,
-                              marginBottom: 4,
                             }}
                           >
-                            {STAGE_TITLES[st] || st}
+                            4 Weeks Soft Skills Bootcamp
                           </span>
-                        ))}
+                        ) : (
+                          stages.map((st) => (
+                            <span
+                              key={st}
+                              className={`stage-select-inline ${STAGE_CLASS[st] || "stage-val-full_course"}`}
+                              style={{
+                                padding: "4px 10px",
+                                borderRadius: 50,
+                                fontSize: 10,
+                                display: "inline-block",
+                                fontWeight: 700,
+                                textTransform: "uppercase",
+                                cursor: "default",
+                                marginRight: 4,
+                                marginBottom: 4,
+                              }}
+                            >
+                              {STAGE_TITLES[st] || st}
+                            </span>
+                          ))
+                        )}
                       </td>
                       <td>
                         {assignedAssessmentsCount === 0 ? (

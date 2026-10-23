@@ -202,7 +202,7 @@ export const coursesData: CourseCard[] = [
     sessions: "22",
     description:
       "A structured 4-week online program in disciplined speech and interview mastery (Daily 9:30 AM – 10:30 AM) led by Lt. Commander Niati Hirway (Retd.).",
-    image: "/assets/N2.jpeg",
+    image: "/assets/website/SoftSkillCard.png",
     price: " 5999 + 18% GST",
     href: "/SoftskillBootcamp",
   },

@@ -26,8 +26,11 @@ import {
   MapPin,
   Building2,
   GitMerge,
+  Sparkles,
+  Clock,
+  ShieldCheck,
 } from "lucide-react";
-import { isBookingClosed, formatTimeRemaining } from "@/lib/batchTiming";
+import { isBookingClosed, formatTimeRemaining, isSoftSkillsBatch } from "@/lib/batchTiming";
 import "@/app/admin/styles/legacy-courses.css";
 
 const ICON_STYLE = { verticalAlign: -2 };
@@ -48,6 +51,8 @@ interface Slot {
   isCancelled?: boolean;
   cancelledAt?: string | null;
   mergedInto?: string | null;
+  programType?: string;
+  noLateAdmissions?: boolean;
 }
 
 const OFFLINE_REGISTRATION_FEE = 5000;
@@ -183,6 +188,8 @@ export default function CoursesView() {
   const [bookModalOpen, setBookModalOpen] = useState(false);
   const [bookingSlotId, setBookingSlotId] = useState<string | null>(null);
   const [manualUserId, setManualUserId] = useState("");
+  const [manualPaymentMethod, setManualPaymentMethod] = useState<"manual" | "bank_transfer">("manual");
+  const [manualTransactionRef, setManualTransactionRef] = useState("");
   const [manualChecks, setManualChecks] = useState<Record<string, boolean>>({
     full_course: false,
     ssb_ppdt: false,
@@ -198,6 +205,14 @@ export default function CoursesView() {
   const [manualOfflinePaymentPlan, setManualOfflinePaymentPlan] = useState<
     "registration" | "full"
   >("registration");
+
+  // Soft Skills Bootcamp Slot Modal State
+  const [softSkillsModalOpen, setSoftSkillsModalOpen] = useState(false);
+  const [editSoftSkillsSlotId, setEditSoftSkillsSlotId] = useState<string | null>(null);
+  const [softSkillsBatchNo, setSoftSkillsBatchNo] = useState("");
+  const [softSkillsStartDate, setSoftSkillsStartDate] = useState("");
+  const [softSkillsMaxStudents, setSoftSkillsMaxStudents] = useState(25);
+  const [savingSoftSkillsSlot, setSavingSoftSkillsSlot] = useState(false);
 
   // Consolidate Modal State
   const [consolidateModalOpen, setConsolidateModalOpen] = useState(false);
@@ -332,6 +347,7 @@ export default function CoursesView() {
   const month = currentDate.getMonth();
   const monthBatches = allBatches.filter((b) => {
     if (b.mode === "offline") return false;
+    if (isSoftSkillsBatch(b)) return false;
     if (!b.startTime) return false;
     const d = new Date(b.startTime);
     return d.getFullYear() === year && d.getMonth() === month;
@@ -344,6 +360,14 @@ export default function CoursesView() {
     (sum, b) => sum + (b.bookedStudents ? b.bookedStudents.length : 0),
     0,
   );
+
+  const softSkillsBatches = allBatches
+    .filter((b) => isSoftSkillsBatch(b))
+    .sort(
+      (a, b) =>
+        new Date(a.startTime || 0).getTime() -
+        new Date(b.startTime || 0).getTime(),
+    );
 
   const offlineBatches = allBatches
     .filter((b) => b.mode === "offline")
@@ -584,6 +608,96 @@ export default function CoursesView() {
     }
   };
 
+  // --- Soft Skills Bootcamp Handlers ---
+  const openAddSoftSkillsModal = () => {
+    setEditSoftSkillsSlotId(null);
+    setSoftSkillsBatchNo("");
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    setSoftSkillsStartDate(toDateInputValue(tomorrow));
+    setSoftSkillsMaxStudents(25);
+    setSoftSkillsModalOpen(true);
+  };
+
+  const openEditSoftSkillsModal = (slot: Slot) => {
+    setEditSoftSkillsSlotId(slot._id);
+    setSoftSkillsBatchNo(slot.batchNo || "");
+    if (slot.startTime) {
+      setSoftSkillsStartDate(toDateInputValue(new Date(slot.startTime)));
+    } else {
+      setSoftSkillsStartDate("");
+    }
+    setSoftSkillsMaxStudents(slot.maxStudents || 25);
+    setSoftSkillsModalOpen(true);
+  };
+
+  const saveSoftSkillsSlot = async () => {
+    if (!softSkillsStartDate) {
+      window.Swal?.fire({
+        icon: "warning",
+        text: "Please select a Start Date for the cohort.",
+        background: "#1a1a1a",
+        color: "#fff",
+      });
+      return;
+    }
+
+    const bNo = softSkillsBatchNo.trim() || "01";
+    const payload = {
+      title: `4 Weeks Soft Skills Bootcamp — Batch ${bNo}`,
+      batchNo: bNo,
+      batchType: "morning",
+      startTime: new Date(softSkillsStartDate).toISOString(),
+      endTime: new Date(
+        new Date(softSkillsStartDate).getTime() + 28 * 86400000,
+      ).toISOString(),
+      maxStudents: Number(softSkillsMaxStudents) || 25,
+      price: 5999,
+      isFullCourse: false,
+      programType: "soft_skills",
+      noLateAdmissions: true,
+    };
+
+    try {
+      setSavingSoftSkillsSlot(true);
+      const url = editSoftSkillsSlotId
+        ? `/api/updateSlot/${editSoftSkillsSlotId}`
+        : "/api/addSlot";
+      const method = editSoftSkillsSlotId ? "PUT" : "POST";
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        const d = await response.json().catch(() => ({}));
+        throw new Error(d.message || "Failed to save Soft Skills batch");
+      }
+
+      window.Swal?.fire({
+        icon: "success",
+        title: "Success",
+        text: editSoftSkillsSlotId
+          ? "4 Weeks Soft Skills Bootcamp batch updated successfully."
+          : "4 Weeks Soft Skills Bootcamp batch scheduled successfully.",
+        background: "#1a1a1a",
+        color: "#fff",
+      });
+      setSoftSkillsModalOpen(false);
+      reloadBatches();
+    } catch (err) {
+      window.Swal?.fire({
+        icon: "error",
+        title: "Save Failed",
+        text: err instanceof Error ? err.message : "Error",
+        background: "#1a1a1a",
+        color: "#fff",
+      });
+    } finally {
+      setSavingSoftSkillsSlot(false);
+    }
+  };
+
   const showDeleteConfirm = async (id: string) => {
     const result = await window.Swal?.fire({
       title: "Delete Batch?",
@@ -626,6 +740,8 @@ export default function CoursesView() {
   const openManualBookingModal = (id: string) => {
     setBookingSlotId(id);
     setManualUserId("");
+    setManualPaymentMethod("manual");
+    setManualTransactionRef("");
     setManualChecks({
       full_course: false,
       ssb_ppdt: false,
@@ -663,6 +779,19 @@ export default function CoursesView() {
       return { base: 0, discount: 0, netBase: 0, gst: 0, total: 0 };
     let basePrice = 0;
     const isOffline = bookingSlot.mode === "offline";
+    const isSoftSkills = bookingSlot.programType === "soft_skills";
+
+    if (isSoftSkills) {
+      basePrice = bookingSlot.price || 5999;
+      const rawDiscount =
+        manualDiscountType === "percent"
+          ? (basePrice * manualDiscountValue) / 100
+          : manualDiscountValue;
+      const discount = Math.min(Math.max(rawDiscount, 0), basePrice);
+      const netBase = basePrice - discount;
+      const gst = netBase * 0.18;
+      return { base: basePrice, discount, netBase, gst, total: netBase + gst };
+    }
 
     if (isOffline) {
       basePrice =
@@ -719,6 +848,16 @@ export default function CoursesView() {
       return;
     }
 
+    if (manualPaymentMethod === "bank_transfer" && !manualTransactionRef.trim()) {
+      window.Swal?.fire({
+        icon: "warning",
+        text: "Please enter the Bank UTR / Transaction Reference Number for bank transfer enrollment.",
+        background: "#1a1a1a",
+        color: "#fff",
+      });
+      return;
+    }
+
     const selectedModules: string[] = [];
     if (bookingSlot && bookingSlot.isFullCourse) {
       if (manualChecks.full_course) {
@@ -732,6 +871,8 @@ export default function CoursesView() {
 
     if (
       bookingSlot &&
+      bookingSlot.programType !== "soft_skills" &&
+      bookingSlot.mode !== "offline" &&
       bookingSlot.isFullCourse &&
       selectedModules.length === 0
     ) {
@@ -760,6 +901,8 @@ export default function CoursesView() {
             manualDiscountValue > 0 ? manualDiscountType : undefined,
           discountValue:
             manualDiscountValue > 0 ? manualDiscountValue : undefined,
+          paymentMethod: manualPaymentMethod,
+          transactionRef: manualTransactionRef.trim() || undefined,
         }),
       });
 
@@ -771,7 +914,7 @@ export default function CoursesView() {
       window.Swal?.fire({
         icon: "success",
         title: "Booked!",
-        text: "Student has been added to this batch.",
+        text: "Student has been enrolled into this batch.",
         background: "#1a1a1a",
         color: "#fff",
       });
@@ -1045,6 +1188,17 @@ export default function CoursesView() {
           </p>
         </div>
         <div className="d-flex gap-2 flex-wrap">
+          <button
+            className="thm-btn"
+            style={{
+              background: "linear-gradient(135deg, #10b981, #059669)",
+              borderColor: "#10b981",
+              color: "#fff",
+            }}
+            onClick={openAddSoftSkillsModal}
+          >
+            <Sparkles size={16} style={ICON_STYLE} /> Schedule Soft Skills Batch
+          </button>
           <button
             className="thm-btn"
             style={{
@@ -1633,6 +1787,237 @@ export default function CoursesView() {
         </div>
       )}
 
+      {/* 4 Weeks Soft Skills Bootcamp Batches */}
+      <div className="admin-page-header" style={{ marginTop: 50 }}>
+        <div className="header-left">
+          <h1 className="admin-page-title">
+            <Sparkles size={20} className="me-2" style={{ ...ICON_STYLE, color: "var(--primary-gold)" }} />
+            4 Weeks Soft Skills Bootcamp
+          </h1>
+          <p className="text-muted mb-0">
+            Live interactive cohorts (9:30 AM – 10:30 AM IST) • 25-seat cap • Strict zero late admissions
+          </p>
+        </div>
+        <div>
+          <button
+            className="thm-btn"
+            style={{
+              background: "linear-gradient(135deg, #10b981, #059669)",
+              borderColor: "#10b981",
+              color: "#fff",
+            }}
+            onClick={openAddSoftSkillsModal}
+          >
+            <PlusCircle size={16} style={ICON_STYLE} /> Schedule Soft Skills Cohort
+          </button>
+        </div>
+      </div>
+
+      {!loading && softSkillsBatches.length === 0 && (
+        <div
+          className="empty-state text-center"
+          style={{ padding: "60px 20px" }}
+        >
+          <div
+            className="empty-icon mb-4"
+            style={{ color: "var(--primary-gold)", opacity: 0.3 }}
+          >
+            <Sparkles size={56} />
+          </div>
+          <h3>No Soft Skills Bootcamp batches scheduled yet</h3>
+          <p className="text-muted">
+            Create a batch to start accepting live registrations online or enrolling students.
+          </p>
+          <button
+            className="thm-btn mt-3"
+            style={{
+              background: "linear-gradient(135deg, #10b981, #059669)",
+              borderColor: "#10b981",
+              color: "#fff",
+            }}
+            onClick={openAddSoftSkillsModal}
+          >
+            <Plus size={16} style={ICON_STYLE} /> Schedule First Cohort
+          </button>
+        </div>
+      )}
+
+      {!loading && softSkillsBatches.length > 0 && (
+        <div className="row g-4">
+          {softSkillsBatches.map((slot) => {
+            const startDateStr = slot.startTime
+              ? new Date(slot.startTime).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
+              : "N/A";
+            const max = slot.maxStudents || 25;
+            const booked = slot.bookedStudents ? slot.bookedStudents.length : 0;
+            const available = max - booked;
+            const isFull = max > 0 && booked >= max;
+            const bookingClosed = isBookingClosed(slot, now);
+            const displayTitle = slot.batchNo
+              ? `Batch ${slot.batchNo}`
+              : slot.title?.replace(/4 Weeks Soft Skills Bootcamp — /i, "") || "Soft Skills Cohort";
+
+            return (
+              <div className="col-lg-4 col-md-6" key={slot._id}>
+                <div className="batch-card">
+                  <div className="batch-header">
+                    <span className="type-badge morning-type">
+                      <Sparkles size={14} className="me-2" style={ICON_STYLE} />
+                      {displayTitle}
+                    </span>
+                    <span style={{ fontSize: "0.75rem", opacity: 0.5 }}>
+                      ID: {slot.batchNo || "—"}
+                    </span>
+                  </div>
+                  <div className="batch-body">
+                    <div className="stat-item">
+                      <span className="stat-label">
+                        <BookOpen
+                          size={14}
+                          className="me-2"
+                          style={ICON_STYLE}
+                        />
+                        Program
+                      </span>
+                      <span
+                        className="stat-value"
+                        style={{ color: "var(--primary-gold)", fontWeight: 600 }}
+                      >
+                        Soft Skills (4 Wks)
+                      </span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">
+                        <CalendarDays
+                          size={14}
+                          className="me-2"
+                          style={ICON_STYLE}
+                        />
+                        Start Date
+                      </span>
+                      <span className="stat-value">{startDateStr}</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">
+                        <Clock size={14} className="me-2" style={ICON_STYLE} />
+                        Timings
+                      </span>
+                      <span className="stat-value">9:30 AM – 10:30 AM</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">
+                        <Users size={14} className="me-2" style={ICON_STYLE} />
+                        Capacity
+                      </span>
+                      <span className="stat-value">{max} Seats</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">
+                        <UserCheck
+                          size={14}
+                          className="me-2"
+                          style={ICON_STYLE}
+                        />
+                        Booked
+                      </span>
+                      <span className="stat-value">{booked} Students</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">
+                        <Tag size={14} className="me-2" style={ICON_STYLE} />
+                        Course Fee
+                      </span>
+                      <span className="price-badge">₹5,999 + 18% GST</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">
+                        <CalendarDays
+                          size={14}
+                          className="me-2"
+                          style={ICON_STYLE}
+                        />
+                        Public Booking
+                      </span>
+                      <span
+                        className="stat-value"
+                        style={{ color: bookingClosed ? "#ff6b6b" : undefined }}
+                      >
+                        {bookingClosed
+                          ? "Closed"
+                          : formatTimeRemaining(slot, now)}
+                      </span>
+                    </div>
+                    <div className="mt-3 text-center">
+                      {isFull ? (
+                        <span
+                          className="badge bg-danger w-100 p-2"
+                          style={{ borderRadius: 8 }}
+                        >
+                          <Ban size={14} className="me-2" style={ICON_STYLE} />
+                          BATCH FULL
+                        </span>
+                      ) : (
+                        <span
+                          className="badge bg-success w-100 p-2"
+                          style={{
+                            background: "rgba(46, 204, 113, 0.1)",
+                            color: "#2ecc71",
+                            border: "1px solid rgba(46, 204, 113, 0.3)",
+                            borderRadius: 8,
+                          }}
+                        >
+                          <Check
+                            size={14}
+                            className="me-2"
+                            style={ICON_STYLE}
+                          />
+                          {available} SPOTS AVAILABLE
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="batch-footer">
+                    <button
+                      className="action-btn edit-btn"
+                      style={{ flex: 1 }}
+                      title="Edit"
+                      onClick={() => openEditSoftSkillsModal(slot)}
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      className="action-btn manual-btn"
+                      style={{
+                        flex: 2,
+                        background: "rgba(39, 174, 96, 0.1)",
+                        borderColor: "rgba(39, 174, 96, 0.3)",
+                        color: "#2ecc71",
+                      }}
+                      disabled={isFull}
+                      onClick={() => openManualBookingModal(slot._id)}
+                    >
+                      <UserPlus size={14} className="me-1" style={ICON_STYLE} />{" "}
+                      Book
+                    </button>
+                    <button
+                      className="action-btn delete-btn"
+                      style={{ flex: 1, color: "#ff6b6b" }}
+                      onClick={() => showDeleteConfirm(slot._id)}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Add/Edit Offline Batch Modal */}
       {offlineModalOpen && (
         <div className="admin-modal-overlay" style={{ display: "flex" }}>
@@ -1923,6 +2308,96 @@ export default function CoursesView() {
         </div>
       )}
 
+      {/* Add / Edit Soft Skills Batch Modal */}
+      {softSkillsModalOpen && (
+        <div className="admin-modal-overlay" style={{ display: "flex" }}>
+          <div
+            className="admin-modal"
+            style={{ maxWidth: 550, width: "95%", margin: "20px auto" }}
+          >
+            <div className="admin-modal-header">
+              <h3 className="admin-modal-title">
+                <Sparkles size={18} className="me-2" style={{ ...ICON_STYLE, color: "#10b981" }} />
+                {editSoftSkillsSlotId
+                  ? "Edit 4 Weeks Soft Skills Bootcamp Batch"
+                  : "Schedule 4 Weeks Soft Skills Bootcamp Batch"}
+              </h3>
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                onClick={() => setSoftSkillsModalOpen(false)}
+              ></button>
+            </div>
+
+            <div className="alert alert-dark mb-3" style={{ border: "1px solid rgba(16, 185, 129, 0.3)", background: "rgba(16, 185, 129, 0.05)", fontSize: "0.85rem", color: "#e5e7eb" }}>
+              <strong style={{ color: "#10b981" }}>Cohort Specifications:</strong>
+              <ul className="mb-0 mt-1 ps-3">
+                <li>Daily Timings: <strong>9:30 AM – 10:30 AM IST</strong> (Monday – Friday)</li>
+                <li>Base Fee: <strong>₹5,999 + 18% GST</strong> (₹7,078.82 total)</li>
+                <li>Policy: <strong>Zero Late Admissions</strong> (Admissions close upon batch start)</li>
+              </ul>
+            </div>
+
+            <div className="mb-3">
+              <label className="admin-form-label">Batch Number / Identifier*</label>
+              <input
+                type="text"
+                className="admin-input"
+                placeholder="e.g. 01, Nov-Cohort, etc."
+                value={softSkillsBatchNo}
+                onChange={(e) => setSoftSkillsBatchNo(e.target.value)}
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="admin-form-label">Batch Start Date*</label>
+              <input
+                type="date"
+                className="admin-input"
+                value={softSkillsStartDate}
+                onChange={(e) => setSoftSkillsStartDate(e.target.value)}
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="admin-form-label">Cohort Seat Capacity*</label>
+              <input
+                type="number"
+                min={1}
+                max={100}
+                className="admin-input"
+                value={softSkillsMaxStudents}
+                onChange={(e) => setSoftSkillsMaxStudents(Number(e.target.value))}
+              />
+              <small className="text-muted">Standard personalized cohort cap is 25 seats.</small>
+            </div>
+
+            <div className="modal-footer px-0 pb-0 pt-3">
+              <button
+                type="button"
+                className="thm-btn cancel-btn"
+                onClick={() => setSoftSkillsModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="thm-btn"
+                style={{ background: "#10b981", borderColor: "#10b981", color: "#fff" }}
+                onClick={saveSoftSkillsSlot}
+                disabled={savingSoftSkillsSlot}
+              >
+                {savingSoftSkillsSlot
+                  ? "Saving..."
+                  : editSoftSkillsSlotId
+                    ? "Update Batch"
+                    : "Schedule Cohort"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Manual Booking Modal */}
       {bookModalOpen && (
         <div
@@ -1965,6 +2440,81 @@ export default function CoursesView() {
                   manually.
                 </small>
               </div>
+
+              {/* Payment Method Selector */}
+              <div
+                className="mb-3"
+                style={{
+                  borderLeft: "3px solid #2ecc71",
+                  paddingLeft: 15,
+                  marginTop: 15,
+                }}
+              >
+                <label className="admin-form-label mb-2">Payment Method / Source*</label>
+                <div className="d-flex gap-3">
+                  <label style={{ display: "flex", alignItems: "center", gap: 6, color: "#fff", cursor: "pointer", fontSize: "0.85rem" }}>
+                    <input
+                      type="radio"
+                      name="manualPaymentMethod"
+                      value="manual"
+                      checked={manualPaymentMethod === "manual"}
+                      onChange={() => setManualPaymentMethod("manual")}
+                    />
+                    Manual / Cash / Office
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: 6, color: "#fff", cursor: "pointer", fontSize: "0.85rem" }}>
+                    <input
+                      type="radio"
+                      name="manualPaymentMethod"
+                      value="bank_transfer"
+                      checked={manualPaymentMethod === "bank_transfer"}
+                      onChange={() => setManualPaymentMethod("bank_transfer")}
+                    />
+                    Bank Transfer (NEFT / IMPS / UPI)
+                  </label>
+                </div>
+
+                {manualPaymentMethod === "bank_transfer" && (
+                  <div className="mt-2">
+                    <label className="admin-form-label" style={{ fontSize: "0.75rem" }}>
+                      Bank Reference / UTR Number*
+                    </label>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="e.g. UTR123456789 / IMPS Ref"
+                      required
+                      value={manualTransactionRef}
+                      onChange={(e) => setManualTransactionRef(e.target.value)}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {bookingSlot?.programType === "soft_skills" && (
+                <div
+                  className="mb-3"
+                  style={{
+                    borderLeft: "3px solid #10b981",
+                    paddingLeft: 15,
+                    marginTop: 15,
+                    background: "rgba(16, 185, 129, 0.05)",
+                    padding: "10px 15px",
+                    borderRadius: "0 8px 8px 0",
+                  }}
+                >
+                  <div style={{ color: "#10b981", fontWeight: 700, fontSize: "0.9rem" }}>
+                    <Sparkles size={14} className="me-1" style={ICON_STYLE} /> 4 Weeks Soft Skills Bootcamp Enrollment
+                  </div>
+                  <div style={{ fontSize: "0.78rem", color: "#d1d5db", marginTop: 4 }}>
+                    Cohort Timings: <strong>Daily 9:30 AM – 10:30 AM (IST)</strong>
+                    <br />
+                    Standard Fee: <strong>₹5,999 + 18% GST = ₹7,078.82</strong>
+                    <br />
+                    Enrolling will automatically tag student with the <strong>Soft Skills Bootcamp</strong> badge in database and roster.
+                  </div>
+                </div>
+              )}
 
               {bookingSlot?.mode === "offline" && (
                 <div
@@ -2088,7 +2638,7 @@ export default function CoursesView() {
                 </div>
               )}
 
-              {bookingSlot?.isFullCourse && (
+              {bookingSlot?.isFullCourse && bookingSlot?.programType !== "soft_skills" && (
                 <div
                   className="mb-3"
                   style={{

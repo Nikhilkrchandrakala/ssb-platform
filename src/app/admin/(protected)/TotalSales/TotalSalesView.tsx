@@ -45,6 +45,7 @@ interface PopulatedSlot {
   title?: string;
   batchNo?: string;
   startTime?: string;
+  programType?: string;
 }
 
 interface OrderItem {
@@ -62,7 +63,10 @@ interface OrderItem {
   couponCode?: string;
   referralCode?: string;
   paymentId?: string;
-  bookingMethod?: "manual" | "standard" | "franchise" | "sales" | null;
+  bookingMethod?: "manual" | "standard" | "franchise" | "sales" | "payment_link" | null;
+  paymentMethod?: string;
+  transactionRef?: string;
+  programType?: string;
   salesPersonId?: PopulatedUser | string | null;
   installmentPlanId?: { status?: string; installments?: { status?: string; amount?: number }[] } | null;
   status?: string;
@@ -92,7 +96,7 @@ interface FranchisePartner {
 type BookingMethod = "manual" | "standard" | "franchise" | "sales";
 
 function resolveBookingMethod(o: OrderItem): BookingMethod {
-  if (o.bookingMethod) return o.bookingMethod;
+  if (o.bookingMethod && o.bookingMethod !== "payment_link") return o.bookingMethod as BookingMethod;
   const hasPayment = !!(o.paymentId && o.paymentId.trim() !== "");
   const hasReferral = !!(o.referralCode && o.referralCode.trim() !== "");
   if (!hasPayment) return "manual";
@@ -123,6 +127,56 @@ const METHOD_BADGE: Record<BookingMethod, { icon: LucideIcon; color: string; bg:
 };
 
 function BookingMethodBadge({ order }: { order: OrderItem }) {
+  if (order.paymentMethod === "bank_transfer") {
+    return (
+      <div className="franchise-info">
+        <span
+          style={{
+            padding: "3px 8px",
+            borderRadius: 4,
+            fontSize: "0.72rem",
+            fontWeight: 800,
+            textTransform: "uppercase",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            background: "rgba(59, 130, 246, 0.15)",
+            color: "#60a5fa",
+            border: "1px solid rgba(59, 130, 246, 0.3)",
+          }}
+          title={order.transactionRef ? `UTR: ${order.transactionRef}` : "Bank Transfer"}
+        >
+          <CreditCard size={12} style={ICON_STYLE} />
+          Bank Transfer {order.transactionRef ? `· ${order.transactionRef.slice(0, 8)}...` : ""}
+        </span>
+      </div>
+    );
+  }
+
+  if (order.bookingMethod === "payment_link") {
+    return (
+      <div className="franchise-info">
+        <span
+          style={{
+            padding: "3px 8px",
+            borderRadius: 4,
+            fontSize: "0.72rem",
+            fontWeight: 800,
+            textTransform: "uppercase",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            background: "rgba(245, 158, 11, 0.15)",
+            color: "#f59e0b",
+            border: "1px solid rgba(245, 158, 11, 0.3)",
+          }}
+        >
+          Payment Link
+        </span>
+      </div>
+    );
+  }
+
   const method = resolveBookingMethod(order);
   const b = METHOD_BADGE[method];
   const Icon = b.icon;
@@ -581,9 +635,25 @@ export default function TotalSalesView() {
                         <EnrollmentModeBadge mode={u?.enrollmentMode} />
                       </td>
                       <td>
-                        <span className={`product-badge ${isBatch ? "badge-batch" : "badge-course"}`}>
-                          {isBatch ? <CalendarDays size={12} /> : <Book size={12} />} {isBatch ? "BATCH" : "COURSE"}
-                        </span>
+                        <div className="d-flex align-items-center gap-1 flex-wrap">
+                          <span className={`product-badge ${isBatch ? "badge-batch" : "badge-course"}`}>
+                            {isBatch ? <CalendarDays size={12} /> : <Book size={12} />} {isBatch ? "BATCH" : "COURSE"}
+                          </span>
+                          {(o.programType === "soft_skills" || o.slotId?.programType === "soft_skills") && (
+                            <span
+                              className="badge"
+                              style={{
+                                background: "rgba(16, 185, 129, 0.15)",
+                                color: "#10b981",
+                                border: "1px solid rgba(16, 185, 129, 0.4)",
+                                fontSize: "0.68rem",
+                                fontWeight: 700,
+                              }}
+                            >
+                              Soft Skills Bootcamp
+                            </span>
+                          )}
+                        </div>
                         <div style={{ fontSize: "0.85rem", fontWeight: 500 }}>{prodTitle}</div>
                       </td>
                       <td className="text-success" style={{ fontWeight: 700 }}>

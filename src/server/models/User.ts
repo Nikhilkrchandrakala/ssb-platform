@@ -30,6 +30,7 @@ const userSchema = new Schema(
     // batch. Defaults to "online" since every student before this field
     // existed was, in fact, online.
     enrollmentMode: { type: String, enum: ["online", "offline"], default: "online" },
+    enrolledPrograms: { type: [String], default: [] },
     batch: { type: String, default: "" },
     chestNo: { type: String, default: "" },
     isManuallyCreated: { type: Boolean, default: false },
@@ -89,5 +90,9 @@ userSchema.set("toJSON", {
     return ret;
   },
 });
+
+if (process.env.NODE_ENV !== "production") {
+  delete (mongoose.models as Record<string, unknown>).User;
+}
 
 export const User = mongoose.models.User || mongoose.model("User", userSchema);

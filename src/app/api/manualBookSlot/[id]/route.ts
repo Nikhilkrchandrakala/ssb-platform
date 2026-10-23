@@ -24,7 +24,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   try {
     const { id } = await params;
-    const { email, selectedModules, discountType, discountValue, offlinePaymentPlan } = await req.json();
+    const {
+      email,
+      selectedModules,
+      discountType,
+      discountValue,
+      offlinePaymentPlan,
+      paymentMethod,
+      transactionRef,
+    } = await req.json();
 
     if (!email) {
       return NextResponse.json({ message: "Email is required" }, { status: 400 });
@@ -55,6 +63,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ message: "Slot not found" }, { status: 404 });
     }
 
+    // Strict No Late Admissions check for Soft Skills Bootcamp
+    if ((slot.programType === "soft_skills" || slot.noLateAdmissions) && slot.startTime) {
+      const { isBookingClosed } = await import("@/lib/batchTiming");
+      if (isBookingClosed(slot)) {
+        return NextResponse.json(
+          {
+            message:
+              "Admissions are closed for this Soft Skills Bootcamp batch as the batch start date/time has passed (no late admissions permitted).",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // find user (same collection as auth)
     const targetUser = await User.findOne({ email: cleanEmail });
 
@@ -66,12 +88,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // already booked check
     if (slot.bookedStudents.some((bid: { toString(): string }) => bid.toString() === userId.toString())) {
-      return NextResponse.json({ message: "Already booked" }, { status: 400 });
+      return NextResponse.json({ message: "Already booked in this batch" }, { status: 400 });
     }
 
-    // seat full check
-    if (slot.bookedStudents.length >= slot.maxStudents) {
-      return NextResponse.json({ message: "Slot is full" }, { status: 400 });
+    // seat full check (max 25 for soft skills)
+    const maxCapacity = slot.maxStudents || (slot.programType === "soft_skills" ? 25 : 10);
+    if (slot.bookedStudents.length >= maxCapacity) {
+      return NextResponse.json({ message: `Slot is full (maximum ${maxCapacity} seats)` }, { status: 400 });
     }
 
     // Dynamic Global Pricing Verification
@@ -87,10 +110,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const getPrice = (cid: string) => (courseMap[cid] !== undefined ? courseMap[cid] : DEFAULT_PRICES[cid]);
 
     const isOfflineSlot = slot.mode === "offline";
+    const isSoftSkillsSlot = slot.programType === "soft_skills";
     let calculatedBaseAmount = 0;
     const modules: string[] = selectedModules || [];
 
-    if (isOfflineSlot) {
+    if (isSoftSkillsSlot) {
+      calculatedBaseAmount = slot.price || 5999;
+    } else if (isOfflineSlot) {
       if (offlinePaymentPlan === "full") {
         calculatedBaseAmount = OFFLINE_TOTAL_FEE;
       } else {
@@ -147,7 +173,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     await slot.save();
 
     // ALSO CREATE ORDER
-    const selectedModulesFinal = isOfflineSlot ? [] : (slot.isFullCourse ? (modules.length > 0 ? modules : ["full_course"]) : []);
+    const selectedModulesFinal = (isOfflineSlot || isSoftSkillsSlot)
+      ? []
+      : (slot.isFullCourse ? (modules.length > 0 ? modules : ["full_course"]) : []);
 
     const order = new Order({
       userId,
@@ -161,6 +189,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       status: "paid",
       selectedModules: selectedModulesFinal,
       bookingMethod: "manual",
+      programType: slot.programType || "ssb",
+      paymentMethod: paymentMethod === "bank_transfer" ? "bank_transfer" : "manual",
+      transactionRef: transactionRef ? String(transactionRef).trim() : null,
     });
 
     await order.save();
@@ -174,7 +205,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       targetUser.batch = slot.batchNo.trim();
     }
 
-    if (!isOfflineSlot) {
+    if (isSoftSkillsSlot) {
+      if (!targetUser.enrolledPrograms) targetUser.enrolledPrograms = [];
+      if (!targetUser.enrolledPrograms.includes("soft_skills_bootcamp")) {
+        targetUser.enrolledPrograms.push("soft_skills_bootcamp");
+      }
+    } else if (!isOfflineSlot) {
       const bookedModules: string[] = order.selectedModules || [];
       targetUser.clinicalStage = resolveClinicalStageFromModules(bookedModules);
     }
@@ -184,14 +220,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // (matches legacy: markModified + save runs unconditionally).
     targetUser.markModified("updatedAt");
     await targetUser.save();
-    // manualBookSlot never used to touch this at all — a student manually
-    // booked into an online batch after an earlier offline purchase (or vice
-    // versa) kept showing the wrong enrollment-mode badge everywhere forever.
-    await syncEnrollmentModeForUser(String(targetUser._id));
-    await syncClinicalStageForUser(String(targetUser._id));
+    
+    if (!isSoftSkillsSlot) {
+      await syncEnrollmentModeForUser(String(targetUser._id));
+      await syncClinicalStageForUser(String(targetUser._id));
+    }
 
     return NextResponse.json({
-      message: "Slot booked manually successfully",
+      message: "Slot booked successfully",
       data: slot,
     });
   } catch (err) {

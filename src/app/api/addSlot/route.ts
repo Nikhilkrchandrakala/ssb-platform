@@ -9,20 +9,36 @@ export async function POST(req: NextRequest) {
   if (!hasRole(user, ["admin", "owner"])) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   try {
-    const { title, batchNo, startTime, endTime, maxStudents, price, isFullCourse, mode, location } = await req.json();
-
-    await connectDB();
-
-    const slot = new Slot({
+    const {
       title,
       batchNo,
       startTime,
       endTime,
       maxStudents,
       price,
-      isFullCourse: isFullCourse || false,
+      isFullCourse,
+      mode,
+      location,
+      programType,
+      noLateAdmissions,
+    } = await req.json();
+
+    await connectDB();
+
+    const isSoftSkills = programType === "soft_skills" || (title && title.toLowerCase().includes("soft skills"));
+
+    const slot = new Slot({
+      title,
+      batchNo,
+      startTime,
+      endTime: endTime || (isSoftSkills ? "10:30 AM" : ""),
+      maxStudents: maxStudents || (isSoftSkills ? 25 : 50),
+      price: price !== undefined ? price : (isSoftSkills ? 5999 : 12499),
+      isFullCourse: isFullCourse !== undefined ? isFullCourse : (isSoftSkills ? true : false),
       mode: mode === "offline" ? "offline" : "online",
       location: location || "",
+      programType: isSoftSkills ? "soft_skills" : (programType || "ssb"),
+      noLateAdmissions: noLateAdmissions !== undefined ? Boolean(noLateAdmissions) : (isSoftSkills ? true : false),
       createdBy: String(user._id),
     });
 

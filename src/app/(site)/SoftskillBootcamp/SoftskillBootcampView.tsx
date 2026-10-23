@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/style/SoftskillBootcamp.module.css";
 import navStyles from "@/style/Navbar.module.css";
@@ -8,6 +8,11 @@ import Sidebar from "@/components/site/Sidebar";
 import EnquiryForm from "@/components/site/EnquiryForm";
 import { useSiteUser } from "@/components/site/SiteUserProvider";
 import toast from "react-hot-toast";
+import { RAZORPAY_KEY_ID } from "@/lib/razorpayKey";
+import { loadRazorpay } from "@/lib/loadRazorpay";
+import { postJSON, ApiError } from "@/lib/authApi";
+import { isBookingClosed } from "@/lib/batchTiming";
+import type { RazorpayOptions } from "@/global";
 import {
   FaCheck,
   FaCalendarAlt,
@@ -29,27 +34,18 @@ import {
 } from "react-icons/fa";
 import { IoMenu } from "react-icons/io5";
 
-interface Batch {
-  id: string;
+export interface BatchSlot {
+  _id: string;
   title: string;
-  dateRange: string;
-  status: "filling_fast" | "open";
-  seatsLeft: number;
-  price: number;
-  isFeatured?: boolean;
+  batchNo?: string;
+  startTime: string;
+  endTime?: string;
+  maxStudents?: number;
+  bookedStudents?: string[];
+  price?: number;
+  programType?: string;
+  noLateAdmissions?: boolean;
 }
-
-const BATCHES: Batch[] = [
-  {
-    id: "batch-01",
-    title: "Batch 01 — Live Online Cohort",
-    dateRange: "Starts 03 November 2026 • 4 Weeks (9:30 AM – 10:30 AM)",
-    status: "filling_fast",
-    seatsLeft: 6,
-    price: 5999,
-    isFeatured: true,
-  },
-];
 
 const CURRICULUM_WEEKS = [
   {
@@ -155,16 +151,32 @@ const FAQS = [
   },
 ];
 
+function formatBatchDateRange(startStr: string): string {
+  try {
+    const s = new Date(startStr);
+    if (isNaN(s.getTime())) return startStr;
+    const end = new Date(s.getTime() + 27 * 24 * 60 * 60 * 1000);
+    return `${s.toLocaleDateString("en-IN", { month: "short", day: "numeric" })} – ${end.toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })}`;
+  } catch {
+    return startStr;
+  }
+}
+
 export default function SoftskillBootcampView() {
   const router = useRouter();
   const { user } = useSiteUser();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Live batches state
+  const [batches, setBatches] = useState<BatchSlot[]>([]);
+  const [loadingBatches, setLoadingBatches] = useState(true);
+
   // Booking Modal State
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
-  const [selectedBatch, setSelectedBatch] = useState<Batch>(BATCHES[0]);
+  const [selectedBatch, setSelectedBatch] = useState<BatchSlot | null>(null);
   const [couponCode, setCouponCode] = useState("");
   const [discountAmount, setDiscountAmount] = useState(0);
+  const [isPaying, setIsPaying] = useState(false);
 
   // Form Fields
   const [fullName, setFullName] = useState(user?.name || "");
@@ -176,11 +188,56 @@ export default function SoftskillBootcampView() {
   const [isBooked, setIsBooked] = useState(false);
   const [generatedBookingId, setGeneratedBookingId] = useState("");
 
-  const handleOpenBooking = (batch: Batch) => {
-    setSelectedBatch(batch);
-    if (user?.name && !fullName) setFullName(user.name);
-    if (user?.email && !email) setEmail(user.email);
-    if (user?.phone && !phone) setPhone(user.phone);
+  const fetchBatches = () => {
+    fetch("/api/allSlots?program=soft_skills")
+      .then((res) => res.json())
+      .then((data: BatchSlot[]) => {
+        if (Array.isArray(data)) {
+          setBatches(data);
+          if (data.length > 0 && !selectedBatch) {
+            setSelectedBatch(data[0]);
+          }
+        }
+      })
+      .catch((err) => console.error("Error fetching batches:", err))
+      .finally(() => setLoadingBatches(false));
+  };
+
+  useEffect(() => {
+    fetchBatches();
+  }, []);
+
+  const handleOpenBooking = (batch?: BatchSlot | null) => {
+    if (!user) {
+      toast("Please sign in or create an account to book your cohort seat.", {
+        icon: "🔒",
+      });
+      router.push(`/login?redirect=${encodeURIComponent("/SoftskillBootcamp")}`);
+      return;
+    }
+
+    const targetBatch = batch || (batches.length > 0 ? batches[0] : null);
+    if (!targetBatch) {
+      toast.error("No upcoming batches available currently. Please check back soon.");
+      return;
+    }
+
+    if (isBookingClosed(targetBatch)) {
+      toast.error("Admissions are closed for this batch as it has started (zero late admissions rule).");
+      return;
+    }
+
+    const bookedCount = targetBatch.bookedStudents?.length || 0;
+    const max = targetBatch.maxStudents || 25;
+    if (bookedCount >= max) {
+      toast.error("This batch has reached its maximum capacity of 25 seats.");
+      return;
+    }
+
+    setSelectedBatch(targetBatch);
+    setFullName(user.name || "");
+    setEmail(user.email || "");
+    setPhone(user.phone || "");
     setIsBooked(false);
     setBookingModalOpen(true);
   };
@@ -201,20 +258,100 @@ export default function SoftskillBootcampView() {
     }
   };
 
-  const handleConfirmBooking = (e: React.FormEvent) => {
+  const handleConfirmBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim() || !email.trim() || !phone.trim()) {
-      toast.error("Please fill in your name, email, and phone number.");
+    if (!selectedBatch) return;
+
+    if (!user) {
+      toast.error("Please sign in to proceed with booking.");
+      router.push(`/login?redirect=${encodeURIComponent("/SoftskillBootcamp")}`);
       return;
     }
 
-    const bookingId = `SB-${Date.now().toString().slice(-6)}`;
-    setGeneratedBookingId(bookingId);
-    setIsBooked(true);
-    toast.success("Seat reserved successfully!");
+    if (isBookingClosed(selectedBatch)) {
+      toast.error("Admissions are closed for this batch (no late admissions permitted).");
+      return;
+    }
+
+    if (!fullName.trim() || !email.trim() || !phone.trim()) {
+      toast.error("Please fill in your name, email, and mobile number.");
+      return;
+    }
+
+    try {
+      setIsPaying(true);
+      const loaded = await loadRazorpay();
+      if (!loaded || !window.Razorpay) {
+        toast.error("Payment gateway failed to load. Please check your internet connection.");
+        setIsPaying(false);
+        return;
+      }
+
+      const order = await postJSON<{ orderId: string; amount: number }>("/api/createOrder", {
+        slotId: selectedBatch._id,
+        programType: "soft_skills",
+        couponCode: couponCode.trim() ? couponCode.trim() : null,
+      });
+
+      const options: RazorpayOptions = {
+        key: RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: "INR",
+        order_id: order.orderId,
+        name: "SSB with ISV",
+        description: `4 Weeks Soft Skills Bootcamp — Batch ${selectedBatch.batchNo || "Live"}`,
+        prefill: {
+          name: fullName.trim(),
+          email: email.trim(),
+          contact: phone.trim(),
+        },
+        handler: async (response) => {
+          try {
+            await postJSON("/api/verifyPayment", {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            const refId = response.razorpay_payment_id || `SB-${Date.now().toString().slice(-6)}`;
+            setGeneratedBookingId(refId);
+            setIsBooked(true);
+            toast.success("Payment verified! Welcome to the 4 Weeks Soft Skills Bootcamp.");
+            fetchBatches();
+          } catch (verifyErr) {
+            console.error("Verification error:", verifyErr);
+            toast.error("Payment verification failed. Please contact support.");
+          } finally {
+            setIsPaying(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setIsPaying(false);
+          },
+        },
+        theme: {
+          color: "#d2a100",
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error("Booking error:", err);
+      toast.error(
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Payment initialization failed",
+      );
+      setIsPaying(false);
+    }
   };
 
-  const finalPrice = Math.max(selectedBatch.price - discountAmount, 0);
+  const basePrice = selectedBatch ? (selectedBatch.price || 5999) : 5999;
+  const finalPrice = Math.max(basePrice - discountAmount, 0);
 
   return (
     <div className={styles.pageRoot}>
@@ -268,7 +405,7 @@ export default function SoftskillBootcampView() {
             <button
               type="button"
               className={styles.primaryCta}
-              onClick={() => handleOpenBooking(BATCHES[0])}
+              onClick={() => handleOpenBooking(batches[0] || null)}
             >
               <span>Book Your Seat</span>
               <FaCheck />
@@ -478,72 +615,202 @@ export default function SoftskillBootcampView() {
           </div>
 
           <div className={styles.batchCardsGrid}>
-            {BATCHES.map((batch) => (
+            {loadingBatches ? (
               <div
-                key={batch.id}
-                className={`${styles.batchCard} ${batch.isFeatured ? styles.batchCardFeatured : ""}`}
+                style={{
+                  textAlign: "center",
+                  padding: "48px 20px",
+                  color: "#a0a0a0",
+                  gridColumn: "1 / -1",
+                }}
               >
-                {batch.isFeatured && (
-                  <span className={styles.featuredBadge}>
-                    Recommended Batch
-                  </span>
-                )}
-
-                <div className={styles.batchHeader}>
-                  <div>
-                    <h3 className={styles.batchTitle}>{batch.title}</h3>
-                    <p className={styles.batchDateRange}>{batch.dateRange}</p>
-                  </div>
-
-                  <span
-                    className={`${styles.seatsPill} ${batch.seatsLeft > 10 ? styles.seatsPillGreen : ""}`}
-                  >
-                    {batch.seatsLeft} seats left
-                  </span>
-                </div>
-
-                <div className={styles.batchTimings}>
-                  <div className={styles.timingOption}>
-                    <span className={styles.timingTag}>Timings:</span>
-                    <strong style={{ color: "#ffffff", fontWeight: 700 }}>
-                      9:30 AM – 10:30 AM
-                    </strong>
-                  </div>
-                  <div className={styles.timingOption}>
-                    <span className={styles.timingTag}>Schedule:</span>
-                    <span>Monday to Friday (1 Hour Daily Live)</span>
-                  </div>
-                  <div className={styles.timingOption}>
-                    <span className={styles.timingTag}>Saturday Drills:</span>
-                    <span>Alternate Saturdays • 2 Hours</span>
-                  </div>
-                  <div className={styles.timingOption}>
-                    <span className={styles.timingTag}>Mode:</span>
-                    <span>100% Live Interactive Online Sessions</span>
-                  </div>
-                </div>
-
-                <div className={styles.batchPricing}>
-                  <div>
-                    <span className={styles.priceLabel}>Course Fee</span>
-                    <span className={styles.priceVal}>
-                      ₹{batch.price.toLocaleString("en-IN")}
-                    </span>
-                    <span className={styles.priceInclusive}>+ 18% GST</span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  className={styles.bookBatchBtn}
-                  onClick={() => handleOpenBooking(batch)}
-                  style={{ color: "#000000" }}
-                >
-                  <span style={{ color: "#000000" }}>Book Your Seat</span>
-                  <FaCheck style={{ color: "#000000" }} />
-                </button>
+                Loading available batches...
               </div>
-            ))}
+            ) : batches.length === 0 ? (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "54px 28px",
+                  background: "rgba(255, 255, 255, 0.02)",
+                  borderRadius: "16px",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  color: "#d0d0d0",
+                  gridColumn: "1 / -1",
+                  maxWidth: "600px",
+                  margin: "0 auto",
+                  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.4)",
+                }}
+              >
+                <div
+                  style={{
+                    width: "48px",
+                    height: "48px",
+                    borderRadius: "50%",
+                    background: "rgba(210, 161, 0, 0.12)",
+                    border: "1px solid rgba(210, 161, 0, 0.3)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--secondary-color, #d2a100)",
+                    fontSize: "20px",
+                    marginBottom: "16px",
+                  }}
+                >
+                  <FaClock />
+                </div>
+                <h3
+                  style={{
+                    color: "#ffffff",
+                    fontSize: "1.25rem",
+                    fontWeight: 700,
+                    marginBottom: "8px",
+                    letterSpacing: "-0.2px",
+                  }}
+                >
+                  Upcoming Batches Announcing Soon
+                </h3>
+                <p
+                  style={{
+                    color: "#9ca3af",
+                    fontSize: "0.95rem",
+                    lineHeight: 1.6,
+                    margin: 0,
+                  }}
+                >
+                  New cohort schedules are currently being finalized. Please stay tuned for upcoming batch dates.
+                </p>
+              </div>
+            ) : (
+              batches.map((batch, idx) => {
+                const bookedCount = batch.bookedStudents?.length || 0;
+                const max = batch.maxStudents || 25;
+                const seatsLeft = Math.max(0, max - bookedCount);
+                const closed = isBookingClosed(batch);
+                const isFull = seatsLeft <= 0;
+                const isFeatured = idx === 0 && !closed && !isFull;
+                const dateRangeStr = formatBatchDateRange(batch.startTime);
+
+                return (
+                  <div
+                    key={batch._id}
+                    className={`${styles.batchCard} ${isFeatured ? styles.batchCardFeatured : ""}`}
+                    style={
+                      closed
+                        ? { opacity: 0.75, filter: "grayscale(20%)" }
+                        : undefined
+                    }
+                  >
+                    {isFeatured && (
+                      <span className={styles.featuredBadge}>
+                        Recommended Batch
+                      </span>
+                    )}
+
+                    <div className={styles.batchHeader}>
+                      <div>
+                        <h3 className={styles.batchTitle}>
+                          {batch.title || `Batch ${batch.batchNo || idx + 1}`}
+                        </h3>
+                        <p className={styles.batchDateRange}>{dateRangeStr}</p>
+                      </div>
+
+                      <span
+                        className={`${styles.seatsPill} ${
+                          closed
+                            ? ""
+                            : seatsLeft > 10
+                              ? styles.seatsPillGreen
+                              : ""
+                        }`}
+                        style={
+                          closed
+                            ? {
+                                background: "rgba(239, 68, 68, 0.15)",
+                                color: "#ef4444",
+                                borderColor: "rgba(239, 68, 68, 0.3)",
+                              }
+                            : isFull
+                              ? {
+                                  background: "rgba(245, 158, 11, 0.15)",
+                                  color: "#f59e0b",
+                                  borderColor: "rgba(245, 158, 11, 0.3)",
+                                }
+                              : undefined
+                        }
+                      >
+                        {closed
+                          ? "Admissions Closed"
+                          : isFull
+                            ? "Cohort Full (25/25)"
+                            : `${seatsLeft} seats left`}
+                      </span>
+                    </div>
+
+                    <div className={styles.batchTimings}>
+                      <div className={styles.timingOption}>
+                        <span className={styles.timingTag}>Timings:</span>
+                        <strong style={{ color: "#ffffff", fontWeight: 700 }}>
+                          9:30 AM – 10:30 AM
+                        </strong>
+                      </div>
+                      <div className={styles.timingOption}>
+                        <span className={styles.timingTag}>Schedule:</span>
+                        <span>Monday to Friday (1 Hour Daily Live)</span>
+                      </div>
+                      <div className={styles.timingOption}>
+                        <span className={styles.timingTag}>
+                          Saturday Drills:
+                        </span>
+                        <span>Alternate Saturdays • 2 Hours</span>
+                      </div>
+                      <div className={styles.timingOption}>
+                        <span className={styles.timingTag}>Mode:</span>
+                        <span>100% Live Interactive Online Sessions</span>
+                      </div>
+                      <div className={styles.timingOption}>
+                        <span className={styles.timingTag}>Policy:</span>
+                        <span style={{ color: "#f59e0b", fontWeight: 600 }}>
+                          Strict Zero Late Admissions
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={styles.batchPricing}>
+                      <div>
+                        <span className={styles.priceLabel}>Course Fee</span>
+                        <span className={styles.priceVal}>
+                          ₹{(batch.price || 5999).toLocaleString("en-IN")}
+                        </span>
+                        <span className={styles.priceInclusive}>+ 18% GST</span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className={styles.bookBatchBtn}
+                      onClick={() => handleOpenBooking(batch)}
+                      disabled={closed || isFull}
+                      style={{
+                        color: closed || isFull ? "#9ca3af" : "#000000",
+                        background: closed || isFull ? "#262626" : undefined,
+                        cursor: closed || isFull ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      <span>
+                        {closed
+                          ? "Admissions Closed"
+                          : isFull
+                            ? "Cohort Full"
+                            : "Book Your Seat"}
+                      </span>
+                      {!closed && !isFull && (
+                        <FaCheck style={{ color: "#000000" }} />
+                      )}
+                    </button>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </section>
@@ -596,8 +863,11 @@ export default function SoftskillBootcampView() {
                 <div className={styles.modalHeader}>
                   <h3>Enrol in 4 Weeks Soft Skills Bootcamp</h3>
                   <p>
-                    {selectedBatch.title} • {selectedBatch.dateRange} • 9:30 AM
-                    – 10:30 AM
+                    {selectedBatch?.title || "4 Weeks Soft Skills Bootcamp"} •{" "}
+                    {selectedBatch
+                      ? formatBatchDateRange(selectedBatch.startTime)
+                      : ""}{" "}
+                    • 9:30 AM – 10:30 AM
                   </p>
                 </div>
 
@@ -699,7 +969,7 @@ export default function SoftskillBootcampView() {
                     <div className={styles.summaryRow}>
                       <span>Bootcamp Fee (4 Weeks Live):</span>
                       <span>
-                        ₹{selectedBatch.price.toLocaleString("en-IN")} + 18% GST
+                        ₹{basePrice.toLocaleString("en-IN")} + 18% GST
                       </span>
                     </div>
                     {discountAmount > 0 && (
@@ -723,8 +993,16 @@ export default function SoftskillBootcampView() {
                     </div>
                   </div>
 
-                  <button type="submit" className={styles.confirmBookBtn}>
-                    Confirm &amp; Reserve Seat
+                  <button
+                    type="submit"
+                    className={styles.confirmBookBtn}
+                    disabled={isPaying}
+                    style={{
+                      opacity: isPaying ? 0.7 : 1,
+                      cursor: isPaying ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {isPaying ? "Processing Payment..." : "Confirm & Pay via Razorpay"}
                   </button>
                 </form>
               </>
@@ -734,8 +1012,12 @@ export default function SoftskillBootcampView() {
                 <h3 className={styles.successTitle}>Seat Reserved!</h3>
                 <p className={styles.successDesc}>
                   Congratulations, <strong>{fullName}</strong>. Your seat in{" "}
-                  {selectedBatch.title} ({selectedBatch.dateRange}) has been
-                  held.
+                  {selectedBatch?.title || "4 Weeks Soft Skills Bootcamp"}{" "}
+                  (
+                  {selectedBatch
+                    ? formatBatchDateRange(selectedBatch.startTime)
+                    : ""}
+                  ) has been held.
                 </p>
 
                 <div className={styles.bookingIdBadge}>

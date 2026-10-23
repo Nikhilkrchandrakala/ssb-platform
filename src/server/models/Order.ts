@@ -25,7 +25,10 @@ const orderSchema = new Schema(
     signature: { type: String },
     status: { type: String, enum: ["pending", "paid", "failed"], default: "pending" },
     selectedModules: { type: [String], default: [] },
-    bookingMethod: { type: String, enum: ["manual", "standard", "franchise", "sales"], default: null },
+    bookingMethod: { type: String, enum: ["manual", "standard", "franchise", "sales", "payment_link"], default: null },
+    programType: { type: String, enum: ["ssb", "soft_skills"], default: "ssb" },
+    paymentMethod: { type: String, enum: ["razorpay", "bank_transfer", "manual", null], default: null },
+    transactionRef: { type: String, default: null },
     // Sales module (see salesimplementation.md Phase 1) — only set when bookingMethod is "sales".
     salesPersonId: { type: Schema.Types.ObjectId, ref: "AdminUser", default: null },
     installmentPlanId: { type: Schema.Types.ObjectId, ref: "InstallmentPlan", default: null },
@@ -43,5 +46,9 @@ const orderSchema = new Schema(
   },
   { timestamps: true }
 );
+
+if (process.env.NODE_ENV !== "production") {
+  delete (mongoose.models as Record<string, unknown>).Order;
+}
 
 export const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);

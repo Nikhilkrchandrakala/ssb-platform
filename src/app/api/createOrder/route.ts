@@ -30,45 +30,60 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Slot not found" }, { status: 404 });
     }
 
-    // Booking closes 1 hour before the batch's real start time (see
-    // src/lib/batchTiming.ts — Morning/Evening batches have a fixed IST
-    // clock time, so this needs no extra data beyond what's already stored).
-    if (isBookingClosed(slot)) {
-      return NextResponse.json({ message: "Booking for this batch is closed." }, { status: 400 });
+    const isSoftSkills = slot.programType === "soft_skills" || (slot.title && slot.title.toLowerCase().includes("soft skills"));
+
+    if (slot.bookedStudents && slot.bookedStudents.length >= (slot.maxStudents || (isSoftSkills ? 25 : 50))) {
+      return NextResponse.json({ message: "This batch is full." }, { status: 400 });
     }
 
-    // Dynamic Global Pricing Verification
-    const courses = await Course.find({
-      courseId: { $in: ["ssb_ppdt", "psych", "interview", "group_testing", "full_course"] },
-    });
-
-    const courseMap: Record<string, number> = {};
-    courses.forEach((c: { courseId: string; price: number }) => {
-      courseMap[c.courseId] = c.price;
-    });
-
-    const getPrice = (id: string) => (courseMap[id] !== undefined ? courseMap[id] : DEFAULT_PRICES[id]);
+    // Booking closes at cutoff (Strictly no late admissions for Soft Skills Bootcamp)
+    if (isBookingClosed(slot)) {
+      return NextResponse.json(
+        {
+          message: isSoftSkills
+            ? "Admissions for this cohort are closed. No late admissions are permitted for the 4 Weeks Soft Skills Bootcamp."
+            : "Booking for this batch is closed.",
+        },
+        { status: 400 }
+      );
+    }
 
     let calculatedBaseAmount = 0;
     const modules: string[] = selectedModules || [];
 
-    if (slot.isFullCourse) {
-      calculatedBaseAmount = getPrice("full_course");
+    if (isSoftSkills) {
+      calculatedBaseAmount = slot.price || 5999;
     } else {
-      if (modules.length === 0) {
-        calculatedBaseAmount = slot.price || getPrice("full_course");
-      } else if (modules.includes("full_course")) {
+      // Dynamic Global Pricing Verification for SSB
+      const courses = await Course.find({
+        courseId: { $in: ["ssb_ppdt", "psych", "interview", "group_testing", "full_course"] },
+      });
+
+      const courseMap: Record<string, number> = {};
+      courses.forEach((c: { courseId: string; price: number }) => {
+        courseMap[c.courseId] = c.price;
+      });
+
+      const getPrice = (id: string) => (courseMap[id] !== undefined ? courseMap[id] : DEFAULT_PRICES[id]);
+
+      if (slot.isFullCourse) {
         calculatedBaseAmount = getPrice("full_course");
       } else {
-        const individualSelectedCount = modules.filter((id) => id !== "full_course").length;
-        if (individualSelectedCount === 4) {
+        if (modules.length === 0) {
+          calculatedBaseAmount = slot.price || getPrice("full_course");
+        } else if (modules.includes("full_course")) {
           calculatedBaseAmount = getPrice("full_course");
         } else {
-          let sum = 0;
-          modules.forEach((id) => {
-            if (id !== "full_course") sum += getPrice(id);
-          });
-          calculatedBaseAmount = sum;
+          const individualSelectedCount = modules.filter((id) => id !== "full_course").length;
+          if (individualSelectedCount === 4) {
+            calculatedBaseAmount = getPrice("full_course");
+          } else {
+            let sum = 0;
+            modules.forEach((id) => {
+              if (id !== "full_course") sum += getPrice(id);
+            });
+            calculatedBaseAmount = sum;
+          }
         }
       }
     }
@@ -125,9 +140,11 @@ export async function POST(req: NextRequest) {
       discount,
       couponCode: couponCode || null,
       referralCode: referralCode || null,
-      selectedModules: selectedModules || [],
+      selectedModules: isSoftSkills ? ["soft_skills_bootcamp"] : (selectedModules || []),
       status: "pending",
       bookingMethod: referralCode ? "franchise" : "standard",
+      programType: isSoftSkills ? "soft_skills" : "ssb",
+      paymentMethod: "razorpay",
     });
 
     await order.save();

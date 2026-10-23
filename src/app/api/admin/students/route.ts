@@ -64,12 +64,12 @@ export async function GET(req: NextRequest) {
         // the Allotment page, instead of collapsing to a single row whose
         // batch/type/course/assessor columns only ever reflected one batch.
         const paidOrders = await Order.find({ userId: student._id, status: "paid" })
-          .populate("slotId", "title batchNo mode isFullCourse")
+          .populate("slotId", "title batchNo mode isFullCourse programType")
           .populate("assignedGTO", "name")
           .populate("assignedTO", "name")
           .populate("assignedPsych", "name")
           .populate("assignedIO", "name")
-          .select("slotId selectedModules assignedGTO assignedTO assignedPsych assignedIO assignedAssessments price createdAt")
+          .select("slotId selectedModules assignedGTO assignedTO assignedPsych assignedIO assignedAssessments price createdAt programType paymentMethod transactionRef bookingMethod")
           .sort({ createdAt: -1 });
 
         if (!student.batch && paidOrders.length > 0 && paidOrders[0].slotId?.batchNo) {

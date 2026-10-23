@@ -16,9 +16,9 @@
   flex-direction: column;
   padding: 0 0 80px;
   background:
-    radial-gradient(circle at 50% 25%, rgba(210, 161, 0, 0.15) 0%, transparent 60%),
-    linear-gradient(180deg, #09090a 0%, #111113 100%);
-  border-bottom: 1px solid rgba(210, 161, 0, 0.15);
+    linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(12, 12, 13, 0.5) 55%, #0c0c0d 100%),
+    url("/assets/SoftSkillsBg.png") center 30% / cover no-repeat;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   text-align: center;
 }
 
@@ -68,6 +68,7 @@
   margin: 0 0 18px;
   letter-spacing: -0.5px;
   text-transform: uppercase;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.95);
 }
 
 .heroTitleGradient {
@@ -83,14 +84,16 @@
   margin: 0 auto 16px;
   line-height: 1.4;
   max-width: 800px;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.9);
 }
 
 .heroLead {
   font-size: 16px;
-  color: #a8a798;
+  color: #d1d0c5;
   line-height: 1.7;
   max-width: 760px;
   margin: 0 auto 36px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
 }
 
 .heroActions {

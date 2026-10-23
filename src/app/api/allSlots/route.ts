@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
   // default that every batch created before this field existed only picks
   // up once Mongoose loads it. Treat "no value stored" as an implicit
   // "online" here too, or ?mode=online would drop every pre-existing batch.
+  const program = req.nextUrl.searchParams.get("program");
   const includeCancelled = req.nextUrl.searchParams.get("includeCancelled") === "true";
   let query: Record<string, unknown> = {};
   if (!includeCancelled) {
@@ -24,6 +25,36 @@ export async function GET(req: NextRequest) {
   } else if (mode === "offline") {
     query.mode = "offline";
   }
+
+  if (program === "soft_skills") {
+    const softSkillsFilter = {
+      $or: [{ programType: "soft_skills" }, { title: { $regex: /soft skills/i } }],
+    };
+    if (query.$and && Array.isArray(query.$and)) {
+      query.$and.push(softSkillsFilter);
+    } else {
+      query.$and = [
+        ...(query.isCancelled !== undefined ? [{ isCancelled: query.isCancelled }] : []),
+        softSkillsFilter,
+      ];
+      delete query.isCancelled;
+    }
+  } else if (program === "ssb") {
+    const ssbFilter = {
+      programType: { $ne: "soft_skills" },
+      title: { $not: /soft skills/i },
+    };
+    if (query.$and && Array.isArray(query.$and)) {
+      query.$and.push(ssbFilter);
+    } else {
+      query.$and = [
+        ...(query.isCancelled !== undefined ? [{ isCancelled: query.isCancelled }] : []),
+        ssbFilter,
+      ];
+      delete query.isCancelled;
+    }
+  }
+
   const slots = await Slot.find(query).sort({ createdAt: -1 });
   return NextResponse.json(slots);
 }

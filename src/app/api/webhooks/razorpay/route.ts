@@ -61,9 +61,86 @@ export async function POST(req: NextRequest) {
         ? event.payload?.order?.entity?.notes
         : undefined;
 
+  const paymentId = event.payload?.payment?.entity?.id;
+
+  // Handle Soft Skills Bootcamp Payment Link fulfillment
+  if (notes?.programType === "soft_skills" && paymentId) {
+    try {
+      const { connectDB } = await import("@/server/db");
+      const { User, Slot, Order } = await import("@/server/models");
+      await connectDB();
+
+      const customerEmail = (notes.customerEmail || notes.email || "").trim().toLowerCase();
+      if (!customerEmail) {
+        return NextResponse.json({ received: true, handled: false, error: "Missing customerEmail" });
+      }
+
+      let targetUser = await User.findOne({ email: customerEmail });
+      if (!targetUser) {
+        targetUser = new User({
+          name: notes.customerName || "Student",
+          email: customerEmail,
+          phone: notes.customerPhone || undefined,
+          role: "student",
+          enrolledPrograms: ["soft_skills_bootcamp"],
+        });
+      } else {
+        targetUser.role = "student";
+        if (!targetUser.enrolledPrograms) targetUser.enrolledPrograms = [];
+        if (!targetUser.enrolledPrograms.includes("soft_skills_bootcamp")) {
+          targetUser.enrolledPrograms.push("soft_skills_bootcamp");
+        }
+      }
+
+      let slotDoc: any = null;
+      if (notes.slotId) {
+        slotDoc = await Slot.findById(notes.slotId);
+        if (slotDoc) {
+          if (!slotDoc.bookedStudents.some((id: any) => id.toString() === targetUser._id.toString())) {
+            slotDoc.bookedStudents.push(targetUser._id);
+            await slotDoc.save();
+          }
+          if (slotDoc.batchNo) {
+            targetUser.batch = slotDoc.batchNo.trim();
+          }
+        }
+      }
+
+      targetUser.markModified("updatedAt");
+      await targetUser.save();
+
+      const existingOrder = await Order.findOne({ transactionRef: paymentId });
+      if (!existingOrder) {
+        const amountInPaise =
+          (event.payload?.payment_link?.entity as any)?.amount_paid ||
+          (event.payload?.payment?.entity as any)?.amount ||
+          0;
+        const paidRupees = amountInPaise > 0 ? amountInPaise / 100 : 7078.82;
+
+        const order = new Order({
+          userId: targetUser._id,
+          buyerName: targetUser.name,
+          buyerEmail: targetUser.email,
+          slotId: slotDoc?._id,
+          price: paidRupees,
+          status: "paid",
+          bookingMethod: "payment_link",
+          programType: "soft_skills",
+          paymentMethod: "razorpay",
+          transactionRef: paymentId,
+        });
+        await order.save();
+      }
+
+      return NextResponse.json({ received: true, handled: true, programType: "soft_skills" });
+    } catch (softSkillsErr) {
+      console.error("[webhooks/razorpay] soft_skills enrollment failed", softSkillsErr);
+      return NextResponse.json({ message: "Soft Skills webhook handling failed" }, { status: 500 });
+    }
+  }
+
   const installmentPlanId = notes?.installmentPlanId;
   const seq = Number(notes?.seq);
-  const paymentId = event.payload?.payment?.entity?.id;
 
   if (!installmentPlanId || !seq || !paymentId) {
     // Not a sales-installment payment (wrong event type, or notes belong to

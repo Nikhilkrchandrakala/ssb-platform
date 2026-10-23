@@ -14,6 +14,9 @@ const slotSchema = new Schema(
     // have no morning/evening clock-time concept and use `location` instead.
     mode: { type: String, enum: ["online", "offline"], default: "online" },
     location: { type: String, default: "" },
+    // Whether this batch is for standard SSB or the 4 Weeks Soft Skills Bootcamp
+    programType: { type: String, enum: ["ssb", "soft_skills"], default: "ssb" },
+    noLateAdmissions: { type: Boolean, default: false },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
     isCancelled: { type: Boolean, default: false },
     cancelledAt: { type: Date, default: null },
@@ -21,5 +24,9 @@ const slotSchema = new Schema(
   },
   { timestamps: true }
 );
+
+if (process.env.NODE_ENV !== "production") {
+  delete (mongoose.models as Record<string, unknown>).Slot;
+}
 
 export const Slot = mongoose.models.Slot || mongoose.model("Slot", slotSchema);

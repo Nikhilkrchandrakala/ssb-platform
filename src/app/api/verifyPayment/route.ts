@@ -47,30 +47,30 @@ export async function POST(req: NextRequest) {
       await slot.save();
     }
 
-    // Synchronize student's profile batch, role, and clinicalStage
+    // Synchronize student's profile batch, role, and program badge
+    const isSoftSkills = slot?.programType === "soft_skills" || (slot?.title && slot.title.toLowerCase().includes("soft skills"));
     const updateFields: Record<string, unknown> = {
       role: "student",
     };
     if (slot && slot.batchNo) {
       updateFields.batch = slot.batchNo.trim();
     }
-    const isOfflineBatch = slot?.mode === "offline";
-    if (isOfflineBatch) {
-      // No clinicalStage assignment for an offline registration — they've
-      // only paid the flat registration fee, not for any course modules, so
-      // granting the "full_course" fallback (the online-flow default below)
-      // would be a fabricated course-access grant.
+
+    if (isSoftSkills) {
+      updateFields.$addToSet = { enrolledPrograms: "soft_skills_bootcamp" };
     } else {
-      const bookedModules: string[] = order.selectedModules || [];
-      updateFields.clinicalStage = resolveClinicalStageFromModules(bookedModules);
+      const isOfflineBatch = slot?.mode === "offline";
+      if (!isOfflineBatch) {
+        const bookedModules: string[] = order.selectedModules || [];
+        updateFields.clinicalStage = resolveClinicalStageFromModules(bookedModules);
+      }
     }
+
     await User.findByIdAndUpdate(order.userId, updateFields);
-    // Re-derives enrollmentMode from this student's most recent paid Order
-    // (this one) rather than a one-way "set to offline" flag — otherwise a
-    // student who buys an offline batch and later an online one keeps
-    // showing as offline everywhere forever.
     await syncEnrollmentModeForUser(String(order.userId));
-    await syncClinicalStageForUser(String(order.userId));
+    if (!isSoftSkills) {
+      await syncClinicalStageForUser(String(order.userId));
+    }
 
     // mark coupon used
     if (order.couponCode) {

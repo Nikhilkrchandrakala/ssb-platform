@@ -15,18 +15,29 @@ const IST_OFFSET_MINUTES = 30;
 
 export const MORNING_START_IST = { hour: 7, minute: 30 };
 export const EVENING_START_IST = { hour: 19, minute: 30 };
+export const SOFTSKILLS_START_IST = { hour: 9, minute: 30 };
 
-export const BOOKING_CUTOFF_MS_BEFORE_START = 60 * 60 * 1000; // 1 hour
+export const BOOKING_CUTOFF_MS_BEFORE_START = 60 * 60 * 1000; // 1 hour for SSB batches
 
 export const BATCH_DURATION_DAYS = 12;
+export const SOFTSKILLS_DURATION_DAYS = 28; // 4 Weeks
 
 export interface BatchTimingSlot {
   startTime?: string | null;
   batchType?: string | null;
   title?: string | null;
+  programType?: string | null;
+  noLateAdmissions?: boolean | null;
+}
+
+export function isSoftSkillsBatch(slot: BatchTimingSlot): boolean {
+  if (slot.programType === "soft_skills") return true;
+  const title = (slot.title || "").toLowerCase();
+  return title.includes("soft skills") || title.includes("soft skill");
 }
 
 export function isMorningBatch(slot: BatchTimingSlot): boolean {
+  if (isSoftSkillsBatch(slot)) return false;
   if (slot.batchType) return slot.batchType.toLowerCase() === "morning";
   return (slot.title || "").toLowerCase().includes("morning");
 }
@@ -37,20 +48,26 @@ export function getRealStartTime(slot: BatchTimingSlot): Date | null {
   const base = new Date(slot.startTime);
   if (Number.isNaN(base.getTime())) return null;
 
-  const { hour, minute } = isMorningBatch(slot) ? MORNING_START_IST : EVENING_START_IST;
-  // Read the calendar date via UTC getters (not local getters) since
-  // Slot.startTime was itself constructed as UTC midnight for that date —
-  // using local getters here would shift the date depending on whichever
-  // timezone this code happens to run in.
+  let timeSetting = EVENING_START_IST;
+  if (isSoftSkillsBatch(slot)) {
+    timeSetting = SOFTSKILLS_START_IST;
+  } else if (isMorningBatch(slot)) {
+    timeSetting = MORNING_START_IST;
+  }
+
+  const { hour, minute } = timeSetting;
   return new Date(
     Date.UTC(base.getUTCFullYear(), base.getUTCMonth(), base.getUTCDate(), hour - IST_OFFSET_HOURS, minute - IST_OFFSET_MINUTES)
   );
 }
 
-/** Booking closes exactly 1 hour before the real start time. */
+/** Booking closes before start time. For Soft Skills (or noLateAdmissions), cutoff is exact start time (9:30 AM IST). */
 export function getBookingCutoff(slot: BatchTimingSlot): Date | null {
   const real = getRealStartTime(slot);
   if (!real) return null;
+  if (slot.noLateAdmissions || isSoftSkillsBatch(slot)) {
+    return real; // Exactly at batch start time — strictly no late admissions
+  }
   return new Date(real.getTime() - BOOKING_CUTOFF_MS_BEFORE_START);
 }
 
@@ -61,19 +78,20 @@ export function isBookingClosed(slot: BatchTimingSlot, now: number = Date.now())
 }
 
 /**
- * A batch runs for 12 consecutive calendar days in IST (Day 1 = start date, Day 12 = start date + 11 days).
- * Concludes at 23:59:59.999 IST on Day 12.
+ * A batch runs for 12 days (SSB) or 28 days (Soft Skills Bootcamp) in IST.
  */
 export function getBatchEndTime(slot: BatchTimingSlot): Date | null {
   if (!slot.startTime) return null;
   const base = new Date(slot.startTime);
   if (Number.isNaN(base.getTime())) return null;
 
+  const durationDays = isSoftSkillsBatch(slot) ? SOFTSKILLS_DURATION_DAYS : BATCH_DURATION_DAYS;
+
   return new Date(
     Date.UTC(
       base.getUTCFullYear(),
       base.getUTCMonth(),
-      base.getUTCDate() + (BATCH_DURATION_DAYS - 1),
+      base.getUTCDate() + (durationDays - 1),
       23 - IST_OFFSET_HOURS,
       59 - IST_OFFSET_MINUTES,
       59,
