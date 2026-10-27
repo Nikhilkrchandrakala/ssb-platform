@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/style/SoftskillBootcamp.module.css";
 import navStyles from "@/style/Navbar.module.css";
@@ -31,6 +31,7 @@ import {
   FaTimes,
   FaCheckCircle,
   FaChevronDown,
+  FaSearch,
 } from "react-icons/fa";
 import { IoMenu } from "react-icons/io5";
 
@@ -170,6 +171,30 @@ export default function SoftskillBootcampView() {
   // Live batches state
   const [batches, setBatches] = useState<BatchSlot[]>([]);
   const [loadingBatches, setLoadingBatches] = useState(true);
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<"soonest" | "seats">("soonest");
+
+  // Filtered & sorted batches for multi-batch view
+  const visibleBatches = useMemo(() => {
+    let result = [...batches];
+    const q = search.trim().toLowerCase();
+    if (q) {
+      result = result.filter(
+        (b) =>
+          (b.title && b.title.toLowerCase().includes(q)) ||
+          (b.batchNo && b.batchNo.toLowerCase().includes(q))
+      );
+    }
+    result.sort((a, b) => {
+      if (sortBy === "seats") {
+        const aSeats = (a.maxStudents || 25) - (a.bookedStudents?.length || 0);
+        const bSeats = (b.maxStudents || 25) - (b.bookedStudents?.length || 0);
+        return bSeats - aSeats;
+      }
+      return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+    });
+    return result;
+  }, [batches, search, sortBy]);
 
   // Booking Modal State
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
@@ -610,208 +635,250 @@ export default function SoftskillBootcampView() {
             </h2>
             <p className={styles.sectionSubtitle}>
               Reserve your seat online today. Batches are capped at 25
-              participants to ensure personalized feedback.
+              participants to ensure personalized feedback and interactive drills.
             </p>
           </div>
 
-          <div className={styles.batchCardsGrid}>
-            {loadingBatches ? (
+          {!loadingBatches && batches.length > 1 && (
+            <div className={styles.toolbar}>
+              <div className={styles.searchBox}>
+                <FaSearch />
+                <input
+                  className={styles.searchInput}
+                  placeholder="Search by batch name, ID..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <select
+                className={styles.sortSelect}
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as "soonest" | "seats")}
+              >
+                <option value="soonest">Sort: Starting Soonest</option>
+                <option value="seats">Sort: Most Seats Available</option>
+              </select>
+              <span className={styles.resultCount}>
+                {visibleBatches.length} cohort{visibleBatches.length === 1 ? "" : "s"} available
+              </span>
+            </div>
+          )}
+
+          {loadingBatches ? (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "60px 20px",
+                color: "#a0a0a0",
+              }}
+            >
+              <FaClock style={{ fontSize: "28px", color: "var(--secondary-color, #d2a100)", marginBottom: "12px", animation: "spin 2s linear infinite" }} />
+              <div>Loading available cohorts...</div>
+            </div>
+          ) : batches.length === 0 ? (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "54px 28px",
+                background: "rgba(255, 255, 255, 0.02)",
+                borderRadius: "16px",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                color: "#d0d0d0",
+                maxWidth: "600px",
+                margin: "0 auto",
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.4)",
+              }}
+            >
               <div
                 style={{
-                  textAlign: "center",
-                  padding: "48px 20px",
-                  color: "#a0a0a0",
-                  gridColumn: "1 / -1",
+                  width: "48px",
+                  height: "48px",
+                  borderRadius: "50%",
+                  background: "rgba(210, 161, 0, 0.12)",
+                  border: "1px solid rgba(210, 161, 0, 0.3)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "var(--secondary-color, #d2a100)",
+                  fontSize: "20px",
+                  marginBottom: "16px",
                 }}
               >
-                Loading available batches...
+                <FaClock />
               </div>
-            ) : batches.length === 0 ? (
-              <div
+              <h3
                 style={{
-                  textAlign: "center",
-                  padding: "54px 28px",
-                  background: "rgba(255, 255, 255, 0.02)",
-                  borderRadius: "16px",
-                  border: "1px solid rgba(255, 255, 255, 0.08)",
-                  color: "#d0d0d0",
-                  gridColumn: "1 / -1",
-                  maxWidth: "600px",
-                  margin: "0 auto",
-                  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.4)",
+                  color: "#ffffff",
+                  fontSize: "1.25rem",
+                  fontWeight: 700,
+                  marginBottom: "8px",
+                  letterSpacing: "-0.2px",
                 }}
               >
-                <div
-                  style={{
-                    width: "48px",
-                    height: "48px",
-                    borderRadius: "50%",
-                    background: "rgba(210, 161, 0, 0.12)",
-                    border: "1px solid rgba(210, 161, 0, 0.3)",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "var(--secondary-color, #d2a100)",
-                    fontSize: "20px",
-                    marginBottom: "16px",
-                  }}
-                >
-                  <FaClock />
-                </div>
-                <h3
-                  style={{
-                    color: "#ffffff",
-                    fontSize: "1.25rem",
-                    fontWeight: 700,
-                    marginBottom: "8px",
-                    letterSpacing: "-0.2px",
-                  }}
-                >
-                  Upcoming Batches Announcing Soon
-                </h3>
-                <p
-                  style={{
-                    color: "#9ca3af",
-                    fontSize: "0.95rem",
-                    lineHeight: 1.6,
-                    margin: 0,
-                  }}
-                >
-                  New cohort schedules are currently being finalized. Please stay tuned for upcoming batch dates.
-                </p>
-              </div>
-            ) : (
-              batches.map((batch, idx) => {
+                Upcoming Batches Announcing Soon
+              </h3>
+              <p
+                style={{
+                  color: "#9ca3af",
+                  fontSize: "0.95rem",
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}
+              >
+                New cohort schedules are currently being finalized. Please stay tuned for upcoming batch dates.
+              </p>
+            </div>
+          ) : visibleBatches.length === 0 ? (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "50px 20px",
+                color: "rgba(255, 255, 255, 0.6)",
+              }}
+            >
+              <h3 style={{ color: "#fff", marginBottom: "8px" }}>No batches match your search</h3>
+              <p style={{ color: "#888" }}>Try a different search term or clear the filter.</p>
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                style={{
+                  marginTop: "12px",
+                  background: "rgba(210, 161, 0, 0.15)",
+                  color: "var(--secondary-color, #d2a100)",
+                  border: "1px solid rgba(210, 161, 0, 0.3)",
+                  padding: "8px 16px",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                }}
+              >
+                Clear Search
+              </button>
+            </div>
+          ) : (
+            <div className={styles.grid}>
+              {visibleBatches.map((batch) => {
+                const date = new Date(batch.startTime);
+                const day = isNaN(date.getDate()) ? "—" : date.getDate();
+                const monthYear = isNaN(date.getTime())
+                  ? ""
+                  : date.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
                 const bookedCount = batch.bookedStudents?.length || 0;
                 const max = batch.maxStudents || 25;
-                const seatsLeft = Math.max(0, max - bookedCount);
+                const available = Math.max(0, max - bookedCount);
                 const closed = isBookingClosed(batch);
-                const isFull = seatsLeft <= 0;
-                const isFeatured = idx === 0 && !closed && !isFull;
-                const dateRangeStr = formatBatchDateRange(batch.startTime);
+                const isFull = available <= 0;
+                const pctFilled = max > 0 ? Math.min(100, Math.round((bookedCount / max) * 100)) : 0;
+                const lowSeats = !closed && !isFull && available <= 5;
+                const formattedBatchNo = batch.batchNo
+                  ? (batch.batchNo.toLowerCase().startsWith("batch") ? batch.batchNo : `Batch #${batch.batchNo}`)
+                  : null;
 
                 return (
                   <div
                     key={batch._id}
-                    className={`${styles.batchCard} ${isFeatured ? styles.batchCardFeatured : ""}`}
-                    style={
-                      closed
-                        ? { opacity: 0.75, filter: "grayscale(20%)" }
-                        : undefined
-                    }
+                    className={`${styles.card} ${closed || isFull ? styles.cardDisabled : ""}`}
                   >
-                    {isFeatured && (
-                      <span className={styles.featuredBadge}>
-                        Recommended Batch
-                      </span>
-                    )}
-
-                    <div className={styles.batchHeader}>
-                      <div>
-                        <h3 className={styles.batchTitle}>
-                          {batch.title || `Batch ${batch.batchNo || idx + 1}`}
+                    <div className={styles.cardTop}>
+                      <div className={styles.dateTile}>
+                        <span className={styles.dateTileDay}>{day}</span>
+                        <span className={styles.dateTileMonth}>{monthYear}</span>
+                      </div>
+                      <div className={styles.cardHeaderText}>
+                        <span className={styles.liveTag}>
+                          <FaMicrophoneAlt size={9} /> 100% Live Online
+                        </span>
+                        <h3 className={styles.cardTitle} title={batch.title || "4 Weeks Soft Skills Bootcamp"}>
+                          {batch.title || "4 Weeks Soft Skills Bootcamp"}
                         </h3>
-                        <p className={styles.batchDateRange}>{dateRangeStr}</p>
+                        {formattedBatchNo && (
+                          <span className={styles.cardBatchNo}>{formattedBatchNo}</span>
+                        )}
                       </div>
+                    </div>
 
-                      <span
-                        className={`${styles.seatsPill} ${
-                          closed
-                            ? ""
-                            : seatsLeft > 10
-                              ? styles.seatsPillGreen
-                              : ""
-                        }`}
-                        style={
-                          closed
-                            ? {
-                                background: "rgba(239, 68, 68, 0.15)",
-                                color: "#ef4444",
-                                borderColor: "rgba(239, 68, 68, 0.3)",
-                              }
+                    <div className={styles.seatsSection}>
+                      <div className={styles.seatsRow}>
+                        <span>Cohort Capacity ({bookedCount}/{max})</span>
+                        <span
+                          className={
+                            closed
+                              ? styles.seatsClosedText
+                              : isFull
+                                ? styles.seatsFullText
+                                : lowSeats
+                                  ? styles.seatsUrgent
+                                  : styles.seatsNormal
+                          }
+                        >
+                          {closed
+                            ? "Admissions Closed"
                             : isFull
-                              ? {
-                                  background: "rgba(245, 158, 11, 0.15)",
-                                  color: "#f59e0b",
-                                  borderColor: "rgba(245, 158, 11, 0.3)",
-                                }
-                              : undefined
-                        }
+                              ? "Cohort Full (25/25)"
+                              : lowSeats
+                                ? `Only ${available} seat${available === 1 ? "" : "s"} left!`
+                                : `${available} of ${max} left`}
+                        </span>
+                      </div>
+                      <div className={styles.progressTrack}>
+                        <div
+                          className={`${styles.progressFill} ${closed || isFull ? styles.progressFillFull : lowSeats ? styles.progressFillWarn : ""}`}
+                          style={{ width: `${pctFilled}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <ul className={styles.featureList}>
+                      <li>
+                        <FaCheckCircle /> <span>Mon–Fri 1-Hr Daily Live (9:30 AM – 10:30 AM)</span>
+                      </li>
+                      <li>
+                        <FaCheckCircle /> <span>Alternate Saturdays 2-Hour High-Intensity Drills</span>
+                      </li>
+                      <li>
+                        <FaCheckCircle /> <span>1:1 Video Portfolio Baseline &amp; Capstone Feedback</span>
+                      </li>
+                      <li>
+                        <FaCheckCircle /> <span>Strict Zero Late Admissions Policy</span>
+                      </li>
+                    </ul>
+
+                    <div className={styles.cardFooter}>
+                      <div className={styles.priceLine}>
+                        <div>
+                          <div className={styles.priceValue}>
+                            ₹{(batch.price || 5999).toLocaleString("en-IN")}
+                          </div>
+                          <div className={styles.priceLabel}>Course Fee (+ 18% GST)</div>
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", fontWeight: 600 }}>4 Weeks Live</div>
+                          <div className={styles.priceLabel}>Max 25 Participants</div>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        className={styles.cardCta}
+                        onClick={() => handleOpenBooking(batch)}
+                        disabled={closed || isFull}
                       >
-                        {closed
-                          ? "Admissions Closed"
-                          : isFull
-                            ? "Cohort Full (25/25)"
-                            : `${seatsLeft} seats left`}
-                      </span>
+                        {closed ? (
+                          <>Admissions Closed</>
+                        ) : isFull ? (
+                          <>Cohort Full</>
+                        ) : (
+                          <>
+                            <FaCheckCircle /> Book Your Seat
+                          </>
+                        )}
+                      </button>
                     </div>
-
-                    <div className={styles.batchTimings}>
-                      <div className={styles.timingOption}>
-                        <span className={styles.timingTag}>Timings:</span>
-                        <strong style={{ color: "#ffffff", fontWeight: 700 }}>
-                          9:30 AM – 10:30 AM
-                        </strong>
-                      </div>
-                      <div className={styles.timingOption}>
-                        <span className={styles.timingTag}>Schedule:</span>
-                        <span>Monday to Friday (1 Hour Daily Live)</span>
-                      </div>
-                      <div className={styles.timingOption}>
-                        <span className={styles.timingTag}>
-                          Saturday Drills:
-                        </span>
-                        <span>Alternate Saturdays • 2 Hours</span>
-                      </div>
-                      <div className={styles.timingOption}>
-                        <span className={styles.timingTag}>Mode:</span>
-                        <span>100% Live Interactive Online Sessions</span>
-                      </div>
-                      <div className={styles.timingOption}>
-                        <span className={styles.timingTag}>Policy:</span>
-                        <span style={{ color: "#f59e0b", fontWeight: 600 }}>
-                          Strict Zero Late Admissions
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className={styles.batchPricing}>
-                      <div>
-                        <span className={styles.priceLabel}>Course Fee</span>
-                        <span className={styles.priceVal}>
-                          ₹{(batch.price || 5999).toLocaleString("en-IN")}
-                        </span>
-                        <span className={styles.priceInclusive}>+ 18% GST</span>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      className={styles.bookBatchBtn}
-                      onClick={() => handleOpenBooking(batch)}
-                      disabled={closed || isFull}
-                      style={{
-                        color: closed || isFull ? "#9ca3af" : "#000000",
-                        background: closed || isFull ? "#262626" : undefined,
-                        cursor: closed || isFull ? "not-allowed" : "pointer",
-                      }}
-                    >
-                      <span>
-                        {closed
-                          ? "Admissions Closed"
-                          : isFull
-                            ? "Cohort Full"
-                            : "Book Your Seat"}
-                      </span>
-                      {!closed && !isFull && (
-                        <FaCheck style={{ color: "#000000" }} />
-                      )}
-                    </button>
                   </div>
                 );
-              })
-            )}
-          </div>
+              })}
+            </div>
+          )}
         </div>
       </section>
 
@@ -861,9 +928,9 @@ export default function SoftskillBootcampView() {
             {!isBooked ? (
               <>
                 <div className={styles.modalHeader}>
-                  <h3>Enrol in 4 Weeks Soft Skills Bootcamp</h3>
+                  <h3>Enrol in {selectedBatch?.title || "4 Weeks Soft Skills Bootcamp"}</h3>
                   <p>
-                    {selectedBatch?.title || "4 Weeks Soft Skills Bootcamp"} •{" "}
+                    {selectedBatch?.batchNo ? `Batch #${selectedBatch.batchNo} • ` : ""}
                     {selectedBatch
                       ? formatBatchDateRange(selectedBatch.startTime)
                       : ""}{" "}
@@ -1012,7 +1079,8 @@ export default function SoftskillBootcampView() {
                 <h3 className={styles.successTitle}>Seat Reserved!</h3>
                 <p className={styles.successDesc}>
                   Congratulations, <strong>{fullName}</strong>. Your seat in{" "}
-                  {selectedBatch?.title || "4 Weeks Soft Skills Bootcamp"}{" "}
+                  <strong>{selectedBatch?.title || "4 Weeks Soft Skills Bootcamp"}</strong>{" "}
+                  {selectedBatch?.batchNo ? `(Batch #${selectedBatch.batchNo})` : ""}{" "}
                   (
                   {selectedBatch
                     ? formatBatchDateRange(selectedBatch.startTime)

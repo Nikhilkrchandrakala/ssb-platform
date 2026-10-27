@@ -209,6 +209,7 @@ export default function CoursesView() {
   // Soft Skills Bootcamp Slot Modal State
   const [softSkillsModalOpen, setSoftSkillsModalOpen] = useState(false);
   const [editSoftSkillsSlotId, setEditSoftSkillsSlotId] = useState<string | null>(null);
+  const [softSkillsTitle, setSoftSkillsTitle] = useState("4 Weeks Soft Skills Bootcamp");
   const [softSkillsBatchNo, setSoftSkillsBatchNo] = useState("");
   const [softSkillsStartDate, setSoftSkillsStartDate] = useState("");
   const [softSkillsMaxStudents, setSoftSkillsMaxStudents] = useState(25);
@@ -611,6 +612,7 @@ export default function CoursesView() {
   // --- Soft Skills Bootcamp Handlers ---
   const openAddSoftSkillsModal = () => {
     setEditSoftSkillsSlotId(null);
+    setSoftSkillsTitle("4 Weeks Soft Skills Bootcamp");
     setSoftSkillsBatchNo("");
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -621,6 +623,7 @@ export default function CoursesView() {
 
   const openEditSoftSkillsModal = (slot: Slot) => {
     setEditSoftSkillsSlotId(slot._id);
+    setSoftSkillsTitle(slot.title || "4 Weeks Soft Skills Bootcamp");
     setSoftSkillsBatchNo(slot.batchNo || "");
     if (slot.startTime) {
       setSoftSkillsStartDate(toDateInputValue(new Date(slot.startTime)));
@@ -632,6 +635,16 @@ export default function CoursesView() {
   };
 
   const saveSoftSkillsSlot = async () => {
+    if (!softSkillsTitle.trim()) {
+      window.Swal?.fire({
+        icon: "warning",
+        text: "Please enter a Batch Name.",
+        background: "#1a1a1a",
+        color: "#fff",
+      });
+      return;
+    }
+
     if (!softSkillsStartDate) {
       window.Swal?.fire({
         icon: "warning",
@@ -642,9 +655,10 @@ export default function CoursesView() {
       return;
     }
 
-    const bNo = softSkillsBatchNo.trim() || "01";
+    const title = softSkillsTitle.trim();
+    const bNo = softSkillsBatchNo.trim();
     const payload = {
-      title: `4 Weeks Soft Skills Bootcamp — Batch ${bNo}`,
+      title,
       batchNo: bNo,
       batchType: "morning",
       startTime: new Date(softSkillsStartDate).toISOString(),
@@ -1857,19 +1871,16 @@ export default function CoursesView() {
             const available = max - booked;
             const isFull = max > 0 && booked >= max;
             const bookingClosed = isBookingClosed(slot, now);
-            const displayTitle = slot.batchNo
-              ? `Batch ${slot.batchNo}`
-              : slot.title?.replace(/4 Weeks Soft Skills Bootcamp — /i, "") || "Soft Skills Cohort";
 
             return (
               <div className="col-lg-4 col-md-6" key={slot._id}>
                 <div className="batch-card">
-                  <div className="batch-header">
-                    <span className="type-badge morning-type">
+                  <div className="batch-header" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+                    <span className="type-badge morning-type" title={slot.title}>
                       <Sparkles size={14} className="me-2" style={ICON_STYLE} />
-                      {displayTitle}
+                      {slot.title || "Soft Skills Cohort"}
                     </span>
-                    <span style={{ fontSize: "0.75rem", opacity: 0.5 }}>
+                    <span style={{ fontSize: "0.78rem", color: "#9ca3af", fontWeight: 500, paddingLeft: 2 }}>
                       ID: {slot.batchNo || "—"}
                     </span>
                   </div>
@@ -2339,14 +2350,27 @@ export default function CoursesView() {
             </div>
 
             <div className="mb-3">
-              <label className="admin-form-label">Batch Number / Identifier*</label>
+              <label className="admin-form-label">Batch Name / Title*</label>
               <input
                 type="text"
                 className="admin-input"
-                placeholder="e.g. 01, Nov-Cohort, etc."
+                placeholder="e.g. 4 Weeks Soft Skills Bootcamp"
+                value={softSkillsTitle}
+                onChange={(e) => setSoftSkillsTitle(e.target.value)}
+              />
+              <small className="text-muted">The public display name of this cohort.</small>
+            </div>
+
+            <div className="mb-3">
+              <label className="admin-form-label">Batch ID / Number (Distinct Identifier)*</label>
+              <input
+                type="text"
+                className="admin-input"
+                placeholder="e.g. SSB-SS-01, Batch 01, Nov-Cohort"
                 value={softSkillsBatchNo}
                 onChange={(e) => setSoftSkillsBatchNo(e.target.value)}
               />
+              <small className="text-muted">Distinct cohort identifier used on rosters and candidate panels.</small>
             </div>
 
             <div className="mb-3">

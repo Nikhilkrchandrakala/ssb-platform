@@ -24,7 +24,7 @@ const userSchema = new Schema(
     // Not an enum: legacy data includes 'lead', 'student', 'assessor', 'admin', 'owner', 'franchise'.
     role: { type: String, default: "lead" },
 
-    assessorType: { type: String, enum: ["GTO", "TO", "Psych", "IO", null], default: null },
+    assessorType: { type: String, enum: ["GTO", "TO", "Psych", "IO", "SoftSkills", null], default: null },
     clinicalStage: { type: String, default: null },
     // Whether this student trains online or attends an in-person/offline
     // batch. Defaults to "online" since every student before this field

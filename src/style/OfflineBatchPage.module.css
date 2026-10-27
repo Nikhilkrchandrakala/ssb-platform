@@ -158,13 +158,26 @@
 }
 
 .sortSelect {
-    padding: 11px 14px;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 11px 16px;
+    background-color: #151518;
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 10px;
-    color: #fff;
+    color: #ffffff;
     font-size: 14px;
     cursor: pointer;
+    color-scheme: dark;
+    transition: border-color 0.2s ease;
+}
+
+.sortSelect:focus {
+    outline: none;
+    border-color: var(--secondary-color, #d2a100);
+}
+
+.sortSelect option {
+    background-color: #18181b !important;
+    color: #ffffff !important;
+    padding: 10px 14px;
 }
 
 .resultCount {

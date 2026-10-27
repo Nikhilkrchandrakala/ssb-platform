@@ -1,4 +1,4 @@
-export const ASSESSOR_TYPE_VALUES = ["Psych", "IO", "GTO", "TO"] as const;
+export const ASSESSOR_TYPE_VALUES = ["Psych", "IO", "GTO", "TO", "SoftSkills"] as const;
 export type AssessorType = (typeof ASSESSOR_TYPE_VALUES)[number];
 
 // Real-world SSB designations these abbreviations stand for. Single source
@@ -12,6 +12,7 @@ export const ASSESSOR_FULL_NAME: Record<AssessorType, string> = {
   IO: "Interviewing Officer",
   GTO: "Group Testing Officer",
   TO: "Technical Officer",
+  SoftSkills: "Soft Skills Mentor",
 };
 
 /** "Psychologist(Psych)" / "Interviewing Officer(IO)" / "Group Testing Officer(GTO)" / "Technical Officer(TO)" */

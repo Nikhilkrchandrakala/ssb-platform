@@ -23,3 +23,4 @@ export { Visitor } from "./Visitor";
 export { AuthDisplaySettings } from "./AuthDisplaySettings";
 export { VerificationSession } from "./VerificationSession";
 export { DeletedUserLog } from "./DeletedUserLog";
+export { SoftSkillsSubmission } from "./SoftSkillsSubmission";

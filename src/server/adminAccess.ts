@@ -20,18 +20,23 @@ export type AdminPermissionKey =
   | "roles"
   | "allotment"
   | "students"
-  | "evaluations";
+  | "evaluations"
+  | "softskills_evaluation";
 
 export const ADMIN_PANEL_ROLES = ["owner", "admin", "franchise", "assessor"];
 
 export interface AdminLikeUser {
   role?: string;
   permissions?: string[];
+  assessorType?: string | null;
 }
 
 export function hasAdminPermission(user: AdminLikeUser | null, key: AdminPermissionKey): boolean {
   if (!user) return false;
   if (user.role === "owner") return true;
+  if (key === "softskills_evaluation") {
+    if (user.role === "assessor" && user.assessorType === "SoftSkills") return true;
+  }
   if (user.role !== "admin") return false;
   const perms = user.permissions || [];
   if (perms.includes("super_admin")) return true;

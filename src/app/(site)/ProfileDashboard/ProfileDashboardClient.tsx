@@ -25,11 +25,12 @@ import {
   BiX,
   BiBell,
 } from "react-icons/bi";
-import { FaCamera, FaCheckCircle, FaLock } from "react-icons/fa";
+import { FaCamera, FaCheckCircle, FaLock, FaVideo } from "react-icons/fa";
 import "@/style/custom-theme.css";
 import styles from "@/style/ProfileDashboard.module.css";
 import ImageUploadPopup from "@/components/site/ImageUploadPopup";
 import PdfViewer from "@/components/site/PdfViewer";
+import SoftSkillsPortfolioModal from "@/components/site/SoftSkillsPortfolioModal";
 import { useSiteUser } from "@/components/site/SiteUserProvider";
 import { resolveLegacyAssetUrl } from "@/lib/legacyAssets";
 import { postJSON, ApiError } from "@/lib/authApi";
@@ -64,6 +65,7 @@ interface DashboardSlot {
   batchNo?: string;
   isFullCourse?: boolean;
   mode?: string;
+  programType?: string;
 }
 
 interface DashboardInstallment {
@@ -97,6 +99,14 @@ export interface DashboardOrder {
   assignedTO?: string | null;
   assignedPsych?: string | null;
   assignedIO?: string | null;
+  programType?: string;
+}
+
+function isSoftSkills(order: DashboardOrder): boolean {
+  if (order.programType === "soft_skills") return true;
+  if (order.slotId?.programType === "soft_skills") return true;
+  if (order.slotId?.title && order.slotId.title.toLowerCase().includes("soft skills")) return true;
+  return false;
 }
 
 // Mirrors AllotmentView.tsx's stagesOfOrder(): a per-batch selectedModules
@@ -207,6 +217,7 @@ export default function ProfileDashboardClient({
   const [activeTab, setActiveTab] = useState<ActiveTab>("profile");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [softSkillsModalSlot, setSoftSkillsModalSlot] = useState<any | null>(null);
 
   // ---- Profile field state ----
   const [previewData, setPreviewData] = useState<DashboardUser>(initialUser);
@@ -1282,32 +1293,377 @@ export default function ProfileDashboardClient({
                       )}
                       {orders.length > 0 ? (
                         <div className={styles.coursesGrid}>
-                          {orders.map((order) => (
-                            <div key={order._id} className={styles.courseCard}>
-                              <div className={styles.courseDetails}>
-                                <div className={styles.courseTitle}>
-                                  <h3>Start: {formatDate(order.slotId?.startTime)}</h3>
-                                  <h3>
-                                    {order.slotId?.title || "Batch Session"} {order.slotId?.batchNo ? `(#${order.slotId.batchNo})` : ""}
-                                  </h3>
-                                </div>
-                                <div className={styles.courseMeta}>
-                                  <div className={styles.coursePrice}>
-                                    <BiRupee />
-                                    <span>{Number(order.price || 0).toFixed(2)}</span>
-                                  </div>
-                                  <div className={styles.courseDate}>Purchased on {formatDate(order.createdAt)}</div>
-                                </div>
+                          {orders.map((order) => {
+                            const isSoftSkill = isSoftSkills(order);
 
-                                <div style={{ marginTop: 16, marginBottom: 16 }}>
-                                  <span style={{ color: "#d2a100", fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 8 }}>
-                                    Enrolled Courses / Modules:
-                                  </span>
-                                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                                    {order.selectedModules && order.selectedModules.length > 0 ? (
-                                      order.selectedModules.map((modId) => (
+                            if (isSoftSkill) {
+                              return (
+                                <div
+                                  key={order._id}
+                                  className={styles.courseCard}
+                                  style={{
+                                    background: "linear-gradient(165deg, #18181b 0%, #111113 100%)",
+                                    border: "1px solid rgba(210, 161, 0, 0.35)",
+                                    borderRadius: 18,
+                                    overflow: "hidden",
+                                    boxShadow: "0 12px 36px rgba(0, 0, 0, 0.5)",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                  }}
+                                >
+                                  {/* Card Body */}
+                                  <div style={{ padding: "22px 24px", display: "flex", flexDirection: "column", flex: 1, gap: 14 }}>
+                                    {/* Top Status Badges Row */}
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+                                      <span
+                                        style={{
+                                          display: "inline-flex",
+                                          alignItems: "center",
+                                          gap: 5,
+                                          background: "rgba(16, 185, 129, 0.15)",
+                                          border: "1px solid rgba(16, 185, 129, 0.35)",
+                                          color: "#10b981",
+                                          padding: "4px 10px",
+                                          borderRadius: 20,
+                                          fontSize: "0.72rem",
+                                          fontWeight: 800,
+                                          letterSpacing: "0.5px",
+                                          textTransform: "uppercase",
+                                        }}
+                                      >
+                                        <FaVideo size={10} /> Live Online Cohort
+                                      </span>
+                                      {order.slotId?.startTime && (
                                         <span
-                                          key={modId}
+                                          style={{
+                                            background: "rgba(210, 161, 0, 0.12)",
+                                            border: "1px solid rgba(210, 161, 0, 0.3)",
+                                            color: "var(--primary-gold, #d2a100)",
+                                            padding: "4px 10px",
+                                            borderRadius: 20,
+                                            fontSize: "0.75rem",
+                                            fontWeight: 700,
+                                            whiteSpace: "nowrap",
+                                          }}
+                                        >
+                                          Starts {formatDate(order.slotId.startTime)}
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    {/* Title & Batch ID */}
+                                    <div>
+                                      <h3
+                                        style={{
+                                          color: "#ffffff",
+                                          fontSize: "1.22rem",
+                                          fontWeight: 800,
+                                          margin: "0 0 4px",
+                                          letterSpacing: "-0.3px",
+                                          lineHeight: 1.3,
+                                        }}
+                                      >
+                                        {order.slotId?.title || "4 Weeks Soft Skills Bootcamp"}
+                                      </h3>
+                                      <span style={{ fontSize: "0.8rem", color: "#9ca3af", fontWeight: 500 }}>
+                                        ID: {order.slotId?.batchNo || "—"}
+                                      </span>
+                                    </div>
+
+                                    {/* Price & Purchase Date */}
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        paddingBottom: 12,
+                                        borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          display: "inline-flex",
+                                          alignItems: "center",
+                                          gap: 3,
+                                          background: "rgba(210, 161, 0, 0.12)",
+                                          border: "1px solid rgba(210, 161, 0, 0.3)",
+                                          padding: "3px 10px",
+                                          borderRadius: 20,
+                                          color: "var(--primary-gold, #d2a100)",
+                                          fontWeight: 700,
+                                          fontSize: "0.95rem",
+                                        }}
+                                      >
+                                        <BiRupee />
+                                        <span>{Number(order.price || 0).toFixed(2)}</span>
+                                      </div>
+                                      <span style={{ fontSize: "0.78rem", color: "#888" }}>
+                                        Purchased on {formatDate(order.createdAt)}
+                                      </span>
+                                    </div>
+
+                                    {/* Cohort Details Box */}
+                                    <div
+                                      style={{
+                                        background: "rgba(255, 255, 255, 0.025)",
+                                        border: "1px solid rgba(255, 255, 255, 0.06)",
+                                        borderRadius: 10,
+                                        padding: "12px 14px",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: 8,
+                                        fontSize: "0.82rem",
+                                        color: "#d1d5db",
+                                      }}
+                                    >
+                                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                        <BiTime style={{ color: "var(--primary-gold, #d2a100)", flexShrink: 0, fontSize: "1rem" }} />
+                                        <span><strong>Timings:</strong> 9:30 AM – 10:30 AM IST (Mon – Fri)</span>
+                                      </div>
+                                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                        <BiCalendar style={{ color: "var(--primary-gold, #d2a100)", flexShrink: 0, fontSize: "1rem" }} />
+                                        <span><strong>Commencement:</strong> {formatDate(order.slotId?.startTime)}</span>
+                                      </div>
+                                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                        <FaCheckCircle style={{ color: "#10b981", flexShrink: 0, fontSize: "0.9rem" }} />
+                                        <span><strong>Mentorship:</strong> 1:1 Video Speech Evaluation &amp; Drills</span>
+                                      </div>
+                                    </div>
+
+                                    {/* Enrolled Program Tag */}
+                                    <div>
+                                      <span style={{ color: "#d2a100", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 6 }}>
+                                        Enrolled Program:
+                                      </span>
+                                      <span
+                                        style={{
+                                          display: "inline-block",
+                                          background: "rgba(210, 161, 0, 0.1)",
+                                          color: "#d2a100",
+                                          border: "1px solid rgba(210, 161, 0, 0.3)",
+                                          padding: "4px 10px",
+                                          borderRadius: 6,
+                                          fontSize: "0.78rem",
+                                          fontWeight: 600,
+                                        }}
+                                      >
+                                        4 Weeks Soft Skills Bootcamp
+                                      </span>
+                                    </div>
+
+                                    {/* Order ID Reference */}
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 8,
+                                        background: "rgba(0, 0, 0, 0.35)",
+                                        border: "1px solid rgba(255, 255, 255, 0.05)",
+                                        padding: "8px 12px",
+                                        borderRadius: 8,
+                                        fontSize: "0.78rem",
+                                        fontFamily: "monospace",
+                                      }}
+                                    >
+                                      <span style={{ color: "var(--primary-gold, #d2a100)", fontWeight: 700 }}>Order ID:</span>
+                                      <span style={{ color: "#9ca3af" }}>{order.orderId || "Manual booking/System created"}</span>
+                                    </div>
+
+                                    {/* Speech Portfolio Action */}
+                                    <div style={{ marginTop: "auto", paddingTop: 6, display: "flex", flexDirection: "column", gap: 8 }}>
+                                      <button
+                                        type="button"
+                                        className={styles.browseCoursesBtn}
+                                        style={{
+                                          background: "linear-gradient(135deg, #d2a100 0%, #b8860b 100%)",
+                                          color: "#000",
+                                          fontWeight: 800,
+                                          border: "none",
+                                          display: "inline-flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          gap: 8,
+                                          padding: "13px 16px",
+                                          borderRadius: 10,
+                                          fontSize: "0.95rem",
+                                          boxShadow: "0 6px 20px rgba(210, 161, 0, 0.28)",
+                                          cursor: "pointer",
+                                        }}
+                                        onClick={() => setSoftSkillsModalSlot(order.slotId || { _id: order._id, title: "4 Weeks Soft Skills Bootcamp" })}
+                                      >
+                                        <FaVideo /> Speech Portfolio &amp; Videos
+                                      </button>
+                                      <span style={{ fontSize: "0.74rem", color: "#777", textAlign: "center" }}>
+                                        Submit baseline introduction video &amp; view mentor remarks
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            const isOffline = order.slotId?.mode === "offline";
+
+                            return (
+                              <div
+                                key={order._id}
+                                className={styles.courseCard}
+                                style={{
+                                  background: "linear-gradient(165deg, #18181b 0%, #111113 100%)",
+                                  border: "1px solid rgba(210, 161, 0, 0.35)",
+                                  borderRadius: 18,
+                                  overflow: "hidden",
+                                  boxShadow: "0 12px 36px rgba(0, 0, 0, 0.5)",
+                                  display: "flex",
+                                  flexDirection: "column",
+                                }}
+                              >
+                                <div style={{ padding: "22px 24px", display: "flex", flexDirection: "column", flex: 1, gap: 14 }}>
+                                  {/* Top Status Badges Row */}
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+                                    {isOffline ? (
+                                      <span
+                                        style={{
+                                          display: "inline-flex",
+                                          alignItems: "center",
+                                          gap: 5,
+                                          background: "rgba(245, 158, 11, 0.15)",
+                                          border: "1px solid rgba(245, 158, 11, 0.35)",
+                                          color: "#f59e0b",
+                                          padding: "4px 10px",
+                                          borderRadius: 20,
+                                          fontSize: "0.72rem",
+                                          fontWeight: 800,
+                                          letterSpacing: "0.5px",
+                                          textTransform: "uppercase",
+                                        }}
+                                      >
+                                        <BiMap size={12} /> In-Person Offline Batch
+                                      </span>
+                                    ) : (
+                                      <span
+                                        style={{
+                                          display: "inline-flex",
+                                          alignItems: "center",
+                                          gap: 5,
+                                          background: "rgba(59, 130, 246, 0.15)",
+                                          border: "1px solid rgba(59, 130, 246, 0.35)",
+                                          color: "#60a5fa",
+                                          padding: "4px 10px",
+                                          borderRadius: 20,
+                                          fontSize: "0.72rem",
+                                          fontWeight: 800,
+                                          letterSpacing: "0.5px",
+                                          textTransform: "uppercase",
+                                        }}
+                                      >
+                                        <FaVideo size={10} /> Live Online SSB Batch
+                                      </span>
+                                    )}
+                                    {order.slotId?.startTime && (
+                                      <span
+                                        style={{
+                                          background: "rgba(210, 161, 0, 0.12)",
+                                          border: "1px solid rgba(210, 161, 0, 0.3)",
+                                          color: "var(--primary-gold, #d2a100)",
+                                          padding: "4px 10px",
+                                          borderRadius: 20,
+                                          fontSize: "0.75rem",
+                                          fontWeight: 700,
+                                          whiteSpace: "nowrap",
+                                        }}
+                                      >
+                                        Starts {formatDate(order.slotId.startTime)}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Title & Batch ID */}
+                                  <div>
+                                    <h3
+                                      style={{
+                                        color: "#ffffff",
+                                        fontSize: "1.22rem",
+                                        fontWeight: 800,
+                                        margin: "0 0 4px",
+                                        letterSpacing: "-0.3px",
+                                        lineHeight: 1.3,
+                                      }}
+                                    >
+                                      {order.slotId?.title || (order.slotId?.isFullCourse ? "12 Days SSB Hackathon" : "SSB Batch Session")}
+                                    </h3>
+                                    <span style={{ fontSize: "0.8rem", color: "#9ca3af", fontWeight: 500 }}>
+                                      ID: {order.slotId?.batchNo || "—"}
+                                    </span>
+                                  </div>
+
+                                  {/* Price & Purchase Date */}
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "space-between",
+                                      paddingBottom: 12,
+                                      borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: 3,
+                                        background: "rgba(210, 161, 0, 0.12)",
+                                        border: "1px solid rgba(210, 161, 0, 0.3)",
+                                        padding: "3px 10px",
+                                        borderRadius: 20,
+                                        color: "var(--primary-gold, #d2a100)",
+                                        fontWeight: 700,
+                                        fontSize: "0.95rem",
+                                      }}
+                                    >
+                                      <BiRupee />
+                                      <span>{Number(order.price || 0).toFixed(2)}</span>
+                                    </div>
+                                    <span style={{ fontSize: "0.78rem", color: "#888" }}>
+                                      Purchased on {formatDate(order.createdAt)}
+                                    </span>
+                                  </div>
+
+                                  {/* Enrolled Courses / Modules */}
+                                  <div>
+                                    <span
+                                      style={{
+                                        color: "#d2a100",
+                                        fontSize: "0.75rem",
+                                        fontWeight: 700,
+                                        textTransform: "uppercase",
+                                        letterSpacing: "0.5px",
+                                        display: "block",
+                                        marginBottom: 6,
+                                      }}
+                                    >
+                                      Enrolled Courses / Modules:
+                                    </span>
+                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                                      {order.selectedModules && order.selectedModules.length > 0 ? (
+                                        order.selectedModules.map((modId) => (
+                                          <span
+                                            key={modId}
+                                            style={{
+                                              background: "rgba(210, 161, 0, 0.1)",
+                                              color: "#d2a100",
+                                              border: "1px solid rgba(210, 161, 0, 0.3)",
+                                              padding: "4px 10px",
+                                              borderRadius: 6,
+                                              fontSize: "0.78rem",
+                                              fontWeight: 600,
+                                            }}
+                                          >
+                                            {moduleNames[modId] || modId}
+                                          </span>
+                                        ))
+                                      ) : (
+                                        <span
                                           style={{
                                             background: "rgba(210, 161, 0, 0.1)",
                                             color: "#d2a100",
@@ -1318,123 +1674,155 @@ export default function ProfileDashboardClient({
                                             fontWeight: 600,
                                           }}
                                         >
-                                          {moduleNames[modId] || modId}
+                                          {order.slotId?.isFullCourse ? "12 Days SSB Hackathon (Full Course)" : "General Batch Access"}
                                         </span>
-                                      ))
-                                    ) : (
-                                      <span style={{ background: "rgba(210, 161, 0, 0.1)", color: "#d2a100", border: "1px solid rgba(210, 161, 0, 0.3)", padding: "4px 10px", borderRadius: 6, fontSize: "0.78rem", fontWeight: 600 }}>
-                                        {order.slotId?.isFullCourse ? "12 Days SSB Hackathon (Full Course)" : "General Batch Access"}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {order.installmentPlanId && order.installmentPlanId.installments.length > 0 && (
-                                  <div style={{ marginTop: 16, marginBottom: 16 }}>
-                                    <span
-                                      style={{
-                                        color: "#d2a100",
-                                        fontSize: "0.8rem",
-                                        fontWeight: 700,
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.5px",
-                                        display: "block",
-                                        marginBottom: 8,
-                                      }}
-                                    >
-                                      Installments:
-                                    </span>
-                                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                      {order.installmentPlanId.installments.map((inst) => {
-                                        const key = `${order.installmentPlanId!._id}:${inst.seq}`;
-                                        const isPaid = inst.status === "paid";
-                                        return (
-                                          <div
-                                            key={inst.seq}
-                                            style={{
-                                              display: "flex",
-                                              alignItems: "center",
-                                              justifyContent: "space-between",
-                                              gap: 12,
-                                              padding: "8px 12px",
-                                              borderRadius: 6,
-                                              background: "rgba(255,255,255,0.03)",
-                                              border: "1px solid rgba(255,255,255,0.08)",
-                                            }}
-                                          >
-                                            <div>
-                                              <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>
-                                                Installment {inst.seq} — ₹{Number(inst.amount).toFixed(2)}
-                                              </div>
-                                              <div style={{ fontSize: "0.75rem", opacity: 0.7 }}>
-                                                {isPaid ? "Paid" : `Due ${formatDate(inst.dueDate)}`}
-                                                {inst.status === "overdue" && " — Overdue"}
-                                              </div>
-                                              {isPaid && inst.paymentMethod && (
-                                                <div style={{ fontSize: "0.7rem", opacity: 0.6, marginTop: 2 }}>
-                                                  Paid via {inst.paymentMethod === "manual" ? "Manual (offline)" : "Razorpay"}
-                                                  {inst.paymentReference ? ` — Ref: ${inst.paymentReference}` : ""}
-                                                </div>
-                                              )}
-                                            </div>
-                                            {isPaid ? (
-                                              <FaCheckCircle style={{ color: "#2ecc71" }} title="Paid" />
-                                            ) : (
-                                              <button
-                                                type="button"
-                                                className={styles.browseCoursesBtn}
-                                                disabled={payingInstallmentKey === key}
-                                                onClick={() => payInstallment(order.installmentPlanId!._id, inst.seq, inst.amount)}
-                                                style={{ padding: "6px 14px", fontSize: "0.85rem" }}
-                                              >
-                                                {payingInstallmentKey === key ? "Processing…" : "Pay Now"}
-                                              </button>
-                                            )}
-                                          </div>
-                                        );
-                                      })}
+                                      )}
                                     </div>
                                   </div>
-                                )}
 
-                                <div className={styles.courseOrderInfo}>
-                                  <span className={styles.orderIdLabel}>Order ID:</span>
-                                  <span className={styles.orderIdValue}>{order.orderId || "Manual booking/System created"}</span>
+                                  {/* Installments Plan */}
+                                  {order.installmentPlanId && order.installmentPlanId.installments.length > 0 && (
+                                    <div>
+                                      <span
+                                        style={{
+                                          color: "#d2a100",
+                                          fontSize: "0.75rem",
+                                          fontWeight: 700,
+                                          textTransform: "uppercase",
+                                          letterSpacing: "0.5px",
+                                          display: "block",
+                                          marginBottom: 6,
+                                        }}
+                                      >
+                                        Installments:
+                                      </span>
+                                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                        {order.installmentPlanId.installments.map((inst) => {
+                                          const key = `${order.installmentPlanId!._id}:${inst.seq}`;
+                                          const isPaid = inst.status === "paid";
+                                          return (
+                                            <div
+                                              key={inst.seq}
+                                              style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "space-between",
+                                                gap: 12,
+                                                padding: "8px 12px",
+                                                borderRadius: 6,
+                                                background: "rgba(255,255,255,0.03)",
+                                                border: "1px solid rgba(255,255,255,0.08)",
+                                              }}
+                                            >
+                                              <div>
+                                                <div style={{ fontWeight: 600, fontSize: "0.88rem", color: "#fff" }}>
+                                                  Installment {inst.seq} — ₹{Number(inst.amount).toFixed(2)}
+                                                </div>
+                                                <div style={{ fontSize: "0.75rem", opacity: 0.7, color: "#d1d5db" }}>
+                                                  {isPaid ? "Paid" : `Due ${formatDate(inst.dueDate)}`}
+                                                  {inst.status === "overdue" && " — Overdue"}
+                                                </div>
+                                                {isPaid && inst.paymentMethod && (
+                                                  <div style={{ fontSize: "0.7rem", opacity: 0.6, marginTop: 2, color: "#9ca3af" }}>
+                                                    Paid via {inst.paymentMethod === "manual" ? "Manual (offline)" : "Razorpay"}
+                                                    {inst.paymentReference ? ` — Ref: ${inst.paymentReference}` : ""}
+                                                  </div>
+                                                )}
+                                              </div>
+                                              {isPaid ? (
+                                                <FaCheckCircle style={{ color: "#2ecc71" }} title="Paid" />
+                                              ) : (
+                                                <button
+                                                  type="button"
+                                                  className={styles.browseCoursesBtn}
+                                                  disabled={payingInstallmentKey === key}
+                                                  onClick={() => payInstallment(order.installmentPlanId!._id, inst.seq, inst.amount)}
+                                                  style={{ padding: "6px 14px", fontSize: "0.85rem" }}
+                                                >
+                                                  {payingInstallmentKey === key ? "Processing…" : "Pay Now"}
+                                                </button>
+                                              )}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Order ID & References Box */}
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: 4,
+                                      background: "rgba(0, 0, 0, 0.35)",
+                                      border: "1px solid rgba(255, 255, 255, 0.05)",
+                                      padding: "8px 12px",
+                                      borderRadius: 8,
+                                      fontSize: "0.78rem",
+                                      fontFamily: "monospace",
+                                    }}
+                                  >
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                                      <span style={{ color: "var(--primary-gold, #d2a100)", fontWeight: 700 }}>Order ID:</span>
+                                      <span style={{ color: "#9ca3af" }}>{order.orderId || "Manual booking/System created"}</span>
+                                    </div>
+                                    {order.paymentId && (
+                                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                                        <span style={{ color: "var(--primary-gold, #d2a100)", fontWeight: 700 }}>Payment ID:</span>
+                                        <span style={{ color: "#9ca3af" }}>{order.paymentId}</span>
+                                      </div>
+                                    )}
+                                    {order.couponCode && (
+                                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                                        <span style={{ color: "var(--primary-gold, #d2a100)", fontWeight: 700 }}>Coupon:</span>
+                                        <span style={{ color: "#9ca3af" }}>{order.couponCode}</span>
+                                      </div>
+                                    )}
+                                    {order.referralCode && (
+                                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                                        <span style={{ color: "var(--primary-gold, #d2a100)", fontWeight: 700 }}>Referral:</span>
+                                        <span style={{ color: "#9ca3af" }}>{order.referralCode}</span>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Evaluation Action Button */}
+                                  <div style={{ marginTop: "auto", paddingTop: 6, display: "flex", flexDirection: "column", gap: 8 }}>
+                                    <button
+                                      type="button"
+                                      className={styles.browseCoursesBtn}
+                                      style={{
+                                        background: "linear-gradient(135deg, #d2a100 0%, #b8860b 100%)",
+                                        color: "#000",
+                                        fontWeight: 800,
+                                        border: "none",
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: 8,
+                                        padding: "13px 16px",
+                                        borderRadius: 10,
+                                        fontSize: "0.95rem",
+                                        boxShadow: "0 6px 20px rgba(210, 161, 0, 0.28)",
+                                        cursor: "pointer",
+                                        width: "100%",
+                                      }}
+                                      onClick={() => {
+                                        setSelectedOrderId(order._id);
+                                        setActiveTab("psycheTest");
+                                      }}
+                                    >
+                                      <BiBrain size={18} /> View Evaluation &amp; Dossier
+                                    </button>
+                                    <span style={{ fontSize: "0.74rem", color: "#777", textAlign: "center" }}>
+                                      Psychological assessments, Stage dossiers &amp; assessor remarks
+                                    </span>
+                                  </div>
                                 </div>
-                                {order.paymentId && (
-                                  <div className={styles.courseOrderInfo}>
-                                    <span className={styles.orderIdLabel}>Payment ID:</span>
-                                    <span className={styles.orderIdValue}>{order.paymentId}</span>
-                                  </div>
-                                )}
-                                {order.couponCode && (
-                                  <div className={styles.courseOrderInfo}>
-                                    <span className={styles.orderIdLabel}>Coupon Used:</span>
-                                    <span className={styles.orderIdValue}>{order.couponCode}</span>
-                                  </div>
-                                )}
-                                {order.referralCode && (
-                                  <div className={styles.courseOrderInfo}>
-                                    <span className={styles.orderIdLabel}>Referral Code:</span>
-                                    <span className={styles.orderIdValue}>{order.referralCode}</span>
-                                  </div>
-                                )}
-
-                                <button
-                                  type="button"
-                                  className={styles.browseCoursesBtn}
-                                  style={{ marginTop: 16 }}
-                                  onClick={() => {
-                                    setSelectedOrderId(order._id);
-                                    setActiveTab("psycheTest");
-                                  }}
-                                >
-                                  <BiBrain style={{ marginRight: 6 }} />
-                                  View Evaluation
-                                </button>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       ) : (
                         <div className={styles.emptyState}>
@@ -2250,6 +2638,14 @@ export default function ProfileDashboardClient({
             </div>
           </div>
         </div>
+      )}
+
+      {softSkillsModalSlot && (
+        <SoftSkillsPortfolioModal
+          isOpen={Boolean(softSkillsModalSlot)}
+          onClose={() => setSoftSkillsModalSlot(null)}
+          slot={softSkillsModalSlot}
+        />
       )}
     </>
   );

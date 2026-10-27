@@ -33,6 +33,7 @@ import {
   Outdent,
   Globe,
   MapPin,
+  Video,
   type LucideIcon,
 } from "lucide-react";
 import { useAdminUser } from "./AdminUserProvider";
@@ -416,7 +417,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 </div>
               )}
 
-              {(role === "assessor" || hasAdminPermission(user ?? null, "evaluations")) && (
+              {((role === "assessor" && user?.assessorType !== "SoftSkills") ||
+                (role !== "assessor" && hasAdminPermission(user ?? null, "evaluations"))) && (
                 // Use a standard <a> tag instead of client-side NavLink/Link for transitioning
                 // between the legacy Bootstrap admin layout and the Tailwind psych-battery suite.
                 <a
@@ -428,6 +430,18 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                   <Brain size={16} />
                   <span className="admin-nav-label">Candidate Evaluation</span>
                 </a>
+              )}
+
+              {hasAdminPermission(user ?? null, "softskills_evaluation") && (
+                <NavLink
+                  href="/admin/softskills-evaluation"
+                  active={isActive("/admin/softskills-evaluation")}
+                  icon={Video}
+                  onClick={closeMobile}
+                  title="Soft Skills Evaluations"
+                >
+                  Soft Skills Evaluations
+                </NavLink>
               )}
 
               <NavLink href="/admin/Profile" active={isActive("/admin/Profile")} icon={User} onClick={closeMobile}>
