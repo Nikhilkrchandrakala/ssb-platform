@@ -207,7 +207,6 @@ export default function SoftskillBootcampView() {
   const [fullName, setFullName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
   const [phone, setPhone] = useState(user?.phone || "");
-  const [targetGoal, setTargetGoal] = useState("Interviews & Placements");
 
   // Booking Success State
   const [isBooked, setIsBooked] = useState(false);
@@ -974,30 +973,6 @@ export default function SoftskillBootcampView() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                     />
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>
-                      Primary Focus Area
-                    </label>
-                    <select
-                      className={styles.formSelect}
-                      value={targetGoal}
-                      onChange={(e) => setTargetGoal(e.target.value)}
-                    >
-                      <option value="Interviews & Placements">
-                        Job Interviews &amp; Campus Placements
-                      </option>
-                      <option value="Workplace Poise">
-                        Corporate Meetings &amp; Workplace Poise
-                      </option>
-                      <option value="SSB Aspirants">
-                        SSB GD &amp; Lecturette Preparation
-                      </option>
-                      <option value="Public Speaking">
-                        Overcoming Stage Fear &amp; Public Speaking
-                      </option>
-                    </select>
                   </div>
 
                   {/* Coupon Code */}
