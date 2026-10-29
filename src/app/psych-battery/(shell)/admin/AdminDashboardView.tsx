@@ -285,6 +285,16 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
     }
   };
 
+  const toggleAssessmentActive = async (id: string, currentActive: boolean) => {
+    try {
+      const updated = await api.assessments.update(id, { active: !currentActive });
+      setAssessments((prev) => prev.map((a) => (a.id === id ? { ...a, active: updated.active } : a)));
+    } catch (error) {
+      console.error("Failed to toggle assessment status:", error);
+      alert("Failed to update assessment status.");
+    }
+  };
+
   const duplicateAssessment = async (id: string) => {
     if (!window.confirm("Are you sure you want to duplicate this assessment?")) return;
     try {
@@ -373,7 +383,7 @@ export default function AdminDashboardView({ tab }: { tab?: string }) {
                     <div className="p-2.5 bg-app-accent/15 rounded-xl">
                       <Database size={20} className="text-app-accent-light" />
                     </div>
-                    <Badge tone={a.active ? "success" : "danger"}>{a.active ? "Operational" : "Disabled"}</Badge>
+                    <button type="button" onClick={() => toggleAssessmentActive(a.id!, !!a.active)} className="cursor-pointer transition-transform hover:scale-105 active:scale-95" title={`Click to ${a.active ? "disable" : "enable"} this battery`}><Badge tone={a.active ? "success" : "danger"}>{a.active ? "Operational" : "Disabled"}</Badge></button>
                   </div>
                   <h4 className="text-lg font-bold text-app-text-bright mb-1.5 tracking-tight">{a.title}</h4>
                   <p className="text-app-text-muted text-xs mb-5 line-clamp-2 leading-relaxed">{a.description}</p>
