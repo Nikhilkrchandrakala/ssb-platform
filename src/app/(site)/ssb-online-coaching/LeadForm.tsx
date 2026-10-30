@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import Button from "./Button";
 import { formatPhoneWithCountryCode } from "@/lib/phone";
 
@@ -61,6 +62,7 @@ function toZohoDate(value: string) {
 }
 
 export default function LeadForm() {
+  const router = useRouter();
   const [submitted, setSubmitted] = useState(false);
   const [submitFailed, setSubmitFailed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -171,6 +173,7 @@ export default function LeadForm() {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setSubmitting(false);
     setSubmitted(true);
+    router.push("/ssb-online-coaching/thank-you");
   }
 
   return (
@@ -201,7 +204,7 @@ export default function LeadForm() {
         <div style={{ padding: "20px 0", textAlign: "center", display: "flex", flexDirection: "column", gap: 8 }}>
           <span style={{ font: "500 18px/1.3 var(--font-display)", color: "var(--base-gold-source)" }}>Thanks — you&apos;re in!</span>
           <span style={{ font: "400 14px/1.5 var(--font-body)", color: "var(--base-cream-300)" }}>
-            We&apos;ve received your details and will call you within 24 hours.
+            Redirecting to confirmation page...
           </span>
         </div>
       ) : (
