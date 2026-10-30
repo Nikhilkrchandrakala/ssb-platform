@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
 
     const netAmount = Math.max(baseAmount - discount, 0);
     const gst = netAmount * 0.18;
-    const finalAmount = netAmount + gst;
+    const finalAmount = Math.ceil(netAmount + gst); // ceil to nearest whole rupee
 
     return NextResponse.json({
       discount,

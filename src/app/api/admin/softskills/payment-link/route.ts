@@ -56,13 +56,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Amount calculation: Base ₹5,999 + 18% GST = ₹7,078.82, or admin custom amount
-    let amountRupees = 5999 * 1.18;
+    // Amount calculation: Base ₹5,999 + 18% GST = ₹7,079 (ceil to nearest rupee), or admin custom amount
+    let amountRupees = Math.ceil(5999 * 1.18);
     if (customAmountRupees && typeof customAmountRupees === "number" && customAmountRupees > 0) {
-      amountRupees = customAmountRupees;
+      amountRupees = Math.ceil(customAmountRupees);
     }
-    // Round to 2 decimal places
-    amountRupees = Math.round(amountRupees * 100) / 100;
 
     // Set expiry at batch start time (no late admissions)
     const startTimeIST = getRealStartTime(slot);

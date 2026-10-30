@@ -163,9 +163,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       originalAmount = baseAmount;
       finalPrice = Math.max(netBaseAmount, 0);
     } else {
-      // Online courses have 18% GST
-      originalAmount = Math.round(baseAmount * 1.18 * 100) / 100;
-      finalPrice = Math.round(netBaseAmount * 1.18 * 100) / 100;
+      // Online courses have 18% GST — ceil to nearest whole rupee
+      originalAmount = Math.ceil(baseAmount * 1.18);
+      finalPrice = Math.ceil(Math.max(netBaseAmount, 0) * 1.18);
     }
 
     // add user (same as payment logic)

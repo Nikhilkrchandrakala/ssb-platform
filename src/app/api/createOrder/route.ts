@@ -124,10 +124,10 @@ export async function POST(req: NextRequest) {
 
     const netAmount = Math.max(baseAmount - discount, 0);
     const gstAmount = netAmount * 0.18;
-    const finalAmount = netAmount + gstAmount;
-    const originalAmountWithGST = baseAmount + baseAmount * 0.18;
+    const finalAmount = Math.ceil(netAmount + gstAmount); // ceil to nearest whole rupee
+    const originalAmountWithGST = Math.ceil(baseAmount + baseAmount * 0.18); // ceil to nearest whole rupee
 
-    const amountInPaise = Math.round(finalAmount * 100);
+    const amountInPaise = finalAmount * 100; // already a whole number after ceil
 
     // CREATE ORDER FIRST (IMPORTANT FOR REFERENCE)
     const order = new Order({

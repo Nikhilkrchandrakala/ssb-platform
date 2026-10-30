@@ -103,7 +103,7 @@ export async function applySalesCoupon(opts: {
   studentEmail: string;
 }): Promise<SalesCouponResult> {
   if (!opts.couponCode) {
-    return { ok: true, finalPriceInclGST: Math.round(opts.baseAmount * 1.18 * 100) / 100, discount: 0, couponCode: null };
+    return { ok: true, finalPriceInclGST: Math.ceil(opts.baseAmount * 1.18), discount: 0, couponCode: null };
   }
   if (!opts.slot.isFullCourse) {
     return { ok: false, error: "Coupons are only valid for the Full Course." };
@@ -129,7 +129,7 @@ export async function applySalesCoupon(opts: {
   }
 
   const netAmount = Math.max(opts.baseAmount - discount, 0);
-  const finalPriceInclGST = Math.round((netAmount + netAmount * 0.18) * 100) / 100;
+  const finalPriceInclGST = Math.ceil(netAmount * 1.18);
 
   return { ok: true, finalPriceInclGST, discount: Math.round(discount * 100) / 100, couponCode: coupon.code };
 }
