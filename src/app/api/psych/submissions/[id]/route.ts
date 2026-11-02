@@ -45,6 +45,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
       userId: studentJSON
         ? {
             ...studentJSON,
+            batch: allotment.batchNo || studentJSON.batch,
             assignedGTO: allotment.assignedGTO,
             assignedTO: allotment.assignedTO,
             assignedPsych: allotment.assignedPsych,

@@ -63,7 +63,17 @@ export async function GET() {
           const subJSON = sub.toJSON ? sub.toJSON() : sub;
           const orderId = (subJSON as Record<string, unknown>).orderId as string | null | undefined;
           const allotment = await resolveAllotmentForOrder(orderId, uid);
-          return { ...subJSON, student: (subJSON as Record<string, unknown>).userId, isOffline: allotment.isOffline };
+          const studentObj = (subJSON as Record<string, unknown>).userId as Record<string, unknown> | undefined;
+          return {
+            ...subJSON,
+            student: studentObj
+              ? {
+                  ...studentObj,
+                  batch: allotment.batchNo || studentObj.batch,
+                }
+              : (subJSON as Record<string, unknown>).userId,
+            isOffline: allotment.isOffline,
+          };
         })
       );
       return NextResponse.json(studentSubmissions);
@@ -127,6 +137,7 @@ export async function GET() {
         student: candidateUser
           ? {
               ...(candidateUser.toJSON ? candidateUser.toJSON() : candidateUser),
+              batch: allotment.batchNo || candidateUser.batch,
               assignedGTO: allotment.assignedGTO,
               assignedTO: allotment.assignedTO,
               assignedPsych: allotment.assignedPsych,
@@ -154,6 +165,7 @@ export async function GET() {
         status: "PENDING",
         student: {
           ...(candidateUser.toObject ? candidateUser.toObject() : candidateUser),
+          batch: allotment.batchNo || candidateUser.batch,
           assignedGTO: allotment.assignedGTO,
           assignedTO: allotment.assignedTO,
           assignedPsych: allotment.assignedPsych,
@@ -236,7 +248,7 @@ export async function POST(req: NextRequest) {
     submission = new Submission({
       ...body,
       userId: uid,
-      orderId: allotment.orderId,
+      orderId: body.orderId || allotment.orderId,
       startedAt: isLiveCall ? (body.startedAt || null) : new Date(),
       psychStatus,
       gtoStatus,

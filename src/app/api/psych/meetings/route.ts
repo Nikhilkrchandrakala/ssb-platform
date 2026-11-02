@@ -156,7 +156,7 @@ export async function GET(req: NextRequest) {
             name: (student.name as string) || "Candidate",
             email: (student.email as string) || "",
             chestNo: (student.chestNo as string) || "--",
-            batch: (student.batch as string) || "--",
+            batch: allotment.batchNo || (student.batch as string) || "--",
             profileImage: student.profileImage as string | undefined,
           },
           assessor: assessor

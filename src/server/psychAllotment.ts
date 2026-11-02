@@ -15,12 +15,26 @@ export interface ResolvedAllotment {
   isOffline: boolean;
   // Whether a super-admin has unlocked online uploads for this offline student.
   uploadsUnlocked: boolean;
+  // The specific batch number for this enrollment (from the order's slot).
+  // Prevents multi-batch candidates from having all their cards display the same
+  // overwritten global User.batch string.
+  batchNo: string | null;
 }
 
-async function isSlotOffline(slotId: unknown): Promise<boolean> {
-  if (!slotId) return false;
-  const slot = await Slot.findById(slotId).select("mode");
-  return slot?.mode === "offline";
+async function getSlotDetails(slotIdOrObj: unknown): Promise<{ isOffline: boolean; batchNo: string | null }> {
+  if (!slotIdOrObj) return { isOffline: false, batchNo: null };
+  if (typeof slotIdOrObj === "object" && slotIdOrObj !== null && "mode" in slotIdOrObj) {
+    const slotObj = slotIdOrObj as { mode?: string; batchNo?: string };
+    return {
+      isOffline: slotObj.mode === "offline",
+      batchNo: slotObj.batchNo ? slotObj.batchNo.trim() : null,
+    };
+  }
+  const slot = await Slot.findById(slotIdOrObj).select("mode batchNo");
+  return {
+    isOffline: slot?.mode === "offline",
+    batchNo: slot?.batchNo ? slot.batchNo.trim() : null,
+  };
 }
 
 async function fromOrder(order: {
@@ -33,6 +47,7 @@ async function fromOrder(order: {
   slotId?: unknown;
   uploadsUnlocked?: boolean;
 }): Promise<ResolvedAllotment> {
+  const slotDetails = await getSlotDetails(order.slotId);
   return {
     orderId: String(order._id),
     assignedGTO: order.assignedGTO ? String(order.assignedGTO) : null,
@@ -40,13 +55,14 @@ async function fromOrder(order: {
     assignedPsych: order.assignedPsych ? String(order.assignedPsych) : null,
     assignedIO: order.assignedIO ? String(order.assignedIO) : null,
     assignedAssessments: (order.assignedAssessments || []).map(String),
-    isOffline: await isSlotOffline(order.slotId),
+    isOffline: slotDetails.isOffline,
     uploadsUnlocked: !!order.uploadsUnlocked,
+    batchNo: slotDetails.batchNo,
   };
 }
 
 async function fromUserFallback(userId: string): Promise<ResolvedAllotment> {
-  const user = await User.findById(userId).select("assignedGTO assignedTO assignedPsych assignedIO assignedAssessments enrollmentMode");
+  const user = await User.findById(userId).select("assignedGTO assignedTO assignedPsych assignedIO assignedAssessments enrollmentMode batch");
   return {
     orderId: null,
     assignedGTO: user?.assignedGTO ? String(user.assignedGTO) : null,
@@ -56,6 +72,7 @@ async function fromUserFallback(userId: string): Promise<ResolvedAllotment> {
     assignedAssessments: (user?.assignedAssessments || []).map(String),
     isOffline: user?.enrollmentMode === "offline",
     uploadsUnlocked: false,
+    batchNo: user?.batch ? user.batch.trim() : null,
   };
 }
 
@@ -67,13 +84,28 @@ async function fromUserFallback(userId: string): Promise<ResolvedAllotment> {
  * (deleted order, bad id) — covers the same "no real purchase" edge cases
  * `resolveCurrentAllotmentForUser` handles for manually-created candidates.
  */
-export async function resolveAllotmentForOrder(orderId: string | null | undefined, fallbackUserId?: string): Promise<ResolvedAllotment> {
+export async function resolveAllotmentForOrder(
+  orderId: string | null | undefined,
+  fallbackUserId?: string,
+): Promise<ResolvedAllotment> {
   if (orderId) {
-    const order = await Order.findById(orderId).select("assignedGTO assignedTO assignedPsych assignedIO assignedAssessments slotId uploadsUnlocked");
+    const order = await Order.findById(orderId).select(
+      "assignedGTO assignedTO assignedPsych assignedIO assignedAssessments slotId uploadsUnlocked",
+    );
     if (order) return fromOrder(order);
   }
   if (fallbackUserId) return fromUserFallback(fallbackUserId);
-  return { orderId: null, assignedGTO: null, assignedTO: null, assignedPsych: null, assignedIO: null, assignedAssessments: [], isOffline: false, uploadsUnlocked: false };
+  return {
+    orderId: null,
+    assignedGTO: null,
+    assignedTO: null,
+    assignedPsych: null,
+    assignedIO: null,
+    assignedAssessments: [],
+    isOffline: false,
+    uploadsUnlocked: false,
+    batchNo: null,
+  };
 }
 
 /**
@@ -84,10 +116,14 @@ export async function resolveAllotmentForOrder(orderId: string | null | undefine
  * back to their User-level fields if they have no paid Order at all
  * (manually-created candidates with an allotment but no real purchase).
  */
-export async function resolveCurrentAllotmentForUser(userId: string): Promise<ResolvedAllotment> {
+export async function resolveCurrentAllotmentForUser(
+  userId: string,
+): Promise<ResolvedAllotment> {
   const mostRecentPaidOrder = await Order.findOne({ userId, status: "paid" })
     .sort({ createdAt: -1 })
-    .select("assignedGTO assignedTO assignedPsych assignedIO assignedAssessments slotId uploadsUnlocked");
+    .select(
+      "assignedGTO assignedTO assignedPsych assignedIO assignedAssessments slotId uploadsUnlocked",
+    );
   if (mostRecentPaidOrder) return fromOrder(mostRecentPaidOrder);
   return fromUserFallback(userId);
 }
