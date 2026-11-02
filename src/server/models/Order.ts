@@ -43,6 +43,10 @@ const orderSchema = new Schema(
     assignedPsych: { type: Schema.Types.ObjectId, ref: "User", default: null },
     assignedIO: { type: Schema.Types.ObjectId, ref: "User", default: null },
     assignedAssessments: { type: [{ type: Schema.Types.ObjectId, ref: "Assessment" }], default: [] },
+    // Super-admin toggle: when set, offline-batch students see the standard
+    // online evaluation journey (PIQ form, timed test, dossier upload)
+    // instead of the "In-Person Evaluation" locked view on their dashboard.
+    uploadsUnlocked: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

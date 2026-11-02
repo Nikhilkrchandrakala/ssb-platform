@@ -118,6 +118,8 @@ function stagesOfRow(order: OrderItem | null, clinicalStage?: string): string[] 
     // one batch's course onto a DIFFERENT batch's row (e.g. an offline
     // registration, which never gets a course/module, showing whatever
     // course the student's other, online batch happens to be for).
+    // Offline batches are always treated as full_course for allotment purposes.
+    if (order.slotId?.mode === "offline") return ["full_course"];
     const modules = order.selectedModules || [];
     if (modules.length > 0) return modules;
     return order.slotId?.isFullCourse ? ["full_course"] : [];

@@ -14,12 +14,22 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { usePsychUser, type PsychUser } from "@/components/psych/PsychUserProvider";
+import {
+  usePsychUser,
+  type PsychUser,
+} from "@/components/psych/PsychUserProvider";
 import { api } from "@/app/psych-battery/lib/api";
 import { Assessment, AssessmentSubmission } from "@/app/psych-battery/types";
 import { Play, Timer, BookOpen, AlertTriangle } from "lucide-react";
 import { Watermark } from "@/app/psych-battery/components/Watermark";
-import { Card, Badge, GlassCard, Reveal, Button, staggerDelay } from "@/app/psych-battery/components/ui/Primitives";
+import {
+  Card,
+  Badge,
+  GlassCard,
+  Reveal,
+  Button,
+  staggerDelay,
+} from "@/app/psych-battery/components/ui/Primitives";
 
 // getCurrentUser() returns the full populated Mongo user document, but the
 // PsychUser interface (shared by every psych-battery page) only declares the
@@ -28,6 +38,7 @@ import { Card, Badge, GlassCard, Reveal, Button, staggerDelay } from "@/app/psyc
 interface StudentUser extends PsychUser {
   batch?: string;
   clinicalStage?: string;
+  enrollmentMode?: string;
 }
 
 // Legacy's AssessmentSubmission type never declared piq1Status/piq2Status
@@ -38,7 +49,9 @@ interface SubmissionWithPiqStatus extends AssessmentSubmission {
   piq2Status?: string;
 }
 
-function extractAssessmentId(a: { id?: string; _id?: string } | string | undefined): string | undefined {
+function extractAssessmentId(
+  a: { id?: string; _id?: string } | string | undefined,
+): string | undefined {
   if (!a) return undefined;
   return typeof a === "string" ? a : a.id || a._id;
 }
@@ -49,8 +62,12 @@ export default function StudentEntryView() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
-  const [submission, setSubmission] = useState<SubmissionWithPiqStatus | null>(null);
-  const [allSubmissions, setAllSubmissions] = useState<SubmissionWithPiqStatus[]>([]);
+  const [submission, setSubmission] = useState<SubmissionWithPiqStatus | null>(
+    null,
+  );
+  const [allSubmissions, setAllSubmissions] = useState<
+    SubmissionWithPiqStatus[]
+  >([]);
 
   const hasBatch = !!(user?.batch && user.batch.trim() !== "");
   // Fetched from /api/psych/my-allotment rather than read off `user` — the
@@ -66,7 +83,7 @@ export default function StudentEntryView() {
       (s) =>
         s.piq1Status === "VERIFIED" ||
         s.piq1Status === "PROCESSING" ||
-        (s.piqFiles && s.piqFiles.some((f) => f.includes("piq1")))
+        (s.piqFiles && s.piqFiles.some((f) => f.includes("piq1"))),
     ) ||
     submission?.piq1Status === "VERIFIED" ||
     submission?.piq1Status === "PROCESSING" ||
@@ -76,7 +93,7 @@ export default function StudentEntryView() {
       (s) =>
         s.piq2Status === "VERIFIED" ||
         s.piq2Status === "PROCESSING" ||
-        (s.piqFiles && s.piqFiles.some((f) => f.includes("piq2")))
+        (s.piqFiles && s.piqFiles.some((f) => f.includes("piq2"))),
     ) ||
     submission?.piq2Status === "VERIFIED" ||
     submission?.piq2Status === "PROCESSING" ||
@@ -84,15 +101,23 @@ export default function StudentEntryView() {
   const hasBothPiqs = !!(hasPiq1 && hasPiq2);
   const isEligible = hasBatch && hasAssessor && hasBothPiqs;
 
-  const [primaryAssessment, setPrimaryAssessment] = useState<Assessment | null>(null);
+  const [primaryAssessment, setPrimaryAssessment] = useState<Assessment | null>(
+    null,
+  );
   const [totalTime, setTotalTime] = useState(0);
 
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
 
-    const userStages = user.clinicalStage ? user.clinicalStage.split(",").map((s) => s.trim().toLowerCase()) : [];
-    const isFullOrPsych = userStages.includes("full_course") || userStages.includes("psych") || userStages.includes("psychology");
+    const userStages = user.clinicalStage
+      ? user.clinicalStage.split(",").map((s) => s.trim().toLowerCase())
+      : [];
+    const isFullOrPsych =
+      userStages.includes("full_course") ||
+      userStages.includes("psych") ||
+      userStages.includes("psychology") ||
+      user.enrollmentMode === "offline";
     if (!isFullOrPsych) {
       router.push("/ProfileDashboard?tab=psycheTest");
       return;
@@ -100,59 +125,77 @@ export default function StudentEntryView() {
 
     fetch("/api/psych/my-allotment")
       .then((res) => (res.ok ? res.json() : null))
-      .then((data: { hasAssessor?: boolean; isOffline?: boolean } | null) => {
-        if (cancelled || !data) return;
-        // Offline candidates are evaluated in person during their batch —
-        // there's no PIQ/timed-test/dossier journey for them at all, so this
-        // page (the timed-test entry screen) isn't for them either.
-        if (data.isOffline) {
-          router.push("/ProfileDashboard?tab=psycheTest");
-          return;
-        }
-        setHasAssessor(!!data.hasAssessor);
-      })
-      .catch((err) => console.error("Failed to fetch allotment eligibility:", err));
+      .then(
+        (
+          data: {
+            hasAssessor?: boolean;
+            isOffline?: boolean;
+            uploadsUnlocked?: boolean;
+          } | null,
+        ) => {
+          if (cancelled || !data) return;
+          // Offline candidates are evaluated in person during their batch —
+          // there's no PIQ/timed-test/dossier journey for them at all, so this
+          // page (the timed-test entry screen) isn't for them either.
+          // Exception: allowed if uploads are unlocked by admin.
+          if (data.isOffline && !data.uploadsUnlocked) {
+            router.push("/ProfileDashboard?tab=psycheTest");
+            return;
+          }
+          setHasAssessor(!!data.hasAssessor);
+        },
+      )
+      .catch((err) =>
+        console.error("Failed to fetch allotment eligibility:", err),
+      );
 
     Promise.all([api.assessments.list(), api.submissions.list()])
-      .then(([assessmentsList, submissionsList]: [Assessment[], SubmissionWithPiqStatus[]]) => {
-        if (cancelled) return;
+      .then(
+        ([assessmentsList, submissionsList]: [
+          Assessment[],
+          SubmissionWithPiqStatus[],
+        ]) => {
+          if (cancelled) return;
 
-        const activeAssessments = assessmentsList.filter((a) => a.active);
+          const activeAssessments = assessmentsList.filter((a) => a.active);
 
-        if (activeAssessments.length === 0) {
-          // If no active assessments, bounce back to profile
-          router.push("/ProfileDashboard?tab=psycheTest");
-          return;
-        }
+          if (activeAssessments.length === 0) {
+            // If no active assessments, bounce back to profile
+            router.push("/ProfileDashboard?tab=psycheTest");
+            return;
+          }
 
-        const primary = activeAssessments[0];
-        setPrimaryAssessment(primary);
+          const primary = activeAssessments[0];
+          setPrimaryAssessment(primary);
 
-        // Calculate approx time (duration is stored in the assessment object, or derived)
-        // Duration is in minutes (e.g. 60)
-        setTotalTime(primary.duration ? primary.duration * 60 : 3600);
+          // Calculate approx time (duration is stored in the assessment object, or derived)
+          // Duration is in minutes (e.g. 60)
+          setTotalTime(primary.duration ? primary.duration * 60 : 3600);
 
-        const matchedSubmission = submissionsList.find((s) => {
-          const assId = extractAssessmentId(s.assessmentId as string | { id?: string; _id?: string });
-          return assId === primary.id || assId === primary._id;
-        });
-        setAllSubmissions(submissionsList);
-        setSubmission(matchedSubmission || null);
+          const matchedSubmission = submissionsList.find((s) => {
+            const assId = extractAssessmentId(
+              s.assessmentId as string | { id?: string; _id?: string },
+            );
+            return assId === primary.id || assId === primary._id;
+          });
+          setAllSubmissions(submissionsList);
+          setSubmission(matchedSubmission || null);
 
-        if (!matchedSubmission) {
-          // Candidate hasn't started yet — nothing further to do, "Commence
-          // Test" button below handles it.
-        } else if (
-          matchedSubmission.status === "PENDING_UPLOAD" ||
-          matchedSubmission.status === "COMPLETED" ||
-          matchedSubmission.status === "UPLOADED" ||
-          matchedSubmission.status === "REPORT_RELEASED" ||
-          matchedSubmission.status === "MEETING_SCHEDULED"
-        ) {
-          router.push("/ProfileDashboard?tab=psycheTest");
-        }
-        // else: IN_PROGRESS or ASSIGNED — stay on this page, candidate can resume.
-      })
+          if (!matchedSubmission) {
+            // Candidate hasn't started yet — nothing further to do, "Commence
+            // Test" button below handles it.
+          } else if (
+            matchedSubmission.status === "PENDING_UPLOAD" ||
+            matchedSubmission.status === "COMPLETED" ||
+            matchedSubmission.status === "UPLOADED" ||
+            matchedSubmission.status === "REPORT_RELEASED" ||
+            matchedSubmission.status === "MEETING_SCHEDULED"
+          ) {
+            router.push("/ProfileDashboard?tab=psycheTest");
+          }
+          // else: IN_PROGRESS or ASSIGNED — stay on this page, candidate can resume.
+        },
+      )
       .catch((err) => {
         if (cancelled) return;
         console.error("Failed to fetch evaluation data:", err);
@@ -175,7 +218,9 @@ export default function StudentEntryView() {
     } catch (err) {
       console.warn("Fullscreen request failed", err);
     }
-    router.push(`/psych-battery/assessment/${primaryAssessment?._id || primaryAssessment?.id}?autoStart=true`);
+    router.push(
+      `/psych-battery/assessment/${primaryAssessment?._id || primaryAssessment?.id}?autoStart=true`,
+    );
   };
 
   const getWelcomeName = () => {
@@ -200,7 +245,14 @@ export default function StudentEntryView() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 space-y-10 sm:space-y-12 pb-20 pt-6 sm:pt-10 animate-fade-in">
-      <Watermark user={user} isAdminPreview={user?.role === "admin" || user?.role === "assessor" || user?.role === "owner"} />
+      <Watermark
+        user={user}
+        isAdminPreview={
+          user?.role === "admin" ||
+          user?.role === "assessor" ||
+          user?.role === "owner"
+        }
+      />
       <div className="space-y-3 sm:space-y-4">
         <button
           onClick={() => (window.location.href = "/ProfileDashboard")}
@@ -212,51 +264,71 @@ export default function StudentEntryView() {
           Welcome, {getWelcomeName()}
         </h1>
         <p className="text-base sm:text-lg text-app-text-muted leading-relaxed max-w-2xl">
-          {primaryAssessment.description || "This assessment will evaluate various cognitive and psychological traits."}
+          {primaryAssessment.description ||
+            "This assessment will evaluate various cognitive and psychological traits."}
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
         <GlassCard className="p-6 sm:p-8 flex flex-col items-center text-center gap-4">
-          <Reveal delay={staggerDelay(0)} className="flex flex-col items-center gap-4">
-          <div className="w-14 h-14 bg-amber-500/20 rounded-2xl flex items-center justify-center border border-amber-400/40">
-            <Timer className="w-7 h-7 text-amber-400" />
-          </div>
-          <div>
-            <h3 className="text-[11px] font-bold text-app-text-muted uppercase tracking-widest mb-1.5">Total Duration</h3>
-            <p className="text-3xl sm:text-4xl font-black text-app-text-bright">
-              {Math.round(totalTime / 60)}
-              <span className="text-base text-app-text-muted ml-1.5">min</span>
-            </p>
-          </div>
+          <Reveal
+            delay={staggerDelay(0)}
+            className="flex flex-col items-center gap-4"
+          >
+            <div className="w-14 h-14 bg-amber-500/20 rounded-2xl flex items-center justify-center border border-amber-400/40">
+              <Timer className="w-7 h-7 text-amber-400" />
+            </div>
+            <div>
+              <h3 className="text-[11px] font-bold text-app-text-muted uppercase tracking-widest mb-1.5">
+                Total Duration
+              </h3>
+              <p className="text-3xl sm:text-4xl font-black text-app-text-bright">
+                {Math.round(totalTime / 60)}
+                <span className="text-base text-app-text-muted ml-1.5">
+                  min
+                </span>
+              </p>
+            </div>
           </Reveal>
         </GlassCard>
 
         <GlassCard className="p-6 sm:p-8 flex flex-col items-center text-center gap-4">
-          <Reveal delay={staggerDelay(1)} className="flex flex-col items-center gap-4">
-          <div className="w-14 h-14 bg-purple-500/20 rounded-2xl flex items-center justify-center border border-purple-400/40">
-            <BookOpen className="w-7 h-7 text-purple-400" />
-          </div>
-          <div>
-            <h3 className="text-[11px] font-bold text-app-text-muted uppercase tracking-widest mb-1.5">Format</h3>
-            <p className="text-lg font-black text-app-text-bright uppercase tracking-wide">Multiple Modules</p>
-          </div>
+          <Reveal
+            delay={staggerDelay(1)}
+            className="flex flex-col items-center gap-4"
+          >
+            <div className="w-14 h-14 bg-purple-500/20 rounded-2xl flex items-center justify-center border border-purple-400/40">
+              <BookOpen className="w-7 h-7 text-purple-400" />
+            </div>
+            <div>
+              <h3 className="text-[11px] font-bold text-app-text-muted uppercase tracking-widest mb-1.5">
+                Format
+              </h3>
+              <p className="text-lg font-black text-app-text-bright uppercase tracking-wide">
+                Multiple Modules
+              </p>
+            </div>
           </Reveal>
         </GlassCard>
 
         <GlassCard className="p-6 sm:p-8 flex flex-col items-center text-center gap-3">
-          <Reveal delay={staggerDelay(2)} className="flex flex-col items-center gap-3">
-          <div className="w-14 h-14 bg-red-500/20 rounded-2xl flex items-center justify-center border border-red-400/40">
-            <AlertTriangle className="w-7 h-7 text-red-400" />
-          </div>
-          <div>
-            <h3 className="text-[11px] font-bold text-app-text-muted uppercase tracking-widest mb-2">Instructions</h3>
-            <ul className="text-xs sm:text-sm text-app-text-muted space-y-1 font-medium">
-              <li>Do not refresh the page</li>
-              <li>Ensure stable connection</li>
-              <li>Test is strictly timed</li>
-            </ul>
-          </div>
+          <Reveal
+            delay={staggerDelay(2)}
+            className="flex flex-col items-center gap-3"
+          >
+            <div className="w-14 h-14 bg-red-500/20 rounded-2xl flex items-center justify-center border border-red-400/40">
+              <AlertTriangle className="w-7 h-7 text-red-400" />
+            </div>
+            <div>
+              <h3 className="text-[11px] font-bold text-app-text-muted uppercase tracking-widest mb-2">
+                Instructions
+              </h3>
+              <ul className="text-xs sm:text-sm text-app-text-muted space-y-1 font-medium">
+                <li>Do not refresh the page</li>
+                <li>Ensure stable connection</li>
+                <li>Test is strictly timed</li>
+              </ul>
+            </div>
           </Reveal>
         </GlassCard>
       </div>
@@ -264,15 +336,27 @@ export default function StudentEntryView() {
       {!isEligible && (
         <Card className="p-6 max-w-xl mx-auto text-center space-y-2 border-red-400/40 bg-red-500/15">
           <AlertTriangle className="w-7 h-7 text-red-400 mx-auto" />
-          <Badge tone="danger" className="mx-auto">Evaluation Start Blocked</Badge>
-          <p className="text-xs text-app-text-muted pt-1">You cannot start this evaluation because your profile details are incomplete:</p>
+          <Badge tone="danger" className="mx-auto">
+            Evaluation Start Blocked
+          </Badge>
+          <p className="text-xs text-app-text-muted pt-1">
+            You cannot start this evaluation because your profile details are
+            incomplete:
+          </p>
           <ul className="text-xs text-app-text-muted list-disc list-inside text-left max-w-xs mx-auto">
-            {!hasBatch && <li>A batch has not been assigned to your profile.</li>}
-            {!hasAssessor && <li>An assessor has not been assigned to your profile.</li>}
-            {!hasBothPiqs && <li>Both PIQ 1 (Initial) and PIQ 2 (Final) must be uploaded.</li>}
+            {!hasBatch && (
+              <li>A batch has not been assigned to your profile.</li>
+            )}
+            {!hasAssessor && (
+              <li>An assessor has not been assigned to your profile.</li>
+            )}
+            {!hasBothPiqs && (
+              <li>Both PIQ 1 (Initial) and PIQ 2 (Final) must be uploaded.</li>
+            )}
           </ul>
           <p className="text-[11px] text-red-400 font-semibold pt-1">
-            Please contact Integrated SSB Virtuosos Admin to configure your evaluation details.
+            Please contact Integrated SSB Virtuosos Admin to configure your
+            evaluation details.
           </p>
         </Card>
       )}

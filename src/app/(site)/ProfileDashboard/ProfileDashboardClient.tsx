@@ -99,6 +99,7 @@ export interface DashboardOrder {
   assignedTO?: string | null;
   assignedPsych?: string | null;
   assignedIO?: string | null;
+  uploadsUnlocked?: boolean;
   programType?: string;
 }
 
@@ -114,6 +115,8 @@ function isSoftSkills(order: DashboardOrder): boolean {
 // selectedModules existed.
 function stagesOfOrder(order: Pick<DashboardOrder, "selectedModules" | "slotId"> | null): string[] {
   if (!order) return [];
+  // Offline batches are always treated as full_course for evaluation purposes.
+  if (order.slotId?.mode === "offline") return ["full_course"];
   const modules = order.selectedModules || [];
   if (modules.length === 0) return order.slotId?.isFullCourse ? ["full_course"] : [];
   return modules;
@@ -1959,7 +1962,7 @@ export default function ProfileDashboardClient({
                     </div>
 
                     <div className={styles.psycheTestPanel}>
-                      {isOfflineOrder ? (
+                      {isOfflineOrder && !selectedOrder?.uploadsUnlocked ? (
                         <div className={styles.psycheTimelineContainer}>
                           <h4 className={styles.timelineHeader}>Evaluation Journey</h4>
                           <div className={styles.evalLockedContainer}>

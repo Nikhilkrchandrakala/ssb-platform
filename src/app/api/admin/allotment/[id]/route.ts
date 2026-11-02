@@ -21,9 +21,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     await connectDB();
 
     const { id } = await params;
-    const { assignedGTO, assignedTO, assignedPsych, assignedIO, assignedAssessments } = await req.json();
+    const { assignedGTO, assignedTO, assignedPsych, assignedIO, assignedAssessments, uploadsUnlocked } = await req.json();
 
-    const order = await Order.findById(id).populate("slotId", "isFullCourse").populate("userId", "name");
+    const order = await Order.findById(id).populate("slotId", "isFullCourse mode").populate("userId", "name");
 
     if (!order || order.status !== "paid") {
       return NextResponse.json({ error: "Enrollment not found" }, { status: 404 });
@@ -37,9 +37,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     // (now-legacy) global clinicalStage — an empty selectedModules array on
     // a full-course Slot means the same as an explicit "full_course" entry
     // (see createOrder's own fallback semantics).
-    const slot = order.slotId as unknown as { isFullCourse?: boolean } | null;
+    const slot = order.slotId as unknown as { isFullCourse?: boolean; mode?: string } | null;
     const modules: string[] = order.selectedModules || [];
-    const stages = modules.length === 0 && slot?.isFullCourse ? ["full_course"] : modules;
+    // Offline batches are always treated as full_course for allotment purposes.
+    const stages = slot?.mode === "offline" ? ["full_course"] : (modules.length === 0 && slot?.isFullCourse ? ["full_course"] : modules);
     const gtoAllowed = stages.includes("full_course") || stages.includes("group_testing");
     const ioAllowed = stages.includes("full_course") || stages.includes("interview");
     const psychOrToAllowed = stages.includes("full_course") || stages.includes("psych");
@@ -80,6 +81,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (assignedPsych !== undefined) order.assignedPsych = assignedPsych || null;
     if (assignedIO !== undefined) order.assignedIO = assignedIO || null;
     if (assignedAssessments !== undefined) order.assignedAssessments = assignedAssessments;
+    if (uploadsUnlocked !== undefined) order.uploadsUnlocked = !!uploadsUnlocked;
 
     await order.save();
 

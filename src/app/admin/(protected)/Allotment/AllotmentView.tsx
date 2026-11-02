@@ -90,6 +90,7 @@ interface AllotmentOrder {
   assignedPsych?: AssessorRef | null;
   assignedIO?: AssessorRef | null;
   assignedAssessments?: string[];
+  uploadsUnlocked?: boolean;
 }
 
 interface AssessmentItem {
@@ -131,6 +132,10 @@ function getInitials(name?: string) {
 // entry (see createOrder's own fallback semantics).
 function stagesOfOrder(order: Pick<AllotmentOrder, "selectedModules" | "slotId"> | null): string[] {
   if (!order) return [];
+  // Offline batches are always treated as full_course for allotment purposes —
+  // they never have selectedModules or isFullCourse, but all 4 assessor types
+  // (Psych, GTO, TO, IO) should be assignable to them.
+  if (order.slotId?.mode === "offline") return ["full_course"];
   const modules = order.selectedModules || [];
   if (modules.length === 0) return order.slotId?.isFullCourse ? ["full_course"] : [];
   return modules;
@@ -175,6 +180,8 @@ export default function AllotmentView() {
   const [selectIO, setSelectIO] = useState("");
   const [assignedAssessmentIds, setAssignedAssessmentIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadsUnlocked, setUploadsUnlocked] = useState(false);
+  const [noPsychAssessment, setNoPsychAssessment] = useState(false);
 
   const loadData = (page: number, searchVal: string, stageVal: string, batchVal: string, modeVal: string) => {
     setLoading(true);
@@ -306,7 +313,10 @@ export default function AllotmentView() {
     setSelectGTO(gtoAllowed ? order.assignedGTO?._id || "" : "");
     setSelectTO(psychOrToAllowed ? order.assignedTO?._id || "" : "");
     setSelectIO(ioAllowed ? order.assignedIO?._id || "" : "");
-    setAssignedAssessmentIds((order.assignedAssessments || []).map((id) => id.toString()));
+    const currentAssessments = (order.assignedAssessments || []).map((id) => id.toString());
+    setAssignedAssessmentIds(currentAssessments);
+    setNoPsychAssessment(order.slotId?.mode === "offline" && currentAssessments.length === 0);
+    setUploadsUnlocked(!!order.uploadsUnlocked);
     setIsModalOpen(true);
   };
 
@@ -354,6 +364,7 @@ export default function AllotmentView() {
   };
 
   const toggleAssessment = (id: string) => {
+    setNoPsychAssessment(false);
     setAssignedAssessmentIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
@@ -361,11 +372,14 @@ export default function AllotmentView() {
     e.preventDefault();
     if (!modalOrder || submitting) return;
 
-    if (!isGtoOnly && !isIoOnly && assignedAssessmentIds.length === 0 && assessments.length > 0) {
+    const isOffline = modalOrder.slotId?.mode === "offline";
+    if (!isGtoOnly && !isIoOnly && !noPsychAssessment && assignedAssessmentIds.length === 0 && assessments.length > 0) {
       window.Swal?.fire({
         icon: "error",
         title: "Assessment Required",
-        text: "A student MUST be allotted at least one Assessment.",
+        text: isOffline
+          ? "Please select an assessment or choose 'No Allocated Assessment (In-Person Psych Evaluation)'."
+          : "A student MUST be allotted at least one Assessment.",
         background: "#1a1a1a",
         color: "#fff",
         confirmButtonColor: "#ff6b6b",
@@ -437,6 +451,7 @@ export default function AllotmentView() {
           assignedTO: selectTO || null,
           assignedIO: selectIO || null,
           assignedAssessments: assignedAssessmentIds,
+          uploadsUnlocked,
         }),
       });
       const result = await response.json();
@@ -770,6 +785,28 @@ export default function AllotmentView() {
                       Workloads are recalculated live in real-time to avoid schedule clashes.
                     </p>
                   </div>
+
+                  {modalOrder.slotId?.mode === "offline" && (
+                    <div style={{ background: "rgba(224, 194, 20, 0.08)", border: "1px solid rgba(224, 194, 20, 0.25)", padding: 15, borderRadius: 8 }} className="mt-3">
+                      <div className="form-check form-switch d-flex align-items-center gap-2" style={{ margin: 0 }}>
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          role="switch"
+                          id="uploadsUnlockedSwitch"
+                          checked={uploadsUnlocked}
+                          onChange={(e) => setUploadsUnlocked(e.target.checked)}
+                          style={{ width: 38, height: 20, cursor: "pointer" }}
+                        />
+                        <label className="form-check-label text-warning small mb-0" htmlFor="uploadsUnlockedSwitch" style={{ cursor: "pointer", fontWeight: 600 }}>
+                          Unlock Online Uploads
+                        </label>
+                      </div>
+                      <p className="small mb-0 mt-2" style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.78rem" }}>
+                        Allows this offline batch student to access the online evaluation journey (PIQ form, timed test, dossier upload) on their dashboard.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Right Column: Select Dropdowns */}
@@ -846,6 +883,26 @@ export default function AllotmentView() {
                           style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.05)", borderRadius: 8, padding: 12 }}
                           className="d-flex flex-column gap-2"
                         >
+                          {modalOrder.slotId?.mode === "offline" && (
+                            <div className="form-check pb-2 mb-1 border-bottom" style={{ borderColor: "rgba(255, 255, 255, 0.1)" }}>
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                id="no_assessment_offline"
+                                checked={noPsychAssessment}
+                                onChange={(e) => {
+                                  const checked = e.target.checked;
+                                  setNoPsychAssessment(checked);
+                                  if (checked) {
+                                    setAssignedAssessmentIds([]);
+                                  }
+                                }}
+                              />
+                              <label className="form-check-label text-warning small fw-bold" htmlFor="no_assessment_offline" style={{ cursor: "pointer" }}>
+                                No Allocated Assessment <span className="opacity-75 fw-normal">(In-Person Psych Evaluation)</span>
+                              </label>
+                            </div>
+                          )}
                           {assessments.length === 0 ? (
                             <div className="text-center p-3 opacity-40">
                               <p className="small mb-0">No active assessments found in system</p>
@@ -857,10 +914,14 @@ export default function AllotmentView() {
                                   className="form-check-input"
                                   type="checkbox"
                                   id={`assess_${a._id}`}
-                                  checked={assignedAssessmentIds.includes(a._id)}
+                                  checked={!noPsychAssessment && assignedAssessmentIds.includes(a._id)}
+                                  disabled={noPsychAssessment}
                                   onChange={() => toggleAssessment(a._id)}
                                 />
-                                <label className="form-check-label text-white small" htmlFor={`assess_${a._id}`}>
+                                <label
+                                  className={noPsychAssessment ? "form-check-label small text-muted" : "form-check-label text-white small"}
+                                  htmlFor={`assess_${a._id}`}
+                                >
                                   {a.title} <span className="opacity-50">({a.type} | {a.duration || 0}m)</span>
                                 </label>
                               </div>

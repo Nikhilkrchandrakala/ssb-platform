@@ -13,6 +13,7 @@ export interface PsychUser {
   permissions?: string[];
   assessorType?: "GTO" | "TO" | "Psych" | "IO" | null;
   profileImage?: string;
+  enrollmentMode?: string;
 }
 
 interface PsychUserContextValue {
