@@ -21,7 +21,7 @@ interface TeamMember {
 const teamData: TeamMember[] = [
   {
     id: "member-1",
-    image: "/assets/founder.webp",
+    image: "/assets/NKC Kolkata.jpg",
     designation: "Group Testing Officer",
     name: "Lt. Commander Nikhil Kumar Chandrakala (Retd.)",
     post: "Founder & Chief Mentor",
