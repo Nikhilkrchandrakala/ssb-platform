@@ -226,11 +226,13 @@ export default function TotalSalesView() {
   const [franchiseFilterVal, setFranchiseFilterVal] = useState("all");
   const [modeFilterVal, setModeFilterVal] = useState("all");
   const [batchNoFilter, setBatchNoFilter] = useState("");
+  const [isCustomBatchFilter, setIsCustomBatchFilter] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
   const [batchInputValue, setBatchInputValue] = useState("");
+  const [isCustomModalBatch, setIsCustomModalBatch] = useState(false);
   const [savingBatch, setSavingBatch] = useState(false);
   const [availableSlots, setAvailableSlots] = useState<any[]>([]);
 
@@ -317,6 +319,19 @@ export default function TotalSalesView() {
     return { total, revenue, franchiseCount, directCount };
   }, [allOrders]);
 
+  const existingBatchNumbers = useMemo(() => {
+    const vals = new Set<string>();
+    for (const s of availableSlots) {
+      if (s.batchNo && String(s.batchNo).trim()) vals.add(String(s.batchNo).trim());
+    }
+    for (const o of allOrders) {
+      if (o.slotId?.batchNo && String(o.slotId.batchNo).trim()) vals.add(String(o.slotId.batchNo).trim());
+    }
+    return Array.from(vals).sort((a, b) =>
+      a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" })
+    );
+  }, [availableSlots, allOrders]);
+
   const filtered = useMemo(() => {
     let result = [...allOrders];
 
@@ -340,7 +355,19 @@ export default function TotalSalesView() {
 
     const bVal = batchNoFilter.toLowerCase().trim();
     if (bVal) {
-      result = result.filter((o) => (o.slotId?.batchNo || "").toLowerCase().includes(bVal));
+      if (isCustomBatchFilter) {
+        result = result.filter((o) => (o.slotId?.batchNo || "").toLowerCase().includes(bVal));
+      } else {
+        result = result.filter((o) => {
+          const slotBatch = (o.slotId?.batchNo || "").toLowerCase().trim();
+          if (!slotBatch) return false;
+          return (
+            slotBatch === bVal ||
+            slotBatch === `batch ${bVal}` ||
+            slotBatch.replace(/^batch\s*/i, "") === bVal.replace(/^batch\s*/i, "")
+          );
+        });
+      }
     }
 
     if (modeFilterVal !== "all") {
@@ -362,7 +389,7 @@ export default function TotalSalesView() {
     }
 
     return result;
-  }, [allOrders, search, franchiseFilterVal, modeFilterVal, batchNoFilter, startDate, endDate]);
+  }, [allOrders, search, franchiseFilterVal, modeFilterVal, batchNoFilter, isCustomBatchFilter, startDate, endDate]);
 
   const hasActiveFilters = !!(search || franchiseFilterVal !== "all" || modeFilterVal !== "all" || batchNoFilter || startDate || endDate);
 
@@ -371,25 +398,38 @@ export default function TotalSalesView() {
     setFranchiseFilterVal("all");
     setModeFilterVal("all");
     setBatchNoFilter("");
+    setIsCustomBatchFilter(false);
     setStartDate("");
     setEndDate("");
   }
 
   function showOrderDetail(order: OrderItem) {
     setSelectedOrder(order);
-    setBatchInputValue(order.slotId?._id || "");
+    const orderSlotId = order.slotId?._id;
+    const hasSlot = availableSlots.some((s) => s._id === orderSlotId);
+    if (hasSlot && orderSlotId) {
+      setBatchInputValue(orderSlotId);
+      setIsCustomModalBatch(false);
+    } else if (order.slotId?.batchNo) {
+      setBatchInputValue(order.slotId.batchNo);
+      setIsCustomModalBatch(true);
+    } else {
+      setBatchInputValue("");
+      setIsCustomModalBatch(false);
+    }
   }
 
   function closeOrderDetail() {
     setSelectedOrder(null);
     setBatchInputValue("");
+    setIsCustomModalBatch(false);
   }
 
   async function saveOrderBatch() {
     if (!selectedOrder) return;
     const targetSlotId = batchInputValue.trim();
     if (!targetSlotId) {
-      window.Swal?.fire({ icon: "warning", text: "Please select a batch slot.", background: "#1a1a1a", color: "#fff" });
+      window.Swal?.fire({ icon: "warning", text: "Please select a batch slot or enter a custom batch number.", background: "#1a1a1a", color: "#fff" });
       return;
     }
 
@@ -543,14 +583,53 @@ export default function TotalSalesView() {
             </select>
           </div>
           <div className="col-lg-2 col-md-6">
-            <label className="admin-form-label">Batch No.</label>
-            <input
-              type="text"
-              className="admin-input"
-              placeholder="e.g. B2405"
-              value={batchNoFilter}
-              onChange={(e) => setBatchNoFilter(e.target.value)}
-            />
+            <div className="d-flex justify-content-between align-items-center" style={{ marginBottom: 7 }}>
+              <label className="admin-form-label mb-0">Batch No.</label>
+              {isCustomBatchFilter && (
+                <button
+                  type="button"
+                  className="btn btn-link p-0 text-warning"
+                  style={{ fontSize: "0.72rem", textDecoration: "none" }}
+                  onClick={() => {
+                    setIsCustomBatchFilter(false);
+                    setBatchNoFilter("");
+                  }}
+                >
+                  ← Pick list
+                </button>
+              )}
+            </div>
+            {isCustomBatchFilter ? (
+              <input
+                type="text"
+                className="admin-input"
+                placeholder="e.g. B2405"
+                autoFocus
+                value={batchNoFilter}
+                onChange={(e) => setBatchNoFilter(e.target.value)}
+              />
+            ) : (
+              <select
+                className="admin-input"
+                value={batchNoFilter}
+                onChange={(e) => {
+                  if (e.target.value === "__custom__") {
+                    setIsCustomBatchFilter(true);
+                    setBatchNoFilter("");
+                  } else {
+                    setBatchNoFilter(e.target.value);
+                  }
+                }}
+              >
+                <option value="">All Batches</option>
+                {existingBatchNumbers.map((b) => (
+                  <option key={b} value={b}>
+                    {b.toLowerCase().startsWith("batch") ? b : `Batch ${b}`}
+                  </option>
+                ))}
+                <option value="__custom__">+ Custom Batch...</option>
+              </select>
+            )}
           </div>
           <div className="col-lg-2 col-md-6">
             <label className="admin-form-label">Student Type</label>
@@ -744,54 +823,77 @@ export default function TotalSalesView() {
                     <div className="order-detail-row" style={{ alignItems: "flex-start" }}>
                       <span>Batch / Slot</span>
                       <div className="d-flex gap-2 align-items-center flex-wrap flex-grow-1 justify-content-end" style={{ minWidth: 0 }}>
-                        {availableSlots.length > 0 ? (
-                          <select
-                            className="admin-input py-1 px-2"
-                            style={{
-                              fontSize: "0.85rem",
-                              background: "var(--surface-light)",
-                              border: "1px solid rgba(224, 194, 20, 0.25)",
-                              color: "#fff",
-                              borderRadius: 4,
-                              flex: "1 1 160px",
-                              minWidth: 0,
-                            }}
-                            value={batchInputValue}
-                            onChange={(e) => setBatchInputValue(e.target.value)}
-                          >
-                            <option value="">-- Choose Batch Slot --</option>
-                            {availableSlots
-                              .filter((s) => !s.isCancelled)
-                              .map((s) => {
-                                const start = s.startDate ? new Date(s.startDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "";
-                                return (
-                                  <option key={s._id} value={s._id}>
-                                    {s.batchNo ? `Batch #${s.batchNo}` : s.title} {s.mode ? `[${s.mode.toUpperCase()}]` : ""} {start ? `(${start})` : ""}
-                                  </option>
-                                );
-                              })}
-                          </select>
-                        ) : (
-                          <input
-                            type="text"
-                            className="admin-input py-1 px-2"
-                            style={{
-                              flex: "1 1 120px",
-                              minWidth: 0,
-                              fontSize: "0.85rem",
-                              background: "var(--surface-light)",
-                              border: "1px solid rgba(224, 194, 20, 0.25)",
-                              color: "#fff",
-                              borderRadius: 4,
-                            }}
-                            placeholder="e.g. B45"
-                            value={batchInputValue}
-                            onChange={(e) => setBatchInputValue(e.target.value)}
-                          />
-                        )}
+                        <div className="d-flex flex-column" style={{ flex: "1 1 180px", minWidth: 0 }}>
+                          {availableSlots.length > 0 && (
+                            <div className="d-flex justify-content-end mb-1">
+                              <button
+                                type="button"
+                                className="btn btn-link p-0 text-warning"
+                                style={{ fontSize: "0.72rem", textDecoration: "none" }}
+                                onClick={() => {
+                                  setIsCustomModalBatch(!isCustomModalBatch);
+                                  setBatchInputValue("");
+                                }}
+                              >
+                                {isCustomModalBatch ? "← Pick from slots" : "+ Custom Batch"}
+                              </button>
+                            </div>
+                          )}
+                          {isCustomModalBatch || availableSlots.length === 0 ? (
+                            <input
+                              type="text"
+                              className="admin-input py-1 px-2"
+                              style={{
+                                fontSize: "0.85rem",
+                                background: "var(--surface-light)",
+                                border: "1px solid rgba(224, 194, 20, 0.25)",
+                                color: "#fff",
+                                borderRadius: 4,
+                                width: "100%",
+                              }}
+                              placeholder="e.g. B45 or 75-SSB"
+                              value={batchInputValue}
+                              onChange={(e) => setBatchInputValue(e.target.value)}
+                            />
+                          ) : (
+                            <select
+                              className="admin-input py-1 px-2"
+                              style={{
+                                fontSize: "0.85rem",
+                                background: "var(--surface-light)",
+                                border: "1px solid rgba(224, 194, 20, 0.25)",
+                                color: "#fff",
+                                borderRadius: 4,
+                                width: "100%",
+                              }}
+                              value={batchInputValue}
+                              onChange={(e) => {
+                                if (e.target.value === "__custom__") {
+                                  setIsCustomModalBatch(true);
+                                  setBatchInputValue("");
+                                } else {
+                                  setBatchInputValue(e.target.value);
+                                }
+                              }}
+                            >
+                              <option value="">-- Choose Batch Slot --</option>
+                              {availableSlots
+                                .filter((s) => !s.isCancelled)
+                                .map((s) => {
+                                  const start = s.startDate ? new Date(s.startDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "";
+                                  return (
+                                    <option key={s._id} value={s._id}>
+                                      {s.batchNo ? `Batch #${s.batchNo}` : s.title} {s.mode ? `[${s.mode.toUpperCase()}]` : ""} {start ? `(${start})` : ""}
+                                    </option>
+                                  );
+                                })}
+                              <option value="__custom__">+ Enter Custom Batch...</option>
+                            </select>
+                          )}
+                        </div>
                         <button
                           className="thm-btn py-1 px-3"
-                          style={{ fontSize: "0.78rem", padding: "4px 10px", borderRadius: 4, whiteSpace: "nowrap", flexShrink: 0 }}
+                          style={{ fontSize: "0.78rem", padding: "4px 10px", borderRadius: 4, whiteSpace: "nowrap", flexShrink: 0, alignSelf: "flex-end" }}
                           disabled={savingBatch}
                           onClick={saveOrderBatch}
                         >
