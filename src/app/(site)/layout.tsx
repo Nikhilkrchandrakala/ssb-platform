@@ -73,26 +73,25 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
 
       <noscript>
         <iframe
-          src="https://www.googletagmanager.com/ns.html?id=GTM-WBMZT8BP"
+          src="https://www.googletagmanager.com/ns.html?id=GTM-WZ7CK78P"
           height="0"
           width="0"
           style={{ display: "none", visibility: "hidden" }}
         />
       </noscript>
 
-      <Script async src="https://www.googletagmanager.com/gtag/js?id=G-MPVGNGE0NX" strategy="afterInteractive" />
-      <Script id="ga-init" strategy="afterInteractive">
+      {/* Google Tag Manager (GTM-WZ7CK78P) */}
+      <Script async src="https://www.googletagmanager.com/gtm.js?id=GTM-WZ7CK78P" strategy="afterInteractive" />
+      <Script id="gtm-init" strategy="afterInteractive">
         {`window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-MPVGNGE0NX');`}
+          gtag('js', new Date());`}
       </Script>
-      <Script id="gtm-init" strategy="afterInteractive">
-        {`(function (w, d, s, l, i) {
-            w[l] = w[l] || []; w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
-            j.async = true; j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
-          })(window, document, 'script', 'dataLayer', 'GTM-WBMZT8BP');`}
+
+      {/* Google Analytics (GA4) */}
+      <Script async src="https://www.googletagmanager.com/gtag/js?id=G-MPVGNGE0NX" strategy="afterInteractive" />
+      <Script id="ga-init" strategy="afterInteractive">
+        {`gtag('config', 'G-MPVGNGE0NX');`}
       </Script>
 
       <Script
