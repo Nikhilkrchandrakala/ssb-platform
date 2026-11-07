@@ -107,7 +107,7 @@ export default function PdfViewer({ url }: { url: string; title?: string }) {
 
     const viewportContainer = viewportRef.current;
     const placeholders = viewportContainer.querySelectorAll<HTMLDivElement>(".pdf-page-placeholder");
-    const activeTasks = new Map<number, { cancel: () => void }>();
+    const activeTasks = new Map<number, { cancel?: () => void }>();
 
     const renderPageCanvas = async (pageNum: number, wrapper: HTMLDivElement) => {
       const existingCanvas = wrapper.querySelector<HTMLCanvasElement>("canvas");
@@ -116,7 +116,7 @@ export default function PdfViewer({ url }: { url: string; title?: string }) {
       const previousTask = activeTasks.get(pageNum);
       if (previousTask) {
         try {
-          previousTask.cancel();
+          previousTask.cancel?.();
         } catch {
           // ignore cancellation
         }
@@ -169,7 +169,7 @@ export default function PdfViewer({ url }: { url: string; title?: string }) {
       const task = activeTasks.get(pageNum);
       if (task) {
         try {
-          task.cancel();
+          task.cancel?.();
         } catch {}
         activeTasks.delete(pageNum);
       }
@@ -204,7 +204,7 @@ export default function PdfViewer({ url }: { url: string; title?: string }) {
       observer.disconnect();
       activeTasks.forEach((task) => {
         try {
-          task.cancel();
+          task.cancel?.();
         } catch {}
       });
       activeTasks.clear();

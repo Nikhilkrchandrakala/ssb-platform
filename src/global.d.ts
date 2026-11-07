@@ -1,8 +1,13 @@
 export {};
 
+export interface PdfJsRenderTask {
+  promise: Promise<void>;
+  cancel?: () => void;
+}
+
 export interface PdfJsPage {
   getViewport: (opts: { scale: number }) => { width: number; height: number };
-  render: (ctx: { canvasContext: CanvasRenderingContext2D; viewport: unknown }) => { promise: Promise<void> };
+  render: (ctx: { canvasContext: CanvasRenderingContext2D; viewport: unknown }) => PdfJsRenderTask;
 }
 
 export interface PdfJsDocument {
