@@ -16,6 +16,20 @@ export default function PdfViewer({ url }: { url: string; title?: string }) {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [viewportWidth, setViewportWidth] = useState<number>(0);
+
+  useEffect(() => {
+    if (!viewportRef.current) return;
+    const updateWidth = () => {
+      if (viewportRef.current) {
+        setViewportWidth(viewportRef.current.clientWidth);
+      }
+    };
+    updateWidth();
+    const ro = new ResizeObserver(updateWidth);
+    ro.observe(viewportRef.current);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -93,20 +107,34 @@ export default function PdfViewer({ url }: { url: string; title?: string }) {
 
     const viewportContainer = viewportRef.current;
     const placeholders = viewportContainer.querySelectorAll<HTMLDivElement>(".pdf-page-placeholder");
+    const activeTasks = new Map<number, { cancel: () => void }>();
 
     const renderPageCanvas = async (pageNum: number, wrapper: HTMLDivElement) => {
-      if (wrapper.querySelector("canvas")) return;
+      const existingCanvas = wrapper.querySelector<HTMLCanvasElement>("canvas");
+      if (existingCanvas && existingCanvas.getAttribute("data-zoom") === String(zoomLevel)) return;
+
+      const previousTask = activeTasks.get(pageNum);
+      if (previousTask) {
+        try {
+          previousTask.cancel();
+        } catch {
+          // ignore cancellation
+        }
+        activeTasks.delete(pageNum);
+      }
 
       try {
         const page = await pdfDoc.getPage(pageNum);
-        const canvas = document.createElement("canvas");
+        const canvas = existingCanvas || document.createElement("canvas");
         canvas.className = "pdf-page-canvas";
         canvas.style.width = "100%";
         canvas.style.height = "auto";
         canvas.style.display = "block";
         canvas.oncontextmenu = (e) => e.preventDefault();
 
-        wrapper.appendChild(canvas);
+        if (!existingCanvas) {
+          wrapper.appendChild(canvas);
+        }
 
         const context = canvas.getContext("2d");
         if (!context) return;
@@ -114,8 +142,11 @@ export default function PdfViewer({ url }: { url: string; title?: string }) {
         const viewport = page.getViewport({ scale: renderScale });
         canvas.width = viewport.width;
         canvas.height = viewport.height;
+        canvas.setAttribute("data-zoom", String(zoomLevel));
 
-        await page.render({ canvasContext: context, viewport }).promise;
+        const renderTask = page.render({ canvasContext: context, viewport });
+        activeTasks.set(pageNum, renderTask);
+        await renderTask.promise;
 
         const loader = wrapper.querySelector<HTMLElement>(".pdf-page-loading-indicator");
         if (loader) {
@@ -124,12 +155,24 @@ export default function PdfViewer({ url }: { url: string; title?: string }) {
             loader.style.display = "none";
           }, 200);
         }
-      } catch (err) {
+      } catch (err: unknown) {
+        if (err && typeof err === "object" && (err as { name?: string }).name === "RenderingCancelledException") {
+          return;
+        }
         console.error("Error rendering page:", pageNum, err);
+      } finally {
+        activeTasks.delete(pageNum);
       }
     };
 
-    const clearPageCanvas = (wrapper: HTMLDivElement) => {
+    const clearPageCanvas = (wrapper: HTMLDivElement, pageNum: number) => {
+      const task = activeTasks.get(pageNum);
+      if (task) {
+        try {
+          task.cancel();
+        } catch {}
+        activeTasks.delete(pageNum);
+      }
       const canvas = wrapper.querySelector("canvas");
       if (canvas) {
         canvas.remove();
@@ -148,7 +191,7 @@ export default function PdfViewer({ url }: { url: string; title?: string }) {
           if (entry.isIntersecting) {
             renderPageCanvas(pageNum, entry.target as HTMLDivElement);
           } else {
-            clearPageCanvas(entry.target as HTMLDivElement);
+            clearPageCanvas(entry.target as HTMLDivElement, pageNum);
           }
         });
       },
@@ -157,7 +200,15 @@ export default function PdfViewer({ url }: { url: string; title?: string }) {
 
     placeholders.forEach((el) => observer.observe(el));
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      activeTasks.forEach((task) => {
+        try {
+          task.cancel();
+        } catch {}
+      });
+      activeTasks.clear();
+    };
   }, [pdfDoc, zoomLevel, loading]);
 
   const handleScroll = () => {
@@ -199,6 +250,9 @@ export default function PdfViewer({ url }: { url: string; title?: string }) {
 
   const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
   const aspectValue = aspect && !isNaN(aspect) && isFinite(aspect) ? aspect : 0.707;
+  const effectiveViewportWidth = viewportWidth > 0 ? viewportWidth : 850;
+  const baseFitWidth = Math.min(850, Math.max(280, effectiveViewportWidth - 30));
+  const targetPageWidth = Math.round(baseFitWidth * zoomLevel);
 
   return (
     <div className="pdf-js-viewer-container" ref={containerRef}>
@@ -228,8 +282,8 @@ export default function PdfViewer({ url }: { url: string; title?: string }) {
               data-page-number={pageNum}
               style={{
                 aspectRatio: `${aspectValue}`,
-                width: "100%",
-                maxWidth: `${850 * zoomLevel}px`,
+                width: zoomLevel === 1.0 ? "100%" : `${targetPageWidth}px`,
+                maxWidth: `${targetPageWidth}px`,
                 margin: "20px auto",
                 boxShadow: "0 8px 24px rgba(0, 0, 0, 0.45)",
                 backgroundColor: "#1c1c1f",
@@ -282,7 +336,7 @@ export default function PdfViewer({ url }: { url: string; title?: string }) {
 
       <style>{`
                 .pdf-js-viewer-container { display: flex; flex-direction: column; height: 100%; width: 100%; position: relative; background-color: #0c0c0e; overflow: hidden; }
-                .pdf-viewport-pane { flex: 1; overflow-x: auto; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 20px 10px 90px 10px; background-color: #141416; scrollbar-width: thin; scrollbar-color: #2a2a2d #141416; -webkit-overflow-scrolling: touch; }
+                .pdf-viewport-pane { flex: 1; overflow-x: auto; overflow-y: auto; display: block; padding: 20px 10px 90px 10px; background-color: #141416; scrollbar-width: thin; scrollbar-color: #2a2a2d #141416; -webkit-overflow-scrolling: touch; }
                 .pdf-viewport-pane::-webkit-scrollbar { width: 6px; height: 6px; }
                 .pdf-viewport-pane::-webkit-scrollbar-track { background: #141416; }
                 .pdf-viewport-pane::-webkit-scrollbar-thumb { background: #2a2a2d; border-radius: 4px; }

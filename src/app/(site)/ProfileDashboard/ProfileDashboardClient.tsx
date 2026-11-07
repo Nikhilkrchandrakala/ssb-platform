@@ -24,6 +24,7 @@ import {
   BiTime,
   BiX,
   BiBell,
+  BiFullscreen,
 } from "react-icons/bi";
 import { FaCamera, FaCheckCircle, FaLock, FaVideo } from "react-icons/fa";
 import "@/style/custom-theme.css";
@@ -248,6 +249,40 @@ export default function ProfileDashboardClient({
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
   const [viewingPdf, setViewingPdf] = useState<{ id: string; url: string; title: string } | null>(null);
+  const pdfModalContainerRef = useRef<HTMLDivElement>(null);
+  const [isPdfFullscreen, setIsPdfFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsPdfFullscreen(!!document.fullscreenElement || !!(document as unknown as { webkitFullscreenElement?: Element }).webkitFullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
+  const togglePdfFullscreen = () => {
+    if (!pdfModalContainerRef.current) return;
+    const el = pdfModalContainerRef.current as HTMLDivElement & { webkitRequestFullscreen?: () => Promise<void> };
+    const doc = document as Document & { webkitFullscreenElement?: Element; webkitExitFullscreen?: () => void };
+
+    if (!document.fullscreenElement && !doc.webkitFullscreenElement) {
+      const req = el.requestFullscreen || el.webkitRequestFullscreen;
+      if (req) {
+        req.call(el)?.catch?.((err: unknown) => {
+          console.error("Fullscreen request failed", err);
+        });
+      }
+    } else {
+      const exit = document.exitFullscreen || doc.webkitExitFullscreen;
+      if (exit) {
+        exit.call(document);
+      }
+    }
+  };
 
   // ---- Candidate Evaluation tab ----
   const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -2628,16 +2663,41 @@ export default function ProfileDashboardClient({
         })()}
 
       {viewingPdf && (
-        <div className={styles.overlay} style={{ zIndex: 99999 }}>
-          <div className={styles.popup} style={{ maxWidth: "900px", width: "95%", height: "90vh", display: "flex", flexDirection: "column" }}>
-            <button className={styles.closeBtn} onClick={() => setViewingPdf(null)} type="button">
-              ×
-            </button>
-            <div className={styles.header}>
+        <div
+          className="pdf-modal-overlay"
+          onClick={() => {
+            setViewingPdf(null);
+          }}
+        >
+          <div className="pdf-modal-container" ref={pdfModalContainerRef} onClick={(e) => e.stopPropagation()}>
+            <div className="pdf-modal-header">
               <h3>{viewingPdf.title}</h3>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  className={`pdf-modal-notes-toggle ${isPdfFullscreen ? "active" : ""}`}
+                  onClick={togglePdfFullscreen}
+                  type="button"
+                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                >
+                  <BiFullscreen /> <span>{isPdfFullscreen ? "Exit Fullscreen" : "Fullscreen"}</span>
+                </button>
+                <button
+                  className="pdf-modal-close-btn"
+                  onClick={() => {
+                    setViewingPdf(null);
+                  }}
+                  type="button"
+                >
+                  <BiX size={18} /> <span>Close</span>
+                </button>
+              </div>
             </div>
-            <div style={{ flex: 1, overflow: "hidden" }}>
-              <PdfViewer url={viewingPdf.url} title={viewingPdf.title} />
+            <div className="pdf-modal-body">
+              <div className="pdf-modal-viewer-split">
+                <div className="pdf-viewer-pane">
+                  <PdfViewer url={viewingPdf.url} title={viewingPdf.title} />
+                </div>
+              </div>
             </div>
           </div>
         </div>
