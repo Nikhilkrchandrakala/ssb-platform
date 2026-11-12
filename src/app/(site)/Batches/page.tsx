@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import BatchesView from "./BatchesView";
 
 export const metadata: Metadata = {
-  title: "SSB Batches & Schedule | Online and Nagpur Offline",
-  description: "See upcoming SSB batch dates for ONLINE mentoring and the residential camp in Nagpur. Check seats, schedule and enrolment details before you register.",
+  title: "Online SSB Batches & Schedule | SSB with ISV",
+  description: "See upcoming SSB batch dates for live ONLINE mentoring. Check seats, schedule and enrolment details before you register.",
   alternates: { canonical: "/Batches" },
   openGraph: {
-    title: "SSB Batches & Schedule | Online and Nagpur Offline",
-    description: "See upcoming SSB batch dates for ONLINE mentoring and the residential camp in Nagpur. Check seats, schedule and enrolment details before you register.",
+    title: "Online SSB Batches & Schedule | SSB with ISV",
+    description: "See upcoming SSB batch dates for live ONLINE mentoring. Check seats, schedule and enrolment details before you register.",
     url: "/Batches",
   },
 };

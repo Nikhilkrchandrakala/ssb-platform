@@ -4,9 +4,9 @@ import styles from "@/style/AnnouncementStrip.module.css";
 export default function AnnouncementStrip() {
   return (
     <div className={styles.strip}>
-      <p className={styles.text}>SSB with ISV is now offline. Nagpur Batch 1 begins 26th October 2026.</p>
-      <Link href="/ssb-offline-coaching" className={styles.btn}>
-        Click to know more →
+      <p className={styles.text}>New Online SSB Batches are open! Train live with DIPR certified ex-SSB assessors.</p>
+      <Link href="/Batches" className={styles.btn}>
+        Explore Batches →
       </Link>
     </div>
   );

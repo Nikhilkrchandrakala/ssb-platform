@@ -469,11 +469,11 @@ export default function OfficerLikeQualitiesClient() {
 
       <section className={styles.container} style={{ padding: "20px 20px 60px", textAlign: "center" }}>
         <p style={{ fontSize: "14.5px", color: "rgba(198, 197, 175, 0.75)", maxWidth: "620px", margin: "0 auto 12px" }}>
-          Ready to be assessed on these qualities in person? SSB with ISV now runs a fully immersive offline batch
-          at our Nagpur campus, alongside our online mentoring.
+          Ready to be assessed on these qualities? Join our live online mentoring batches led by DIPR certified ex-SSB
+          assessors.
         </p>
-        <Link href="/ssb-offline-coaching" className="thm-btn" style={{ margin: "0 auto" }}>
-          Explore the Nagpur Offline Batch →
+        <Link href="/Batches" className="thm-btn" style={{ margin: "0 auto" }}>
+          Explore Online Batches →
         </Link>
       </section>
 

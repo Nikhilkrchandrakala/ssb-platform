@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import CoursesView from "./CoursesView";
 
 export const metadata: Metadata = {
-  title: "SSB Courses | Online, Virtual GTO ground_VTX™ and Offline Nagpur Programs",
-  description: "Compare SSB preparation programs: Online mentoring, VTX™ virtual GTO ground and the 12-day residential camp in Nagpur. Pick the format that fits your Aspirant journey.",
+  title: "SSB Courses | Online Mentoring & Virtual GTO ground_VTX™",
+  description: "Explore SSB preparation programs: live Online mentoring and VTX™ virtual GTO ground. Pick the program that fits your Aspirant journey.",
   alternates: { canonical: "/Courses" },
   openGraph: {
-    title: "SSB Courses | Online, Virtual GTO ground_VTX™ and Offline Nagpur Programs",
-    description: "Compare SSB preparation programs: Online mentoring, VTX™ virtual GTO ground and the 12-day residential camp in Nagpur. Pick the format that fits your Aspirant journey.",
+    title: "SSB Courses | Online Mentoring & Virtual GTO ground_VTX™",
+    description: "Explore SSB preparation programs: live Online mentoring and VTX™ virtual GTO ground. Pick the program that fits your Aspirant journey.",
     url: "/Courses",
   },
 };

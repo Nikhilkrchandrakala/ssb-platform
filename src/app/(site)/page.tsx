@@ -17,12 +17,12 @@ import AnnouncementStrip from "@/components/home/AnnouncementStrip";
 
 
 export const metadata: Metadata = {
-  title: "Best SSB Training in India | Online + Nagpur Offline",
-  description: "Assessor-led SSB preparation by an ex-GTO. Join online mentoring with VTX™, India's first virtual GTO ground, or the 12-day residential SSB camp in Nagpur.",
+  title: "Best Online SSB Training in India | SSB with ISV",
+  description: "Assessor-led SSB preparation by an ex-GTO. Join live online mentoring with VTX™, India's first virtual GTO ground.",
   alternates: { canonical: "/" },
   openGraph: {
-    title: "Best SSB Training in India | Online + Nagpur Offline",
-    description: "Assessor-led SSB preparation by an ex-GTO. Join online mentoring with VTX™, India's first virtual GTO ground, or the 12-day residential SSB camp in Nagpur.",
+    title: "Best Online SSB Training in India | SSB with ISV",
+    description: "Assessor-led SSB preparation by an ex-GTO. Join live online mentoring with VTX™, India's first virtual GTO ground.",
     url: "/",
   },
 };
@@ -137,7 +137,7 @@ const homeJsonLd = {
           name: "Does SSB with ISV offer offline coaching?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Yes. SSB with ISV now offers a 12-day offline batch at our Nagpur campus, in addition to our online programmes - both mentored by the same faculty, including Lt Cdr Nikhil Kumar Chandrakala and Commodore Pankaj Singh.",
+            text: "Offline batches are coming soon. Currently, we offer live online mentoring and VTX™ virtual GTO ground practice.",
           },
         },
         {
@@ -145,7 +145,7 @@ const homeJsonLd = {
           name: "Should I choose online or offline SSB coaching?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Offline training offers full immersion with in-person feedback and live GTO tasks, ideal if you can commit 12 days on campus. Online offers flexibility with the same mentors and full VTX access. Both follow the identical 12-day structure and standard.",
+            text: "Currently, all SSB with ISV mentoring is delivered live online with full VTX™ virtual GTO ground access, personal feedback, and the same structured 12-day curriculum.",
           },
         },
       ],
@@ -165,14 +165,6 @@ const homeJsonLd = {
       "provider": {
         "@id": "https://ssbwithisv.in/#organization"
       }
-    },
-    {
-      "@type": "Course",
-      "name": "12-Day Residential SSB Camp in Nagpur",
-      "description": "Residential SSB training academy in Nagpur. 12 days of GTO tasks, interview and psychology preparation.",
-      "provider": {
-        "@id": "https://ssbwithisv.in/#organization"
-      }
     }
   ],
 };
@@ -187,7 +179,7 @@ const navbarData = {
   title: "Indian Military",
   title1: "Leadership",
   subtitleTwo: "Integrated SSB Virtuosos",
-  text: "Now offline in Nagpur. DIPR certified ex-SSB assessors - online and in person.",
+  text: "Online SSB mentoring by DIPR certified ex-SSB assessors, featuring VTX™.",
 };
 
 export default function HomePage() {

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import styles from "@/style/Sidebar.module.css";
-import { BiX, BiLogOut, BiWorld, BiBuilding, BiChevronRight, BiChevronDown } from "react-icons/bi";
+import { BiX, BiLogOut } from "react-icons/bi";
 import { RiShieldUserLine } from "react-icons/ri";
 import ContactUs from "./ContactUs";
 import { useSiteUser } from "./SiteUserProvider";
@@ -34,7 +34,6 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
   const pathname = usePathname();
   const { user, logout } = useSiteUser();
   const [openContact, setOpenContact] = useState(false);
-  const [coursesSubOpen, setCoursesSubOpen] = useState(false);
 
   const isStaff = Boolean(user?.role && STAFF_ROLES.includes(user.role));
   const adminHref = user?.role === "franchise" ? "/admin/FranchiseDashboard" : "/admin/Profile";
@@ -48,19 +47,6 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
       : user?.role === "admin"
       ? "Admin"
       : "SSB Aspirant";
-
-  const toggleCourses = () => {
-    setCoursesSubOpen((prev) => !prev);
-  };
-
-  // Resets the submenu when the drawer closes — adjusted during render
-  // (React's documented pattern) rather than via an effect+setState, so it
-  // doesn't reopen already-expanded the next time the drawer opens.
-  const [wasOpen, setWasOpen] = useState(open);
-  if (open !== wasOpen) {
-    setWasOpen(open);
-    if (!open) setCoursesSubOpen(false);
-  }
 
   return (
     <>
@@ -165,65 +151,9 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
               Home
             </Link>
 
-            <div className={styles.coursesMenuItem}>
-              <button
-                type="button"
-                className={`${styles.coursesTrigger} ${pathname === "/Courses" || pathname === "/CoursesOffline" ? styles.active : ""}`}
-                onClick={toggleCourses}
-                aria-expanded={coursesSubOpen}
-              >
-                <span className={styles.coursesTriggerLabel}>
-                  <span>SSB Courses</span>
-                  <span className={styles.newBadge}>NEW</span>
-                </span>
-                <BiChevronDown className={`${styles.coursesChevron} ${coursesSubOpen ? styles.coursesChevronOpen : ""}`} />
-              </button>
-
-              {coursesSubOpen && (
-                <div className={styles.inlineCoursesSubmenu}>
-                  <span className={styles.coursesSubmenuLabel}>Choose a format</span>
-                  <Link
-                    href="/Courses"
-                    prefetch={false}
-                    onClick={() => {
-                      setCoursesSubOpen(false);
-                      onClose();
-                    }}
-                    className={styles.coursesSubmenuItem}
-                  >
-                    <span className={styles.coursesSubmenuIcon}>
-                      <BiWorld />
-                    </span>
-                    <span className={styles.coursesSubmenuText}>
-                      <strong>Online</strong>
-                      <small>Live virtual sessions</small>
-                    </span>
-                    <BiChevronRight className={styles.coursesSubmenuArrow} />
-                  </Link>
-                  <Link
-                    href="/CoursesOffline"
-                    prefetch={false}
-                    onClick={() => {
-                      setCoursesSubOpen(false);
-                      onClose();
-                    }}
-                    className={styles.coursesSubmenuItem}
-                  >
-                    <span className={styles.coursesSubmenuIcon}>
-                      <BiBuilding />
-                    </span>
-                    <span className={styles.coursesSubmenuText}>
-                      <span className={styles.coursesSubmenuTitleRow}>
-                        <strong>Offline</strong>
-                        <span className={styles.newBadgeMini}>NEW</span>
-                      </span>
-                      <small>In-person batches</small>
-                    </span>
-                    <BiChevronRight className={styles.coursesSubmenuArrow} />
-                  </Link>
-                </div>
-              )}
-            </div>
+            <Link href="/Courses" onClick={onClose} className={pathname === "/Courses" ? styles.active : ""} prefetch={false}>
+              SSB Courses
+            </Link>
 
             <Link
               href="/SoftskillBootcamp"

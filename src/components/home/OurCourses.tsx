@@ -30,7 +30,6 @@ function getCardPositionClass(index: number, activeIndex: number) {
 const OurCourses = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [detailIndex, setDetailIndex] = useState<number | null>(null);
-  const [showChoice, setShowChoice] = useState(false);
   const router = useRouter();
 
   const handlePrev = () => setActiveIndex((prev) => (prev - 1 + totalItems) % totalItems);
@@ -52,7 +51,7 @@ const OurCourses = () => {
       {/* Header */}
       <div className={styles.header}>
         <HeadingTwo h1="Our" t1="Courses" />
-        <CustomButton text="Know More" onClick={() => setShowChoice(true)} />
+        <CustomButton text="Know More" onClick={() => router.push("/Courses")} />
       </div>
 
       <div className={`${styles.coursesBenefits} mvk-benefits`}>
@@ -131,29 +130,6 @@ const OurCourses = () => {
           />
         ))}
       </div>
-
-      {/* ONLINE / OFFLINE CHOICE MODAL */}
-      {showChoice && (
-        <div className={styles.detailOverlay} onClick={() => setShowChoice(false)}>
-          <div className={styles.choiceModal} onClick={(e) => e.stopPropagation()}>
-            <button className={styles.detailClose} onClick={() => setShowChoice(false)} aria-label="Close">
-              <FaTimes />
-            </button>
-            <h2 className={styles.choiceTitle}>How would you like to train?</h2>
-            <p className={styles.choiceLead}>Pick a track to see courses, batches and pricing.</p>
-            <div className={styles.choiceOptions}>
-              <button className={styles.choiceOption} onClick={() => router.push("/Courses")}>
-                <span className={styles.choiceOptionTitle}>Online</span>
-                <span className={styles.choiceOptionDesc}>Mentor-led coaching from anywhere in India</span>
-              </button>
-              <button className={styles.choiceOption} onClick={() => router.push("/CoursesOffline")}>
-                <span className={styles.choiceOptionTitle}>Offline</span>
-                <span className={styles.choiceOptionDesc}>12-day residential programme at our Nagpur campus</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* COURSE DETAIL MODAL */}
       {detailCourse && (

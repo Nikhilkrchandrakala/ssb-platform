@@ -18,8 +18,8 @@ const CHOICES = [
     key: "offline",
     icon: FaBuilding,
     title: "Offline Batches",
-    description: "In-person training at our center, with direct hands-on mentorship.",
-    features: ["Pay ₹5,000 online to register", "Balance settled at the center", "In-person, hands-on practice"],
+    description: "In-person SSB training batches — coming soon.",
+    features: ["Coming soon", "In-person, hands-on practice", "Led by DIPR certified ex-SSB assessors"],
     href: "/OfflineBatches",
   },
 ];

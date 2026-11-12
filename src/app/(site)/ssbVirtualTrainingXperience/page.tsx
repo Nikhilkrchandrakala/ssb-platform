@@ -277,16 +277,14 @@ export default function GtoTrainPage() {
             <div className="col-lg-12 px-0">
               <div style={{ padding: "32px" }} className="what-is-not-text text-center">
                 <div className="sct-title mb-3">
-                  <h2>VTX<sup>TM</sup> is now available on ground, too.</h2>
+                  <h2>Experience VTX<sup>TM</sup> in your online batch.</h2>
                 </div>
                 <p className="text-center" style={{ maxWidth: "760px", margin: "0 auto 20px" }}>
-                  &quot;The GTO ground, before the GTO ground&quot; now has a direct, physical payoff. Our Nagpur
-                  campus pairs the virtual simulation you just saw with a real GTO ground, so candidates who train
-                  on VTX<sup>TM</sup> can walk straight onto the actual obstacles in person, during our 12-day
-                  offline batch.
+                  &quot;The GTO ground, before the GTO ground&quot; — train on India&rsquo;s first virtual GTO
+                  simulation with live feedback from our ex-GTOs in our 12-day online mentoring programme.
                 </p>
-                <Link href="/ssb-offline-coaching" className="thm-btn" style={{ margin: "0 auto" }}>
-                  Explore the Nagpur Offline Batch →
+                <Link href="/Batches" className="thm-btn" style={{ margin: "0 auto" }}>
+                  Explore Online Batches →
                 </Link>
               </div>
             </div>

@@ -868,7 +868,6 @@ export default function SignUpClient({ initialDisplaySettings }: { initialDispla
                 <select className="mgf-select" value={courseType} onChange={(e) => setCourseType(e.target.value)}>
                   <option value="-None-">Select…</option>
                   <option value="Online SSB Course">Online SSB Course</option>
-                  <option value="Offline SSB Course at Nagpur">Offline SSB Course at Nagpur</option>
                 </select>
               </div>
 

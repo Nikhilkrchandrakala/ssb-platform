@@ -74,8 +74,8 @@ export default function HalfOfFamePage() {
           </p>
 
           <p className="hall-intro-text">
-            These results reflect our 5 years of online mentoring. As our first Nagpur offline batch begins, we&rsquo;ll
-            be adding in-person success stories here as well.
+            These results reflect our 5+ years of live online mentoring and assessor-led guidance for defence aspirants
+            across India.
           </p>
         </div>
 

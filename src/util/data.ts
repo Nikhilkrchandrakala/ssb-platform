@@ -51,7 +51,6 @@ export const mentorsData = [
       "Commissioning crew, SSB (Kolkata)",
       "Ex 12 SSB & NSB (Coimbatore)",
       "13000+ candidates assessed",
-      "Founding Faculty & Mentor, SSB with ISV - Nagpur Offline Campus (opens 26th October)",
     ],
     fullBiodata: {
       type: "structured",
@@ -177,21 +176,6 @@ interface CourseCard {
 }
 
 export const coursesData: CourseCard[] = [
-  {
-    id: 0,
-    number: "01",
-    title: "Offline SSB Program - Nagpur Campus",
-    white: "Offline SSB ",
-    gray: "Program - Nagpur",
-    white2: "Campus",
-    subtitle: "12-Day Residential Program",
-    description:
-      "SSB with ISV's first physical campus - Nagpur, opens 26th October",
-    image: "/uploads/nagpur-offline/main-building.jpeg",
-    price: " 21000 (All Inclusive)",
-    isOffline: true,
-  },
-
   {
     id: 1,
     number: "02",
@@ -366,12 +350,6 @@ export const journeyData = [
     title: "Virtual GTO ground rolled out",
     desc: "Launch of India’s first Virtual Training Xperience for remote SSB preparation.",
     image: "/assets/website/virtual.webp",
-  },
-  {
-    date: "26 October 2026",
-    title: "SSB with ISV Goes Offline",
-    desc: "First physical campus opens in Nagpur - the same assessor-led mentoring, now fully in person.",
-    image: "/uploads/nagpur-offline/main-building.jpeg",
   },
 ];
 
@@ -1141,7 +1119,7 @@ export const faqDataHome = [
     id: "faq7",
     question: "Does SSB with ISV offer offline coaching?",
     answer:
-      "Yes. SSB with ISV now offers a 12-day offline batch at our Nagpur campus, in addition to our online programmes - both mentored by the same faculty, including Lt Cdr Nikhil Kumar Chandrakala and Commodore Pankaj Singh.",
+      "Offline batches are coming soon. Currently, we offer live online mentoring and VTX™ virtual GTO ground practice, mentored by our DIPR certified ex-SSB assessors including Lt Cdr Nikhil Kumar Chandrakala and Commodore Pankaj Singh.",
     isOpen: false,
   },
   {

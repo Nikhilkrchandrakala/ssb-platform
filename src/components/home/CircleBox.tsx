@@ -87,11 +87,6 @@ function CircleBox() {
             real GTO ground having never experienced one before.
           </p>
 
-          <p className={styles.titleOfSecondSection}>
-            And now, we&rsquo;re offline. SSB with ISV&rsquo;s first physical campus opens in Nagpur, 26th October 2026
-            &mdash; the same mentors, the same standard, in person.
-          </p>
-
           <p className={styles.titleOfThirdSection}>
             <span className={styles.boxText}>
               Handholding till recommendation &nbsp;/&nbsp; Over 50% candidates recommended &nbsp;/&nbsp; Virtual GTO

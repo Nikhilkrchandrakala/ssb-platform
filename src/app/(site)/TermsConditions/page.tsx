@@ -3,11 +3,11 @@ import "@/style/TermsConditions.css";
 
 export const metadata: Metadata = {
   title: "Terms & Conditions",
-  description: "Terms governing use of the SSB with ISV website, ONLINE courses, VTX™ and offline programs in Nagpur. Please read before registering.",
+  description: "Terms governing use of the SSB with ISV website, ONLINE courses and VTX™. Please read before registering.",
   alternates: { canonical: "/TermsConditions" },
   openGraph: {
     title: "Terms & Conditions",
-    description: "Terms governing use of the SSB with ISV website, ONLINE courses, VTX™ and offline programs in Nagpur. Please read before registering.",
+    description: "Terms governing use of the SSB with ISV website, ONLINE courses and VTX™. Please read before registering.",
     url: "/TermsConditions",
   },
 };

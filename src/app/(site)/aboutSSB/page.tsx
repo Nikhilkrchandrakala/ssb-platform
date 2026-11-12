@@ -160,9 +160,8 @@ export default function SsbPage() {
 
       <section className="container sectionspace60">
         <p className="ssb-philosophy-text text-center">
-          Prepare for this process online or in person - SSB with ISV now offers both, including a fully
-          immersive offline batch at our Nagpur campus.{" "}
-          <Link href="/ssb-offline-coaching">Learn more →</Link>
+          Prepare for this process online with SSB with ISV — live mentoring by DIPR certified ex-SSB assessors.{" "}
+          <Link href="/Courses">Explore courses →</Link>
         </p>
       </section>
 

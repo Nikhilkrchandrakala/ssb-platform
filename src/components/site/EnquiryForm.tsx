@@ -809,7 +809,6 @@ export default function EnquiryForm({ isModal = false }: { isModal?: boolean } =
                       >
                         <option value="-None-">-None-</option>
                         <option value="Online SSB Course">Online SSB Course</option>
-                        <option value="Offline SSB Course at Nagpur">Offline SSB Course at Nagpur</option>
                       </select>
                       {hasError("courseType") && (
                         <div className="error-message" style={{ color: "#ff4d4d", fontSize: "13px", marginTop: "5px" }}>
