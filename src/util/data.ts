@@ -178,7 +178,7 @@ interface CourseCard {
 export const coursesData: CourseCard[] = [
   {
     id: 1,
-    number: "02",
+    number: "01",
     title: "4 Weeks Soft Skills Bootcamp",
     white: "4 Weeks Soft Skills ",
     gray: "Bootcamp - Live Online",
@@ -193,7 +193,7 @@ export const coursesData: CourseCard[] = [
 
   {
     id: 2,
-    number: "03",
+    number: "02",
     title: "12 days Services Selection Board Hackathon",
     white: "12 days ",
     gray: "Services Selection Board",
@@ -207,7 +207,7 @@ export const coursesData: CourseCard[] = [
 
   {
     id: 3,
-    number: "04",
+    number: "03",
     title: "Introduction to SSB & PPDT, Stage 1 Process",
     white: "Introduction",
     gray: "to SSB & PPDT, Stage",
@@ -221,7 +221,7 @@ export const coursesData: CourseCard[] = [
 
   {
     id: 4,
-    number: "05",
+    number: "04",
     title: "Psychology Test Preparation Program",
     white: "Psychology",
     gray: "Test Preparation",
@@ -236,7 +236,7 @@ export const coursesData: CourseCard[] = [
 
   {
     id: 5,
-    number: "06",
+    number: "05",
     title: "Interview Theory Course and Mock Interview",
     white: "Interview Theory ",
     gray: "Course and Mock",
@@ -250,7 +250,7 @@ export const coursesData: CourseCard[] = [
 
   {
     id: 6,
-    number: "07",
+    number: "06",
     title: "Group Testing Course",
     white: "Group ",
     gray: "Testing",

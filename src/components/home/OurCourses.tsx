@@ -173,22 +173,8 @@ const OurCourses = () => {
                 </div>
               </div>
               <CustomButton
-                text={
-                  detailCourse.href
-                    ? "Explore & Enrol"
-                    : detailCourse.isOffline
-                    ? "Know More"
-                    : "Enroll Now"
-                }
-                onClick={() =>
-                  router.push(
-                    detailCourse.href
-                      ? detailCourse.href
-                      : detailCourse.isOffline
-                      ? "/CoursesOffline"
-                      : "/Batches"
-                  )
-                }
+                text={detailCourse.href ? "Explore & Enrol" : "Enroll Now"}
+                onClick={() => router.push(detailCourse.href ? detailCourse.href : "/Batches")}
               />
             </div>
           </div>
